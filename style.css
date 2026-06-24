@@ -26,7 +26,8 @@ body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;
 header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0.92);backdrop-filter:blur(16px);border-bottom:var(--b1)}
 .nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px}
 .logo-img{height:44px;cursor:pointer;display:block}
-.nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto}
+.nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto;scrollbar-width:none}
+.nav-modules::-webkit-scrollbar{display:none}
 .nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--tm);cursor:pointer;transition:color .2s,transform .2s,text-shadow .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .nm-item:hover{transform:translateY(-1px);text-shadow:0 0 10px rgba(0,255,136,0.6)}
 .nm-item:hover{color:var(--g)}
