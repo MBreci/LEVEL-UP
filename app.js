@@ -42,10 +42,11 @@ const WIP_MODULES = [
 const PROFILES_KEY = 'levelup_profiles';
 const CURRENT_KEY = 'levelup_current_profile';
 
-function makeProfile({ name, position, team, photo }) {
+function makeProfile({ name, position, team, nickname }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
+    nickname: nickname ? nickname.toUpperCase() : '',
     position,
     team: team || 'SIN EQUIPO',
     photo: null,
@@ -141,7 +142,7 @@ function renderCard() {
       <div class="fc-rank">${rank.name}</div>
     </div>
     <div class="fc-player">${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA</span></div>`}</div>
-    <div class="fc-namebar"><div class="fc-name">${state.name}</div></div>
+    <div class="fc-namebar"><div class="fc-name">${state.name}${state.nickname ? ` <span class="fc-nick">"${state.nickname}"</span>` : ''}</div></div>
     <div class="fc-attrs">
       <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
       <div class="fca"><div class="fca-v">${a.sho}</div><div class="fca-l">SHO</div></div>
@@ -160,7 +161,7 @@ function renderCard() {
   const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
 
   document.getElementById('player-info').innerHTML = `
-    <div class="pi-name">${state.name}</div>
+    <div class="pi-name">${state.name} ${state.nickname ? `<span class="pi-nick" onclick="editNickname()">"${state.nickname}" ✎</span>` : `<span class="pi-nick pi-nick-add" onclick="editNickname()">+ AGREGAR APODO</span>`}</div>
     <div class="pi-sub">${state.position} · ${state.team}</div>
     <div class="pi-tags">
       <div class="pi-tag g">RANGO: ${rank.name}</div>
@@ -400,6 +401,7 @@ function deleteProfile(id) {
 
 function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
+  const nickname = document.getElementById('auth-nickname').value.trim();
   const position = document.getElementById('auth-position').value;
   const team = document.getElementById('auth-team').value.trim();
   const errorEl = document.getElementById('auth-error');
@@ -407,11 +409,20 @@ function submitNewProfile() {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
     return;
   }
-  const profile = makeProfile({ name, position, team });
+  const profile = makeProfile({ name, position, team, nickname });
   profiles[profile.id] = profile;
   saveProfiles();
   setCurrentProfile(profile.id);
   closeAuth();
+  renderAll();
+}
+
+function editNickname() {
+  const current = state.nickname || '';
+  const value = prompt('¿Cuál es tu apodo?', current);
+  if (value === null) return;
+  state.nickname = value.trim().toUpperCase();
+  saveState();
   renderAll();
 }
 

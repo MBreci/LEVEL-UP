@@ -25,7 +25,7 @@ body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;
 /* NAV */
 header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0.92);backdrop-filter:blur(16px);border-bottom:var(--b1)}
 .nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px}
-.logo-img{height:26px;cursor:pointer;display:block}
+.logo-img{height:44px;cursor:pointer;display:block}
 .nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto}
 .nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--tm);cursor:pointer;transition:color .2s,transform .2s,text-shadow .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .nm-item:hover{transform:translateY(-1px);text-shadow:0 0 10px rgba(0,255,136,0.6)}
@@ -84,6 +84,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-photo-img{height:200px;width:auto;max-width:220px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(0,255,136,0.2))}
 .fc-namebar{background:rgba(0,255,136,0.06);border-top:0.5px solid rgba(0,255,136,0.15);border-bottom:0.5px solid rgba(0,255,136,0.15);padding:10px 20px;text-align:center}
 .fc-name{font-family:var(--ft);font-size:14px;font-weight:700;letter-spacing:3px;color:var(--w)}
+.fc-nick{color:var(--g);font-weight:400;letter-spacing:1px}
 .fc-attrs{padding:14px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .fca{text-align:center}
 .fca-v{font-family:var(--ft);font-size:17px;font-weight:700;color:var(--w);line-height:1}
@@ -93,6 +94,9 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-val{font-family:var(--ft);font-size:11px;color:var(--gold)}
 
 .pi-name{font-family:var(--ft);font-size:36px;font-weight:900;color:var(--w);line-height:0.95;margin-bottom:8px}
+.pi-nick{font-size:14px;font-weight:400;letter-spacing:0.5px;color:var(--g);cursor:pointer;vertical-align:middle;transition:opacity .2s}
+.pi-nick:hover{opacity:0.7}
+.pi-nick-add{color:var(--tm);font-family:var(--fb)}
 .pi-sub{font-size:13px;color:var(--td);margin-bottom:24px;font-weight:300}
 .pi-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
 .pi-tag{font-family:var(--ft);font-size:8px;letter-spacing:1.5px;padding:5px 12px}
@@ -206,7 +210,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .auth-empty{color:var(--td);font-size:13px;padding:16px 0;font-weight:300;text-align:center}
 
 footer{padding:48px 64px;border-top:var(--b1)}
-.ft-logo-img{height:24px;margin-bottom:14px;display:block}
+.ft-logo-img{height:38px;margin-bottom:14px;display:block}
 .ft-desc{font-size:12px;color:var(--td);max-width:340px;line-height:1.7;font-weight:300}
 .ft-bottom{margin-top:32px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.18)}
 
