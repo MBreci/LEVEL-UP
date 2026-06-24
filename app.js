@@ -48,7 +48,7 @@ function makeProfile({ name, position, team, photo }) {
     name: name.toUpperCase(),
     position,
     team: team || 'SIN EQUIPO',
-    photo: photo || 'assets/player-photo.png',
+    photo: null,
     ovr: 60,
     xp: 0,
     matches: 0,
@@ -140,7 +140,7 @@ function renderCard() {
       <div><div class="fc-ovr">${state.ovr}</div><div class="fc-pos">${state.position}</div></div>
       <div class="fc-rank">${rank.name}</div>
     </div>
-    <div class="fc-player">${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder">📷</div>`}</div>
+    <div class="fc-player">${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA</span></div>`}</div>
     <div class="fc-namebar"><div class="fc-name">${state.name}</div></div>
     <div class="fc-attrs">
       <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
@@ -349,8 +349,6 @@ function closePostMatch() {
 
 /* ===== AUTH / PERFILES ===== */
 
-let pendingPhoto = null;
-
 function switchAuthTab(tab) {
   document.getElementById('tab-new').classList.toggle('on', tab === 'new');
   document.getElementById('tab-existing').classList.toggle('on', tab === 'existing');
@@ -400,19 +398,6 @@ function deleteProfile(id) {
   if (!state) openAuth(true);
 }
 
-function onAuthPhotoChange(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    pendingPhoto = reader.result;
-    document.getElementById('auth-photo-preview').src = pendingPhoto;
-    document.getElementById('auth-photo-preview').style.display = 'block';
-    document.getElementById('auth-photo-placeholder').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-}
-
 function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const position = document.getElementById('auth-position').value;
@@ -422,11 +407,10 @@ function submitNewProfile() {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
     return;
   }
-  const profile = makeProfile({ name, position, team, photo: pendingPhoto });
+  const profile = makeProfile({ name, position, team });
   profiles[profile.id] = profile;
   saveProfiles();
   setCurrentProfile(profile.id);
-  pendingPhoto = null;
   closeAuth();
   renderAll();
 }

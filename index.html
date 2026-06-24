@@ -50,6 +50,14 @@
     <div class="fifa" id="fifa-card"></div>
     <div class="pi" id="player-info"></div>
   </div>
+  <div class="photo-process">
+    <img class="photo-process-img" src="assets/player-photo.png" alt="Ejemplo de foto de jugador">
+    <div class="photo-process-text">
+      <div class="photo-process-tag">CÓMO FUNCIONA TU FOTO</div>
+      <div class="photo-process-title">Así se verá tu carta con tu foto real</div>
+      <p>Esta imagen es solo un ejemplo de cómo luce el proceso. Mientras creas tu perfil, tu carta no tiene foto: el equipo de LEVEL UP te toma la fotografía oficial en tu primer partido en la cancha y la sube directamente a tu carta.</p>
+    </div>
+  </div>
 </section>
 
 <!-- HISTORIAL DE PARTIDOS -->
@@ -121,12 +129,7 @@
     </div>
 
     <div id="auth-new">
-      <div class="auth-label">FOTO DE JUGADOR (OPCIONAL)</div>
-      <label class="auth-photo-pick">
-        <img id="auth-photo-preview" class="auth-photo-img" style="display:none">
-        <span id="auth-photo-placeholder">📷 SUBIR FOTO</span>
-        <input type="file" id="auth-photo-input" accept="image/*" onchange="onAuthPhotoChange(event)">
-      </label>
+      <div class="auth-photo-note">📷 Tu foto de jugador no se sube aquí: el equipo de LEVEL UP te la toma en tu primer partido en la cancha y la sube a tu carta.</div>
       <div class="auth-label">NOMBRE</div>
       <input class="auth-input" id="auth-name" placeholder="Ej: Miguel Breci" maxlength="24">
       <div class="auth-label">POSICIÓN</div>
