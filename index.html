@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<header>
+  <div class="nav-top">
+    <div class="logo" onclick="goTo('inicio')">LEVEL<span>UP</span></div>
+    <nav class="nav-modules" id="nav-modules"></nav>
+    <div class="nav-right">
+      <div class="season-badge">TEMPORADA PILOTO</div>
+      <button class="btn-g" onclick="goTo('notificaciones')">🔔 <span id="notif-count">0</span></button>
+      <button class="btn-p" onclick="simularPartido()">JUGAR PARTIDO</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <div class="h-season">TEMPORADA PILOTO · 2026</div>
+    <div class="h-title">
+      <span class="t1">TU CARRERA.</span>
+      <span class="t2">TU CARTA.</span>
+      <span class="t3">TU NIVEL.</span>
+    </div>
+    <div class="h-desc">Cada partido cambia tu carta. Sube tu OVR, gana XP, escala de rango y compite por el top del ranking general.</div>
+    <div class="h-btns">
+      <button class="hb1" onclick="goTo('carta')">VER MI CARTA</button>
+      <button class="hb2" onclick="simularPartido()">SIMULAR PARTIDO</button>
+    </div>
+    <div class="h-stats" id="hero-stats"></div>
+  </div>
+</section>
+
+<!-- CARTA DEL JUGADOR -->
+<section id="carta">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">01 · MI IDENTIDAD</div>
+  </div>
+  <div class="card-section">
+    <div class="fifa" id="fifa-card"></div>
+    <div class="pi" id="player-info"></div>
+  </div>
+</section>
+
+<!-- HISTORIAL DE PARTIDOS -->
+<section id="historial">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">02 · HISTORIAL DE PARTIDOS</div>
+  </div>
+  <div class="hist-list" id="hist-list"></div>
+</section>
+
+<!-- RANKING GENERAL -->
+<section id="ranking">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">03 · RANKING GENERAL</div>
+  </div>
+  <div class="rk-panel" id="rk-panel"></div>
+</section>
+
+<!-- NOTIFICACIONES -->
+<section id="notificaciones">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">04 · NOTIFICACIONES</div>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+</section>
+
+<!-- PRÓXIMAMENTE -->
+<section id="proximamente">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">PRÓXIMAMENTE EN LEVEL UP</div>
+  </div>
+  <div class="wip-grid" id="wip-grid"></div>
+</section>
+
+<footer>
+  <div class="ft-top">
+    <div>
+      <div class="ft-logo">LEVEL<span class="dot">UP</span></div>
+      <div class="ft-desc">La plataforma deportiva donde cada partido cambia tu carrera. Construido en Bogotá, Colombia.</div>
+    </div>
+  </div>
+  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
+</footer>
+
+<!-- MODAL POST-PARTIDO -->
+<div class="modal-overlay" id="post-match-modal">
+  <div class="post-match-card" id="post-match-content"></div>
+</div>
+
+<!-- MODAL TRABAJO EN PROGRESO -->
+<div class="modal-overlay" id="wip-modal">
+  <div class="wip-card">
+    <div class="tape tape-top"></div>
+    <div class="wip-icon">🚧</div>
+    <div class="wip-title" id="wip-modal-title">MÓDULO</div>
+    <div class="wip-sub">TRABAJO EN PROGRESO</div>
+    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
+    <button class="wip-close" onclick="closeWip()">CERRAR</button>
+    <div class="tape tape-bottom"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
