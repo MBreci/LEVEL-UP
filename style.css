@@ -90,6 +90,8 @@ section{padding:64px;border-bottom:var(--b1)}
 .bp-zona{font-family:var(--ft);font-size:13px;color:var(--w);letter-spacing:1px}
 .bp-meta{font-size:11px;color:var(--td)}
 .bp-creator{font-size:10px;color:var(--g)}
+.bp-tags{display:flex;gap:6px}
+.bp-tag{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--tm);border:0.5px solid rgba(255,255,255,0.15);padding:2px 7px;border-radius:2px}
 .bp-needs{display:flex;gap:8px;flex-wrap:wrap}
 .bp-need-chip{display:flex;align-items:center;gap:8px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);border:0.5px solid rgba(0,255,136,0.25);padding:6px 10px;border-radius:3px}
 .bp-need-chip button{background:var(--g);border:none;color:#020510;font-family:var(--ft);font-size:8px;padding:3px 8px;border-radius:2px;cursor:pointer;letter-spacing:1px}

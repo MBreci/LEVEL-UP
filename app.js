@@ -470,6 +470,8 @@ function submitMatchRequest() {
   if (!state) { openAuth(true); return; }
   const zona = document.getElementById('bp-zona').value;
   const cancha = document.getElementById('bp-cancha').value.trim();
+  const formato = document.getElementById('bp-formato').value;
+  const superficie = document.getElementById('bp-superficie').value;
   const fecha = document.getElementById('bp-fecha').value.trim();
   const errorEl = document.getElementById('bp-error');
   const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
@@ -496,6 +498,8 @@ function submitMatchRequest() {
     creatorName: state.nickname || state.name,
     zona,
     cancha: cancha || null,
+    formato,
+    superficie,
     fecha,
     necesita,
     estado: 'abierto',
@@ -534,6 +538,7 @@ function renderBuscarPartido() {
     <div class="bp-card">
       <div class="bp-info">
         <div class="bp-zona">${m.zona}${m.cancha ? ' · ' + m.cancha : ''}</div>
+        <div class="bp-tags"><span class="bp-tag">FÚTBOL ${m.formato}</span><span class="bp-tag">${m.superficie}</span></div>
         <div class="bp-meta">${m.fecha}</div>
         <div class="bp-creator">Organiza: ${m.creatorName}</div>
       </div>
@@ -556,7 +561,7 @@ function renderTicker() {
   const items = [];
   openMatches.filter(m => m.estado === 'abierto').forEach(m => {
     m.necesita.filter(n => n.unidos.length < n.cupos).forEach(n => {
-      items.push(`<span class="tk-item">🔍 <strong>SE BUSCA ${n.pos}</strong> ${m.zona} · ${m.fecha} · faltan ${n.cupos - n.unidos.length}</span>`);
+      items.push(`<span class="tk-item">🔍 <strong>SE BUSCA ${n.pos}</strong> Fútbol ${m.formato} · ${m.zona} · ${m.fecha} · faltan ${n.cupos - n.unidos.length}</span>`);
     });
   });
   Object.values(profiles).slice(-5).forEach(p => {
