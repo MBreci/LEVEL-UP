@@ -39,34 +39,59 @@ const WIP_MODULES = [
   { name: 'IA SCOUTING', icon: '🤖' },
 ];
 
-const DEFAULT_STATE = {
-  name: 'JUGADOR NUEVO',
-  position: 'DEL',
-  team: 'SIN EQUIPO',
-  ovr: 60,
-  xp: 0,
-  matches: 0,
-  goals: 0,
-  assists: 0,
-  mvps: 0,
-  attrs: { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
-  history: [],
-  notifications: [
-    { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
-  ],
-};
+const PROFILES_KEY = 'levelup_profiles';
+const CURRENT_KEY = 'levelup_current_profile';
 
-function loadState() {
-  const raw = localStorage.getItem('levelup_state');
-  if (!raw) return structuredClone(DEFAULT_STATE);
-  try { return JSON.parse(raw); } catch { return structuredClone(DEFAULT_STATE); }
+function makeProfile({ name, position, team, photo }) {
+  return {
+    id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    name: name.toUpperCase(),
+    position,
+    team: team || 'SIN EQUIPO',
+    photo: photo || null,
+    ovr: 60,
+    xp: 0,
+    matches: 0,
+    goals: 0,
+    assists: 0,
+    mvps: 0,
+    attrs: { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
+    history: [],
+    notifications: [
+      { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
+    ],
+  };
+}
+
+function loadProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; } catch { return {}; }
+}
+
+function saveProfiles() {
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+}
+
+let profiles = loadProfiles();
+let state = null;
+
+function setCurrentProfile(id) {
+  localStorage.setItem(CURRENT_KEY, id);
+  state = profiles[id];
 }
 
 function saveState() {
-  localStorage.setItem('levelup_state', JSON.stringify(state));
+  profiles[state.id] = state;
+  saveProfiles();
 }
 
-let state = loadState();
+function loadCurrentProfile() {
+  const id = localStorage.getItem(CURRENT_KEY);
+  if (id && profiles[id]) {
+    state = profiles[id];
+    return true;
+  }
+  return false;
+}
 
 function getRank(xp) {
   let current = RANKS[0];
@@ -115,7 +140,7 @@ function renderCard() {
       <div><div class="fc-ovr">${state.ovr}</div><div class="fc-pos">${state.position}</div></div>
       <div class="fc-rank">${rank.name}</div>
     </div>
-    <div class="fc-player"><div class="fc-photo-placeholder">📷</div></div>
+    <div class="fc-player">${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder">📷</div>`}</div>
     <div class="fc-namebar"><div class="fc-name">${state.name}</div></div>
     <div class="fc-attrs">
       <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
@@ -239,6 +264,8 @@ function renderAll() {
   renderRanking();
   renderNotifications();
   renderWipGrid();
+  const btn = document.getElementById('profile-btn');
+  if (btn && state) btn.textContent = state.name.split(' ')[0];
 }
 
 function goTo(id) {
@@ -320,4 +347,107 @@ function closePostMatch() {
   goTo('carta');
 }
 
-renderAll();
+/* ===== AUTH / PERFILES ===== */
+
+let pendingPhoto = null;
+
+function switchAuthTab(tab) {
+  document.getElementById('tab-new').classList.toggle('on', tab === 'new');
+  document.getElementById('tab-existing').classList.toggle('on', tab === 'existing');
+  document.getElementById('auth-new').style.display = tab === 'new' ? 'block' : 'none';
+  document.getElementById('auth-existing').style.display = tab === 'existing' ? 'block' : 'none';
+  if (tab === 'existing') renderProfileList();
+}
+
+function renderProfileList() {
+  const ids = Object.keys(profiles);
+  const el = document.getElementById('auth-profile-list');
+  if (!ids.length) {
+    el.innerHTML = `<div class="auth-empty">Todavía no has creado ningún perfil.</div>`;
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const p = profiles[id];
+    const initials = p.name.split(' ').map(s => s[0]).join('').slice(0, 2);
+    const photo = p.photo ? `<img class="auth-profile-photo" src="${p.photo}">` : `<div class="auth-profile-photo rk-av" style="display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:10px">${initials}</div>`;
+    return `
+      <div class="auth-profile-row" onclick="selectProfile('${id}')">
+        ${photo}
+        <div>
+          <div class="auth-profile-name">${p.name}</div>
+          <div class="auth-profile-sub">${p.position} · OVR ${p.ovr}</div>
+        </div>
+        <div class="auth-profile-del" onclick="event.stopPropagation();deleteProfile('${id}')">✕</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectProfile(id) {
+  setCurrentProfile(id);
+  closeAuth();
+  renderAll();
+}
+
+function deleteProfile(id) {
+  delete profiles[id];
+  saveProfiles();
+  if (state && state.id === id) {
+    state = null;
+    localStorage.removeItem(CURRENT_KEY);
+  }
+  renderProfileList();
+  if (!state) openAuth(true);
+}
+
+function onAuthPhotoChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingPhoto = reader.result;
+    document.getElementById('auth-photo-preview').src = pendingPhoto;
+    document.getElementById('auth-photo-preview').style.display = 'block';
+    document.getElementById('auth-photo-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitNewProfile() {
+  const name = document.getElementById('auth-name').value.trim();
+  const position = document.getElementById('auth-position').value;
+  const team = document.getElementById('auth-team').value.trim();
+  const errorEl = document.getElementById('auth-error');
+  if (!name) {
+    errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
+    return;
+  }
+  const profile = makeProfile({ name, position, team, photo: pendingPhoto });
+  profiles[profile.id] = profile;
+  saveProfiles();
+  setCurrentProfile(profile.id);
+  pendingPhoto = null;
+  closeAuth();
+  renderAll();
+}
+
+function openAuth(forced) {
+  document.getElementById('auth-cancel').style.display = forced ? 'none' : 'block';
+  switchAuthTab(Object.keys(profiles).length ? 'existing' : 'new');
+  document.getElementById('auth-modal').classList.add('open');
+}
+
+function closeAuth() {
+  document.getElementById('auth-modal').classList.remove('open');
+}
+
+function initApp() {
+  if (!loadCurrentProfile()) {
+    openAuth(true);
+  } else {
+    renderAll();
+  }
+  document.getElementById('profile-btn').onclick = () => openAuth(false);
+}
+
+initApp();

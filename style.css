@@ -63,6 +63,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-rank{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--gold);border:0.5px solid rgba(201,168,76,0.3);padding:2px 7px;height:fit-content}
 .fc-player{height:200px;position:relative;display:flex;align-items:center;justify-content:center}
 .fc-photo-placeholder{width:140px;height:140px;border-radius:50%;background:linear-gradient(155deg,#0d2a1f,#05080e);border:1px solid rgba(0,255,136,0.3);display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:42px;color:var(--g)}
+.fc-photo-img{height:200px;width:auto;max-width:220px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(0,255,136,0.2))}
 .fc-namebar{background:rgba(0,255,136,0.06);border-top:0.5px solid rgba(0,255,136,0.15);border-bottom:0.5px solid rgba(0,255,136,0.15);padding:10px 20px;text-align:center}
 .fc-name{font-family:var(--ft);font-size:14px;font-weight:700;letter-spacing:3px;color:var(--w)}
 .fc-attrs{padding:14px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -161,6 +162,33 @@ section{padding:64px;border-bottom:var(--b1)}
 .wip-text{font-size:13px;color:var(--tm);line-height:1.7;padding:0 32px;margin-bottom:28px;font-weight:300}
 .wip-close{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:12px 28px;background:transparent;border:0.5px solid rgba(255,255,255,0.25);color:var(--w);cursor:pointer;margin-bottom:24px}
 .wip-close:hover{border-color:#f5c400;color:#f5c400}
+
+/* AUTH / PROFILE MODAL */
+.auth-card{background:var(--bg2);border:1px solid rgba(0,255,136,0.25);box-shadow:0 0 80px rgba(0,255,136,0.12);padding:36px;max-width:420px;width:90%;max-height:88vh;overflow-y:auto}
+.auth-tabs{display:flex;border-bottom:var(--b1);margin-bottom:24px}
+.auth-tab{flex:1;text-align:center;padding:10px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);cursor:pointer;border-bottom:1.5px solid transparent}
+.auth-tab.on{color:var(--g);border-bottom-color:var(--g)}
+.auth-label{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--td);margin-bottom:8px;margin-top:16px}
+.auth-input{width:100%;background:var(--bg3);border:var(--b2);color:var(--w);padding:11px 12px;font-family:var(--fb);font-size:13px;outline:none}
+.auth-input:focus{border-color:rgba(0,255,136,0.4)}
+.auth-error{color:#ff4444;font-size:12px;margin-top:10px;min-height:14px}
+.auth-submit{width:100%;margin-top:20px;font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:13px;background:var(--g);color:var(--bg);border:none;cursor:pointer}
+.auth-submit:hover{box-shadow:0 0 24px rgba(0,255,136,0.4)}
+.auth-cancel{width:100%;margin-top:12px;font-family:var(--ft);font-size:9px;letter-spacing:2px;padding:11px;background:transparent;border:0.5px solid rgba(255,255,255,0.15);color:var(--tm);cursor:pointer}
+.auth-cancel:hover{color:var(--w);border-color:rgba(255,255,255,0.3)}
+.auth-photo-pick{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:96px;height:96px;border-radius:50%;border:1px dashed rgba(0,255,136,0.3);cursor:pointer;margin:0 auto;position:relative;overflow:hidden;background:var(--bg3)}
+.auth-photo-pick span{font-family:var(--ft);font-size:7px;letter-spacing:1px;color:var(--td);text-align:center;padding:0 8px}
+.auth-photo-img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.auth-photo-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.auth-profile-list{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,0.04)}
+.auth-profile-row{background:var(--bg3);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s}
+.auth-profile-row:hover{background:#0d1220}
+.auth-profile-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--bg2);border:0.5px solid rgba(255,255,255,0.1);flex-shrink:0}
+.auth-profile-name{font-size:13px;color:var(--w);font-weight:500}
+.auth-profile-sub{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--td)}
+.auth-profile-del{font-size:14px;color:var(--td);padding:4px 8px;margin-left:auto}
+.auth-profile-del:hover{color:#ff4444}
+.auth-empty{color:var(--td);font-size:13px;padding:16px 0;font-weight:300;text-align:center}
 
 footer{padding:48px 64px;border-top:var(--b1)}
 .ft-logo{font-family:var(--ft);font-size:16px;font-weight:900;letter-spacing:5px;color:var(--w);margin-bottom:10px}
