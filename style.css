@@ -15,8 +15,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fb);overflow-x:hidden
 /* NAV */
 header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0.92);backdrop-filter:blur(16px);border-bottom:var(--b1)}
 .nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px}
-.logo{font-family:var(--ft);font-size:16px;font-weight:900;letter-spacing:3px;color:var(--g);text-shadow:0 0 18px rgba(0,255,136,0.6);cursor:pointer;white-space:nowrap}
-.logo span{color:var(--f);text-shadow:0 0 18px rgba(255,0,170,0.6)}
+.logo-img{height:26px;cursor:pointer;display:block}
 .nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto}
 .nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--tm);cursor:pointer;transition:color .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .nm-item:hover{color:var(--g)}
@@ -191,8 +190,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .auth-empty{color:var(--td);font-size:13px;padding:16px 0;font-weight:300;text-align:center}
 
 footer{padding:48px 64px;border-top:var(--b1)}
-.ft-logo{font-family:var(--ft);font-size:16px;font-weight:900;letter-spacing:5px;color:var(--w);margin-bottom:10px}
-.ft-logo .dot{color:var(--g)}
+.ft-logo-img{height:24px;margin-bottom:14px;display:block}
 .ft-desc{font-size:12px;color:var(--td);max-width:340px;line-height:1.7;font-weight:300}
 .ft-bottom{margin-top:32px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.18)}
 

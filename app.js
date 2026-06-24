@@ -48,7 +48,7 @@ function makeProfile({ name, position, team, photo }) {
     name: name.toUpperCase(),
     position,
     team: team || 'SIN EQUIPO',
-    photo: photo || null,
+    photo: photo || 'assets/player-photo.png',
     ovr: 60,
     xp: 0,
     matches: 0,
