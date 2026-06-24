@@ -123,13 +123,23 @@ function renderNav() {
   });
 }
 
+function getPlatformStats() {
+  const all = Object.values(profiles);
+  return {
+    jugadores: all.length,
+    partidos: all.reduce((s, p) => s + (p.matches || 0), 0),
+    goles: all.reduce((s, p) => s + (p.goals || 0), 0),
+    mvps: all.reduce((s, p) => s + (p.mvps || 0), 0),
+  };
+}
+
 function renderHero() {
-  const rank = getRank(state.xp);
+  const stats = getPlatformStats();
   document.getElementById('hero-stats').innerHTML = `
-    <div class="h-stat"><div class="h-stat-n">${state.ovr}</div><div class="h-stat-l">OVR</div></div>
-    <div class="h-stat"><div class="h-stat-n">${rank.name}</div><div class="h-stat-l">RANGO</div></div>
-    <div class="h-stat"><div class="h-stat-n">${state.matches}</div><div class="h-stat-l">PARTIDOS</div></div>
-    <div class="h-stat"><div class="h-stat-n">${state.xp}</div><div class="h-stat-l">XP</div></div>
+    <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES REGISTRADOS</div></div>
+    <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS JUGADOS</div></div>
+    <div class="h-stat"><div class="h-stat-n">${stats.goles}</div><div class="h-stat-l">GOLES ANOTADOS</div></div>
+    <div class="h-stat"><div class="h-stat-n">${stats.mvps}</div><div class="h-stat-l">MVP OTORGADOS</div></div>
   `;
 }
 
