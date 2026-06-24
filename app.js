@@ -435,3 +435,35 @@ function initApp() {
 }
 
 initApp();
+
+/* ===== AUDIO ===== */
+
+const aud = document.getElementById('audio');
+let audPlaying = false;
+
+function setAudioUI(playing) {
+  const ctrl = document.getElementById('audio-ctrl');
+  const lbl = document.getElementById('audio-lbl');
+  ctrl.classList.toggle('muted', !playing);
+  lbl.textContent = playing ? 'SILENCIAR' : "LET'S ROLL";
+}
+
+document.addEventListener('click', function startAudio() {
+  aud.volume = 0.7;
+  aud.play().then(() => {
+    audPlaying = true;
+    setAudioUI(true);
+  }).catch(() => {});
+  document.removeEventListener('click', startAudio);
+}, { once: true });
+
+function toggleAudio() {
+  if (audPlaying) {
+    aud.pause();
+    audPlaying = false;
+  } else {
+    aud.play();
+    audPlaying = true;
+  }
+  setAudioUI(audPlaying);
+}
