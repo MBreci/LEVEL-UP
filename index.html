@@ -23,6 +23,12 @@
   </div>
 </header>
 
+<!-- TICKER -->
+<div class="ticker">
+  <div class="tk-pill"><div class="tk-dot"></div><div class="tk-lbl">ACTIVIDAD</div></div>
+  <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
+</div>
+
 <!-- HERO -->
 <section class="hero" id="inicio">
   <div class="hero-content">
@@ -83,6 +89,43 @@
     <div class="sec-eyebrow">04 · NOTIFICACIONES</div>
   </div>
   <div class="notif-list" id="notif-list"></div>
+</section>
+
+<!-- BUSCAR PARTIDO -->
+<section id="buscar-partido">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">05 · BUSCAR PARTIDO</div>
+    <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
+  </div>
+  <div class="bp-form" id="bp-form" style="display:none">
+    <div class="auth-label">ZONA DE BOGOTÁ</div>
+    <select class="auth-input" id="bp-zona">
+      <option>Chapinero</option>
+      <option>Usaquén</option>
+      <option>Suba</option>
+      <option>Engativá</option>
+      <option>Kennedy</option>
+      <option>Teusaquillo</option>
+      <option>Fontibón</option>
+      <option>Ciudad Bolívar</option>
+      <option>Bosa</option>
+      <option>Santa Fe</option>
+    </select>
+    <div class="auth-label">CANCHA / SEDE (OPCIONAL)</div>
+    <input class="auth-input" id="bp-cancha" placeholder="Ej: Cancha El Salitre" maxlength="30">
+    <div class="auth-label">FECHA Y HORA</div>
+    <input class="auth-input" id="bp-fecha" placeholder="Ej: Sábado 28 jun, 5:00pm" maxlength="30">
+    <div class="auth-label">POSICIONES QUE FALTAN</div>
+    <div class="bp-pos-grid" id="bp-pos-grid">
+      <label class="bp-pos-chip"><input type="checkbox" value="DEL"> DEL <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="MED"> MED <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="DEF"> DEF <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="POR"> POR <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+    </div>
+    <div class="auth-error" id="bp-error"></div>
+    <button class="auth-submit" onclick="submitMatchRequest()">PUBLICAR BÚSQUEDA</button>
+  </div>
+  <div class="bp-list" id="bp-list"></div>
 </section>
 
 <!-- PRÓXIMAMENTE -->

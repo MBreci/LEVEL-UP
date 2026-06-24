@@ -39,7 +39,19 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .btn-p:hover{box-shadow:0 0 32px rgba(0,255,136,0.75);transform:translateY(-2px) scale(1.03)}
 
 /* HERO */
-.hero{position:relative;min-height:80vh;display:flex;align-items:center;justify-content:center;padding-top:60px;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.08),transparent 60%)}
+.hero{position:relative;min-height:80vh;display:flex;align-items:center;justify-content:center;padding-top:98px;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.08),transparent 60%)}
+
+/* TICKER */
+.ticker{position:fixed;top:60px;left:0;right:0;z-index:4500;background:rgba(2,4,8,0.96);border-bottom:var(--b1);padding:9px 32px;display:flex;align-items:center;gap:20px;overflow:hidden}
+.tk-pill{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-right:18px;border-right:var(--b1)}
+.tk-dot{width:6px;height:6px;border-radius:50%;background:#ff3333;animation:tdot 1.2s infinite}
+@keyframes tdot{0%,100%{box-shadow:0 0 4px #ff3333}50%{box-shadow:0 0 12px #ff3333}}
+.tk-lbl{font-family:var(--ft);font-size:8px;letter-spacing:3px;color:#ff3333}
+.tk-feed{flex:1;overflow:hidden;white-space:nowrap}
+.tk-inner{display:inline-flex;gap:48px;animation:tkroll 35s linear infinite}
+@keyframes tkroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-item{font-size:11px;color:var(--tm);display:inline-flex;align-items:center;gap:8px}
+.tk-item strong{color:var(--w);font-weight:500}
 .hero-content{max-width:680px;text-align:center;padding:60px 24px}
 .h-season{font-family:var(--ft);font-size:9px;letter-spacing:5px;color:var(--o);border:0.5px solid rgba(255,102,0,0.3);padding:5px 16px;margin-bottom:16px;display:inline-block;background:rgba(255,102,0,0.04)}
 .h-sub-label{font-family:var(--ft);font-size:10px;letter-spacing:3px;color:var(--g);margin-bottom:14px}
@@ -62,6 +74,28 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 /* SECTIONS */
 section{padding:64px;border-bottom:var(--b1)}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.sec-link{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--g);cursor:pointer;border-bottom:0.5px solid rgba(0,255,136,0.25);padding-bottom:1px;transition:all .2s}
+.sec-link:hover{color:var(--w);border-color:rgba(255,255,255,0.25)}
+
+/* BUSCAR PARTIDO */
+.bp-form{background:var(--bg3);border:0.5px solid rgba(0,255,136,0.2);border-radius:6px;padding:24px;margin-bottom:24px;max-width:480px}
+.bp-pos-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.bp-pos-chip{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px 6px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);cursor:pointer}
+.bp-pos-chip input[type=checkbox]{accent-color:var(--g)}
+.bp-pos-n{width:36px;background:var(--bg);border:0.5px solid rgba(255,255,255,0.15);color:var(--w);text-align:center;font-family:var(--ft);font-size:10px;border-radius:2px}
+.bp-list{display:flex;flex-direction:column;gap:1px;background:var(--b1)}
+.bp-card{background:var(--bg2);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.bp-info{display:flex;flex-direction:column;gap:4px}
+.bp-zona{font-family:var(--ft);font-size:13px;color:var(--w);letter-spacing:1px}
+.bp-meta{font-size:11px;color:var(--td)}
+.bp-creator{font-size:10px;color:var(--g)}
+.bp-needs{display:flex;gap:8px;flex-wrap:wrap}
+.bp-need-chip{display:flex;align-items:center;gap:8px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);border:0.5px solid rgba(0,255,136,0.25);padding:6px 10px;border-radius:3px}
+.bp-need-chip button{background:var(--g);border:none;color:#020510;font-family:var(--ft);font-size:8px;padding:3px 8px;border-radius:2px;cursor:pointer;letter-spacing:1px}
+.bp-need-chip button:hover{box-shadow:0 0 12px rgba(0,255,136,0.5)}
+.bp-need-chip.full{color:rgba(255,255,255,0.25);border-color:rgba(255,255,255,0.1)}
+.bp-empty{padding:20px 22px;background:var(--bg2);color:var(--td);font-size:12px}
+.bp-tag-completo{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--gold);border:0.5px solid rgba(201,168,76,0.3);padding:3px 8px}
 .sec-eyebrow{display:flex;align-items:center;gap:14px;font-family:var(--ft);font-size:9px;letter-spacing:4px;color:var(--td)}
 .sec-eyebrow::before{content:'';width:28px;height:0.5px;background:var(--g);box-shadow:0 0 6px var(--g)}
 

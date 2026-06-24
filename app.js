@@ -16,6 +16,7 @@ const FUNCTIONAL_MODULES = [
   { id: 'historial', label: 'HISTORIAL' },
   { id: 'ranking', label: 'RANKING' },
   { id: 'notificaciones', label: 'NOTIFICACIONES' },
+  { id: 'buscar-partido', label: 'BUSCAR PARTIDO' },
 ];
 
 const WIP_MODULES = [
@@ -41,6 +42,7 @@ const WIP_MODULES = [
 
 const PROFILES_KEY = 'levelup_profiles';
 const CURRENT_KEY = 'levelup_current_profile';
+const MATCHES_KEY = 'levelup_open_matches';
 
 function makeProfile({ name, position, team, nickname }) {
   return {
@@ -275,6 +277,8 @@ function renderAll() {
   renderRanking();
   renderNotifications();
   renderWipGrid();
+  renderBuscarPartido();
+  renderTicker();
   const btn = document.getElementById('profile-btn');
   if (btn && state) btn.textContent = state.name.split(' ')[0];
 }
@@ -446,9 +450,134 @@ function closeAuth() {
   document.getElementById('auth-modal').classList.remove('open');
 }
 
+/* ===== BUSCAR PARTIDO ===== */
+
+function loadOpenMatches() {
+  try { return JSON.parse(localStorage.getItem(MATCHES_KEY)) || []; } catch { return []; }
+}
+function saveOpenMatches() {
+  localStorage.setItem(MATCHES_KEY, JSON.stringify(openMatches));
+}
+
+let openMatches = loadOpenMatches();
+
+function openMatchForm() {
+  const form = document.getElementById('bp-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function submitMatchRequest() {
+  if (!state) { openAuth(true); return; }
+  const zona = document.getElementById('bp-zona').value;
+  const cancha = document.getElementById('bp-cancha').value.trim();
+  const fecha = document.getElementById('bp-fecha').value.trim();
+  const errorEl = document.getElementById('bp-error');
+  const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
+  const necesita = [];
+  chips.forEach(chip => {
+    const checkbox = chip.querySelector('input[type=checkbox]');
+    const n = chip.querySelector('.bp-pos-n');
+    if (checkbox.checked) {
+      necesita.push({ pos: checkbox.value, cupos: parseInt(n.value, 10) || 1, unidos: [] });
+    }
+  });
+  if (!fecha) {
+    errorEl.textContent = 'Indica la fecha y hora del partido.';
+    return;
+  }
+  if (necesita.length === 0) {
+    errorEl.textContent = 'Selecciona al menos una posición que te falte.';
+    return;
+  }
+  errorEl.textContent = '';
+  openMatches.unshift({
+    id: 'm_' + Date.now(),
+    creatorId: state.id,
+    creatorName: state.nickname || state.name,
+    zona,
+    cancha: cancha || null,
+    fecha,
+    necesita,
+    estado: 'abierto',
+    createdAt: Date.now(),
+  });
+  saveOpenMatches();
+  document.getElementById('bp-fecha').value = '';
+  document.getElementById('bp-cancha').value = '';
+  chips.forEach(chip => { chip.querySelector('input[type=checkbox]').checked = false; });
+  openMatchForm();
+  renderAll();
+}
+
+function joinMatchRequest(matchId, pos) {
+  if (!state) { openAuth(true); return; }
+  const match = openMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const slot = match.necesita.find(n => n.pos === pos);
+  if (!slot || slot.unidos.length >= slot.cupos) return;
+  if (slot.unidos.some(u => u.profileId === state.id)) return;
+  slot.unidos.push({ profileId: state.id, name: state.nickname || state.name });
+  if (match.necesita.every(n => n.unidos.length >= n.cupos)) match.estado = 'completo';
+  saveOpenMatches();
+  addNotification('⚽', `Te uniste al partido en ${match.zona} (${pos}) — ${match.fecha}`);
+  saveState();
+  renderAll();
+}
+
+function renderBuscarPartido() {
+  const list = document.getElementById('bp-list');
+  if (openMatches.length === 0) {
+    list.innerHTML = `<div class="bp-empty">Aún no hay búsquedas activas. Publica la tuya y otros jugadores podrán unirse para completar tu equipo.</div>`;
+    return;
+  }
+  list.innerHTML = openMatches.map(m => `
+    <div class="bp-card">
+      <div class="bp-info">
+        <div class="bp-zona">${m.zona}${m.cancha ? ' · ' + m.cancha : ''}</div>
+        <div class="bp-meta">${m.fecha}</div>
+        <div class="bp-creator">Organiza: ${m.creatorName}</div>
+      </div>
+      <div class="bp-needs">
+        ${m.necesita.map(n => {
+          const full = n.unidos.length >= n.cupos;
+          const joined = !!state && n.unidos.some(u => u.profileId === state.id);
+          return `<div class="bp-need-chip ${full ? 'full' : ''}">${n.pos} ${n.unidos.length}/${n.cupos}
+            ${!full && !joined ? `<button onclick="joinMatchRequest('${m.id}','${n.pos}')">UNIRME</button>` : ''}
+            ${joined ? '✓' : ''}
+          </div>`;
+        }).join('')}
+        ${m.estado === 'completo' ? '<span class="bp-tag-completo">EQUIPO COMPLETO</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTicker() {
+  const items = [];
+  openMatches.filter(m => m.estado === 'abierto').forEach(m => {
+    m.necesita.filter(n => n.unidos.length < n.cupos).forEach(n => {
+      items.push(`<span class="tk-item">🔍 <strong>SE BUSCA ${n.pos}</strong> ${m.zona} · ${m.fecha} · faltan ${n.cupos - n.unidos.length}</span>`);
+    });
+  });
+  Object.values(profiles).slice(-5).forEach(p => {
+    items.push(`<span class="tk-item">🆕 <strong>NUEVO JUGADOR</strong> ${p.nickname || p.name} se unió a LEVEL UP</span>`);
+  });
+  if (items.length === 0) {
+    items.push(
+      `<span class="tk-item">🔍 <strong>EJEMPLO · SE BUSCA DEL</strong> Chapinero · Sábado 5:00pm · faltan 2</span>`,
+      `<span class="tk-item">🔍 <strong>EJEMPLO · SE BUSCA POR</strong> Suba · Domingo 10:00am · falta 1</span>`,
+      `<span class="tk-item">⚽ <strong>EJEMPLO</strong> publica tu propia búsqueda en "BUSCAR PARTIDO"</span>`,
+    );
+  }
+  const feed = items.concat(items).join('');
+  document.getElementById('ticker-inner').innerHTML = feed;
+}
+
 function initApp() {
   if (!loadCurrentProfile()) {
     openAuth(true);
+    renderBuscarPartido();
+    renderTicker();
   } else {
     renderAll();
   }
