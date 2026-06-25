@@ -360,7 +360,7 @@ function renderHistory() {
 
 function getGeneralRanking() {
   const list = Object.values(profiles).map(p => ({ id: p.id, name: p.nickname || p.name, ovr: p.ovr, rank: getRank(p.xp).name }));
-  return list.sort((a, b) => b.ovr - a.ovr);
+  return list.sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name));
 }
 
 function renderRanking() {
