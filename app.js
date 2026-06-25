@@ -394,12 +394,21 @@ function renderProfileList() {
     const p = profiles[id];
     const initials = p.name.split(' ').map(s => s[0]).join('').slice(0, 2);
     const photo = p.photo ? `<img class="auth-profile-photo" src="${p.photo}">` : `<div class="auth-profile-photo rk-av" style="display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:10px">${initials}</div>`;
+    const rank = getRank(p.xp);
+    const next = getNextRank(p.xp);
+    const nextMin = next ? next.min : rank.min + 1;
+    const pct = next ? Math.min(100, Math.round(((p.xp - rank.min) / (nextMin - rank.min)) * 100)) : 100;
     return `
       <div class="auth-profile-row" onclick="selectProfile('${id}')">
         ${photo}
-        <div>
+        <div class="auth-profile-main rk-${rank.name.toLowerCase()}">
           <div class="auth-profile-name">${p.name}</div>
           <div class="auth-profile-sub">${p.position} · OVR ${p.ovr}</div>
+          <div class="auth-profile-xp">
+            <span class="auth-profile-rank">${rank.name}</span>
+            <span class="auth-profile-xp-n">${p.xp} XP ${next ? '· ' + (nextMin - p.xp) + ' para ' + next.name : '· RANGO MÁXIMO'}</span>
+          </div>
+          <div class="auth-profile-track"><div class="auth-profile-fill" style="width:${pct}%"></div></div>
         </div>
         <div class="auth-profile-del" onclick="event.stopPropagation();deleteProfile('${id}')">✕</div>
       </div>
