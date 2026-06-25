@@ -205,14 +205,28 @@ function getPlatformStats() {
 
 function renderHero() {
   const el = document.getElementById('hero-stats');
-  if (!el) return;
-  const stats = getPlatformStats();
-  el.innerHTML = `
-    <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES REGISTRADOS</div></div>
-    <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS JUGADOS</div></div>
-    <div class="h-stat"><div class="h-stat-n">${stats.goles}</div><div class="h-stat-l">GOLES ANOTADOS</div></div>
-    <div class="h-stat"><div class="h-stat-n">${stats.mvps}</div><div class="h-stat-l">MVP OTORGADOS</div></div>
-  `;
+  if (el) {
+    const stats = getPlatformStats();
+    el.innerHTML = `
+      <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES</div></div>
+      <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS</div></div>
+      <div class="h-stat"><div class="h-stat-n">${stats.goles}</div><div class="h-stat-l">GOLES</div></div>
+      <div class="h-stat"><div class="h-stat-n">${stats.mvps}</div><div class="h-stat-l">MVP OTORGADOS</div></div>
+    `;
+  }
+  const top = getGeneralRanking()[0];
+  const ovrCard = document.getElementById('hero-float-ovr');
+  if (ovrCard) {
+    ovrCard.innerHTML = top
+      ? `<div class="hf-n">${top.ovr}</div><div class="hf-l">OVR MÁS ALTO</div>`
+      : `<div class="hf-n">--</div><div class="hf-l">SÉ EL PRIMERO</div>`;
+  }
+  const rankCard = document.getElementById('hero-float-rank');
+  if (rankCard) {
+    rankCard.innerHTML = top
+      ? `<div class="hf-l">TOP JUGADOR</div><div class="hf-n2">${top.name}</div>`
+      : `<div class="hf-l">TOP JUGADOR</div><div class="hf-n2">AÚN NADIE</div>`;
+  }
 }
 
 function guestPrompt(text) {

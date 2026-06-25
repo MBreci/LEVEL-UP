@@ -13,6 +13,11 @@
 <header>
   <div class="nav-top">
     <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <nav class="nav-modules">
+      <a class="nm-item nm-item-link on" href="#inicio">INICIO</a>
+      <a class="nm-item nm-item-link" href="#como-funciona">CÓMO FUNCIONA</a>
+      <a class="nm-item nm-item-link" href="#que-es">BENEFICIOS</a>
+    </nav>
     <div class="nav-right">
       <button class="btn-g" onclick="openAuth(false)">INICIAR SESIÓN</button>
       <button class="btn-p" onclick="openAuth(true)">CREAR PERFIL</button>
@@ -27,6 +32,8 @@
     <div class="hero-bg-smoke"></div>
     <div class="hero-bg-light"></div>
   </div>
+  <div class="hero-float hf-left" id="hero-float-ovr"></div>
+  <div class="hero-float hf-right" id="hero-float-rank"></div>
   <div class="hero-content">
     <div class="h-season">TEMPORADA BETA &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
     <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
@@ -35,11 +42,12 @@
       <span class="t2">COMPITE.</span>
       <span class="t3">ASCIENDE.</span>
     </div>
-    <div class="h-desc">La nueva era del fútbol amateur.</div>
+    <div class="h-desc">Transforma cada partido en una carrera deportiva digital.</div>
     <div class="h-btns">
       <button class="hb1" onclick="openAuth(true)">CREAR PERFIL</button>
       <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
     </div>
+    <div class="h-stats" id="hero-stats"></div>
   </div>
 </section>
 
@@ -50,15 +58,12 @@
   <div class="sec-hdr">
     <div class="sec-eyebrow">¿QUÉ ES LEVEL UP?</div>
   </div>
-  <div class="landing-card">
-    <p class="landing-text">Transforma cada partido en una carrera deportiva digital. Tu rendimiento genera:</p>
-    <div class="landing-pills">
-      <span class="landing-pill">OVR</span>
-      <span class="landing-pill">XP</span>
-      <span class="landing-pill">RANGOS</span>
-      <span class="landing-pill">RANKING</span>
-      <span class="landing-pill">LOGROS</span>
-    </div>
+  <div class="qe-grid">
+    <div class="qe-card"><div class="qe-icon">OVR</div><div class="qe-title">OVR</div><div class="qe-desc">Evalúa tu habilidad</div></div>
+    <div class="qe-card"><div class="qe-icon">XP</div><div class="qe-title">XP</div><div class="qe-desc">Gana experiencia en cada partido</div></div>
+    <div class="qe-card"><div class="qe-icon">⬡</div><div class="qe-title">RANGOS</div><div class="qe-desc">Sube de nivel y destaca</div></div>
+    <div class="qe-card"><div class="qe-icon">▲</div><div class="qe-title">RANKING</div><div class="qe-desc">Compite con los mejores</div></div>
+    <div class="qe-card"><div class="qe-icon">★</div><div class="qe-title">LOGROS</div><div class="qe-desc">Desbloquea recompensas</div></div>
   </div>
 </section>
 
@@ -70,10 +75,13 @@
     <div class="sec-eyebrow">CÓMO FUNCIONA</div>
   </div>
   <div class="how-grid">
-    <div class="how-step"><div class="how-n">1</div><div class="how-l">JUEGA</div></div>
-    <div class="how-step"><div class="how-n">2</div><div class="how-l">SÉ EVALUADO</div></div>
-    <div class="how-step"><div class="how-n">3</div><div class="how-l">MEJORA TU OVR</div></div>
-    <div class="how-step"><div class="how-n">4</div><div class="how-l">ESCALA POSICIONES</div></div>
+    <div class="how-step"><div class="how-n">1</div><div class="how-l">JUEGA</div><div class="how-sub">Disputa partidos y registra tu rendimiento.</div></div>
+    <div class="how-arrow">▶</div>
+    <div class="how-step"><div class="how-n">2</div><div class="how-l">SÉ EVALUADO</div><div class="how-sub">Nuestro sistema analiza tu desempeño.</div></div>
+    <div class="how-arrow">▶</div>
+    <div class="how-step"><div class="how-n">3</div><div class="how-l">MEJORA TU OVR</div><div class="how-sub">Aumenta tu nivel y hazte más fuerte.</div></div>
+    <div class="how-arrow">▶</div>
+    <div class="how-step"><div class="how-n">4</div><div class="how-l">ESCALA POSICIONES</div><div class="how-sub">Sube en el ranking y conviértete en leyenda.</div></div>
   </div>
 </section>
 
