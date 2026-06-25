@@ -77,17 +77,18 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 
 /* SECTION ATMOSPHERES (sec-cine wrapper shared by all "landing" blocks) */
 .sec-cine{position:relative;overflow:hidden}
-.sec-cine::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background-image:var(--noise);opacity:.04;mix-blend-mode:overlay}
+.sec-cine::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background-image:var(--noise);opacity:.05;mix-blend-mode:overlay}
 .sec-cine-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#03050c 0%,#020308 100%)}
-.sec-cine-scrim{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 55% 60% at 12% 90%,rgba(0,255,136,0.10),transparent 65%),radial-gradient(ellipse 50% 55% at 90% 10%,rgba(255,0,170,0.09),transparent 65%),linear-gradient(180deg,rgba(2,4,10,0.92) 0%,rgba(2,4,10,0.74) 30%,rgba(2,4,10,0.74) 70%,rgba(2,4,10,0.92) 100%);animation:smokeDrift 26s ease-in-out infinite alternate,smokeHue 18s linear infinite}
+.sec-cine-scrim{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 65% 75% at 8% 95%,rgba(0,255,136,0.22),transparent 60%),radial-gradient(ellipse 60% 70% at 95% 5%,rgba(255,0,170,0.20),transparent 60%),linear-gradient(180deg,rgba(2,4,10,0.85) 0%,rgba(2,4,10,0.55) 30%,rgba(2,4,10,0.55) 70%,rgba(2,4,10,0.92) 100%);animation:smokeDrift 26s ease-in-out infinite alternate,smokeHue 18s linear infinite}
+.sec-cine-smoke{position:absolute;inset:-15%;z-index:0;pointer-events:none;background:radial-gradient(ellipse 50% 55% at 12% 75%,rgba(0,255,136,0.30),transparent 65%),radial-gradient(ellipse 45% 50% at 88% 25%,rgba(255,0,170,0.26),transparent 65%),radial-gradient(circle at 20% 30%,rgba(0,255,136,0.5) 0,transparent 2px),radial-gradient(circle at 75% 70%,rgba(255,0,170,0.45) 0,transparent 2px),radial-gradient(circle at 50% 15%,rgba(255,255,255,0.15) 0,transparent 1.5px);background-size:auto,auto,520px 520px,480px 480px,560px 560px;mix-blend-mode:screen;opacity:.9;will-change:transform,filter,background-position;animation:smokeDrift 24s ease-in-out infinite alternate,smokeHue 16s linear infinite,particleFloatA 48s linear infinite}
 .sec-cine>.sec-hdr,.sec-cine>.landing-card,.sec-cine>.how-grid,.sec-cine>.qe-grid{position:relative;z-index:2}
 
 /* ¿QUÉ ES LEVEL UP? — "Neon Mist": black mist + drifting green/magenta particles */
 #que-es.sec-cine .sec-cine-bg{background:radial-gradient(circle at 15% 30%,rgba(0,255,136,0.4) 0,transparent 2px),radial-gradient(circle at 75% 65%,rgba(255,0,170,0.35) 0,transparent 2px),radial-gradient(circle at 45% 80%,rgba(0,255,136,0.3) 0,transparent 1.5px),radial-gradient(circle at 90% 20%,rgba(255,255,255,0.18) 0,transparent 1.5px),radial-gradient(circle at 30% 55%,rgba(255,0,170,0.25) 0,transparent 1.5px),linear-gradient(180deg,#04060d 0%,#020308 100%);background-size:520px 520px,460px 460px,600px 600px,540px 540px,480px 480px,auto;animation:particleFloatB 46s linear infinite}
 
 /* CÓMO FUNCIONA — "Digital Grid": magenta-leaning energy + side rim lights */
-#como-funciona.sec-cine .sec-cine-bg{background:radial-gradient(ellipse 55% 70% at 0% 50%,rgba(255,0,170,0.12),transparent 65%),radial-gradient(ellipse 55% 70% at 100% 50%,rgba(0,255,136,0.10),transparent 65%),linear-gradient(180deg,#04060d 0%,#020308 100%);animation:beamSweep 28s ease-in-out infinite alternate}
-@media(prefers-reduced-motion:reduce){.sec-cine-scrim,#que-es.sec-cine .sec-cine-bg,#como-funciona.sec-cine .sec-cine-bg,.sec-cine::after{animation:none!important}}
+#como-funciona.sec-cine .sec-cine-bg{background:radial-gradient(ellipse 60% 75% at 0% 50%,rgba(255,0,170,0.20),transparent 60%),radial-gradient(ellipse 60% 75% at 100% 50%,rgba(0,255,136,0.18),transparent 60%),linear-gradient(180deg,#04060d 0%,#020308 100%);animation:beamSweep 28s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.sec-cine-scrim,.sec-cine-smoke,#que-es.sec-cine .sec-cine-bg,#como-funciona.sec-cine .sec-cine-bg,.sec-cine::after{animation:none!important}}
 
 /* PAGE BANNER (sub-páginas) — "Neon Mist", same universe, lighter footprint */
 .page-banner{position:relative;overflow:hidden;padding:140px 64px 40px;border-bottom:var(--b1);background:linear-gradient(180deg,#03050b 0%,#020308 100%)}
@@ -174,7 +175,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .sec-eyebrow::before{content:'';width:28px;height:0.5px;background:var(--g);box-shadow:0 0 6px var(--g)}
 
 /* CARTA */
-.card-section{display:grid;grid-template-columns:340px 1fr;gap:64px;align-items:start}
+.card-section{display:flex;justify-content:center;align-items:start}
 .photo-process{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:36px;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:10px;padding:48px 40px 56px}
 .photo-process-img{width:100%;max-width:1240px;height:auto;border-radius:10px;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
 .photo-process-text{max-width:780px;text-align:center}
@@ -593,7 +594,6 @@ footer{padding:48px 64px;border-top:var(--b1)}
 @media(max-width:900px){
   .nav-modules{display:none}
   section{padding:40px 20px}
-  .card-section{grid-template-columns:1fr}
   .hist-row{grid-template-columns:1fr 1fr;row-gap:6px}
   .wip-grid{grid-template-columns:1fr 1fr}
   footer{padding:32px 20px}
