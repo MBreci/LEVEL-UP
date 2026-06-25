@@ -24,8 +24,8 @@ body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;
 
 /* NAV */
 header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0.92);backdrop-filter:blur(16px);border-bottom:var(--b1)}
-.nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px}
-.logo-img{height:44px;cursor:pointer;display:block}
+.nav-top{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:72px}
+.logo-img{height:58px;cursor:pointer;display:block}
 .nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto;scrollbar-width:none}
 .nav-modules::-webkit-scrollbar{display:none}
 .nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,222,250,0.65);text-shadow:0 0 6px rgba(180,200,240,0.15);cursor:pointer;transition:color .2s,transform .2s,text-shadow .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
@@ -50,7 +50,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .btn-p:hover{box-shadow:0 0 32px rgba(0,255,136,0.75);transform:translateY(-2px) scale(1.03)}
 
 /* HERO */
-.hero{position:relative;min-height:88vh;display:flex;align-items:center;justify-content:center;padding-top:98px;overflow:hidden;background:#02040a}
+.hero{position:relative;min-height:88vh;display:flex;align-items:center;justify-content:center;padding-top:110px;overflow:hidden;background:#02040a}
 .hero-bg{position:absolute;inset:-4%;z-index:0;will-change:transform;pointer-events:none}
 .hero-bg-img{position:absolute;inset:0;background-image:url(assets/bg-hero-stadium.jpg);background-image:image-set(url(assets/bg-hero-stadium.webp) type('image/webp'),url(assets/bg-hero-stadium.jpg) type('image/jpeg'));background-size:cover;background-position:center 38%;filter:brightness(.5) saturate(.85) contrast(1.05);transform:scale(1.06)}
 .hero-bg-smoke{position:absolute;inset:0;background:radial-gradient(ellipse 75% 45% at 50% 105%,rgba(255,255,255,0.07),transparent 70%),radial-gradient(ellipse 40% 30% at 15% 20%,rgba(255,255,255,0.04),transparent 70%);mix-blend-mode:screen;opacity:.65;will-change:transform}
@@ -67,14 +67,14 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 #como-funciona.sec-cine .sec-cine-bg{background-image:url(assets/bg-competitivo-aerea.jpg);background-image:image-set(url(assets/bg-competitivo-aerea.webp) type('image/webp'),url(assets/bg-competitivo-aerea.jpg) type('image/jpeg'))}
 
 /* PAGE BANNER (sub-páginas) */
-.page-banner{padding:128px 64px 40px;border-bottom:var(--b1);background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.06),transparent 60%)}
+.page-banner{padding:140px 64px 40px;border-bottom:var(--b1);background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.06),transparent 60%)}
 .page-banner-eyebrow{font-family:var(--ft);font-size:9px;letter-spacing:4px;color:var(--g);margin-bottom:10px}
 .page-banner-title{font-family:var(--ft);font-weight:900;font-size:clamp(26px,4vw,42px);color:var(--w);letter-spacing:1px}
 .page-banner-desc{margin-top:10px;font-size:13px;color:var(--tm);max-width:560px;font-weight:300;line-height:1.6}
-@media(max-width:900px){.page-banner{padding:108px 20px 28px}}
+@media(max-width:900px){.page-banner{padding:120px 20px 28px}}
 
 /* TICKER */
-.ticker{position:fixed;top:60px;left:0;right:0;z-index:4500;background:rgba(2,4,8,0.96);border-bottom:var(--b1);padding:9px 32px;display:flex;align-items:center;gap:20px;overflow:hidden}
+.ticker{position:fixed;top:72px;left:0;right:0;z-index:4500;background:rgba(2,4,8,0.96);border-bottom:var(--b1);padding:9px 32px;display:flex;align-items:center;gap:20px;overflow:hidden}
 .tk-pill{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-right:18px;border-right:var(--b1)}
 .tk-dot{width:6px;height:6px;border-radius:50%;background:#ff3333;animation:tdot 1.2s infinite}
 @keyframes tdot{0%,100%{box-shadow:0 0 4px #ff3333}50%{box-shadow:0 0 12px #ff3333}}
@@ -136,12 +136,12 @@ section{padding:64px;border-bottom:var(--b1)}
 
 /* CARTA */
 .card-section{display:grid;grid-template-columns:340px 1fr;gap:64px;align-items:start}
-.photo-process{margin-top:48px;display:grid;grid-template-columns:140px 1fr;gap:28px;align-items:center;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:6px;padding:22px 28px}
-.photo-process-img{width:140px;height:auto;border-radius:6px;filter:drop-shadow(0 0 18px rgba(0,255,136,0.15))}
-.photo-process-tag{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--g);margin-bottom:8px}
-.photo-process-title{font-family:var(--ft);font-size:13px;letter-spacing:0.5px;color:var(--w);margin-bottom:8px}
-.photo-process-text p{font-family:var(--fb);font-size:12px;line-height:1.6;color:var(--tm)}
-@media (max-width:680px){.photo-process{grid-template-columns:1fr;text-align:center}.photo-process-img{margin:0 auto}}
+.photo-process{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:36px;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:10px;padding:48px 40px 56px}
+.photo-process-img{width:100%;max-width:1240px;height:auto;border-radius:10px;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
+.photo-process-text{max-width:780px;text-align:center}
+.photo-process-tag{font-family:var(--ft);font-size:11px;letter-spacing:3px;color:var(--g);margin-bottom:12px}
+.photo-process-title{font-family:var(--ft);font-size:clamp(20px,3vw,28px);letter-spacing:0.5px;color:var(--w);margin-bottom:14px}
+.photo-process-text p{font-family:var(--fb);font-size:16px;line-height:1.7;color:var(--tm)}
 
 /* ===== ULTRA CARD ===== */
 .fifa{
