@@ -126,6 +126,19 @@
       <input class="auth-input" type="password" id="login-password" placeholder="Tu contraseña" maxlength="40">
       <div class="auth-error" id="login-error"></div>
       <button class="auth-submit" id="login-submit" onclick="submitLogin()">INICIAR SESIÓN</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></div>
+    </div>
+
+    <div id="auth-reset" style="display:none">
+      <div class="auth-label">NOMBRE O APODO</div>
+      <input class="auth-input" id="reset-id" placeholder="Ej: Miguel Breci o Lobo" maxlength="24">
+      <div class="auth-label">NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+      <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password-confirm" placeholder="Repite tu nueva contraseña" maxlength="40">
+      <div class="auth-error" id="reset-error"></div>
+      <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
     </div>
 
     <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">CANCELAR</button>

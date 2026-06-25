@@ -57,6 +57,8 @@
   <div class="sec-cine-scrim"></div>
   <div class="sec-hdr">
     <div class="sec-eyebrow">¿QUÉ ES LEVEL UP?</div>
+    <div class="sec-title">TU CARRERA DEPORTIVA, GAMIFICADA</div>
+    <div class="sec-desc">LEVEL UP convierte cada partido que juegas en datos reales: tu nivel general (OVR), tu experiencia (XP), tu rango y tu posición en el ranking. Así medimos tu progreso dentro de la plataforma.</div>
   </div>
   <div class="qe-grid">
     <div class="qe-card"><div class="qe-icon">OVR</div><div class="qe-title">OVR</div><div class="qe-desc">Evalúa tu habilidad</div></div>
@@ -73,6 +75,8 @@
   <div class="sec-cine-scrim"></div>
   <div class="sec-hdr">
     <div class="sec-eyebrow">CÓMO FUNCIONA</div>
+    <div class="sec-title">DE LA CANCHA A TU PERFIL</div>
+    <div class="sec-desc">Cuatro pasos simples convierten tu desempeño en cancha en una progresión deportiva digital que puedes seguir partido a partido.</div>
   </div>
   <div class="how-grid">
     <div class="how-step"><div class="how-n">1</div><div class="how-l">JUEGA</div><div class="how-sub">Disputa partidos y registra tu rendimiento.</div></div>
@@ -178,6 +182,19 @@
       <input class="auth-input" type="password" id="login-password" placeholder="Tu contraseña" maxlength="40">
       <div class="auth-error" id="login-error"></div>
       <button class="auth-submit" id="login-submit" onclick="submitLogin()">INICIAR SESIÓN</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></div>
+    </div>
+
+    <div id="auth-reset" style="display:none">
+      <div class="auth-label">NOMBRE O APODO</div>
+      <input class="auth-input" id="reset-id" placeholder="Ej: Miguel Breci o Lobo" maxlength="24">
+      <div class="auth-label">NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+      <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password-confirm" placeholder="Repite tu nueva contraseña" maxlength="40">
+      <div class="auth-error" id="reset-error"></div>
+      <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
     </div>
 
     <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">CANCELAR</button>

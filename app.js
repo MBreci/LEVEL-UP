@@ -626,6 +626,7 @@ function switchAuthTab(tab) {
   document.getElementById('tab-existing').classList.toggle('on', tab === 'existing');
   document.getElementById('auth-new').style.display = tab === 'new' ? 'block' : 'none';
   document.getElementById('auth-existing').style.display = tab === 'existing' ? 'block' : 'none';
+  document.getElementById('auth-reset').style.display = 'none';
 }
 
 function normalizeId(text) {
@@ -674,6 +675,61 @@ async function submitLogin() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'INICIAR SESIÓN';
+  }
+}
+
+function showResetPassword() {
+  document.getElementById('auth-existing').style.display = 'none';
+  document.getElementById('auth-reset').style.display = 'block';
+}
+
+function backToLogin() {
+  document.getElementById('auth-reset').style.display = 'none';
+  document.getElementById('auth-existing').style.display = 'block';
+}
+
+async function submitResetPassword() {
+  const identifier = document.getElementById('reset-id').value;
+  const password = document.getElementById('reset-password').value;
+  const passwordConfirm = document.getElementById('reset-password-confirm').value;
+  const errorEl = document.getElementById('reset-error');
+  const btn = document.getElementById('reset-submit');
+  if (!identifier.trim()) {
+    errorEl.textContent = 'Escribe el nombre o apodo de tu cuenta.';
+    return;
+  }
+  if (!isPasswordMediumStrength(password)) {
+    errorEl.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.';
+    return;
+  }
+  if (password !== passwordConfirm) {
+    errorEl.textContent = 'Las contraseñas no coinciden.';
+    return;
+  }
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'ACTUALIZANDO...';
+  try {
+    const profile = await findProfileByIdentifier(identifier);
+    if (!profile) {
+      errorEl.textContent = 'No encontramos ninguna cuenta con ese nombre o apodo.';
+      return;
+    }
+    profile.passwordHash = await hashPassword(password);
+    profiles[profile.id] = profile;
+    saveProfiles();
+    pushProfileToCloud(profile);
+    document.getElementById('reset-id').value = '';
+    document.getElementById('reset-password').value = '';
+    document.getElementById('reset-password-confirm').value = '';
+    backToLogin();
+    document.getElementById('login-id').value = identifier.trim();
+    document.getElementById('login-error').textContent = '';
+    errorEl.textContent = '';
+    alert('Tu contraseña fue actualizada. Ya puedes iniciar sesión con tu nueva contraseña.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ACTUALIZAR CONTRASEÑA';
   }
 }
 
