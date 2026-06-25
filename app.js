@@ -43,6 +43,7 @@ const WIP_MODULES = [
 const PROFILES_KEY = 'levelup_profiles';
 const CURRENT_KEY = 'levelup_current_profile';
 const MATCHES_KEY = 'levelup_open_matches';
+const INVITES_KEY = 'levelup_invites';
 
 async function hashPassword(password) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
@@ -116,14 +117,23 @@ function getNextRank(xp) {
   return RANKS.find(r => r.min > xp) || null;
 }
 
+const PAGE_HREFS = {
+  carta: 'carta.html',
+  historial: 'carta.html#historial',
+  ranking: 'ranking.html',
+  notificaciones: 'notificaciones.html',
+  'buscar-partido': 'buscar-partido.html',
+};
+
 function renderNav() {
   const nav = document.getElementById('nav-modules');
+  if (!nav) return;
   nav.innerHTML = '';
   FUNCTIONAL_MODULES.forEach(m => {
-    const el = document.createElement('div');
-    el.className = 'nm-item';
+    const el = document.createElement('a');
+    el.className = 'nm-item nm-item-link';
     el.textContent = m.label;
-    el.onclick = () => goTo(m.id);
+    el.href = PAGE_HREFS[m.id] || '#';
     nav.appendChild(el);
   });
   WIP_MODULES.slice(0, 6).forEach(m => {
@@ -146,8 +156,10 @@ function getPlatformStats() {
 }
 
 function renderHero() {
+  const el = document.getElementById('hero-stats');
+  if (!el) return;
   const stats = getPlatformStats();
-  document.getElementById('hero-stats').innerHTML = `
+  el.innerHTML = `
     <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES REGISTRADOS</div></div>
     <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS JUGADOS</div></div>
     <div class="h-stat"><div class="h-stat-n">${stats.goles}</div><div class="h-stat-l">GOLES ANOTADOS</div></div>
@@ -156,9 +168,10 @@ function renderHero() {
 }
 
 function renderCard() {
+  const card = document.getElementById('fifa-card');
+  if (!card) return;
   const rank = getRank(state.xp);
   const a = state.attrs;
-  const card = document.getElementById('fifa-card');
   const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
   const tier = rank.name.toLowerCase();
   card.className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
@@ -193,7 +206,9 @@ function renderCard() {
   const pct = next ? Math.min(100, Math.round(((state.xp - prevMin) / (nextMin - prevMin)) * 100)) : 100;
   const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
 
-  document.getElementById('player-info').innerHTML = `
+  const piEl = document.getElementById('player-info');
+  if (!piEl) return;
+  piEl.innerHTML = `
     <div class="pi-name">${state.name} ${state.nickname ? `<span class="pi-nick" onclick="editNickname()">"${state.nickname}" ✎</span>` : `<span class="pi-nick pi-nick-add" onclick="editNickname()">+ AGREGAR APODO</span>`}</div>
     <div class="pi-sub">${state.position} · ${state.team}</div>
     <div class="pi-tags">
@@ -224,6 +239,7 @@ function renderCard() {
 
 function renderHistory() {
   const el = document.getElementById('hist-list');
+  if (!el) return;
   if (!state.history.length) {
     el.innerHTML = `<div class="notif-empty">Aún no tienes partidos. Pulsa "JUGAR PARTIDO" para crear tu primer historial.</div>`;
     return;
@@ -253,8 +269,10 @@ function getGeneralRanking() {
 }
 
 function renderRanking() {
+  const el = document.getElementById('rk-panel');
+  if (!el) return;
   const list = getGeneralRanking();
-  document.getElementById('rk-panel').innerHTML = list.map((p, i) => `
+  el.innerHTML = list.map((p, i) => `
     <div class="rk-row ${p.id === 'me' ? 'me' : ''}">
       <div class="rk-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
       <div class="rk-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
@@ -265,22 +283,39 @@ function renderRanking() {
 }
 
 function renderNotifications() {
-  document.getElementById('notif-count').textContent = state.notifications.length;
+  const myInvites = state ? getMyInvites() : [];
+  const countEl = document.getElementById('notif-count');
+  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length;
   const el = document.getElementById('notif-list');
-  if (!state.notifications.length) {
+  if (!el) return;
+  if (!state.notifications.length && !myInvites.length) {
     el.innerHTML = `<div class="notif-empty">No tienes notificaciones.</div>`;
     return;
   }
-  el.innerHTML = state.notifications.slice().reverse().map(n => `
+  const inviteRows = myInvites.slice().reverse().map(inv => `
+    <div class="notif-invite">
+      <div class="notif-invite-txt">⚽ <strong>${inv.fromName}</strong> te invitó a su partido en ${inv.zona} — ${inv.fecha}</div>
+      ${inv.status === 'pendiente'
+        ? `<div class="notif-invite-actions">
+            <button class="notif-accept" onclick="respondInvite('${inv.id}',true)">ACEPTAR</button>
+            <button class="notif-reject" onclick="respondInvite('${inv.id}',false)">RECHAZAR</button>
+          </div>`
+        : `<div class="notif-invite-status">${inv.status === 'aceptada' ? '✓ ACEPTASTE ESTA INVITACIÓN' : '✕ RECHAZASTE ESTA INVITACIÓN'}</div>`}
+    </div>
+  `).join('');
+  const normalRows = state.notifications.slice().reverse().map(n => `
     <div class="notif-row">
       <div class="notif-icon">${n.icon}</div>
       <div><div class="notif-txt">${n.text}</div><div class="notif-time">${n.time}</div></div>
     </div>
   `).join('');
+  el.innerHTML = inviteRows + normalRows;
 }
 
 function renderWipGrid() {
-  document.getElementById('wip-grid').innerHTML = WIP_MODULES.map(m => `
+  const el = document.getElementById('wip-grid');
+  if (!el) return;
+  el.innerHTML = WIP_MODULES.map(m => `
     <div class="wip-tile" onclick="openWip('${m.name}')">
       <div class="wip-tile-stripes"></div>
       <div class="wip-tile-icon">${m.icon}</div>
@@ -301,18 +336,32 @@ function renderAll() {
   renderBuscarPartido();
   renderTicker();
   const btn = document.getElementById('profile-btn');
-  if (btn && state) btn.textContent = state.name.split(' ')[0];
-  document.getElementById('logout-btn').style.display = state ? 'inline-block' : 'none';
+  if (btn) btn.textContent = state ? (state.nickname || state.name).split(' ')[0] : 'PERFIL';
 }
+
+function toggleDropdown(id) {
+  document.querySelectorAll('.dropdown-menu.open').forEach(d => { if (d.id !== id) d.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dropdown-wrap')) {
+    document.querySelectorAll('.dropdown-menu.open').forEach(d => d.classList.remove('open'));
+  }
+});
 
 function logout() {
   state = null;
   localStorage.removeItem(CURRENT_KEY);
-  document.getElementById('logout-btn').style.display = 'none';
-  document.getElementById('profile-btn').textContent = 'PERFIL';
-  openAuth(true);
+  document.querySelectorAll('.dropdown-menu.open').forEach(d => d.classList.remove('open'));
+  renderNav();
+  renderHero();
+  renderWipGrid();
   renderBuscarPartido();
   renderTicker();
+  const btn = document.getElementById('profile-btn');
+  if (btn) btn.textContent = 'PERFIL';
+  openAuth(true);
 }
 
 function goTo(id) {
@@ -332,20 +381,25 @@ function addNotification(icon, text) {
 }
 
 function simularPartido() {
-  const outcomes = [
-    { label: 'VICTORIA', w: 3 },
-    { label: 'EMPATE', w: 2 },
-    { label: 'DERROTA', w: 1 },
-  ];
-  const pick = outcomes[Math.floor(Math.random() * outcomes.length)];
-  const golesFav = Math.floor(Math.random() * 4) + (pick.label === 'VICTORIA' ? 2 : 0);
-  const golesRiv = pick.label === 'DERROTA' ? golesFav + Math.ceil(Math.random() * 2) : Math.max(0, golesFav - (pick.label === 'VICTORIA' ? Math.ceil(Math.random()*2) : 0));
+  if (!state) { openAuth(true); return; }
+  document.getElementById('sim-result-modal').classList.add('open');
+}
+
+function closeSimResult() {
+  document.getElementById('sim-result-modal').classList.remove('open');
+}
+
+function registrarResultado(resultado) {
+  closeSimResult();
+  const golesFav = Math.floor(Math.random() * 4) + (resultado === 'VICTORIA' ? 2 : 0);
+  const golesRiv = resultado === 'DERROTA' ? golesFav + Math.ceil(Math.random() * 2) : resultado === 'EMPATE' ? golesFav : Math.max(0, golesFav - Math.ceil(Math.random() * 2));
   const goals = Math.floor(Math.random() * 3);
   const assists = Math.floor(Math.random() * 2);
   const isMvp = Math.random() < 0.25;
-  const ovrDelta = isMvp ? (Math.random() < 0.8 ? 1 : 2) : (pick.label === 'DERROTA' ? (Math.random() < 0.3 ? -1 : 0) : (Math.random() < 0.5 ? 1 : 0));
+  const ovrDelta = isMvp ? (Math.random() < 0.8 ? 1 : 2) : (resultado === 'DERROTA' ? (Math.random() < 0.3 ? -1 : 0) : (Math.random() < 0.5 ? 1 : 0));
 
   let xpGain = 50 + goals * 80 + assists * 60;
+  if (resultado === 'VICTORIA') xpGain += 100;
   if (isMvp) xpGain += 200;
 
   state.matches += 1;
@@ -358,7 +412,7 @@ function simularPartido() {
   const prevRank = getRank(state.xp - xpGain).name;
   const newRank = getRank(state.xp).name;
 
-  const resultLabel = `${pick.label} ${golesFav}-${golesRiv}`;
+  const resultLabel = `${resultado} ${golesFav}-${golesRiv}`;
   state.history.push({
     date: new Date().toLocaleDateString('es-CO'),
     result: resultLabel,
@@ -391,7 +445,7 @@ function showPostMatch({ resultLabel, ovrDelta, xpGain, isMvp, achievement }) {
 
 function closePostMatch() {
   document.getElementById('post-match-modal').classList.remove('open');
-  goTo('carta');
+  location.href = 'carta.html';
 }
 
 /* ===== AUTH / PERFILES ===== */
@@ -595,6 +649,8 @@ function joinMatchRequest(matchId, pos) {
 
 function renderBuscarPartido() {
   const list = document.getElementById('bp-list');
+  if (!list) return;
+  renderMyMatches();
   if (openMatches.length === 0) {
     list.innerHTML = `<div class="bp-empty">Aún no hay búsquedas activas. Publica la tuya y otros jugadores podrán unirse para completar tu equipo.</div>`;
     return;
@@ -622,6 +678,110 @@ function renderBuscarPartido() {
   `).join('');
 }
 
+/* ===== INVITACIONES (jugadores ya registrados en este dispositivo) ===== */
+
+function loadInvites() {
+  try { return JSON.parse(localStorage.getItem(INVITES_KEY)) || []; } catch { return []; }
+}
+function saveInvites() {
+  localStorage.setItem(INVITES_KEY, JSON.stringify(invites));
+}
+
+let invites = loadInvites();
+
+function getMyInvites() {
+  return invites.filter(i => i.toId === state.id);
+}
+
+function renderMyMatches() {
+  const el = document.getElementById('my-matches');
+  if (!el) return;
+  if (!state) { el.innerHTML = ''; return; }
+  const mine = openMatches.filter(m => m.creatorId === state.id);
+  if (!mine.length) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = mine.map(m => {
+    const myInvites = invites.filter(i => i.matchId === m.id);
+    return `
+      <div class="mm-card">
+        <div class="mm-info">
+          <div class="mm-zona">${m.zona}${m.cancha ? ' · ' + m.cancha : ''} — ${m.fecha}</div>
+          <div>FÚTBOL ${m.formato} · ${m.superficie}</div>
+          ${myInvites.length ? `<div class="mm-confirmados">${myInvites.map(i => `<span class="mm-confirm-chip ${i.status}">${i.toName} · ${i.status}</span>`).join('')}</div>` : ''}
+        </div>
+        <button class="mm-invite-btn" onclick="openInviteModal('${m.id}')">+ INVITAR JUGADORES</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openInviteModal(matchId) {
+  const match = openMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const others = Object.values(profiles).filter(p => p.id !== state.id);
+  const alreadyInvited = new Set(invites.filter(i => i.matchId === matchId).map(i => i.toId));
+  const available = others.filter(p => !alreadyInvited.has(p.id));
+  document.getElementById('invite-content').innerHTML = `
+    <div class="invite-title">INVITAR JUGADORES</div>
+    <div class="invite-sub">${match.zona} — ${match.fecha}. Por ahora solo puedes invitar perfiles creados en este mismo dispositivo. Cuando conectemos LEVEL UP a un servidor compartido podrás invitar a cualquier jugador real.</div>
+    <div class="invite-list" id="invite-list">
+      ${available.length
+        ? available.map(p => `<label class="invite-row"><input type="checkbox" value="${p.id}"> ${p.nickname || p.name} (${p.position})</label>`).join('')
+        : `<div class="invite-empty">No hay más perfiles disponibles para invitar en este dispositivo.</div>`}
+    </div>
+    <button class="invite-submit" onclick="submitInvites('${matchId}')">ENVIAR INVITACIONES</button>
+    <button class="invite-cancel" onclick="closeInviteModal()">CANCELAR</button>
+  `;
+  document.getElementById('invite-modal').classList.add('open');
+}
+
+function closeInviteModal() {
+  document.getElementById('invite-modal').classList.remove('open');
+}
+
+function submitInvites(matchId) {
+  const match = openMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const checked = document.querySelectorAll('#invite-list input[type=checkbox]:checked');
+  checked.forEach(cb => {
+    const toProfile = profiles[cb.value];
+    if (!toProfile) return;
+    invites.push({
+      id: 'inv_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      matchId,
+      zona: match.zona,
+      fecha: match.fecha,
+      fromId: state.id,
+      fromName: state.nickname || state.name,
+      toId: toProfile.id,
+      toName: toProfile.nickname || toProfile.name,
+      status: 'pendiente',
+    });
+  });
+  saveInvites();
+  closeInviteModal();
+  renderMyMatches();
+}
+
+function respondInvite(inviteId, accept) {
+  const invite = invites.find(i => i.id === inviteId);
+  if (!invite) return;
+  invite.status = accept ? 'aceptada' : 'rechazada';
+  saveInvites();
+  const fromProfile = profiles[invite.fromId];
+  if (fromProfile) {
+    fromProfile.notifications.push({
+      icon: accept ? '✅' : '❌',
+      text: `${state.nickname || state.name} ${accept ? 'aceptó' : 'rechazó'} tu invitación al partido en ${invite.zona} — ${invite.fecha}.`,
+      time: 'AHORA',
+    });
+    saveProfiles();
+  }
+  renderNotifications();
+}
+
 function renderTicker() {
   const items = [];
   openMatches.filter(m => m.estado === 'abierto').forEach(m => {
@@ -640,18 +800,28 @@ function renderTicker() {
     );
   }
   const feed = items.concat(items).join('');
-  document.getElementById('ticker-inner').innerHTML = feed;
+  const el = document.getElementById('ticker-inner');
+  if (el) el.innerHTML = feed;
 }
 
 function initApp() {
   if (!loadCurrentProfile()) {
     openAuth(true);
+    renderNav();
+    renderHero();
+    renderWipGrid();
     renderBuscarPartido();
     renderTicker();
   } else {
     renderAll();
   }
-  document.getElementById('profile-btn').onclick = () => openAuth(false);
+  const profileBtn = document.getElementById('profile-btn');
+  if (profileBtn) profileBtn.onclick = () => toggleDropdown('account-dropdown');
+
+  if (location.hash === '#crear') {
+    const form = document.getElementById('bp-form');
+    if (form) form.style.display = 'block';
+  }
 }
 
 initApp();

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LEVEL UP</title>
+<title>Buscar Partido · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -42,31 +42,73 @@
   <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
 </div>
 
-<!-- HERO -->
-<section class="hero" id="inicio">
-  <div class="hero-content">
-    <div class="h-season">TEMPORADA PILOTO &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
-    <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
-    <div class="h-title">
-      <span class="t1">JUEGA.</span>
-      <span class="t2">COMPITE.</span>
-      <span class="t3">ASCIENDE.</span>
-    </div>
-    <div class="h-desc">Tu identidad deportiva digital. Cada partido cambia tu carta: sube tu OVR, gana XP, escala de rango y conviértete en una figura reconocida del ranking general.</div>
-    <div class="h-btns">
-      <button class="hb1" onclick="simularPartido()">SIMULAR PARTIDO</button>
-      <button class="hb2" onclick="location.href='carta.html'">VER MI CARTA</button>
-    </div>
-    <div class="h-stats" id="hero-stats"></div>
-  </div>
-</section>
+<div class="page-banner">
+  <div class="page-banner-eyebrow">05 · ENCUENTRA TU PARTIDO</div>
+  <div class="page-banner-title">BUSCAR PARTIDO</div>
+  <div class="page-banner-desc">Publica tu búsqueda de jugadores, únete a partidos abiertos o invita a jugadores de LEVEL UP a tu partido.</div>
+</div>
 
-<!-- PRÓXIMAMENTE -->
-<section id="proximamente">
+<!-- BUSCAR PARTIDO -->
+<section id="buscar-partido">
   <div class="sec-hdr">
-    <div class="sec-eyebrow">PRÓXIMAMENTE EN LEVEL UP</div>
+    <div class="sec-eyebrow">CREAR PARTIDO</div>
+    <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
   </div>
-  <div class="wip-grid" id="wip-grid"></div>
+  <div class="bp-form" id="bp-form" style="display:none">
+    <div class="auth-label">ZONA DE BOGOTÁ</div>
+    <select class="auth-input" id="bp-zona">
+      <option>Chapinero</option>
+      <option>Usaquén</option>
+      <option>Suba</option>
+      <option>Engativá</option>
+      <option>Kennedy</option>
+      <option>Teusaquillo</option>
+      <option>Fontibón</option>
+      <option>Ciudad Bolívar</option>
+      <option>Bosa</option>
+      <option>Santa Fe</option>
+    </select>
+    <div class="auth-label">CANCHA / SEDE (OPCIONAL)</div>
+    <input class="auth-input" id="bp-cancha" placeholder="Ej: Cancha El Salitre" maxlength="30">
+    <div class="auth-label">FORMATO</div>
+    <select class="auth-input" id="bp-formato">
+      <option value="5">FÚTBOL 5</option>
+      <option value="6">FÚTBOL 6</option>
+      <option value="7">FÚTBOL 7</option>
+      <option value="8">FÚTBOL 8</option>
+      <option value="11">FÚTBOL 11</option>
+    </select>
+    <div class="auth-label">TIPO DE CANCHA</div>
+    <select class="auth-input" id="bp-superficie">
+      <option value="SINTÉTICO">SINTÉTICO — Pasto artificial</option>
+      <option value="CEMENTO">CEMENTO — Canchas duras de barrio</option>
+      <option value="NATURAL">NATURAL — Pasto real</option>
+      <option value="COLISEO">COLISEO — Cubierto</option>
+    </select>
+    <div class="auth-label">FECHA Y HORA</div>
+    <input class="auth-input" id="bp-fecha" placeholder="Ej: Sábado 28 jun, 5:00pm" maxlength="30">
+    <div class="auth-label">POSICIONES QUE FALTAN</div>
+    <div class="bp-pos-grid" id="bp-pos-grid">
+      <label class="bp-pos-chip"><input type="checkbox" value="DEL"> DEL <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="MED"> MED <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="DEF"> DEF <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <label class="bp-pos-chip"><input type="checkbox" value="POR"> POR <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+    </div>
+    <div class="auth-error" id="bp-error"></div>
+    <button class="auth-submit" onclick="submitMatchRequest()">PUBLICAR BÚSQUEDA</button>
+  </div>
+
+  <div id="invitar">
+    <div class="sec-hdr">
+      <div class="sec-eyebrow">MIS PARTIDOS · INVITAR JUGADORES</div>
+    </div>
+    <div class="my-matches" id="my-matches"></div>
+  </div>
+
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">PARTIDOS REGISTRADOS</div>
+  </div>
+  <div class="bp-list" id="bp-list"></div>
 </section>
 
 <footer>
@@ -79,23 +121,9 @@
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
 </footer>
 
-<!-- MODAL RESULTADO DE PARTIDO -->
-<div class="modal-overlay" id="sim-result-modal">
-  <div class="sim-card">
-    <div class="sim-label">REGISTRAR RESULTADO</div>
-    <div class="sim-title">¿CÓMO TERMINÓ TU PARTIDO?</div>
-    <div class="sim-opts">
-      <button class="sim-opt win" onclick="registrarResultado('VICTORIA')">VICTORIA</button>
-      <button class="sim-opt draw" onclick="registrarResultado('EMPATE')">EMPATE</button>
-      <button class="sim-opt loss" onclick="registrarResultado('DERROTA')">DERROTA</button>
-    </div>
-    <button class="sim-cancel" onclick="closeSimResult()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL POST-PARTIDO -->
-<div class="modal-overlay" id="post-match-modal">
-  <div class="post-match-card" id="post-match-content"></div>
+<!-- MODAL INVITAR JUGADORES -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="invite-card" id="invite-content"></div>
 </div>
 
 <!-- MODAL TRABAJO EN PROGRESO -->

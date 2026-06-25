@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LEVEL UP</title>
+<title>Notificaciones · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -42,31 +42,15 @@
   <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
 </div>
 
-<!-- HERO -->
-<section class="hero" id="inicio">
-  <div class="hero-content">
-    <div class="h-season">TEMPORADA PILOTO &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
-    <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
-    <div class="h-title">
-      <span class="t1">JUEGA.</span>
-      <span class="t2">COMPITE.</span>
-      <span class="t3">ASCIENDE.</span>
-    </div>
-    <div class="h-desc">Tu identidad deportiva digital. Cada partido cambia tu carta: sube tu OVR, gana XP, escala de rango y conviértete en una figura reconocida del ranking general.</div>
-    <div class="h-btns">
-      <button class="hb1" onclick="simularPartido()">SIMULAR PARTIDO</button>
-      <button class="hb2" onclick="location.href='carta.html'">VER MI CARTA</button>
-    </div>
-    <div class="h-stats" id="hero-stats"></div>
-  </div>
-</section>
+<div class="page-banner">
+  <div class="page-banner-eyebrow">04 · ACTIVIDAD</div>
+  <div class="page-banner-title">NOTIFICACIONES</div>
+  <div class="page-banner-desc">Actualizaciones de tu carta e invitaciones a partidos de otros jugadores.</div>
+</div>
 
-<!-- PRÓXIMAMENTE -->
-<section id="proximamente">
-  <div class="sec-hdr">
-    <div class="sec-eyebrow">PRÓXIMAMENTE EN LEVEL UP</div>
-  </div>
-  <div class="wip-grid" id="wip-grid"></div>
+<!-- NOTIFICACIONES -->
+<section id="notificaciones">
+  <div class="notif-list" id="notif-list"></div>
 </section>
 
 <footer>
@@ -78,25 +62,6 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
 </footer>
-
-<!-- MODAL RESULTADO DE PARTIDO -->
-<div class="modal-overlay" id="sim-result-modal">
-  <div class="sim-card">
-    <div class="sim-label">REGISTRAR RESULTADO</div>
-    <div class="sim-title">¿CÓMO TERMINÓ TU PARTIDO?</div>
-    <div class="sim-opts">
-      <button class="sim-opt win" onclick="registrarResultado('VICTORIA')">VICTORIA</button>
-      <button class="sim-opt draw" onclick="registrarResultado('EMPATE')">EMPATE</button>
-      <button class="sim-opt loss" onclick="registrarResultado('DERROTA')">DERROTA</button>
-    </div>
-    <button class="sim-cancel" onclick="closeSimResult()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL POST-PARTIDO -->
-<div class="modal-overlay" id="post-match-modal">
-  <div class="post-match-card" id="post-match-content"></div>
-</div>
 
 <!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
