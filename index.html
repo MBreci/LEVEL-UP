@@ -9,38 +9,16 @@
 </head>
 <body>
 
-<!-- NAV -->
+<!-- NAV (SOLO INVITADO) -->
 <header>
   <div class="nav-top">
     <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
-    <nav class="nav-modules" id="nav-modules"></nav>
     <div class="nav-right">
-      <div class="season-badge">TEMPORADA PILOTO</div>
-      <a class="btn-g" href="notificaciones.html">🔔 <span id="notif-count">0</span></a>
-      <div class="dropdown-wrap">
-        <button class="btn-g" id="profile-btn">PERFIL</button>
-        <div class="dropdown-menu" id="account-dropdown">
-          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
-          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
-        </div>
-      </div>
-      <div class="dropdown-wrap">
-        <button class="btn-p" onclick="toggleDropdown('jugar-dropdown')">JUGAR PARTIDO ▾</button>
-        <div class="dropdown-menu" id="jugar-dropdown">
-          <a class="dropdown-item" href="buscar-partido.html">BUSCAR PARTIDOS REGISTRADOS<span class="dropdown-item-sub">Únete a un partido ya publicado</span></a>
-          <a class="dropdown-item" href="buscar-partido.html#crear">CREAR PARTIDO<span class="dropdown-item-sub">Publica tu búsqueda de jugadores</span></a>
-          <a class="dropdown-item" href="buscar-partido.html#invitar">INVITAR JUGADORES<span class="dropdown-item-sub">Invita perfiles de este dispositivo</span></a>
-        </div>
-      </div>
+      <button class="btn-g" onclick="openAuth(false)">INICIAR SESIÓN</button>
+      <button class="btn-p" onclick="openAuth(true)">CREAR PERFIL</button>
     </div>
   </div>
 </header>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="tk-pill"><div class="tk-dot"></div><div class="tk-lbl">ACTIVIDAD</div></div>
-  <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
-</div>
 
 <!-- HERO -->
 <section class="hero" id="inicio">
@@ -52,21 +30,75 @@
       <span class="t2">COMPITE.</span>
       <span class="t3">ASCIENDE.</span>
     </div>
-    <div class="h-desc">Tu identidad deportiva digital. Cada partido cambia tu carta: sube tu OVR, gana XP, escala de rango y conviértete en una figura reconocida del ranking general.</div>
+    <div class="h-desc">La nueva era del fútbol amateur.</div>
     <div class="h-btns">
-      <button class="hb1" onclick="simularPartido()">SIMULAR PARTIDO</button>
-      <button class="hb2" onclick="location.href='carta.html'">VER MI CARTA</button>
+      <button class="hb1" onclick="openAuth(true)">CREAR PERFIL</button>
+      <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
     </div>
-    <div class="h-stats" id="hero-stats"></div>
   </div>
 </section>
 
-<!-- PRÓXIMAMENTE -->
-<section id="proximamente">
+<!-- QUÉ ES LEVEL UP -->
+<section id="que-es">
   <div class="sec-hdr">
-    <div class="sec-eyebrow">PRÓXIMAMENTE EN LEVEL UP</div>
+    <div class="sec-eyebrow">¿QUÉ ES LEVEL UP?</div>
   </div>
-  <div class="wip-grid" id="wip-grid"></div>
+  <div class="landing-card">
+    <p class="landing-text">Transforma cada partido en una carrera deportiva digital. Tu rendimiento genera:</p>
+    <div class="landing-pills">
+      <span class="landing-pill">OVR</span>
+      <span class="landing-pill">XP</span>
+      <span class="landing-pill">RANGOS</span>
+      <span class="landing-pill">RANKING</span>
+      <span class="landing-pill">LOGROS</span>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="como-funciona">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">CÓMO FUNCIONA</div>
+  </div>
+  <div class="how-grid">
+    <div class="how-step"><div class="how-n">1</div><div class="how-l">JUEGA</div></div>
+    <div class="how-step"><div class="how-n">2</div><div class="how-l">SÉ EVALUADO</div></div>
+    <div class="how-step"><div class="how-n">3</div><div class="how-l">MEJORA TU OVR</div></div>
+    <div class="how-step"><div class="how-n">4</div><div class="how-l">ESCALA POSICIONES</div></div>
+  </div>
+</section>
+
+<!-- VISTA PREVIA DE CARTA -->
+<section id="preview-carta">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">VISTA PREVIA · FICHA DEL JUGADOR</div>
+  </div>
+  <div class="card-section">
+    <div class="fifa rk-elite epic">
+      <div class="fc-shine"></div>
+      <div class="fc-sparks"></div>
+      <span class="fc-corner tl"></span>
+      <span class="fc-corner tr"></span>
+      <span class="fc-corner bl"></span>
+      <span class="fc-corner br"></span>
+      <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
+      <div class="fc-head">
+        <div><div class="fc-ovr">88</div><div class="fc-pos">DEL</div></div>
+        <div class="fc-rank">ELITE</div>
+      </div>
+      <div class="fc-player"><div class="fc-spotlight"></div><div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">EJEMPLO DE FICHA</span></div></div>
+      <div class="fc-namebar"><div class="fc-name">JUGADOR EJEMPLO <span class="fc-nick">"CRACK"</span></div></div>
+      <div class="fc-attrs">
+        <div class="fca"><div class="fca-v">88</div><div class="fca-l">PAC</div></div>
+        <div class="fca"><div class="fca-v">85</div><div class="fca-l">SHO</div></div>
+        <div class="fca"><div class="fca-v">80</div><div class="fca-l">PAS</div></div>
+        <div class="fca"><div class="fca-v">86</div><div class="fca-l">DRI</div></div>
+        <div class="fca"><div class="fca-v">70</div><div class="fca-l">DEF</div></div>
+        <div class="fca"><div class="fca-v">82</div><div class="fca-l">FIS</div></div>
+      </div>
+      <div class="fc-foot"><div class="fc-team">EQUIPO EJEMPLO</div></div>
+    </div>
+  </div>
 </section>
 
 <footer>
@@ -78,38 +110,6 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
 </footer>
-
-<!-- MODAL RESULTADO DE PARTIDO -->
-<div class="modal-overlay" id="sim-result-modal">
-  <div class="sim-card">
-    <div class="sim-label">REGISTRAR RESULTADO</div>
-    <div class="sim-title">¿CÓMO TERMINÓ TU PARTIDO?</div>
-    <div class="sim-opts">
-      <button class="sim-opt win" onclick="registrarResultado('VICTORIA')">VICTORIA</button>
-      <button class="sim-opt draw" onclick="registrarResultado('EMPATE')">EMPATE</button>
-      <button class="sim-opt loss" onclick="registrarResultado('DERROTA')">DERROTA</button>
-    </div>
-    <button class="sim-cancel" onclick="closeSimResult()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL POST-PARTIDO -->
-<div class="modal-overlay" id="post-match-modal">
-  <div class="post-match-card" id="post-match-content"></div>
-</div>
-
-<!-- MODAL TRABAJO EN PROGRESO -->
-<div class="modal-overlay" id="wip-modal">
-  <div class="wip-card">
-    <div class="tape tape-top"></div>
-    <div class="wip-icon">🚧</div>
-    <div class="wip-title" id="wip-modal-title">MÓDULO</div>
-    <div class="wip-sub">TRABAJO EN PROGRESO</div>
-    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
-    <button class="wip-close" onclick="closeWip()">CERRAR</button>
-    <div class="tape tape-bottom"></div>
-  </div>
-</div>
 
 <!-- MODAL REGISTRO / PERFILES -->
 <div class="modal-overlay" id="auth-modal">

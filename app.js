@@ -12,11 +12,11 @@ const RANKS = [
 ];
 
 const FUNCTIONAL_MODULES = [
-  { id: 'carta', label: 'MI CARTA' },
-  { id: 'historial', label: 'HISTORIAL' },
+  { id: 'ficha', label: 'MI FICHA' },
   { id: 'ranking', label: 'RANKING' },
-  { id: 'notificaciones', label: 'NOTIFICACIONES' },
-  { id: 'buscar-partido', label: 'BUSCAR PARTIDO' },
+  { id: 'historial', label: 'HISTORIAL' },
+  { id: 'partidos', label: 'PARTIDOS' },
+  { id: 'temporada', label: 'TEMPORADA PILOTO' },
 ];
 
 const WIP_MODULES = [
@@ -65,6 +65,8 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     passwordHash,
     ovr: 60,
     xp: 0,
+    lp: 0,
+    lastUpdate: null,
     matches: 0,
     goals: 0,
     assists: 0,
@@ -118,31 +120,26 @@ function getNextRank(xp) {
 }
 
 const PAGE_HREFS = {
-  carta: 'carta.html',
-  historial: 'carta.html#historial',
+  ficha: 'carta.html',
   ranking: 'ranking.html',
-  notificaciones: 'notificaciones.html',
-  'buscar-partido': 'buscar-partido.html',
+  historial: 'carta.html#historial',
+  partidos: 'buscar-partido.html',
+  temporada: 'temporada-piloto.html',
 };
-
-const GUEST_VISIBLE_MODULES = ['ranking', 'buscar-partido'];
 
 function renderNav() {
   const nav = document.getElementById('nav-modules');
   if (!nav) return;
   nav.innerHTML = '';
-  FUNCTIONAL_MODULES.filter(m => state || GUEST_VISIBLE_MODULES.includes(m.id)).forEach(m => {
+  if (!state) return;
+  const page = location.pathname.split('/').pop() || 'index.html';
+  FUNCTIONAL_MODULES.forEach(m => {
+    const href = PAGE_HREFS[m.id] || '#';
     const el = document.createElement('a');
     el.className = 'nm-item nm-item-link';
+    if (href.split('#')[0] === page) el.classList.add('on');
     el.textContent = m.label;
-    el.href = PAGE_HREFS[m.id] || '#';
-    nav.appendChild(el);
-  });
-  WIP_MODULES.slice(0, 6).forEach(m => {
-    const el = document.createElement('div');
-    el.className = 'nm-item';
-    el.innerHTML = `${m.name} <span class="nm-lock">🔒</span>`;
-    el.onclick = () => openWip(m.name);
+    el.href = href;
     nav.appendChild(el);
   });
 }
@@ -371,6 +368,50 @@ function renderAll() {
   renderBuscarPartido();
   renderTicker();
   updateProfileBtn();
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const el = document.getElementById('dash-content');
+  if (!el || !state) return;
+  const rank = getRank(state.xp);
+  const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
+  const lu = state.lastUpdate;
+  const nextMatch = openMatches.find(m => m.creatorId === state.id && m.estado === 'abierto');
+  const recentNotifs = state.notifications.slice(-3).reverse();
+  el.innerHTML = `
+    <div class="dash-welcome">BIENVENIDO DE NUEVO, ${(state.nickname || state.name).split(' ')[0]}</div>
+    <div class="dash-top-stats">
+      <div class="dash-stat"><div class="dash-stat-v">${state.ovr}</div><div class="dash-stat-l">OVR</div></div>
+      <div class="dash-stat"><div class="dash-stat-v">${rank.name}</div><div class="dash-stat-l">RANGO</div></div>
+      <div class="dash-stat"><div class="dash-stat-v">${state.xp}</div><div class="dash-stat-l">XP</div></div>
+      <div class="dash-stat"><div class="dash-stat-v">${state.lp || 0}</div><div class="dash-stat-l">LP</div></div>
+    </div>
+    ${lu ? `
+    <div class="dash-card">
+      <div class="dash-card-title">ÚLTIMA ACTUALIZACIÓN</div>
+      <div class="dash-update-row">
+        <span>OVR ${lu.ovrDelta >= 0 ? '+' : ''}${lu.ovrDelta}</span>
+        <span>XP +${lu.xpGain}</span>
+        <span>LP +${lu.lpGain}</span>
+      </div>
+    </div>` : ''}
+    <div class="dash-card">
+      <div class="dash-card-title">PRÓXIMO PARTIDO</div>
+      ${nextMatch ? `
+        <div class="dash-match-info">${nextMatch.zona}${nextMatch.cancha ? ' · ' + nextMatch.cancha : ''} — ${nextMatch.fecha}</div>
+        <button class="dash-btn" onclick="location.href='buscar-partido.html'">VER PARTIDO</button>
+      ` : `<div class="dash-empty">No tienes búsquedas activas. Publica una en "PARTIDOS".</div>`}
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">RANKING</div>
+      <div class="dash-rank-pos">TU POSICIÓN ACTUAL: #${rankPos}</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-title">ACTIVIDAD RECIENTE</div>
+      ${recentNotifs.length ? recentNotifs.map(n => `<div class="dash-activity-row">${n.icon} ${n.text}</div>`).join('') : `<div class="dash-empty">Sin actividad reciente.</div>`}
+    </div>
+  `;
 }
 
 function toggleDropdown(id) {
@@ -388,7 +429,7 @@ function logout() {
   state = null;
   localStorage.removeItem(CURRENT_KEY);
   document.querySelectorAll('.dropdown-menu.open').forEach(d => d.classList.remove('open'));
-  renderAll();
+  location.href = 'index.html';
 }
 
 function goTo(id) {
@@ -429,12 +470,16 @@ function registrarResultado(resultado) {
   if (resultado === 'VICTORIA') xpGain += 100;
   if (isMvp) xpGain += 200;
 
+  const lpGain = resultado === 'VICTORIA' ? 25 : resultado === 'EMPATE' ? 10 : 5;
+
   state.matches += 1;
   state.goals += goals;
   state.assists += assists;
   if (isMvp) state.mvps += 1;
   state.ovr = Math.max(40, Math.min(99, state.ovr + ovrDelta));
   state.xp += xpGain;
+  state.lp = (state.lp || 0) + lpGain;
+  state.lastUpdate = { ovrDelta, xpGain, lpGain };
 
   const prevRank = getRank(state.xp - xpGain).name;
   const newRank = getRank(state.xp).name;
@@ -454,15 +499,16 @@ function registrarResultado(resultado) {
 
   saveState();
   renderAll();
-  showPostMatch({ resultLabel, ovrDelta, xpGain, isMvp, achievement: newRank !== prevRank ? `Nuevo rango desbloqueado: ${newRank}` : null });
+  showPostMatch({ resultLabel, ovrDelta, xpGain, lpGain, isMvp, achievement: newRank !== prevRank ? `Nuevo rango desbloqueado: ${newRank}` : null });
 }
 
-function showPostMatch({ resultLabel, ovrDelta, xpGain, isMvp, achievement }) {
+function showPostMatch({ resultLabel, ovrDelta, xpGain, lpGain, isMvp, achievement }) {
   document.getElementById('post-match-content').innerHTML = `
     <div class="pm-label">ACTUALIZACIÓN POST-PARTIDO</div>
     <div class="pm-result">${resultLabel}</div>
     <div class="pm-stat"><div class="pm-stat-l">OVR</div><div class="pm-stat-v">${ovrDelta >= 0 ? '+' : ''}${ovrDelta}</div></div>
     <div class="pm-stat"><div class="pm-stat-l">XP GANADO</div><div class="pm-stat-v">+${xpGain}</div></div>
+    <div class="pm-stat"><div class="pm-stat-l">LP GANADO</div><div class="pm-stat-v">+${lpGain}</div></div>
     ${isMvp ? `<div class="pm-mvp">★ MVP DEL PARTIDO</div>` : ''}
     ${achievement ? `<div class="pm-achievement">🏆 ${achievement}</div>` : ''}
     <button class="pm-close" onclick="closePostMatch()">VER MI CARTA</button>
@@ -533,6 +579,7 @@ async function selectProfile(id) {
   errorEl.textContent = '';
   setCurrentProfile(id);
   closeAuth();
+  if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
   renderAll();
 }
 
@@ -574,6 +621,7 @@ async function submitNewProfile() {
   saveProfiles();
   setCurrentProfile(profile.id);
   closeAuth();
+  if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
   renderAll();
 }
 
@@ -586,8 +634,9 @@ function editNickname() {
   renderAll();
 }
 
-function openAuth() {
-  switchAuthTab(Object.keys(profiles).length ? 'existing' : 'new');
+function openAuth(forceNew) {
+  if (forceNew) switchAuthTab('new');
+  else switchAuthTab(Object.keys(profiles).length ? 'existing' : 'new');
   document.getElementById('auth-modal').classList.add('open');
 }
 
@@ -841,6 +890,10 @@ function renderTicker() {
 
 function initApp() {
   loadCurrentProfile();
+  const page = location.pathname.split('/').pop() || 'index.html';
+  if (!state && page !== 'index.html') { location.href = 'index.html'; return; }
+  if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
+
   renderAll();
 
   const fechaInput = document.getElementById('bp-fecha-date');

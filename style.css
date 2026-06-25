@@ -28,9 +28,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .logo-img{height:44px;cursor:pointer;display:block}
 .nav-modules{display:flex;align-items:center;gap:2px;flex:1;padding:0 24px;overflow-x:auto;scrollbar-width:none}
 .nav-modules::-webkit-scrollbar{display:none}
-.nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--tm);cursor:pointer;transition:color .2s,transform .2s,text-shadow .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
-.nm-item:hover{transform:translateY(-1px);text-shadow:0 0 10px rgba(0,255,136,0.6)}
-.nm-item:hover{color:var(--g)}
+.nm-item{position:relative;padding:8px 12px;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,222,250,0.65);text-shadow:0 0 6px rgba(180,200,240,0.15);cursor:pointer;transition:color .2s,transform .2s,text-shadow .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nm-item:hover{transform:translateY(-1px);text-shadow:0 0 12px rgba(0,255,136,0.7);color:var(--g)}
+.nm-item.on{color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.55)}
+.nm-item.on::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--g);box-shadow:0 0 8px var(--g)}
 .nm-lock{font-size:9px;color:var(--o)}
 .nav-right{display:flex;align-items:center;gap:10px}
 .nm-item-link{text-decoration:none}
@@ -418,6 +419,38 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .guest-prompt-btn{font-family:var(--ft);font-size:9px;letter-spacing:2px;padding:12px 24px;background:var(--g);color:#000;border:0;cursor:pointer}
 .guest-prompt-btn:hover{opacity:0.85}
 
+/* DASHBOARD */
+.dash-wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.dash-welcome{font-family:var(--ft);font-size:18px;letter-spacing:1px;color:var(--w)}
+.dash-top-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.dash-stat{border:var(--b1);background:rgba(255,255,255,0.02);padding:16px;text-align:center}
+.dash-stat-v{font-family:var(--ft);font-size:22px;color:var(--g);font-weight:700}
+.dash-stat-l{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--tm);margin-top:6px}
+.dash-card{border:var(--b1);background:rgba(255,255,255,0.02);padding:20px}
+.dash-card-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--g);margin-bottom:12px}
+.dash-update-row{display:flex;gap:24px;font-family:var(--ft);font-size:13px;color:var(--w)}
+.dash-match-info{font-size:13px;color:var(--t);margin-bottom:14px}
+.dash-btn{font-family:var(--ft);font-size:9px;letter-spacing:2px;padding:10px 20px;background:var(--g);color:#000;border:0;cursor:pointer}
+.dash-rank-pos{font-family:var(--ft);font-size:14px;color:var(--w)}
+.dash-activity-row{font-size:13px;color:var(--tm);padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.05)}
+.dash-activity-row:last-child{border-bottom:none}
+.dash-empty{color:var(--td);font-size:13px;font-weight:300}
+
+/* LANDING (GUEST) */
+.landing-card{max-width:640px;margin:0 auto;text-align:center}
+.landing-text{font-size:14px;color:var(--tm);font-weight:300;line-height:1.7;margin-bottom:18px}
+.landing-pills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.landing-pill{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--g);border:0.5px solid rgba(0,255,136,0.3);padding:8px 16px;background:rgba(0,255,136,0.05)}
+.how-grid{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.how-step{border:var(--b1);background:rgba(255,255,255,0.02);padding:24px 12px;text-align:center}
+.how-n{font-family:var(--ft);font-size:24px;color:var(--g);font-weight:900;margin-bottom:8px}
+.how-l{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--t)}
+
+/* TEMPORADA PILOTO */
+.tp-card{max-width:760px;margin:0 auto 24px;border:var(--b1);background:rgba(255,255,255,0.02);padding:24px}
+.tp-title{font-family:var(--ft);font-size:11px;letter-spacing:2px;color:var(--g);margin-bottom:12px}
+.tp-text{font-size:13px;color:var(--tm);font-weight:300;line-height:1.7}
+
 @media(max-width:900px){
   .nav-modules{display:none}
   section{padding:40px 20px}
@@ -425,4 +458,6 @@ footer{padding:48px 64px;border-top:var(--b1)}
   .hist-row{grid-template-columns:1fr 1fr;row-gap:6px}
   .wip-grid{grid-template-columns:1fr 1fr}
   footer{padding:32px 20px}
+  .dash-top-stats{grid-template-columns:1fr 1fr}
+  .how-grid{grid-template-columns:1fr 1fr}
 }

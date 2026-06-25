@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ranking General · LEVEL UP</title>
+<title>Dashboard · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -45,14 +45,16 @@
 </div>
 
 <div class="page-banner">
-  <div class="page-banner-eyebrow">03 · COMPETENCIA</div>
-  <div class="page-banner-title">RANKING GENERAL</div>
-  <div class="page-banner-desc">Así se ven todos los jugadores registrados en LEVEL UP, ordenados por OVR.</div>
+  <div class="page-banner-eyebrow">00 · TU CENTRO DE CONTROL</div>
+  <div class="page-banner-title">DASHBOARD</div>
+  <div class="page-banner-desc">Tu progreso, tu próximo partido y tu ranking, en un solo lugar.</div>
 </div>
 
-<!-- RANKING GENERAL -->
-<section id="ranking">
-  <div class="rk-panel" id="rk-panel"></div>
+<section id="dashboard">
+  <div class="dash-wrap" id="dash-content"></div>
+  <div style="max-width:760px;margin:24px auto 0;text-align:center">
+    <button class="hb1" onclick="simularPartido()">SIMULAR PARTIDO</button>
+  </div>
 </section>
 
 <footer>
@@ -64,6 +66,25 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
 </footer>
+
+<!-- MODAL RESULTADO DE PARTIDO -->
+<div class="modal-overlay" id="sim-result-modal">
+  <div class="sim-card">
+    <div class="sim-label">REGISTRAR RESULTADO</div>
+    <div class="sim-title">¿CÓMO TERMINÓ TU PARTIDO?</div>
+    <div class="sim-opts">
+      <button class="sim-opt win" onclick="registrarResultado('VICTORIA')">VICTORIA</button>
+      <button class="sim-opt draw" onclick="registrarResultado('EMPATE')">EMPATE</button>
+      <button class="sim-opt loss" onclick="registrarResultado('DERROTA')">DERROTA</button>
+    </div>
+    <button class="sim-cancel" onclick="closeSimResult()">CANCELAR</button>
+  </div>
+</div>
+
+<!-- MODAL POST-PARTIDO -->
+<div class="modal-overlay" id="post-match-modal">
+  <div class="post-match-card" id="post-match-content"></div>
+</div>
 
 <!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
