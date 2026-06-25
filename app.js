@@ -45,6 +45,54 @@ const CURRENT_KEY = 'levelup_current_profile';
 const MATCHES_KEY = 'levelup_open_matches';
 const INVITES_KEY = 'levelup_invites';
 
+/* ===== SUPABASE (perfiles compartidos entre jugadores) ===== */
+const SUPABASE_URL = 'https://vwihedjfxrilfdpmuzzu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2YSO3Wwkogd1Oa3V2zXl-Q_yad19S3_';
+const sb = (typeof window !== 'undefined' && window.supabase)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+function profileToRow(p) {
+  return {
+    id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
+    photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
+    last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
+    attrs: p.attrs, history: p.history, notifications: p.notifications,
+  };
+}
+
+function rowToProfile(r) {
+  return {
+    id: r.id, name: r.name, nickname: r.nickname, position: r.position, team: r.team,
+    photo: r.photo, passwordHash: r.password_hash, ovr: r.ovr, xp: r.xp, lp: r.lp,
+    lastUpdate: r.last_update, matches: r.matches, goals: r.goals, assists: r.assists, mvps: r.mvps,
+    attrs: r.attrs, history: r.history, notifications: r.notifications,
+  };
+}
+
+async function pushProfileToCloud(p) {
+  if (!sb) return;
+  const { error } = await sb.from('profiles').upsert(profileToRow(p));
+  if (error) console.error('Error guardando perfil en la nube:', error.message);
+}
+
+async function deleteProfileFromCloud(id) {
+  if (!sb) return;
+  const { error } = await sb.from('profiles').delete().eq('id', id);
+  if (error) console.error('Error borrando perfil en la nube:', error.message);
+}
+
+async function syncProfilesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('profiles').select('*');
+  if (error || !data) { console.error('Error sincronizando perfiles:', error && error.message); return; }
+  data.forEach(row => {
+    if (!state || row.id !== state.id) profiles[row.id] = rowToProfile(row);
+  });
+  saveProfiles();
+  renderAll();
+}
+
 async function hashPassword(password) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -98,6 +146,7 @@ function setCurrentProfile(id) {
 function saveState() {
   profiles[state.id] = state;
   saveProfiles();
+  pushProfileToCloud(state);
 }
 
 function loadCurrentProfile() {
@@ -626,6 +675,7 @@ async function selectProfile(id) {
 function deleteProfile(id) {
   delete profiles[id];
   saveProfiles();
+  deleteProfileFromCloud(id);
   if (state && state.id === id) {
     state = null;
     localStorage.removeItem(CURRENT_KEY);
@@ -659,6 +709,7 @@ async function submitNewProfile() {
   const profile = makeProfile({ name, position, team, nickname, passwordHash });
   profiles[profile.id] = profile;
   saveProfiles();
+  pushProfileToCloud(profile);
   setCurrentProfile(profile.id);
   closeAuth();
   if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
@@ -935,6 +986,7 @@ function initApp() {
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
 
   renderAll();
+  syncProfilesFromCloud();
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
