@@ -88,6 +88,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 
 /* CÓMO FUNCIONA — "Digital Grid": magenta-leaning energy + side rim lights */
 #como-funciona.sec-cine .sec-cine-bg{background:radial-gradient(ellipse 60% 75% at 0% 50%,rgba(255,0,170,0.20),transparent 60%),radial-gradient(ellipse 60% 75% at 100% 50%,rgba(0,255,136,0.18),transparent 60%),linear-gradient(180deg,#04060d 0%,#020308 100%);animation:beamSweep 28s ease-in-out infinite alternate}
+#como-funciona .sec-hdr{text-align:center;align-items:center}
+#como-funciona .sec-desc{max-width:560px}
 @media(prefers-reduced-motion:reduce){.sec-cine-scrim,.sec-cine-smoke,#que-es.sec-cine .sec-cine-bg,#como-funciona.sec-cine .sec-cine-bg,.sec-cine::after{animation:none!important}}
 
 /* PAGE BANNER (sub-páginas) — "Neon Mist", same universe, lighter footprint */
@@ -173,6 +175,9 @@ section{padding:64px;border-bottom:var(--b1)}
 .bp-tag-completo{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--gold);border:0.5px solid rgba(201,168,76,0.3);padding:3px 8px}
 .sec-eyebrow{display:flex;align-items:center;gap:14px;font-family:var(--ft);font-size:9px;letter-spacing:4px;color:var(--td)}
 .sec-eyebrow::before{content:'';width:28px;height:0.5px;background:var(--g);box-shadow:0 0 6px var(--g)}
+.sec-eyebrow.center{justify-content:center;gap:10px;color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.5)}
+.sec-eyebrow.center::before{display:none}
+.sec-eyebrow.center .ar{color:var(--f);font-size:8px;text-shadow:0 0 8px rgba(255,0,170,0.6)}
 
 /* CARTA */
 .card-section{display:flex;justify-content:center;align-items:start}
@@ -580,13 +585,16 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .how-step.g:hover{transform:translateY(-5px);border-color:rgba(0,255,136,0.5);box-shadow:0 14px 32px -10px rgba(0,255,136,0.35)}
 .how-step.f:hover{transform:translateY(-5px);border-color:rgba(255,0,170,0.5);box-shadow:0 14px 32px -10px rgba(255,0,170,0.35)}
 .how-n{width:26px;height:26px;margin:0 auto 8px;border-radius:50%;border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:11px;color:rgba(255,255,255,0.6);font-weight:900}
-.how-icon{position:relative;width:64px;height:64px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
-.how-icon::before{content:'';position:absolute;inset:0;border-radius:50%;z-index:0;filter:blur(2px)}
-.how-icon svg{position:relative;z-index:1;width:40px;height:40px}
+.how-icon{position:relative;width:64px;height:74px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.how-icon::before{content:'';position:absolute;top:0;left:0;right:0;height:64px;border-radius:50%;z-index:0;filter:blur(2px)}
+.how-icon svg{position:relative;z-index:1;width:40px;height:40px;margin-top:-8px}
+.how-floor{position:absolute;left:50%;bottom:0;width:80px;height:14px;transform:translateX(-50%);border-radius:50%;filter:blur(4px);z-index:0;pointer-events:none}
 .how-step.g .how-icon::before{background:radial-gradient(circle,rgba(0,255,136,0.35) 0%,rgba(0,255,136,0.08) 55%,transparent 75%)}
 .how-step.f .how-icon::before{background:radial-gradient(circle,rgba(255,0,170,0.35) 0%,rgba(255,0,170,0.08) 55%,transparent 75%)}
 .how-step.g .how-icon{color:var(--g);filter:drop-shadow(0 0 14px rgba(0,255,136,0.7))}
 .how-step.f .how-icon{color:var(--f);filter:drop-shadow(0 0 14px rgba(255,0,170,0.7))}
+.how-step.g .how-floor{background:radial-gradient(ellipse,rgba(0,255,136,0.55) 0%,transparent 75%)}
+.how-step.f .how-floor{background:radial-gradient(ellipse,rgba(255,0,170,0.55) 0%,transparent 75%)}
 .how-l{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--t)}
 .how-sub{font-size:10.5px;color:rgba(210,220,255,0.5);margin-top:6px;font-weight:300;line-height:1.4}
 .how-arrow{font-family:var(--ft);color:var(--f);font-size:16px;text-shadow:0 0 10px rgba(255,0,170,0.5)}
