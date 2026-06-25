@@ -125,11 +125,13 @@ const PAGE_HREFS = {
   'buscar-partido': 'buscar-partido.html',
 };
 
+const GUEST_VISIBLE_MODULES = ['ranking', 'buscar-partido'];
+
 function renderNav() {
   const nav = document.getElementById('nav-modules');
   if (!nav) return;
   nav.innerHTML = '';
-  FUNCTIONAL_MODULES.forEach(m => {
+  FUNCTIONAL_MODULES.filter(m => state || GUEST_VISIBLE_MODULES.includes(m.id)).forEach(m => {
     const el = document.createElement('a');
     el.className = 'nm-item nm-item-link';
     el.textContent = m.label;
@@ -167,9 +169,20 @@ function renderHero() {
   `;
 }
 
+function guestPrompt(text) {
+  return `<div class="guest-prompt"><div class="guest-prompt-text">${text}</div><button class="guest-prompt-btn" onclick="openAuth(false)">INICIAR SESIÓN</button></div>`;
+}
+
 function renderCard() {
   const card = document.getElementById('fifa-card');
   if (!card) return;
+  const piEl0 = document.getElementById('player-info');
+  if (!state) {
+    card.className = 'fifa rk-rookie';
+    card.innerHTML = '';
+    if (piEl0) piEl0.innerHTML = guestPrompt('Inicia sesión o crea tu perfil para ver tu carta de jugador.');
+    return;
+  }
   const rank = getRank(state.xp);
   const a = state.attrs;
   const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
@@ -240,6 +253,10 @@ function renderCard() {
 function renderHistory() {
   const el = document.getElementById('hist-list');
   if (!el) return;
+  if (!state) {
+    el.innerHTML = guestPrompt('Inicia sesión para ver tu historial de partidos.');
+    return;
+  }
   if (!state.history.length) {
     el.innerHTML = `<div class="notif-empty">Aún no tienes partidos. Pulsa "JUGAR PARTIDO" para crear tu primer historial.</div>`;
     return;
@@ -263,8 +280,8 @@ const MOCK_PLAYERS = [
 ];
 
 function getGeneralRanking() {
-  const me = { id: 'me', name: state.name, ovr: state.ovr, rank: getRank(state.xp).name };
-  const list = MOCK_PLAYERS.map(p => ({ ...p, rank: getRank(p.ovr * 130).name })).concat([me]);
+  const list = MOCK_PLAYERS.map(p => ({ ...p, rank: getRank(p.ovr * 130).name }));
+  if (state) list.push({ id: 'me', name: state.name, ovr: state.ovr, rank: getRank(state.xp).name });
   return list.sort((a, b) => b.ovr - a.ovr);
 }
 
@@ -283,8 +300,14 @@ function renderRanking() {
 }
 
 function renderNotifications() {
-  const myInvites = state ? getMyInvites() : [];
   const countEl = document.getElementById('notif-count');
+  if (!state) {
+    if (countEl) countEl.textContent = '0';
+    const el0 = document.getElementById('notif-list');
+    if (el0) el0.innerHTML = guestPrompt('Inicia sesión para ver tus notificaciones.');
+    return;
+  }
+  const myInvites = getMyInvites();
   if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length;
   const el = document.getElementById('notif-list');
   if (!el) return;
@@ -325,6 +348,18 @@ function renderWipGrid() {
   `).join('');
 }
 
+function updateProfileBtn() {
+  const btn = document.getElementById('profile-btn');
+  if (!btn) return;
+  if (state) {
+    btn.textContent = (state.nickname || state.name).split(' ')[0];
+    btn.onclick = () => toggleDropdown('account-dropdown');
+  } else {
+    btn.textContent = 'INICIAR SESIÓN';
+    btn.onclick = () => openAuth();
+  }
+}
+
 function renderAll() {
   renderNav();
   renderHero();
@@ -335,8 +370,7 @@ function renderAll() {
   renderWipGrid();
   renderBuscarPartido();
   renderTicker();
-  const btn = document.getElementById('profile-btn');
-  if (btn) btn.textContent = state ? (state.nickname || state.name).split(' ')[0] : 'PERFIL';
+  updateProfileBtn();
 }
 
 function toggleDropdown(id) {
@@ -354,14 +388,7 @@ function logout() {
   state = null;
   localStorage.removeItem(CURRENT_KEY);
   document.querySelectorAll('.dropdown-menu.open').forEach(d => d.classList.remove('open'));
-  renderNav();
-  renderHero();
-  renderWipGrid();
-  renderBuscarPartido();
-  renderTicker();
-  const btn = document.getElementById('profile-btn');
-  if (btn) btn.textContent = 'PERFIL';
-  openAuth(true);
+  renderAll();
 }
 
 function goTo(id) {
@@ -559,8 +586,7 @@ function editNickname() {
   renderAll();
 }
 
-function openAuth(forced) {
-  document.getElementById('auth-cancel').style.display = forced ? 'none' : 'block';
+function openAuth() {
   switchAuthTab(Object.keys(profiles).length ? 'existing' : 'new');
   document.getElementById('auth-modal').classList.add('open');
 }
@@ -581,6 +607,7 @@ function saveOpenMatches() {
 let openMatches = loadOpenMatches();
 
 function openMatchForm() {
+  if (!state) { openAuth(false); return; }
   const form = document.getElementById('bp-form');
   form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
@@ -696,7 +723,7 @@ function getMyInvites() {
 function renderMyMatches() {
   const el = document.getElementById('my-matches');
   if (!el) return;
-  if (!state) { el.innerHTML = ''; return; }
+  if (!state) { el.innerHTML = guestPrompt('Inicia sesión para crear partidos e invitar jugadores.'); return; }
   const mine = openMatches.filter(m => m.creatorId === state.id);
   if (!mine.length) {
     el.innerHTML = '';
@@ -805,20 +832,10 @@ function renderTicker() {
 }
 
 function initApp() {
-  if (!loadCurrentProfile()) {
-    openAuth(true);
-    renderNav();
-    renderHero();
-    renderWipGrid();
-    renderBuscarPartido();
-    renderTicker();
-  } else {
-    renderAll();
-  }
-  const profileBtn = document.getElementById('profile-btn');
-  if (profileBtn) profileBtn.onclick = () => toggleDropdown('account-dropdown');
+  loadCurrentProfile();
+  renderAll();
 
-  if (location.hash === '#crear') {
+  if (location.hash === '#crear' && state) {
     const form = document.getElementById('bp-form');
     if (form) form.style.display = 'block';
   }

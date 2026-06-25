@@ -412,6 +412,11 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .ft-desc{font-size:12px;color:var(--td);max-width:340px;line-height:1.7;font-weight:300}
 .ft-bottom{margin-top:32px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.18)}
 
+.guest-prompt{padding:48px 24px;text-align:center;border:var(--b1);background:rgba(255,255,255,0.02)}
+.guest-prompt-text{font-size:13px;color:var(--td);font-weight:300;margin-bottom:18px;max-width:360px;margin-left:auto;margin-right:auto;line-height:1.6}
+.guest-prompt-btn{font-family:var(--ft);font-size:9px;letter-spacing:2px;padding:12px 24px;background:var(--g);color:#000;border:0;cursor:pointer}
+.guest-prompt-btn:hover{opacity:0.85}
+
 @media(max-width:900px){
   .nav-modules{display:none}
   section{padding:40px 20px}
