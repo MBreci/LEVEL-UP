@@ -148,12 +148,16 @@ function renderHero() {
 function renderCard() {
   const rank = getRank(state.xp);
   const a = state.attrs;
-  document.getElementById('fifa-card').innerHTML = `
+  const card = document.getElementById('fifa-card');
+  card.className = 'fifa rk-' + rank.name.toLowerCase();
+  card.innerHTML = `
+    <div class="fc-shine"></div>
+    <div class="fc-crest">◆ LEVEL UP ◆</div>
     <div class="fc-head">
       <div><div class="fc-ovr">${state.ovr}</div><div class="fc-pos">${state.position}</div></div>
       <div class="fc-rank">${rank.name}</div>
     </div>
-    <div class="fc-player">${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA</span></div>`}</div>
+    <div class="fc-player"><div class="fc-spotlight"></div>${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA</span></div>`}</div>
     <div class="fc-namebar"><div class="fc-name">${state.name}${state.nickname ? ` <span class="fc-nick">"${state.nickname}"</span>` : ''}</div></div>
     <div class="fc-attrs">
       <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
