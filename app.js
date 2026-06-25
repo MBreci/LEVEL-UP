@@ -44,7 +44,16 @@ const PROFILES_KEY = 'levelup_profiles';
 const CURRENT_KEY = 'levelup_current_profile';
 const MATCHES_KEY = 'levelup_open_matches';
 
-function makeProfile({ name, position, team, nickname }) {
+async function hashPassword(password) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isPasswordMediumStrength(password) {
+  return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
+}
+
+function makeProfile({ name, position, team, nickname, passwordHash }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
@@ -52,6 +61,7 @@ function makeProfile({ name, position, team, nickname }) {
     position,
     team: team || 'SIN EQUIPO',
     photo: null,
+    passwordHash,
     ovr: 60,
     xp: 0,
     matches: 0,
@@ -292,6 +302,17 @@ function renderAll() {
   renderTicker();
   const btn = document.getElementById('profile-btn');
   if (btn && state) btn.textContent = state.name.split(' ')[0];
+  document.getElementById('logout-btn').style.display = state ? 'inline-block' : 'none';
+}
+
+function logout() {
+  state = null;
+  localStorage.removeItem(CURRENT_KEY);
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('profile-btn').textContent = 'PERFIL';
+  openAuth(true);
+  renderBuscarPartido();
+  renderTicker();
 }
 
 function goTo(id) {
@@ -416,7 +437,19 @@ function renderProfileList() {
   }).join('');
 }
 
-function selectProfile(id) {
+async function selectProfile(id) {
+  const profile = profiles[id];
+  const errorEl = document.getElementById('auth-error');
+  if (profile.passwordHash) {
+    const entered = prompt(`Contraseña de ${profile.name}:`);
+    if (entered === null) return;
+    const hash = await hashPassword(entered);
+    if (hash !== profile.passwordHash) {
+      errorEl.textContent = 'Contraseña incorrecta.';
+      return;
+    }
+  }
+  errorEl.textContent = '';
   setCurrentProfile(id);
   closeAuth();
   renderAll();
@@ -433,17 +466,29 @@ function deleteProfile(id) {
   if (!state) openAuth(true);
 }
 
-function submitNewProfile() {
+async function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const nickname = document.getElementById('auth-nickname').value.trim();
   const position = document.getElementById('auth-position').value;
   const team = document.getElementById('auth-team').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const passwordConfirm = document.getElementById('auth-password-confirm').value;
   const errorEl = document.getElementById('auth-error');
   if (!name) {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
     return;
   }
-  const profile = makeProfile({ name, position, team, nickname });
+  if (!isPasswordMediumStrength(password)) {
+    errorEl.textContent = 'La contraseña debe tener mínimo 6 caracteres, con letras y números.';
+    return;
+  }
+  if (password !== passwordConfirm) {
+    errorEl.textContent = 'Las contraseñas no coinciden.';
+    return;
+  }
+  errorEl.textContent = '';
+  const passwordHash = await hashPassword(password);
+  const profile = makeProfile({ name, position, team, nickname, passwordHash });
   profiles[profile.id] = profile;
   saveProfiles();
   setCurrentProfile(profile.id);

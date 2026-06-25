@@ -18,6 +18,7 @@
       <div class="season-badge">TEMPORADA PILOTO</div>
       <button class="btn-g" onclick="goTo('notificaciones')">🔔 <span id="notif-count">0</span></button>
       <button class="btn-g" id="profile-btn" onclick="openAuth()">PERFIL</button>
+      <button class="btn-g" id="logout-btn" onclick="logout()" style="display:none">CERRAR SESIÓN</button>
       <button class="btn-p" onclick="simularPartido()">JUGAR PARTIDO</button>
     </div>
   </div>
@@ -202,6 +203,10 @@
       </select>
       <div class="auth-label">EQUIPO (OPCIONAL)</div>
       <input class="auth-input" id="auth-team" placeholder="Ej: Halcones FC" maxlength="24">
+      <div class="auth-label">CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="auth-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+      <div class="auth-label">CONFIRMAR CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="auth-password-confirm" placeholder="Repite tu contraseña" maxlength="40">
       <div class="auth-error" id="auth-error"></div>
       <button class="auth-submit" onclick="submitNewProfile()">CREAR MI CARTA</button>
     </div>
