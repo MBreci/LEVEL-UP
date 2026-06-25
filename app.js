@@ -149,10 +149,17 @@ function renderCard() {
   const rank = getRank(state.xp);
   const a = state.attrs;
   const card = document.getElementById('fifa-card');
-  card.className = 'fifa rk-' + rank.name.toLowerCase();
+  const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
+  const tier = rank.name.toLowerCase();
+  card.className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
   card.innerHTML = `
     <div class="fc-shine"></div>
-    <div class="fc-crest">◆ LEVEL UP ◆</div>
+    ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
+    <span class="fc-corner tl"></span>
+    <span class="fc-corner tr"></span>
+    <span class="fc-corner bl"></span>
+    <span class="fc-corner br"></span>
+    <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
     <div class="fc-head">
       <div><div class="fc-ovr">${state.ovr}</div><div class="fc-pos">${state.position}</div></div>
       <div class="fc-rank">${rank.name}</div>

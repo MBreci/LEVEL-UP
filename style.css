@@ -174,6 +174,61 @@ section{padding:64px;border-bottom:var(--b1)}
 }
 @keyframes legacySpin{to{transform:rotate(360deg)}}
 
+/* CORNER ORNAMENTS (sutiles en marcos base, épicos en rival+) */
+.fc-corner{position:absolute;z-index:1;width:14px;height:14px;border:1px solid var(--rc);opacity:.4;pointer-events:none}
+.fc-corner.tl{top:14px;left:14px;border-width:1px 0 0 1px;border-radius:4px 0 0 0}
+.fc-corner.tr{top:14px;right:14px;border-width:1px 1px 0 0;border-radius:0 4px 0 0}
+.fc-corner.bl{bottom:14px;left:14px;border-width:0 0 1px 1px;border-radius:0 0 0 4px}
+.fc-corner.br{bottom:14px;right:14px;border-width:0 1px 1px 0;border-radius:0 0 4px 0}
+.fc-crest-orn{opacity:.6}
+
+/* ===== MARCOS ÉPICOS: RIVAL · ELITE · APEX · LEGACY ===== */
+.fifa.epic{
+  border-width:1.5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    inset 0 0 0 5px rgba(0,0,0,0.35),
+    inset 0 0 0 6px var(--rc),
+    0 0 60px -4px var(--rcglow),
+    0 50px 130px rgba(0,0,0,0.8);
+}
+.fifa.epic::before{inset:11px;opacity:.75;border-width:1.5px}
+.fifa.epic .fc-corner{width:26px;height:26px;opacity:.95;filter:drop-shadow(0 0 6px var(--rcglow))}
+.fifa.epic .fc-corner.tl{top:16px;left:16px;border-width:2px 0 0 2px}
+.fifa.epic .fc-corner.tr{top:16px;right:16px;border-width:2px 2px 0 0}
+.fifa.epic .fc-corner.bl{bottom:16px;left:16px;border-width:0 0 2px 2px}
+.fifa.epic .fc-corner.br{bottom:16px;right:16px;border-width:0 2px 2px 0}
+.fifa.epic .fc-corner::before{
+  content:'';position:absolute;width:5px;height:5px;background:var(--rc);box-shadow:0 0 8px var(--rcglow);border-radius:1px;
+}
+.fifa.epic .fc-corner.tl::before{top:-2px;left:-2px}
+.fifa.epic .fc-corner.tr::before{top:-2px;right:-2px}
+.fifa.epic .fc-corner.bl::before{bottom:-2px;left:-2px}
+.fifa.epic .fc-corner.br::before{bottom:-2px;right:-2px}
+.fifa.epic::after{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(45deg,var(--rcglow) 0,transparent 1.5px,transparent 9px);
+  opacity:.25;
+}
+.fifa.epic .fc-crest{font-size:10px;letter-spacing:5px;text-shadow:0 0 18px var(--rcglow),0 0 4px var(--rc)}
+.fifa.epic .fc-crest-orn{opacity:1;text-shadow:0 0 10px var(--rcglow)}
+.fifa.epic .fc-rank{box-shadow:0 0 16px -2px var(--rcglow),inset 0 0 8px -2px var(--rcglow);text-shadow:0 0 6px var(--rcglow)}
+.fifa.epic .fc-ovr{text-shadow:0 0 34px var(--rcglow),0 0 10px var(--rc)}
+.fifa.epic .fc-namebar{box-shadow:0 0 20px -6px var(--rcglow) inset}
+.fifa.epic .fc-sparks{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.fifa.epic .fc-sparks::before,.fifa.epic .fc-sparks::after{
+  content:'';position:absolute;width:3px;height:3px;border-radius:50%;background:var(--rc);
+  box-shadow:0 0 8px 2px var(--rcglow);animation:fcSpark 3.4s ease-in-out infinite;
+}
+.fifa.epic .fc-sparks::before{top:22%;left:18%;animation-delay:.2s}
+.fifa.epic .fc-sparks::after{top:68%;left:78%;animation-delay:1.6s}
+@keyframes fcSpark{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.3)}}
+
+.rk-rival.epic{box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06),inset 0 0 0 5px rgba(20,2,2,0.5),inset 0 0 0 6px var(--rc),0 0 60px -4px var(--rcglow),0 50px 130px rgba(0,0,0,0.8)}
+.rk-elite.epic{box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08),inset 0 0 0 5px rgba(30,22,4,0.5),inset 0 0 0 6px var(--rc),0 0 70px -2px var(--rcglow),0 50px 130px rgba(0,0,0,0.8)}
+.rk-apex.epic{box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12),inset 0 0 0 5px rgba(10,18,30,0.55),inset 0 0 0 6px var(--rc),0 0 80px -2px var(--rcglow),0 50px 130px rgba(0,0,0,0.8)}
+.rk-legacy.epic{box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1),inset 0 0 0 5px rgba(20,2,18,0.55),inset 0 0 0 6px var(--rc),0 0 90px 0px var(--rcglow),0 50px 130px rgba(0,0,0,0.85)}
+
 .pi-name{font-family:var(--ft);font-size:36px;font-weight:900;color:var(--w);line-height:0.95;margin-bottom:8px}
 .pi-nick{font-size:14px;font-weight:400;letter-spacing:0.5px;color:var(--g);cursor:pointer;vertical-align:middle;transition:opacity .2s}
 .pi-nick:hover{opacity:0.7}
