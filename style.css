@@ -342,6 +342,14 @@ section{padding:64px;border-bottom:var(--b1)}
 .bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.5) 50%,transparent 70%);background-size:200% 100%;animation:xpshine 2.6s linear infinite}
 @keyframes rainbowshift{0%{background-position:0% 0}100%{background-position:300% 0}}
 
+/* FICHA FÍSICA (peso/altura/edad/pie) */
+.phys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.phys-box{background:rgba(0,245,140,0.05);border:0.5px solid rgba(0,245,140,0.25);border-radius:6px;padding:12px 6px;text-align:center;box-shadow:0 0 14px rgba(0,245,140,0.08)}
+.phys-l{font-family:var(--ft);font-size:8px;letter-spacing:1.8px;color:var(--td);margin-bottom:6px}
+.phys-v{font-family:var(--ft);font-size:13px;font-weight:700;color:var(--g);text-shadow:0 0 8px rgba(0,245,140,0.5)}
+.phys-box.pending{border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);box-shadow:none}
+.phys-box.pending .phys-v{color:var(--td);font-size:9px;letter-spacing:1px;text-shadow:none}
+
 /* ATRIBUTOS DEL JUGADOR (PAC/SHO/PAS/DRI/DEF/FIS) */
 .attr-bars{margin:24px 0 28px;display:flex;flex-direction:column;gap:13px}
 .attr-bars-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--td);margin-bottom:10px}
@@ -394,6 +402,19 @@ section{padding:64px;border-bottom:var(--b1)}
 .rk-name{font-size:13px;font-weight:500;color:var(--w)}
 .rk-rank{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--td)}
 .rk-ovr{font-family:var(--ft);font-size:14px;color:var(--g)}
+
+/* BUSCADOR DE JUGADORES */
+.pl-search-wrap{max-width:1100px;margin:0 auto 24px;padding:0 24px}
+.pl-search-input{width:100%;background:var(--bg2);border:var(--b1);color:var(--w);font-family:'Inter',sans-serif;font-size:14px;padding:14px 18px;border-radius:6px;outline:none}
+.pl-search-input:focus{border-color:rgba(0,245,140,0.4)}
+.pl-grid{max-width:1100px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.pl-card{background:var(--bg2);border:var(--b1);border-radius:8px;padding:20px;cursor:pointer;transition:border-color .2s,transform .2s}
+.pl-card:hover{border-color:rgba(0,245,140,0.35);transform:translateY(-2px)}
+.pl-card-av{width:42px;height:42px;border-radius:50%;background:var(--bg3);border:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:12px;color:var(--w);margin-bottom:12px}
+.pl-card-name{font-size:14px;font-weight:600;color:var(--w);margin-bottom:4px}
+.pl-card-sub{font-size:11px;color:var(--td);font-weight:300;margin-bottom:12px}
+.pl-card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.player-view-card{background:var(--bg2);border:var(--b1);border-radius:10px;padding:32px;max-width:760px;max-height:88vh;overflow-y:auto;text-align:center}
 
 /* NOTIFICACIONES */
 .notif-list{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,0.04)}

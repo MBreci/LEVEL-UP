@@ -13,6 +13,7 @@ const RANKS = [
 
 const FUNCTIONAL_MODULES = [
   { id: 'ficha', label: 'MI FICHA' },
+  { id: 'jugadores', label: 'JUGADORES' },
   { id: 'ranking', label: 'RANKING' },
   { id: 'historial', label: 'HISTORIAL' },
   { id: 'partidos', label: 'PARTIDOS' },
@@ -57,7 +58,7 @@ function profileToRow(p) {
     id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
     photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
-    attrs: p.attrs, history: p.history, notifications: p.notifications,
+    attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
   };
 }
 
@@ -67,6 +68,7 @@ function rowToProfile(r) {
     photo: r.photo, passwordHash: r.password_hash, ovr: r.ovr, xp: r.xp, lp: r.lp,
     lastUpdate: r.last_update, matches: r.matches, goals: r.goals, assists: r.assists, mvps: r.mvps,
     attrs: r.attrs, history: r.history, notifications: r.notifications,
+    physical: r.physical || { weight: null, height: null, age: null, foot: null },
   };
 }
 
@@ -120,6 +122,7 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     assists: 0,
     mvps: 0,
     attrs: { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
+    physical: { weight: null, height: null, age: null, foot: null },
     history: [],
     notifications: [
       { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
@@ -170,6 +173,7 @@ function getNextRank(xp) {
 
 const PAGE_HREFS = {
   ficha: 'carta.html',
+  jugadores: 'jugadores.html',
   ranking: 'ranking.html',
   historial: 'carta.html#historial',
   partidos: 'buscar-partido.html',
@@ -233,6 +237,55 @@ function guestPrompt(text) {
   return `<div class="guest-prompt"><div class="guest-prompt-text">${text}</div><button class="guest-prompt-btn" onclick="openAuth(false)">INICIAR SESIÓN</button></div>`;
 }
 
+function buildCardHTML(p) {
+  const rank = getRank(p.xp);
+  const a = p.attrs;
+  const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
+  const tier = rank.name.toLowerCase();
+  const className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
+  const html = `
+    <div class="fc-shine"></div>
+    ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
+    <span class="fc-corner tl"></span>
+    <span class="fc-corner tr"></span>
+    <span class="fc-corner bl"></span>
+    <span class="fc-corner br"></span>
+    <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
+    <div class="fc-head">
+      <div><div class="fc-ovr">${p.ovr}</div><div class="fc-pos">${p.position}</div></div>
+      <div class="fc-rank">${rank.name}</div>
+    </div>
+    <div class="fc-player"><div class="fc-spotlight"></div>${p.photo ? `<img class="fc-photo-img" src="${p.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">${p.id === (state && state.id) ? 'TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA' : 'AÚN SIN FOTO OFICIAL'}</span></div>`}</div>
+    <div class="fc-namebar"><div class="fc-name">${p.name}${p.nickname ? ` <span class="fc-nick">"${p.nickname}"</span>` : ''}</div></div>
+    <div class="fc-attrs">
+      <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
+      <div class="fca"><div class="fca-v">${a.sho}</div><div class="fca-l">SHO</div></div>
+      <div class="fca"><div class="fca-v">${a.pas}</div><div class="fca-l">PAS</div></div>
+      <div class="fca"><div class="fca-v">${a.dri}</div><div class="fca-l">DRI</div></div>
+      <div class="fca"><div class="fca-v">${a.def}</div><div class="fca-l">DEF</div></div>
+      <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
+    </div>
+    <div class="fc-foot"><div class="fc-team">${p.team}</div></div>
+  `;
+  return { className, html };
+}
+
+function buildPhysicalHTML(p) {
+  const ph = p.physical || {};
+  const row = (label, val, unit) => `
+    <div class="phys-box ${val == null ? 'pending' : ''}">
+      <div class="phys-l">${label}</div>
+      <div class="phys-v">${val == null ? 'PENDIENTE' : val + (unit || '')}</div>
+    </div>`;
+  return `
+    <div class="phys-grid">
+      ${row('PESO', ph.weight, ' kg')}
+      ${row('ALTURA', ph.height, ' cm')}
+      ${row('EDAD', ph.age, ' años')}
+      ${row('PIE', ph.foot)}
+    </div>`;
+}
+
 function renderCard() {
   const card = document.getElementById('fifa-card');
   if (!card) return;
@@ -245,33 +298,9 @@ function renderCard() {
   }
   const rank = getRank(state.xp);
   const a = state.attrs;
-  const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
-  const tier = rank.name.toLowerCase();
-  card.className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
-  card.innerHTML = `
-    <div class="fc-shine"></div>
-    ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
-    <span class="fc-corner tl"></span>
-    <span class="fc-corner tr"></span>
-    <span class="fc-corner bl"></span>
-    <span class="fc-corner br"></span>
-    <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
-    <div class="fc-head">
-      <div><div class="fc-ovr">${state.ovr}</div><div class="fc-pos">${state.position}</div></div>
-      <div class="fc-rank">${rank.name}</div>
-    </div>
-    <div class="fc-player"><div class="fc-spotlight"></div>${state.photo ? `<img class="fc-photo-img" src="${state.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA</span></div>`}</div>
-    <div class="fc-namebar"><div class="fc-name">${state.name}${state.nickname ? ` <span class="fc-nick">"${state.nickname}"</span>` : ''}</div></div>
-    <div class="fc-attrs">
-      <div class="fca"><div class="fca-v">${a.pac}</div><div class="fca-l">PAC</div></div>
-      <div class="fca"><div class="fca-v">${a.sho}</div><div class="fca-l">SHO</div></div>
-      <div class="fca"><div class="fca-v">${a.pas}</div><div class="fca-l">PAS</div></div>
-      <div class="fca"><div class="fca-v">${a.dri}</div><div class="fca-l">DRI</div></div>
-      <div class="fca"><div class="fca-v">${a.def}</div><div class="fca-l">DEF</div></div>
-      <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
-    </div>
-    <div class="fc-foot"><div class="fc-team">${state.team}</div></div>
-  `;
+  const { className, html } = buildCardHTML(state);
+  card.className = className;
+  card.innerHTML = html;
 
   const next = getNextRank(state.xp);
   const prevMin = rank.min;
@@ -294,6 +323,8 @@ function renderCard() {
       <div class="pi-stat"><div class="pi-stat-n">${state.assists}</div><div class="pi-stat-l">ASISTENCIAS</div></div>
       <div class="pi-stat"><div class="pi-stat-n">${state.mvps}</div><div class="pi-stat-l">MVP</div></div>
     </div>
+    <div class="attr-bars-title">FICHA FÍSICA</div>
+    ${buildPhysicalHTML(state)}
     <div class="bars">
       <div class="bar">
         <div class="bar-top"><span class="bar-l">OVERALL (OVR)</span><span class="bar-n">${state.ovr}/100</span></div>
@@ -381,6 +412,45 @@ function renderRanking() {
   `).join('');
 }
 
+function renderPlayerSearch(query) {
+  const el = document.getElementById('pl-grid');
+  if (!el) return;
+  const q = (query || '').trim().toLowerCase();
+  const list = Object.values(profiles)
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q) || p.team.toLowerCase().includes(q))
+    .sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name));
+  if (!list.length) {
+    el.innerHTML = `<div class="rk-empty">No se encontraron jugadores.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const rank = getRank(p.xp);
+    return `
+    <div class="pl-card" onclick="openPlayerView('${p.id}')">
+      <div class="pl-card-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
+      <div class="pl-card-name">${p.nickname || p.name}</div>
+      <div class="pl-card-sub">${p.position} · ${p.team}</div>
+      <div class="pl-card-tags"><span class="pi-tag g">${rank.name}</span><span class="pi-tag gold">OVR ${p.ovr}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function openPlayerView(id) {
+  const p = profiles[id];
+  if (!p) return;
+  const { className, html } = buildCardHTML(p);
+  const modal = document.getElementById('player-view-modal');
+  const content = document.getElementById('player-view-content');
+  if (!modal || !content) return;
+  content.innerHTML = `<div class="${className}">${html}</div>`;
+  modal.classList.add('open');
+}
+
+function closePlayerView() {
+  const modal = document.getElementById('player-view-modal');
+  if (modal) modal.classList.remove('open');
+}
+
 function renderNotifications() {
   const countEl = document.getElementById('notif-count');
   if (!state) {
@@ -448,6 +518,7 @@ function renderAll() {
   renderCard();
   renderHistory();
   renderRanking();
+  renderPlayerSearch(document.getElementById('pl-search') ? document.getElementById('pl-search').value : '');
   renderNotifications();
   renderWipGrid();
   renderBuscarPartido();
