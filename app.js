@@ -375,40 +375,49 @@ function renderDashboard() {
   const el = document.getElementById('dash-content');
   if (!el || !state) return;
   const rank = getRank(state.xp);
+  const nextRank = getNextRank(state.xp);
   const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
   const lu = state.lastUpdate;
   const nextMatch = openMatches.find(m => m.creatorId === state.id && m.estado === 'abierto');
   const recentNotifs = state.notifications.slice(-3).reverse();
+  const xpPct = nextRank ? Math.min(100, Math.round(((state.xp - rank.min) / (nextRank.min - rank.min)) * 100)) : 100;
   el.innerHTML = `
     <div class="dash-welcome">BIENVENIDO DE NUEVO, ${(state.nickname || state.name).split(' ')[0]}</div>
     <div class="dash-top-stats">
-      <div class="dash-stat"><div class="dash-stat-v">${state.ovr}</div><div class="dash-stat-l">OVR</div></div>
-      <div class="dash-stat"><div class="dash-stat-v">${rank.name}</div><div class="dash-stat-l">RANGO</div></div>
-      <div class="dash-stat"><div class="dash-stat-v">${state.xp}</div><div class="dash-stat-l">XP</div></div>
-      <div class="dash-stat"><div class="dash-stat-v">${state.lp || 0}</div><div class="dash-stat-l">LP</div></div>
+      <div class="dash-stat acc-g"><div class="dash-stat-v">${state.ovr}</div><div class="dash-stat-l">OVR</div></div>
+      <div class="dash-stat acc-f"><div class="dash-stat-v">${rank.name}</div><div class="dash-stat-l">RANGO</div></div>
+      <div class="dash-stat acc-o"><div class="dash-stat-v">${state.xp}</div><div class="dash-stat-l">XP</div></div>
+      <div class="dash-stat acc-w"><div class="dash-stat-v">${state.lp || 0}</div><div class="dash-stat-l">LP</div></div>
+    </div>
+    <div class="dash-xp-card">
+      <div class="dash-xp-head">
+        <span>PROGRESO DE RANGO</span>
+        <span>${nextRank ? `${xpPct}% · FALTAN ${nextRank.min - state.xp} XP PARA ${nextRank.name}` : 'RANGO MÁXIMO ALCANZADO'}</span>
+      </div>
+      <div class="dash-xp-track"><div class="dash-xp-fill" style="width:${xpPct}%"></div></div>
     </div>
     ${lu ? `
-    <div class="dash-card">
-      <div class="dash-card-title">ÚLTIMA ACTUALIZACIÓN</div>
+    <div class="dash-card acc-g">
+      <div class="dash-card-title">🔥 ÚLTIMA ACTUALIZACIÓN</div>
       <div class="dash-update-row">
         <span>OVR ${lu.ovrDelta >= 0 ? '+' : ''}${lu.ovrDelta}</span>
         <span>XP +${lu.xpGain}</span>
         <span>LP +${lu.lpGain}</span>
       </div>
     </div>` : ''}
-    <div class="dash-card">
-      <div class="dash-card-title">PRÓXIMO PARTIDO</div>
+    <div class="dash-card acc-f">
+      <div class="dash-card-title">⚽ PRÓXIMO PARTIDO</div>
       ${nextMatch ? `
         <div class="dash-match-info">${nextMatch.zona}${nextMatch.cancha ? ' · ' + nextMatch.cancha : ''} — ${nextMatch.fecha}</div>
         <button class="dash-btn" onclick="location.href='buscar-partido.html'">VER PARTIDO</button>
       ` : `<div class="dash-empty">No tienes búsquedas activas. Publica una en "PARTIDOS".</div>`}
     </div>
-    <div class="dash-card">
-      <div class="dash-card-title">RANKING</div>
+    <div class="dash-card acc-o">
+      <div class="dash-card-title">🏆 RANKING</div>
       <div class="dash-rank-pos">TU POSICIÓN ACTUAL: #${rankPos}</div>
     </div>
-    <div class="dash-card">
-      <div class="dash-card-title">ACTIVIDAD RECIENTE</div>
+    <div class="dash-card acc-w">
+      <div class="dash-card-title">📋 ACTIVIDAD RECIENTE</div>
       ${recentNotifs.length ? recentNotifs.map(n => `<div class="dash-activity-row">${n.icon} ${n.text}</div>`).join('') : `<div class="dash-empty">Sin actividad reciente.</div>`}
     </div>
   `;
