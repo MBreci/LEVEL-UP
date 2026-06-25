@@ -263,7 +263,7 @@ function renderCard() {
   const prevMin = rank.min;
   const nextMin = next ? next.min : prevMin + 1;
   const pct = next ? Math.min(100, Math.round(((state.xp - prevMin) / (nextMin - prevMin)) * 100)) : 100;
-  const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
+  const rankPos = getGeneralRanking().findIndex(p => state && p.id === state.id) + 1;
 
   const piEl = document.getElementById('player-info');
   if (!piEl) return;
@@ -344,17 +344,8 @@ function renderHistory() {
   `).join('');
 }
 
-const MOCK_PLAYERS = [
-  { id: 'p1', name: 'SANTIAGO ROJAS', ovr: 88 },
-  { id: 'p2', name: 'MATEO CASTRO', ovr: 84 },
-  { id: 'p3', name: 'JUAN PARDO', ovr: 79 },
-  { id: 'p4', name: 'DAVID LEÓN', ovr: 75 },
-  { id: 'p5', name: 'NICOLÁS RUIZ', ovr: 71 },
-];
-
 function getGeneralRanking() {
-  const list = MOCK_PLAYERS.map(p => ({ ...p, rank: getRank(p.ovr * 130).name }));
-  if (state) list.push({ id: 'me', name: state.name, ovr: state.ovr, rank: getRank(state.xp).name });
+  const list = Object.values(profiles).map(p => ({ id: p.id, name: p.nickname || p.name, ovr: p.ovr, rank: getRank(p.xp).name }));
   return list.sort((a, b) => b.ovr - a.ovr);
 }
 
@@ -362,11 +353,15 @@ function renderRanking() {
   const el = document.getElementById('rk-panel');
   if (!el) return;
   const list = getGeneralRanking();
+  if (!list.length) {
+    el.innerHTML = `<div class="rk-empty">Todavía no hay jugadores registrados. Cuando alguien cree su perfil, aparecerá aquí.</div>`;
+    return;
+  }
   el.innerHTML = list.map((p, i) => `
-    <div class="rk-row ${p.id === 'me' ? 'me' : ''}">
+    <div class="rk-row ${state && p.id === state.id ? 'me' : ''}">
       <div class="rk-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
       <div class="rk-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
-      <div class="rk-info"><div class="rk-name">${p.name}${p.id === 'me' ? ' (TÚ)' : ''}</div><div class="rk-rank">${p.rank}</div></div>
+      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank">${p.rank}</div></div>
       <div class="rk-ovr">${p.ovr}</div>
     </div>
   `).join('');
@@ -452,7 +447,7 @@ function renderDashboard() {
   if (!el || !state) return;
   const rank = getRank(state.xp);
   const nextRank = getNextRank(state.xp);
-  const rankPos = getGeneralRanking().findIndex(p => p.id === 'me') + 1;
+  const rankPos = getGeneralRanking().findIndex(p => state && p.id === state.id) + 1;
   const lu = state.lastUpdate;
   const nextMatch = openMatches.find(m => m.creatorId === state.id && m.estado === 'abierto');
   const recentNotifs = state.notifications.slice(-3).reverse();
@@ -617,59 +612,55 @@ function switchAuthTab(tab) {
   document.getElementById('tab-existing').classList.toggle('on', tab === 'existing');
   document.getElementById('auth-new').style.display = tab === 'new' ? 'block' : 'none';
   document.getElementById('auth-existing').style.display = tab === 'existing' ? 'block' : 'none';
-  if (tab === 'existing') renderProfileList();
 }
 
-function renderProfileList() {
-  const ids = Object.keys(profiles);
-  const el = document.getElementById('auth-profile-list');
-  if (!ids.length) {
-    el.innerHTML = `<div class="auth-empty">Todavía no has creado ningún perfil.</div>`;
+function normalizeId(text) {
+  return text.trim().toUpperCase();
+}
+
+async function findProfileByIdentifier(identifier) {
+  const id = normalizeId(identifier);
+  const local = Object.values(profiles).find(p => p.name === id || p.nickname === id);
+  if (local) return local;
+  if (!sb) return null;
+  const { data: byName } = await sb.from('profiles').select('*').eq('name', id).limit(1);
+  if (byName && byName.length) return rowToProfile(byName[0]);
+  const { data: byNick } = await sb.from('profiles').select('*').eq('nickname', id).limit(1);
+  if (byNick && byNick.length) return rowToProfile(byNick[0]);
+  return null;
+}
+
+async function submitLogin() {
+  const identifier = document.getElementById('login-id').value;
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-submit');
+  if (!identifier.trim() || !password) {
+    errorEl.textContent = 'Escribe tu nombre o apodo y tu contraseña.';
     return;
   }
-  el.innerHTML = ids.map(id => {
-    const p = profiles[id];
-    const initials = p.name.split(' ').map(s => s[0]).join('').slice(0, 2);
-    const photo = p.photo ? `<img class="auth-profile-photo" src="${p.photo}">` : `<div class="auth-profile-photo rk-av" style="display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:10px">${initials}</div>`;
-    const rank = getRank(p.xp);
-    const next = getNextRank(p.xp);
-    const nextMin = next ? next.min : rank.min + 1;
-    const pct = next ? Math.min(100, Math.round(((p.xp - rank.min) / (nextMin - rank.min)) * 100)) : 100;
-    return `
-      <div class="auth-profile-row" onclick="selectProfile('${id}')">
-        ${photo}
-        <div class="auth-profile-main rk-${rank.name.toLowerCase()}">
-          <div class="auth-profile-name">${p.name}</div>
-          <div class="auth-profile-sub">${p.position} · OVR ${p.ovr}</div>
-          <div class="auth-profile-xp">
-            <span class="auth-profile-rank">${rank.name}</span>
-            <span class="auth-profile-xp-n">${p.xp} XP ${next ? '· ' + (nextMin - p.xp) + ' para ' + next.name : '· RANGO MÁXIMO'}</span>
-          </div>
-          <div class="auth-profile-track"><div class="auth-profile-fill" style="width:${pct}%"></div></div>
-        </div>
-        <div class="auth-profile-del" onclick="event.stopPropagation();deleteProfile('${id}')">✕</div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function selectProfile(id) {
-  const profile = profiles[id];
-  const errorEl = document.getElementById('auth-error');
-  if (profile.passwordHash) {
-    const entered = prompt(`Contraseña de ${profile.name}:`);
-    if (entered === null) return;
-    const hash = await hashPassword(entered);
-    if (hash !== profile.passwordHash) {
-      errorEl.textContent = 'Contraseña incorrecta.';
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'VERIFICANDO...';
+  try {
+    const profile = await findProfileByIdentifier(identifier);
+    const hash = await hashPassword(password);
+    if (!profile || hash !== profile.passwordHash) {
+      errorEl.textContent = 'Nombre/apodo o contraseña incorrectos.';
       return;
     }
+    profiles[profile.id] = profile;
+    saveProfiles();
+    setCurrentProfile(profile.id);
+    closeAuth();
+    document.getElementById('login-id').value = '';
+    document.getElementById('login-password').value = '';
+    if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
+    renderAll();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'INICIAR SESIÓN';
   }
-  errorEl.textContent = '';
-  setCurrentProfile(id);
-  closeAuth();
-  if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
-  renderAll();
 }
 
 function deleteProfile(id) {
@@ -680,7 +671,6 @@ function deleteProfile(id) {
     state = null;
     localStorage.removeItem(CURRENT_KEY);
   }
-  renderProfileList();
   if (!state) openAuth(true);
 }
 
@@ -691,6 +681,7 @@ async function submitNewProfile() {
   const team = document.getElementById('auth-team').value.trim();
   const password = document.getElementById('auth-password').value;
   const passwordConfirm = document.getElementById('auth-password-confirm').value;
+  const consent = document.getElementById('auth-consent');
   const errorEl = document.getElementById('auth-error');
   if (!name) {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
@@ -702,6 +693,15 @@ async function submitNewProfile() {
   }
   if (password !== passwordConfirm) {
     errorEl.textContent = 'Las contraseñas no coinciden.';
+    return;
+  }
+  if (!consent.checked) {
+    errorEl.textContent = 'Debes aceptar la Política de Tratamiento de Datos Personales y de Imagen para crear tu cuenta.';
+    return;
+  }
+  const existing = await findProfileByIdentifier(name) || (nickname ? await findProfileByIdentifier(nickname) : null);
+  if (existing) {
+    errorEl.textContent = 'Ya existe una cuenta con ese nombre o apodo. Inicia sesión o elige otro.';
     return;
   }
   errorEl.textContent = '';
@@ -726,8 +726,7 @@ function editNickname() {
 }
 
 function openAuth(forceNew) {
-  if (forceNew) switchAuthTab('new');
-  else switchAuthTab(Object.keys(profiles).length ? 'existing' : 'new');
+  switchAuthTab(forceNew ? 'new' : 'existing');
   document.getElementById('auth-modal').classList.add('open');
 }
 
@@ -968,11 +967,7 @@ function renderTicker() {
     items.push(`<span class="tk-item">🆕 <strong>NUEVO JUGADOR</strong> ${p.nickname || p.name} se unió a LEVEL UP</span>`);
   });
   if (items.length === 0) {
-    items.push(
-      `<span class="tk-item">🔍 <strong>EJEMPLO · SE BUSCA DEL</strong> Chapinero · Sábado 5:00pm · faltan 2</span>`,
-      `<span class="tk-item">🔍 <strong>EJEMPLO · SE BUSCA POR</strong> Suba · Domingo 10:00am · falta 1</span>`,
-      `<span class="tk-item">⚽ <strong>EJEMPLO</strong> publica tu propia búsqueda en "BUSCAR PARTIDO"</span>`,
-    );
+    items.push(`<span class="tk-item">⚽ Sé el primero en publicar tu búsqueda en "BUSCAR PARTIDO"</span>`);
   }
   const feed = items.concat(items).join('');
   const el = document.getElementById('ticker-inner');
@@ -982,7 +977,8 @@ function renderTicker() {
 function initApp() {
   loadCurrentProfile();
   const page = location.pathname.split('/').pop() || 'index.html';
-  if (!state && page !== 'index.html') { location.href = 'index.html'; return; }
+  const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
+  if (!state && !PUBLIC_PAGES.includes(page)) { location.href = 'index.html'; return; }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
 
   renderAll();

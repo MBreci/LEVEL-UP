@@ -326,6 +326,7 @@ section{padding:64px;border-bottom:var(--b1)}
 
 /* RANKING */
 .rk-panel{background:var(--bg2);border:var(--b1)}
+.rk-empty{padding:48px 24px;text-align:center;color:var(--td);font-size:13px}
 .rk-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:var(--b1)}
 .rk-row.me{background:rgba(0,255,136,0.05)}
 .rk-pos{font-family:var(--ft);font-size:13px;width:24px;color:var(--td)}
@@ -426,6 +427,9 @@ section{padding:64px;border-bottom:var(--b1)}
 .auth-input{width:100%;background:var(--bg3);border:var(--b2);color:var(--w);padding:11px 12px;font-family:var(--fb);font-size:13px;outline:none}
 .auth-input:focus{border-color:rgba(0,255,136,0.4)}
 .auth-error{color:#ff4444;font-size:12px;margin-top:10px;min-height:14px}
+.auth-consent{display:flex;align-items:flex-start;gap:10px;margin-top:18px;font-family:var(--fb);font-size:11px;line-height:1.5;color:var(--tm);cursor:pointer}
+.auth-consent input{margin-top:2px;flex-shrink:0;accent-color:var(--g)}
+.auth-consent a{color:var(--g);text-decoration:underline}
 .auth-submit{width:100%;margin-top:20px;font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:13px;background:var(--g);color:var(--bg);border:none;cursor:pointer}
 .auth-submit:hover{box-shadow:0 0 24px rgba(0,255,136,0.4)}
 .auth-cancel{width:100%;margin-top:12px;font-family:var(--ft);font-size:9px;letter-spacing:2px;padding:11px;background:transparent;border:0.5px solid rgba(255,255,255,0.15);color:var(--tm);cursor:pointer}
@@ -451,6 +455,8 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .ft-logo-img{height:38px;margin-bottom:14px;display:block}
 .ft-desc{font-size:12px;color:var(--td);max-width:340px;line-height:1.7;font-weight:300}
 .ft-bottom{margin-top:32px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.18)}
+.ft-bottom a{color:rgba(255,255,255,0.32);text-decoration:underline}
+.ft-bottom a:hover{color:var(--g)}
 
 .guest-prompt{padding:48px 24px;text-align:center;border:var(--b1);background:rgba(255,255,255,0.02)}
 .guest-prompt-text{font-size:13px;color:var(--td);font-weight:300;margin-bottom:18px;max-width:360px;margin-left:auto;margin-right:auto;line-height:1.6}
