@@ -280,7 +280,9 @@ section{padding:64px;border-bottom:var(--b1)}
 .bar-l{color:var(--td);font-weight:300}
 .bar-n{font-family:var(--ft);font-weight:700;color:var(--g)}
 .bar-track{height:4px;background:rgba(255,255,255,0.05);overflow:hidden;border-radius:3px}
-.bar-fill{height:100%;background:var(--g);border-radius:3px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.2,.8,.2,1);position:relative;background:linear-gradient(90deg,#ff003c,#ff8c00,#fff200,#00ff88,#00d9ff,#9d6eff,#ff00aa,#ff003c);background-size:300% 100%;animation:rainbowshift 4s linear infinite;box-shadow:0 0 12px rgba(255,255,255,0.35)}
+.bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.5) 50%,transparent 70%);background-size:200% 100%;animation:xpshine 2.6s linear infinite}
+@keyframes rainbowshift{0%{background-position:0% 0}100%{background-position:300% 0}}
 
 /* ATRIBUTOS DEL JUGADOR (PAC/SHO/PAS/DRI/DEF/FIS) */
 .attr-bars{margin:24px 0 28px;display:flex;flex-direction:column;gap:13px}
@@ -479,7 +481,7 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .dash-xp-head span:first-child{font-size:10px;letter-spacing:2px;color:var(--tm)}
 .dash-xp-head span:last-child{font-size:11px;color:var(--g)}
 .dash-xp-track{height:9px;border-radius:5px;background:rgba(255,255,255,0.06);overflow:hidden;position:relative}
-.dash-xp-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--g),var(--f));box-shadow:0 0 14px rgba(0,255,136,0.5);position:relative;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.dash-xp-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#ff003c,#ff8c00,#fff200,#00ff88,#00d9ff,#9d6eff,#ff00aa,#ff003c);background-size:300% 100%;animation:rainbowshift 4s linear infinite;box-shadow:0 0 14px rgba(255,255,255,0.4);position:relative;transition:width 1s cubic-bezier(.2,.8,.2,1)}
 .dash-xp-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.55) 50%,transparent 70%);background-size:200% 100%;animation:xpshine 2.6s linear infinite}
 @keyframes xpshine{0%{background-position:200% 0}100%{background-position:-50% 0}}
 .dash-card{position:relative;overflow:hidden;border:var(--b1);border-left:2px solid var(--acc,var(--g));background:rgba(255,255,255,0.02);padding:20px;border-radius:6px;transition:transform .25s,box-shadow .25s}
