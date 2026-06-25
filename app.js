@@ -16,7 +16,7 @@ const FUNCTIONAL_MODULES = [
   { id: 'ranking', label: 'RANKING' },
   { id: 'historial', label: 'HISTORIAL' },
   { id: 'partidos', label: 'PARTIDOS' },
-  { id: 'temporada', label: 'TEMPORADA PILOTO' },
+  { id: 'temporada', label: 'TEMPORADA BETA' },
 ];
 
 const WIP_MODULES = [
