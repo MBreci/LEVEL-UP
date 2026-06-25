@@ -612,13 +612,20 @@ function openMatchForm() {
   form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
+function formatFechaPartido(dateStr, horaLabel) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dateLabel = d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'short' });
+  return `${dateLabel.charAt(0).toUpperCase()}${dateLabel.slice(1)}, ${horaLabel}`;
+}
+
 function submitMatchRequest() {
   if (!state) { openAuth(true); return; }
   const zona = document.getElementById('bp-zona').value;
   const cancha = document.getElementById('bp-cancha').value.trim();
   const formato = document.getElementById('bp-formato').value;
   const superficie = document.getElementById('bp-superficie').value;
-  const fecha = document.getElementById('bp-fecha').value.trim();
+  const fechaDate = document.getElementById('bp-fecha-date').value;
+  const horaSel = document.getElementById('bp-fecha-hora');
   const errorEl = document.getElementById('bp-error');
   const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
   const necesita = [];
@@ -629,10 +636,11 @@ function submitMatchRequest() {
       necesita.push({ pos: checkbox.value, cupos: parseInt(n.value, 10) || 1, unidos: [] });
     }
   });
-  if (!fecha) {
-    errorEl.textContent = 'Indica la fecha y hora del partido.';
+  if (!fechaDate) {
+    errorEl.textContent = 'Selecciona la fecha del partido.';
     return;
   }
+  const fecha = formatFechaPartido(fechaDate, horaSel.options[horaSel.selectedIndex].textContent);
   if (necesita.length === 0) {
     errorEl.textContent = 'Selecciona al menos una posición que te falte.';
     return;
@@ -652,7 +660,7 @@ function submitMatchRequest() {
     createdAt: Date.now(),
   });
   saveOpenMatches();
-  document.getElementById('bp-fecha').value = '';
+  document.getElementById('bp-fecha-date').value = '';
   document.getElementById('bp-cancha').value = '';
   chips.forEach(chip => { chip.querySelector('input[type=checkbox]').checked = false; });
   openMatchForm();
@@ -834,6 +842,9 @@ function renderTicker() {
 function initApp() {
   loadCurrentProfile();
   renderAll();
+
+  const fechaInput = document.getElementById('bp-fecha-date');
+  if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
 
   if (location.hash === '#crear' && state) {
     const form = document.getElementById('bp-form');

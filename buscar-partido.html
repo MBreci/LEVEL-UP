@@ -85,14 +85,26 @@
       <option value="NATURAL">NATURAL — Pasto real</option>
       <option value="COLISEO">COLISEO — Cubierto</option>
     </select>
-    <div class="auth-label">FECHA Y HORA</div>
-    <input class="auth-input" id="bp-fecha" placeholder="Ej: Sábado 28 jun, 5:00pm" maxlength="30">
+    <div class="auth-label">FECHA</div>
+    <input class="auth-input" type="date" id="bp-fecha-date">
+    <div class="auth-label">HORA</div>
+    <select class="auth-input" id="bp-fecha-hora">
+      <option value="18:00">6:00 PM</option>
+      <option value="18:30">6:30 PM</option>
+      <option value="19:00">7:00 PM</option>
+      <option value="19:30">7:30 PM</option>
+      <option value="20:00">8:00 PM</option>
+      <option value="20:30">8:30 PM</option>
+      <option value="21:00">9:00 PM</option>
+      <option value="21:30">9:30 PM</option>
+      <option value="22:00">10:00 PM</option>
+    </select>
     <div class="auth-label">POSICIONES QUE FALTAN</div>
     <div class="bp-pos-grid" id="bp-pos-grid">
-      <label class="bp-pos-chip"><input type="checkbox" value="DEL"> DEL <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
-      <label class="bp-pos-chip"><input type="checkbox" value="MED"> MED <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
-      <label class="bp-pos-chip"><input type="checkbox" value="DEF"> DEF <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
-      <label class="bp-pos-chip"><input type="checkbox" value="POR"> POR <input type="number" min="1" max="10" value="1" class="bp-pos-n"></label>
+      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
     </div>
     <div class="auth-error" id="bp-error"></div>
     <button class="auth-submit" onclick="submitMatchRequest()">PUBLICAR BÚSQUEDA</button>
