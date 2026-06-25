@@ -237,6 +237,33 @@ function renderCard() {
         <div class="bar-track"><div class="bar-fill" style="width:${state.ovr}%"></div></div>
       </div>
     </div>
+    <div class="attr-bars">
+      <div class="attr-bars-title">ATRIBUTOS</div>
+      <div class="attr-bar pac">
+        <div class="attr-bar-top"><span class="attr-bar-l">PAC · RITMO</span><span class="attr-bar-n">${a.pac}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.pac}%"></div></div>
+      </div>
+      <div class="attr-bar sho">
+        <div class="attr-bar-top"><span class="attr-bar-l">SHO · TIRO</span><span class="attr-bar-n">${a.sho}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.sho}%"></div></div>
+      </div>
+      <div class="attr-bar pas">
+        <div class="attr-bar-top"><span class="attr-bar-l">PAS · PASE</span><span class="attr-bar-n">${a.pas}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.pas}%"></div></div>
+      </div>
+      <div class="attr-bar dri">
+        <div class="attr-bar-top"><span class="attr-bar-l">DRI · REGATE</span><span class="attr-bar-n">${a.dri}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.dri}%"></div></div>
+      </div>
+      <div class="attr-bar def">
+        <div class="attr-bar-top"><span class="attr-bar-l">DEF · DEFENSA</span><span class="attr-bar-n">${a.def}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.def}%"></div></div>
+      </div>
+      <div class="attr-bar fis">
+        <div class="attr-bar-top"><span class="attr-bar-l">FIS · FÍSICO</span><span class="attr-bar-n">${a.fis}</span></div>
+        <div class="attr-bar-track"><div class="attr-bar-fill" style="width:${a.fis}%"></div></div>
+      </div>
+    </div>
     <div class="lvl-wrap">
       <div class="lvl-top">
         <div class="lvl-badge">${rank.name}</div>
@@ -486,6 +513,10 @@ function registrarResultado(resultado) {
   state.assists += assists;
   if (isMvp) state.mvps += 1;
   state.ovr = Math.max(40, Math.min(99, state.ovr + ovrDelta));
+  ['pac', 'sho', 'pas', 'dri', 'def', 'fis'].forEach((k) => {
+    const jitter = Math.floor(Math.random() * 3) - 1;
+    state.attrs[k] = Math.max(40, Math.min(99, state.attrs[k] + ovrDelta + jitter));
+  });
   state.xp += xpGain;
   state.lp = (state.lp || 0) + lpGain;
   state.lastUpdate = { ovrDelta, xpGain, lpGain };

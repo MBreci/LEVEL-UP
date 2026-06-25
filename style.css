@@ -279,8 +279,30 @@ section{padding:64px;border-bottom:var(--b1)}
 .bar-top{display:flex;justify-content:space-between;margin-bottom:5px;font-size:10px;letter-spacing:1px}
 .bar-l{color:var(--td);font-weight:300}
 .bar-n{font-family:var(--ft);font-weight:700;color:var(--g)}
-.bar-track{height:4px;background:rgba(255,255,255,0.05);overflow:hidden}
-.bar-fill{height:100%;background:var(--g)}
+.bar-track{height:4px;background:rgba(255,255,255,0.05);overflow:hidden;border-radius:3px}
+.bar-fill{height:100%;background:var(--g);border-radius:3px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+
+/* ATRIBUTOS DEL JUGADOR (PAC/SHO/PAS/DRI/DEF/FIS) */
+.attr-bars{margin:24px 0 28px;display:flex;flex-direction:column;gap:13px}
+.attr-bars-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--td);margin-bottom:10px}
+.attr-bar-top{display:flex;justify-content:space-between;margin-bottom:5px;font-size:10px;letter-spacing:1px}
+.attr-bar-l{font-family:var(--ft);font-weight:600;letter-spacing:1.5px}
+.attr-bar-n{font-family:var(--ft);font-weight:700}
+.attr-bar-track{height:7px;background:rgba(255,255,255,0.06);overflow:hidden;border-radius:4px}
+.attr-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.2,.8,.2,1);position:relative}
+.attr-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.45) 50%,transparent 70%);background-size:200% 100%;animation:xpshine 3s linear infinite}
+.attr-bar.pac .attr-bar-l,.attr-bar.pac .attr-bar-n{color:var(--g)}
+.attr-bar.pac .attr-bar-fill{background:var(--g);box-shadow:0 0 12px rgba(0,255,136,0.6)}
+.attr-bar.sho .attr-bar-l,.attr-bar.sho .attr-bar-n{color:var(--f)}
+.attr-bar.sho .attr-bar-fill{background:var(--f);box-shadow:0 0 12px rgba(255,0,170,0.6)}
+.attr-bar.pas .attr-bar-l,.attr-bar.pas .attr-bar-n{color:var(--o)}
+.attr-bar.pas .attr-bar-fill{background:var(--o);box-shadow:0 0 12px rgba(255,102,0,0.6)}
+.attr-bar.dri .attr-bar-l,.attr-bar.dri .attr-bar-n{color:#00d9ff}
+.attr-bar.dri .attr-bar-fill{background:#00d9ff;box-shadow:0 0 12px rgba(0,217,255,0.6)}
+.attr-bar.def .attr-bar-l,.attr-bar.def .attr-bar-n{color:#9d6eff}
+.attr-bar.def .attr-bar-fill{background:#9d6eff;box-shadow:0 0 12px rgba(157,110,255,0.6)}
+.attr-bar.fis .attr-bar-l,.attr-bar.fis .attr-bar-n{color:var(--gold)}
+.attr-bar.fis .attr-bar-fill{background:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.6)}
 .lvl-wrap{margin-bottom:8px}
 .lvl-top{display:flex;justify-content:space-between;margin-bottom:8px}
 .lvl-badge{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--gold);border:0.5px solid rgba(201,168,76,0.3);padding:3px 10px}
