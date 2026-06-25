@@ -50,7 +50,21 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .btn-p:hover{box-shadow:0 0 32px rgba(0,255,136,0.75);transform:translateY(-2px) scale(1.03)}
 
 /* HERO */
-.hero{position:relative;min-height:80vh;display:flex;align-items:center;justify-content:center;padding-top:98px;background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.08),transparent 60%)}
+.hero{position:relative;min-height:88vh;display:flex;align-items:center;justify-content:center;padding-top:98px;overflow:hidden;background:#02040a}
+.hero-bg{position:absolute;inset:-4%;z-index:0;will-change:transform;pointer-events:none}
+.hero-bg-img{position:absolute;inset:0;background-image:url(assets/bg-hero-stadium.jpg);background-image:image-set(url(assets/bg-hero-stadium.webp) type('image/webp'),url(assets/bg-hero-stadium.jpg) type('image/jpeg'));background-size:cover;background-position:center 38%;filter:brightness(.5) saturate(.85) contrast(1.05);transform:scale(1.06)}
+.hero-bg-smoke{position:absolute;inset:0;background:radial-gradient(ellipse 75% 45% at 50% 105%,rgba(255,255,255,0.07),transparent 70%),radial-gradient(ellipse 40% 30% at 15% 20%,rgba(255,255,255,0.04),transparent 70%);mix-blend-mode:screen;opacity:.65;will-change:transform}
+.hero-bg-light{position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 50% 100%,rgba(0,255,136,0.07),transparent 70%),linear-gradient(180deg,rgba(2,4,10,0.35) 0%,rgba(2,4,10,0.25) 40%,rgba(2,4,10,0.65) 78%,rgba(2,4,10,0.96) 100%),linear-gradient(90deg,rgba(2,4,10,0.7) 0%,transparent 22%,transparent 78%,rgba(2,4,10,0.7) 100%)}
+.hero-content{position:relative;z-index:2}
+@media(prefers-reduced-motion:reduce){.hero-bg,.hero-bg-smoke{transition:none!important}}
+
+/* SECTION CINEMATIC BACKGROUNDS */
+.sec-cine{position:relative;overflow:hidden}
+.sec-cine-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;filter:brightness(.65) saturate(.85)}
+.sec-cine-scrim{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(2,4,10,0.88) 0%,rgba(2,4,10,0.4) 30%,rgba(2,4,10,0.4) 70%,rgba(2,4,10,0.88) 100%)}
+.sec-cine>.sec-hdr,.sec-cine>.landing-card,.sec-cine>.how-grid{position:relative;z-index:2}
+#que-es.sec-cine .sec-cine-bg{background-image:url(assets/bg-comunidad-tribuna.jpg);background-image:image-set(url(assets/bg-comunidad-tribuna.webp) type('image/webp'),url(assets/bg-comunidad-tribuna.jpg) type('image/jpeg'));background-position:center 30%}
+#como-funciona.sec-cine .sec-cine-bg{background-image:url(assets/bg-competitivo-aerea.jpg);background-image:image-set(url(assets/bg-competitivo-aerea.webp) type('image/webp'),url(assets/bg-competitivo-aerea.jpg) type('image/jpeg'))}
 
 /* PAGE BANNER (sub-páginas) */
 .page-banner{padding:128px 64px 40px;border-bottom:var(--b1);background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.06),transparent 60%)}

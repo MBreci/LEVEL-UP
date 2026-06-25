@@ -938,3 +938,28 @@ function toggleAudio() {
   }
   setAudioUI(audPlaying);
 }
+
+/* ===== HERO PARALLAX (sutil, reactivo al mouse) ===== */
+(function () {
+  const heroBg = document.getElementById('hero-bg');
+  if (!heroBg || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const img = heroBg.querySelector('.hero-bg-img');
+  const smoke = heroBg.querySelector('.hero-bg-smoke');
+  const light = heroBg.querySelector('.hero-bg-light');
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    tx = (e.clientX / window.innerWidth - 0.5) * 2;
+    ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  function tick() {
+    cx += (tx - cx) * 0.05;
+    cy += (ty - cy) * 0.05;
+    if (img) img.style.transform = `scale(1.06) translate(${(cx * -6).toFixed(2)}px, ${(cy * -4).toFixed(2)}px)`;
+    if (smoke) smoke.style.transform = `translate(${(cx * 10).toFixed(2)}px, ${(cy * 6).toFixed(2)}px)`;
+    if (light) light.style.transform = `translate(${(cx * 4).toFixed(2)}px, ${(cy * 3).toFixed(2)}px)`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
