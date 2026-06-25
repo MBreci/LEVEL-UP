@@ -81,7 +81,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .sec-cine-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#03050c 0%,#020308 100%)}
 .sec-cine-scrim{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 65% 75% at 8% 95%,rgba(0,255,136,0.22),transparent 60%),radial-gradient(ellipse 60% 70% at 95% 5%,rgba(255,0,170,0.20),transparent 60%),linear-gradient(180deg,rgba(2,4,10,0.85) 0%,rgba(2,4,10,0.55) 30%,rgba(2,4,10,0.55) 70%,rgba(2,4,10,0.92) 100%);animation:smokeDrift 26s ease-in-out infinite alternate,smokeHue 18s linear infinite}
 .sec-cine-smoke{position:absolute;inset:-15%;z-index:0;pointer-events:none;background:radial-gradient(ellipse 50% 55% at 12% 75%,rgba(0,255,136,0.30),transparent 65%),radial-gradient(ellipse 45% 50% at 88% 25%,rgba(255,0,170,0.26),transparent 65%),radial-gradient(circle at 20% 30%,rgba(0,255,136,0.5) 0,transparent 2px),radial-gradient(circle at 75% 70%,rgba(255,0,170,0.45) 0,transparent 2px),radial-gradient(circle at 50% 15%,rgba(255,255,255,0.15) 0,transparent 1.5px);background-size:auto,auto,520px 520px,480px 480px,560px 560px;mix-blend-mode:screen;opacity:.9;will-change:transform,filter,background-position;animation:smokeDrift 24s ease-in-out infinite alternate,smokeHue 16s linear infinite,particleFloatA 48s linear infinite}
-.sec-cine>.sec-hdr,.sec-cine>.landing-card,.sec-cine>.how-grid,.sec-cine>.qe-grid{position:relative;z-index:2}
+.sec-cine>.sec-hdr,.sec-cine>.landing-card,.sec-cine>.how-grid,.sec-cine>.qe-grid,.sec-cine>.qe-row{position:relative;z-index:2}
 
 /* ¿QUÉ ES LEVEL UP? — "Neon Mist": black mist + drifting green/magenta particles */
 #que-es.sec-cine .sec-cine-bg{background:radial-gradient(circle at 15% 30%,rgba(0,255,136,0.4) 0,transparent 2px),radial-gradient(circle at 75% 65%,rgba(255,0,170,0.35) 0,transparent 2px),radial-gradient(circle at 45% 80%,rgba(0,255,136,0.3) 0,transparent 1.5px),radial-gradient(circle at 90% 20%,rgba(255,255,255,0.18) 0,transparent 1.5px),radial-gradient(circle at 30% 55%,rgba(255,0,170,0.25) 0,transparent 1.5px),linear-gradient(180deg,#04060d 0%,#020308 100%);background-size:520px 520px,460px 460px,600px 600px,540px 540px,480px 480px,auto;animation:particleFloatB 46s linear infinite}
@@ -557,8 +557,13 @@ footer{padding:48px 64px;border-top:var(--b1)}
 @media(max-width:680px){.dash-top-stats{grid-template-columns:1fr 1fr}}
 
 /* LANDING (GUEST) */
-.qe-grid{max-width:980px;margin:24px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-.qe-card{position:relative;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(155deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));padding:24px 14px;text-align:center;border-radius:8px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.qe-row{display:flex;align-items:center;gap:40px;max-width:1240px;margin:0 auto}
+.qe-intro{flex:0 0 260px}
+.qe-intro-title{font-family:var(--ft);font-size:15px;font-weight:900;letter-spacing:1px;color:var(--w)}
+.qe-intro-bar{width:30px;height:2px;background:var(--g);box-shadow:0 0 8px var(--g);margin:10px 0 12px}
+.qe-intro-desc{font-size:12px;color:rgba(210,220,255,0.55);line-height:1.6;font-weight:300}
+.qe-grid{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.qe-card{position:relative;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(155deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));padding:18px 10px;text-align:center;border-radius:8px;transition:transform .25s,border-color .25s,box-shadow .25s}
 .qe-card.g{box-shadow:inset 0 0 0 1px rgba(0,255,136,0.08)}
 .qe-card.f{box-shadow:inset 0 0 0 1px rgba(255,0,170,0.08)}
 .qe-card.g:hover{transform:translateY(-6px);border-color:rgba(0,255,136,0.5);box-shadow:0 14px 32px -10px rgba(0,255,136,0.35),inset 0 0 0 1px rgba(0,255,136,0.15)}
@@ -572,7 +577,8 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .qe-card.f .qe-icon{color:var(--f);filter:drop-shadow(0 0 10px rgba(255,0,170,0.6))}
 .qe-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--w);margin-bottom:6px}
 .qe-desc{font-size:11px;color:rgba(210,220,255,0.5);line-height:1.5;font-weight:300}
-@media(max-width:900px){.qe-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.qe-row{flex-direction:column;align-items:flex-start;gap:20px}.qe-grid{grid-template-columns:repeat(2,1fr);width:100%}}
+#que-es.sec-cine{padding-top:44px;padding-bottom:44px}
 
 .landing-card{max-width:640px;margin:0 auto;text-align:center}
 .landing-text{font-size:14px;color:var(--tm);font-weight:300;line-height:1.7;margin-bottom:18px}
