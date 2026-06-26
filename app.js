@@ -108,7 +108,17 @@ async function syncProfilesFromCloud() {
   const { data, error } = await sb.from('profiles').select('*');
   if (error || !data) { console.error('Error sincronizando perfiles:', error && error.message); return; }
   data.forEach(row => {
-    if (!state || row.id !== state.id) profiles[row.id] = rowToProfile(row);
+    if (!state || row.id !== state.id) {
+      profiles[row.id] = rowToProfile(row);
+    } else {
+      const cloudNotifs = row.notifications || [];
+      const seen = new Set(state.notifications.map(n => n.icon + n.text + n.time));
+      cloudNotifs.forEach(n => {
+        const key = n.icon + n.text + n.time;
+        if (!seen.has(key)) { state.notifications.push(n); seen.add(key); }
+      });
+      profiles[state.id] = state;
+    }
   });
   saveProfiles();
   renderAll();
@@ -1122,6 +1132,35 @@ function loadTeamInvites() { try { return JSON.parse(localStorage.getItem(TEAM_I
 function saveTeamInvites() { localStorage.setItem(TEAM_INVITES_KEY, JSON.stringify(teamInvites)); }
 let teamInvites = loadTeamInvites();
 
+function teamInviteToRow(i) {
+  return {
+    id: i.id, team_id: i.teamId, team_name: i.teamName, from_captain_id: i.fromCaptainId,
+    to_id: i.toId, status: i.status,
+  };
+}
+function rowToTeamInvite(r) {
+  return {
+    id: r.id, teamId: r.team_id, teamName: r.team_name, fromCaptainId: r.from_captain_id,
+    toId: r.to_id, status: r.status,
+  };
+}
+async function pushTeamInviteToCloud(i) {
+  if (!sb) return;
+  const { error } = await sb.from('team_invites').upsert(teamInviteToRow(i));
+  if (error) console.error('Error guardando invitación de equipo en la nube:', error.message);
+}
+async function syncTeamInvitesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('team_invites').select('*');
+  if (error || !data) { console.error('Error sincronizando invitaciones de equipo:', error && error.message); return; }
+  const localIds = new Set(teamInvites.map(i => i.id));
+  data.forEach(row => {
+    if (!localIds.has(row.id)) teamInvites.push(rowToTeamInvite(row));
+    else Object.assign(teamInvites.find(i => i.id === row.id), rowToTeamInvite(row));
+  });
+  saveTeamInvites();
+}
+
 function loadChallenges() { try { return JSON.parse(localStorage.getItem(CHALLENGES_KEY)) || []; } catch { return []; } }
 function saveChallenges() { localStorage.setItem(CHALLENGES_KEY, JSON.stringify(challenges)); }
 let challenges = loadChallenges();
@@ -1343,6 +1382,7 @@ function sendTeamInvite(teamId, playerId) {
   };
   teamInvites.push(invite);
   saveTeamInvites();
+  pushTeamInviteToCloud(invite);
   player.notifications.push({ icon: '🛡️', text: `${team.name} te invitó a unirte como jugador. Capitán: ${state.nickname || state.name}.`, time: 'AHORA' });
   profiles[playerId] = player;
   saveProfiles();
@@ -1362,6 +1402,7 @@ function respondTeamInvite(inviteId, accept) {
   if (!invite) return;
   invite.status = accept ? 'aceptada' : 'rechazada';
   saveTeamInvites();
+  pushTeamInviteToCloud(invite);
   const team = teams[invite.teamId];
   if (accept && team && !team.memberIds.includes(state.id) && team.memberIds.length < 6) {
     team.memberIds.push(state.id);
@@ -1917,6 +1958,7 @@ function initApp() {
   renderAll();
   syncProfilesFromCloud();
   syncTeamsFromCloud();
+  syncTeamInvitesFromCloud().then(renderAll);
   syncChallengesFromCloud();
   syncTeamMatchesFromCloud();
   if (state) pushProfileToCloud(state);

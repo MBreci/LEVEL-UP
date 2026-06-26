@@ -78,3 +78,19 @@ create policy "allow all select team_matches" on team_matches for select using (
 create policy "allow all insert team_matches" on team_matches for insert with check (true);
 create policy "allow all update team_matches" on team_matches for update using (true);
 create policy "allow all delete team_matches" on team_matches for delete using (true);
+
+create table if not exists team_invites (
+  id text primary key,
+  team_id text,
+  team_name text,
+  from_captain_id text,
+  to_id text,
+  status text
+);
+
+alter table team_invites enable row level security;
+
+create policy "allow all select team_invites" on team_invites for select using (true);
+create policy "allow all insert team_invites" on team_invites for insert with check (true);
+create policy "allow all update team_invites" on team_invites for update using (true);
+create policy "allow all delete team_invites" on team_invites for delete using (true);
