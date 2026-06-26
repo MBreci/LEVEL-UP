@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo Motor de Progresión · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.demo-wrap{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:380px 1fr;gap:18px}
+@media(max-width:900px){.demo-wrap{grid-template-columns:1fr}}
+.demo-card{background:var(--bg2);border:0.5px solid rgba(0,255,136,0.2);border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.demo-label{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--g)}
+.demo-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.demo-stepper{display:inline-flex;align-items:center;gap:8px}
+.demo-stepper button{width:24px;height:24px;background:var(--bg3);color:var(--w);border:0.5px solid rgba(255,255,255,0.15);border-radius:3px;cursor:pointer;font-size:13px}
+.demo-stepper span{font-family:var(--ft);min-width:18px;text-align:center}
+.demo-select{font-family:var(--ft);font-size:10px;background:var(--bg3);color:var(--w);border:0.5px solid rgba(255,255,255,0.15);border-radius:3px;padding:6px}
+.demo-btn{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:12px;background:var(--g);color:#020510;border:none;border-radius:3px;cursor:pointer}
+.demo-btn.secondary{background:transparent;color:var(--f);border:0.5px solid rgba(255,0,170,0.4)}
+.demo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.demo-stat{background:var(--bg3);border-radius:4px;padding:12px;text-align:center}
+.demo-stat-v{font-family:var(--ft);font-weight:700;font-size:20px;color:var(--w)}
+.demo-stat-l{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--tm);margin-top:4px}
+.demo-stat-v.up{color:var(--g)}.demo-stat-v.down{color:var(--f)}
+.demo-log{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto}
+.demo-log-row{display:grid;grid-template-columns:30px 1fr auto auto auto;gap:8px;align-items:center;font-size:11px;background:var(--bg3);border-radius:4px;padding:8px 10px}
+.demo-log-row .n{font-family:var(--ft);color:var(--tm)}
+.demo-log-row .ps{font-family:var(--ft);color:var(--w)}
+.demo-log-row .ovr{font-family:var(--ft)}
+.demo-log-row .ovr.up{color:var(--g)}.demo-log-row .ovr.down{color:var(--f)}.demo-log-row .ovr.zero{color:var(--tm)}
+.demo-chart{display:flex;align-items:flex-end;gap:3px;height:80px;background:var(--bg3);border-radius:4px;padding:8px}
+.demo-bar{flex:1;background:var(--g);border-radius:2px 2px 0 0;min-height:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-top">
+    <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <div class="nav-right"><div class="season-badge">SOLO PRUEBA INTERNA</div></div>
+  </div>
+</header>
+
+<div class="page-banner">
+  <div class="page-banner-eyebrow">LABORATORIO</div>
+  <div class="page-banner-title">DEMO · MOTOR DE PROGRESIÓN</div>
+  <div class="page-banner-desc">Simula partidos contra el algoritmo real (sin azar) y observa cómo evolucionan OVR, XP, LP, Forma y Confianza antes de llevarlo a producción.</div>
+</div>
+
+<div class="demo-wrap">
+  <div class="demo-card">
+    <div class="demo-label">CONFIGURAR PARTIDO</div>
+
+    <div class="demo-row"><span>Posición</span>
+      <select class="demo-select" id="d-pos">
+        <option value="DEL">DEL</option><option value="MED">MED</option><option value="DEF">DEF</option><option value="POR">POR</option>
+      </select>
+    </div>
+    <div class="demo-row"><span>Resultado</span>
+      <select class="demo-select" id="d-res">
+        <option value="VICTORIA">VICTORIA</option><option value="EMPATE">EMPATE</option><option value="DERROTA">DERROTA</option>
+      </select>
+    </div>
+    <div class="demo-row"><span>OVR rival (equipo)</span>
+      <select class="demo-select" id="d-rival">
+        <option value="1000">Muy débil (1000)</option>
+        <option value="1100">Débil (1100)</option>
+        <option value="1200" selected>Igual (1200)</option>
+        <option value="1300">Fuerte (1300)</option>
+        <option value="1400">Muy fuerte (1400)</option>
+      </select>
+    </div>
+
+    <div class="demo-label" style="margin-top:6px">EVENTOS DEL JUGADOR</div>
+    <div id="d-events"></div>
+
+    <label class="demo-row" style="cursor:pointer"><span>¿Fue MVP?</span><input type="checkbox" id="d-mvp" style="accent-color:var(--g)"></label>
+
+    <button class="demo-btn" onclick="simulateOne()">SIMULAR PARTIDO</button>
+    <button class="demo-btn" style="background:var(--bg3);color:var(--w);border:0.5px solid rgba(255,255,255,0.15)" onclick="simulateStreak()">SIMULAR RACHA DE 10 PARTIDOS IGUALES</button>
+    <button class="demo-btn secondary" onclick="resetPlayer()">REINICIAR JUGADOR</button>
+  </div>
+
+  <div class="demo-card">
+    <div class="demo-label">ESTADO ACTUAL DEL JUGADOR DE PRUEBA</div>
+    <div class="demo-stats">
+      <div class="demo-stat"><div class="demo-stat-v" id="s-ovr">65</div><div class="demo-stat-l">OVR</div></div>
+      <div class="demo-stat"><div class="demo-stat-v" id="s-xp">0</div><div class="demo-stat-l">XP</div></div>
+      <div class="demo-stat"><div class="demo-stat-v" id="s-lp">0</div><div class="demo-stat-l">LP</div></div>
+      <div class="demo-stat"><div class="demo-stat-v" id="s-form">—</div><div class="demo-stat-l">FORMA (5)</div></div>
+      <div class="demo-stat"><div class="demo-stat-v" id="s-conf">1.00x</div><div class="demo-stat-l">CONFIANZA</div></div>
+      <div class="demo-stat"><div class="demo-stat-v" id="s-n">0</div><div class="demo-stat-l">PARTIDOS</div></div>
+    </div>
+
+    <div class="demo-label" style="margin-top:4px">PERFORMANCE SCORE — ÚLTIMOS PARTIDOS</div>
+    <div class="demo-chart" id="d-chart"></div>
+
+    <div class="demo-label" style="margin-top:4px">HISTORIAL DE LA SESIÓN</div>
+    <div class="demo-log" id="d-log"></div>
+  </div>
+</div>
+
+<footer><div class="ft-bottom">© 2026 LEVEL UP · LABORATORIO INTERNO · NO CONECTADO A PERFILES REALES</div></footer>
+
+<script src="backend/src/progression.js"></script>
+<script>
+const EVENT_DEFS = [
+  ['gol', 'Goles'], ['asistencia', 'Asistencias'], ['tiro', 'Tiros al arco'],
+  ['recuperacion', 'Recuperaciones'], ['atajada', 'Atajadas (POR)'], ['golRecibido', 'Goles recibidos (POR)'],
+  ['error', 'Errores graves'], ['fallo', 'Oportunidades falladas'], ['amarilla', 'Amarillas'], ['roja', 'Rojas'],
+];
+
+function renderEventInputs() {
+  document.getElementById('d-events').innerHTML = EVENT_DEFS.map(([key, label]) => `
+    <div class="demo-row">
+      <span style="font-size:11px">${label}</span>
+      <div class="demo-stepper">
+        <button onclick="stepEvent('${key}',-1)">-</button>
+        <span id="ev-${key}">0</span>
+        <button onclick="stepEvent('${key}',1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let currentEvents = {};
+function stepEvent(key, d) {
+  currentEvents[key] = Math.max(0, (currentEvents[key] || 0) + d);
+  document.getElementById('ev-' + key).textContent = currentEvents[key];
+}
+
+let player = null;
+let matchCount = 0;
+
+function freshPlayer() {
+  return { ovr: 65, xp: 0, lp: 0, confidence: 1.0, psHistory: [] };
+}
+
+function resetPlayer() {
+  player = freshPlayer();
+  matchCount = 0;
+  document.getElementById('d-log').innerHTML = '';
+  renderState();
+}
+
+function renderState() {
+  document.getElementById('s-ovr').textContent = player.ovr.toFixed(1);
+  document.getElementById('s-xp').textContent = player.xp;
+  document.getElementById('s-lp').textContent = player.lp;
+  document.getElementById('s-form').textContent = player.psHistory.length ? ProgressionEngine.computeForm(player.psHistory).toFixed(1) : '—';
+  document.getElementById('s-conf').textContent = player.confidence.toFixed(2) + 'x';
+  document.getElementById('s-n').textContent = matchCount;
+
+  const chart = document.getElementById('d-chart');
+  const recent = player.psHistory.slice(-20);
+  chart.innerHTML = recent.map(ps => `<div class="demo-bar" style="height:${Math.max(2, ps)}%" title="${ps.toFixed(0)}"></div>`).join('');
+}
+
+function logMatch(result, label) {
+  const row = document.createElement('div');
+  row.className = 'demo-log-row';
+  const ovrClass = result.ovr.delta > 0 ? 'up' : result.ovr.delta < 0 ? 'down' : 'zero';
+  row.innerHTML = `
+    <span class="n">#${matchCount}</span>
+    <span>${label}</span>
+    <span class="ps">PS ${result.ps.toFixed(0)}</span>
+    <span class="ovr ${ovrClass}">${result.ovr.delta >= 0 ? '+' : ''}${result.ovr.delta} OVR</span>
+    <span>+${result.xpGain} XP · ${result.lpChange >= 0 ? '+' : ''}${result.lpChange} LP</span>
+  `;
+  document.getElementById('d-log').prepend(row);
+}
+
+function runMatch(silentLabel) {
+  const position = document.getElementById('d-pos').value;
+  const resultado = document.getElementById('d-res').value;
+  const teamRatingRival = parseInt(document.getElementById('d-rival').value, 10);
+  const isMvp = document.getElementById('d-mvp').checked;
+
+  const result = ProgressionEngine.evaluateMatchForPlayer({
+    position,
+    events: currentEvents,
+    currentOvr: player.ovr,
+    psHistory: player.psHistory,
+    confidence: player.confidence,
+    resultado,
+    isMvp,
+    teamRatingSelf: 1200,
+    teamRatingRival,
+  });
+
+  player.ovr = result.ovr.newOvr;
+  player.xp += result.xpGain;
+  player.lp += result.lpChange;
+  player.confidence = result.confidence;
+  player.psHistory = result.psHistory;
+  matchCount += 1;
+
+  logMatch(result, silentLabel || `${resultado} vs rival ${teamRatingRival}`);
+  renderState();
+}
+
+function simulateOne() {
+  runMatch();
+}
+
+function simulateStreak() {
+  for (let i = 0; i < 10; i++) runMatch('Racha #' + (i + 1));
+}
+
+renderEventInputs();
+resetPlayer();
+</script>
+</body>
+</html>
