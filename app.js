@@ -285,6 +285,7 @@ function buildCardHTML(p) {
     <div class="fc-fx"></div>
     ${tier === 'goat' ? '<div class="fc-cosmos"></div>' : ''}
     ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
+    <div class="fc-frame-img" style="background-image:url('assets/ranks/${tier}.png')"></div>
     <span class="fc-corner tl"></span>
     <span class="fc-corner tr"></span>
     <span class="fc-corner bl"></span>
@@ -695,7 +696,7 @@ const HW_ACTIONS = [
 ];
 
 const HW_FLOW = [
-  'Creas tu jugador', 'Juegas partidos', 'Los administradores registran tus estadísticas',
+  'Creas tu perfil', 'Juegas partidos', 'Los administradores registran tus estadísticas',
   'Tu carta evoluciona automáticamente', 'Obtienes LP y XP', 'Subes de OVR', 'Asciendes de rango',
   'Ingresas a mejores partidos', 'Creas equipos', 'Retas equipos', 'Participas en temporadas', 'Construyes tu legado',
 ];
@@ -724,6 +725,47 @@ const HW_SOON = [
   { icon: '🌎', name: 'Ranking por ciudades' },
 ];
 
+function flowCols() {
+  const w = window.innerWidth || 1200;
+  if (w <= 560) return 1;
+  if (w <= 980) return 2;
+  return 4;
+}
+function renderFlowSnake() {
+  const host = document.getElementById('hw-flow');
+  if (!host) return;
+  const cols = flowCols();
+  const step = (s, i) => `<div class="hw-flow-step"><div class="hw-flow-n">${i + 1}</div><div class="hw-flow-text">${s}</div></div>`;
+  const hConn = dir => `<div class="hw-flow-conn ${dir}"><span class="hw-flow-chev">${dir === 'left' ? '‹' : '›'}</span></div>`;
+  const turn = side => `<div class="hw-flow-turn ${side}"><span class="hw-flow-chev down">⌄</span></div>`;
+  let html = '';
+  const total = HW_FLOW.length;
+  for (let start = 0, row = 0; start < total; start += cols, row++) {
+    const slice = HW_FLOW.slice(start, start + cols).map((s, k) => ({ s, i: start + k }));
+    const reversed = cols > 1 && row % 2 === 1;
+    const ordered = reversed ? slice.slice().reverse() : slice;
+    html += `<div class="hw-flow-row${reversed ? ' rev' : ''}">`;
+    ordered.forEach((item, k) => {
+      html += step(item.s, item.i);
+      if (k < ordered.length - 1) html += hConn(reversed ? 'left' : 'right');
+    });
+    html += `</div>`;
+    // connector turning down to the next row, aligned to the side where the snake turns
+    if (start + cols < total) {
+      // after a normal row the snake turns down on the right; after a reversed row, on the left
+      html += turn(cols === 1 ? 'center' : (reversed ? 'left' : 'right'));
+    }
+  }
+  host.innerHTML = html;
+  host.style.setProperty('--flow-cols', cols);
+}
+let _flowResizeTimer = null;
+window.addEventListener('resize', () => {
+  if (!document.getElementById('hw-flow')) return;
+  clearTimeout(_flowResizeTimer);
+  _flowResizeTimer = setTimeout(renderFlowSnake, 180);
+});
+
 function renderWelcomeHome() {
   if (!document.getElementById('hw-action-grid')) return;
   const nameEl = document.getElementById('hw-name');
@@ -737,11 +779,7 @@ function renderWelcomeHome() {
       <button class="hw-action-btn" onclick="location.href='${a.href}'">${a.btn}</button>
     </div>`).join('');
 
-  document.getElementById('hw-flow').innerHTML = HW_FLOW.map((step, i) => `
-    <div class="hw-flow-step">
-      <div class="hw-flow-n">${i + 1}</div>
-      <div class="hw-flow-text">${step}</div>
-    </div>${i < HW_FLOW.length - 1 ? '<div class="hw-flow-arrow">↓</div>' : ''}`).join('');
+  renderFlowSnake();
 
   document.getElementById('hw-rank-track').innerHTML = RANKS.map((r, i) => {
     const info = HW_RANK_INFO[r.name] || {};
