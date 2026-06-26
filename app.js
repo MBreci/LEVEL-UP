@@ -1132,7 +1132,7 @@ let teamMatches = loadTeamMatches();
 
 function teamToRow(t) {
   return {
-    id: t.id, name: t.name, desc: t.desc, city: t.city, color: t.color, photo: t.photo,
+    id: t.id, name: t.name, descripcion: t.desc, city: t.city, color: t.color, photo: t.photo,
     captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
     join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
     goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
@@ -1140,7 +1140,7 @@ function teamToRow(t) {
 }
 function rowToTeam(r) {
   return {
-    id: r.id, name: r.name, desc: r.desc, city: r.city, color: r.color, photo: r.photo,
+    id: r.id, name: r.name, desc: r.descripcion, city: r.city, color: r.color, photo: r.photo,
     captainId: r.captain_id, memberIds: r.member_ids || [], openForPlayers: r.open_for_players,
     joinRequests: r.join_requests || [], wins: r.wins || 0, draws: r.draws || 0, losses: r.losses || 0,
     goalsFor: r.goals_for || 0, goalsAgainst: r.goals_against || 0, streak: r.streak || '', createdAt: r.created_at,

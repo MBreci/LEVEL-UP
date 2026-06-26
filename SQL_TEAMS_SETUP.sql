@@ -8,7 +8,7 @@
 create table if not exists teams (
   id text primary key,
   name text not null,
-  desc text,
+  descripcion text,
   city text,
   color text,
   photo text,
