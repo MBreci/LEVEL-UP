@@ -33,7 +33,6 @@ const FUNCTIONAL_MODULES = [
   { id: 'ficha', label: 'MI FICHA' },
   { id: 'jugadores', label: 'JUGADORES' },
   { id: 'ranking', label: 'RANKING' },
-  { id: 'historial', label: 'HISTORIAL' },
   { id: 'partidos', label: 'PARTIDOS' },
   { id: 'temporada', label: 'TEMPORADA BETA' },
 ];
@@ -207,7 +206,6 @@ const PAGE_HREFS = {
   ficha: 'carta.html',
   jugadores: 'jugadores.html',
   ranking: 'ranking.html',
-  historial: 'carta.html#historial',
   partidos: 'buscar-partido.html',
   temporada: 'temporada-piloto.html',
 };
