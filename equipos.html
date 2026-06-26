@@ -115,6 +115,14 @@
   </div>
 </div>
 
+<!-- MODAL FICHA DE JUGADOR -->
+<div class="modal-overlay" id="player-view-modal">
+  <div class="player-view-card">
+    <div class="card-section" id="player-view-content"></div>
+    <button class="auth-cancel" onclick="closePlayerView()">CERRAR</button>
+  </div>
+</div>
+
 <!-- MODAL VER ESCUDO EN GRANDE -->
 <div class="modal-overlay" id="escudo-lightbox">
   <div class="escudo-lightbox-card">
@@ -143,6 +151,16 @@
     <div class="auth-error" id="challenge-error"></div>
     <button class="auth-submit" onclick="sendChallenge()">ENVIAR RETO</button>
     <button class="auth-cancel" onclick="closeChallengeModal()">CANCELAR</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR EXPULSIÓN DE JUGADOR -->
+<div class="modal-overlay" id="kick-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">EXPULSAR JUGADOR</div></div>
+    <div class="auth-label" id="kick-modal-text" style="white-space:pre-wrap;"></div>
+    <button class="auth-submit" id="kick-modal-confirm" onclick="confirmKickTeamMember()">SÍ, ECHAR DEL EQUIPO</button>
+    <button class="auth-cancel" onclick="closeKickModal()">CANCELAR</button>
   </div>
 </div>
 

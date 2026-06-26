@@ -300,7 +300,7 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.def}</div><div class="fca-l">DEF</div></div>
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
-    <div class="fc-foot"><div class="fc-team">${p.team}</div></div>
+    <div class="fc-foot"><div class="fc-team">${p.team || 'SIN EQUIPO'}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div></div>
   `;
   return { className, html };
 }
@@ -347,7 +347,7 @@ function renderCard() {
   if (!piEl) return;
   piEl.innerHTML = `
     <div class="pi-name">${state.name} ${state.nickname ? `<span class="pi-nick" onclick="editNickname()">"${state.nickname}" ✎</span>` : `<span class="pi-nick pi-nick-add" onclick="editNickname()">+ AGREGAR APODO</span>`}</div>
-    <div class="pi-sub">${state.position} · ${state.team}</div>
+    <div class="pi-sub">${state.position} · ${state.team || 'SIN EQUIPO'}</div>
     <div class="pi-tags">
       <div class="pi-tag g">RANGO: ${rank.name}</div>
       <div class="pi-tag gold">RANKING GENERAL #${rankPos}</div>
@@ -538,10 +538,11 @@ function renderNotifications() {
   const myInvites = getMyInvites();
   const myTeamInvites = getMyTeamInvites();
   const myChallenges = getMyChallenges();
-  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length;
+  const myLeaveRequests = getMyTeamLeaveRequests();
+  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length + myLeaveRequests.length;
   const el = document.getElementById('notif-list');
   if (!el) return;
-  if (!state.notifications.length && !myInvites.length && !myTeamInvites.length && !myChallenges.length) {
+  if (!state.notifications.length && !myInvites.length && !myTeamInvites.length && !myChallenges.length && !myLeaveRequests.length) {
     el.innerHTML = `<div class="notif-empty">No tienes notificaciones.</div>`;
     return;
   }
@@ -577,13 +578,31 @@ function renderNotifications() {
     </div>
   `;
   }).join('');
+  const leaveRequestRows = myLeaveRequests.map(({ team, playerId }) => {
+    const p = profiles[playerId];
+    if (!p) return '';
+    return `
+    <div class="notif-invite">
+      <div class="notif-invite-txt">🚪 <strong>${p.nickname || p.name}</strong> solicitó salir de ${team.name}.</div>
+      <div class="notif-invite-actions">
+        <button class="notif-accept" onclick="respondLeaveRequest('${team.id}','${playerId}',true)">ACEPTAR</button>
+        <button class="notif-reject" onclick="respondLeaveRequest('${team.id}','${playerId}',false)">RECHAZAR</button>
+      </div>
+    </div>`;
+  }).join('');
   const normalRows = state.notifications.slice().reverse().map(n => `
     <div class="notif-row">
       <div class="notif-icon">${n.icon}</div>
       <div><div class="notif-txt">${n.text}</div><div class="notif-time">${n.time}</div></div>
     </div>
   `).join('');
-  el.innerHTML = inviteRows + teamInviteRows + challengeRows + normalRows;
+  el.innerHTML = inviteRows + teamInviteRows + challengeRows + leaveRequestRows + normalRows;
+}
+
+function getMyTeamLeaveRequests() {
+  const team = getMyTeam();
+  if (!team || !state || team.captainId !== state.id || !team.leaveRequests) return [];
+  return team.leaveRequests.map(playerId => ({ team, playerId }));
 }
 
 function renderWipGrid() {
@@ -1175,7 +1194,7 @@ function teamToRow(t) {
     captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
     join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
     goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
-    slot_positions: t.slotPositions,
+    slot_positions: t.slotPositions, leave_requests: t.leaveRequests,
   };
 }
 function rowToTeam(r) {
@@ -1184,7 +1203,7 @@ function rowToTeam(r) {
     captainId: r.captain_id, memberIds: r.member_ids || [], openForPlayers: r.open_for_players,
     joinRequests: r.join_requests || [], wins: r.wins || 0, draws: r.draws || 0, losses: r.losses || 0,
     goalsFor: r.goals_for || 0, goalsAgainst: r.goals_against || 0, streak: r.streak || '', createdAt: r.created_at,
-    slotPositions: r.slot_positions || [],
+    slotPositions: r.slot_positions || [], leaveRequests: r.leave_requests || [],
   };
 }
 async function pushTeamToCloud(t) {
@@ -1286,7 +1305,7 @@ function makeTeam({ name, desc, city, color, photo, captainId }) {
     captainId, memberIds: [captainId], openForPlayers: false, joinRequests: [],
     slotPositions: [captain ? captain.position : '', '', '', '', '', ''],
     wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, streak: '',
-    createdAt: Date.now(),
+    createdAt: Date.now(), leaveRequests: [],
   };
 }
 
@@ -1327,6 +1346,10 @@ async function submitCreateTeam() {
   teams[team.id] = team;
   saveTeams();
   pushTeamToCloud(team);
+  state.team = team.name;
+  profiles[state.id] = state;
+  saveProfiles();
+  pushProfileToCloud(state);
   renderTeamsModule();
 }
 
@@ -1408,6 +1431,10 @@ function respondTeamInvite(inviteId, accept) {
     team.memberIds.push(state.id);
     saveTeams();
     pushTeamToCloud(team);
+    state.team = team.name;
+    profiles[state.id] = state;
+    saveProfiles();
+    pushProfileToCloud(state);
   }
   const captain = profiles[invite.fromCaptainId];
   if (captain) {
@@ -1447,8 +1474,104 @@ function respondJoinRequest(teamId, playerId, accept) {
   const player = profiles[playerId];
   if (player) {
     player.notifications.push({ icon: accept ? '✅' : '❌', text: `Tu solicitud para unirte a ${team.name} fue ${accept ? 'aceptada' : 'rechazada'}.`, time: 'AHORA' });
+    if (accept) player.team = team.name;
+    profiles[playerId] = player;
     saveProfiles();
     pushProfileToCloud(player);
+    if (state && state.id === playerId) state.team = player.team;
+  }
+  renderTeamProfile(teamId);
+}
+
+function requestLeaveTeam() {
+  if (!state) return;
+  const team = getMyTeam();
+  if (!team) return;
+  if (team.captainId === state.id) {
+    alert('Eres el capitán de ' + team.name + '. Para salir primero debes transferir la capitanía o disolver el equipo (próximamente).');
+    return;
+  }
+  if (!team.leaveRequests) team.leaveRequests = [];
+  if (team.leaveRequests.includes(state.id)) { alert('Ya enviaste una solicitud para salir de este equipo.'); return; }
+  team.leaveRequests.push(state.id);
+  saveTeams();
+  pushTeamToCloud(team);
+  const captain = profiles[team.captainId];
+  if (captain) {
+    captain.notifications.push({ icon: '🚪', text: `${state.nickname || state.name} solicitó salir de ${team.name}.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(captain);
+  }
+  alert('Solicitud de salida enviada al capitán de ' + team.name + '.');
+  renderTeamProfile(team.id);
+}
+
+function respondLeaveRequest(teamId, playerId, accept) {
+  const team = teams[teamId];
+  if (!team || !state || team.captainId !== state.id) return;
+  if (!team.leaveRequests) team.leaveRequests = [];
+  team.leaveRequests = team.leaveRequests.filter(id => id !== playerId);
+  if (accept) {
+    team.memberIds = team.memberIds.filter(id => id !== playerId);
+  }
+  saveTeams();
+  pushTeamToCloud(team);
+  const player = profiles[playerId];
+  if (player) {
+    player.notifications.push({ icon: accept ? '✅' : '❌', text: `Tu solicitud para salir de ${team.name} fue ${accept ? 'aceptada' : 'rechazada'}.`, time: 'AHORA' });
+    if (accept) {
+      player.team = 'SIN EQUIPO';
+      if (state && state.id === playerId) state.team = player.team;
+    }
+    profiles[playerId] = player;
+    saveProfiles();
+    pushProfileToCloud(player);
+  }
+  renderTeamProfile(teamId);
+}
+
+let kickTeamModalCtx = null;
+
+function openKickModal(teamId, playerId) {
+  const team = teams[teamId];
+  const player = profiles[playerId];
+  if (!team || !player || !state || state.id !== team.captainId) return;
+  kickTeamModalCtx = { teamId, playerId };
+  const textEl = document.getElementById('kick-modal-text');
+  if (textEl) textEl.textContent = `Estás por echar a ${player.nickname || player.name} de tu equipo. Esto puede tener consecuencias para tu equipo y los demás jugadores. ¿Deseas continuar?`;
+  const modal = document.getElementById('kick-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeKickModal() {
+  kickTeamModalCtx = null;
+  const modal = document.getElementById('kick-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function confirmKickTeamMember() {
+  if (!kickTeamModalCtx) return;
+  const { teamId, playerId } = kickTeamModalCtx;
+  closeKickModal();
+  kickTeamMember(teamId, playerId);
+}
+
+function kickTeamMember(teamId, playerId) {
+  const team = teams[teamId];
+  if (!team || !state || state.id !== team.captainId) return;
+  if (playerId === team.captainId) return;
+  if (!team.memberIds.includes(playerId)) return;
+  team.memberIds = team.memberIds.filter(id => id !== playerId);
+  saveTeams();
+  pushTeamToCloud(team);
+  const player = profiles[playerId];
+  if (player) {
+    player.team = 'SIN EQUIPO';
+    player.notifications.push({ icon: '🚪', text: `Fuiste retirado del equipo ${team.name} por el capitán.`, time: 'AHORA' });
+    profiles[playerId] = player;
+    saveProfiles();
+    pushProfileToCloud(player);
+    if (state && state.id === playerId) state.team = player.team;
   }
   renderTeamProfile(teamId);
 }
@@ -1635,13 +1758,18 @@ function renderTeamProfile(teamId) {
     const p = profiles[memberId];
     if (!p) return `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
     const isCap = memberId === team.captainId;
+    const neonIdx = i % 6;
     return `
-      <div class="team-slot ${isCap ? 'captain' : ''}">
-        ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
+      <div class="team-slot team-slot-neon neon-${neonIdx} ${isCap ? 'captain' : ''}">
+        <div class="team-slot-smoke"></div>
+        <div class="team-slot-photo-wrap" onclick="openPlayerView('${p.id}')" title="Ver ficha de ${p.nickname || p.name}">
+          ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
+        </div>
         <div class="team-slot-name">${p.nickname || p.name}</div>
         <div class="team-slot-ovr">OVR ${p.ovr}</div>
         ${isCaptain ? positionSelect(i, pos) : (pos ? `<div class="team-slot-tag">${pos}</div>` : '')}
-        ${isCap ? '<div class="team-slot-tag">CAPITÁN</div>' : ''}
+        ${isCap ? '<div class="team-slot-captain-badge">CAPITÁN</div>' : ''}
+        ${isCaptain && !isCap ? `<button class="mm-invite-btn team-kick-btn" onclick="openKickModal('${team.id}','${p.id}')">ECHAR DEL EQUIPO</button>` : ''}
       </div>`;
   }).join('');
   const requests = isCaptain && team.joinRequests.length
@@ -1660,6 +1788,28 @@ function renderTeamProfile(teamId) {
         }).join('')}
        </div>`
     : '';
+  const leaveRequests = team.leaveRequests || [];
+  const leaveRequestsSection = isCaptain && leaveRequests.length
+    ? `<div class="sec-hdr"><div class="sec-eyebrow">SOLICITUDES PARA SALIR DEL EQUIPO</div></div>
+       <div class="team-requests">
+        ${leaveRequests.map(pid => {
+          const p = profiles[pid];
+          if (!p) return '';
+          return `<div class="notif-invite">
+            <div class="notif-invite-txt">🚪 <strong>${p.nickname || p.name}</strong> quiere salir del equipo.</div>
+            <div class="notif-invite-actions">
+              <button class="notif-accept" onclick="respondLeaveRequest('${team.id}','${pid}',true)">ACEPTAR</button>
+              <button class="notif-reject" onclick="respondLeaveRequest('${team.id}','${pid}',false)">RECHAZAR</button>
+            </div>
+          </div>`;
+        }).join('')}
+       </div>`
+    : '';
+  const isNonCaptainMember = state && !isCaptain && team.memberIds.includes(state.id);
+  const alreadyRequestedLeave = state && leaveRequests.includes(state.id);
+  const leaveBtn = isNonCaptainMember
+    ? `<button class="mm-invite-btn team-leave-btn" onclick="requestLeaveTeam()" ${alreadyRequestedLeave ? 'disabled' : ''}>${alreadyRequestedLeave ? 'SOLICITUD DE SALIDA ENVIADA' : 'SOLICITAR SALIR DEL EQUIPO'}</button>`
+    : '';
   el.innerHTML = `
     <div class="team-card">
       <div class="team-card-head">
@@ -1676,9 +1826,11 @@ function renderTeamProfile(teamId) {
         </div>
       </div>
       ${isCaptain ? `<button class="mm-invite-btn" onclick="toggleOpenForPlayers('${team.id}')">${team.openForPlayers ? '✓ ABIERTO A SOLICITUDES' : 'CERRADO A SOLICITUDES — ABRIR'}</button>` : ''}
+      ${leaveBtn}
       <div class="team-slots">${slots}</div>
     </div>
     ${requests}
+    ${leaveRequestsSection}
   `;
 }
 
@@ -1940,6 +2092,13 @@ function renderTicker() {
   Object.values(profiles).slice(-5).forEach(p => {
     items.push(`<span class="tk-item">🆕 <strong>NUEVO JUGADOR</strong> ${p.nickname || p.name} se unió a LEVEL UP</span>`);
   });
+  Object.values(teams).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5).forEach(t => {
+    items.push(`<span class="tk-item">🛡️ <strong>NUEVO EQUIPO</strong> ${t.name} se formó en LEVEL UP</span>`);
+  });
+  teamInvites.filter(i => i.status === 'aceptada').slice(-5).forEach(i => {
+    const p = profiles[i.toId];
+    if (p) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${p.nickname || p.name} se unió a ${i.teamName}</span>`);
+  });
   if (items.length === 0) {
     items.push(`<span class="tk-item">⚽ Sé el primero en publicar tu búsqueda en "BUSCAR PARTIDO"</span>`);
   }
@@ -1959,7 +2118,15 @@ function initApp() {
   syncProfilesFromCloud();
   syncTeamsFromCloud().then(() => {
     const myTeam = getMyTeam();
-    if (myTeam) pushTeamToCloud(myTeam);
+    if (myTeam) {
+      pushTeamToCloud(myTeam);
+      if (state.team !== myTeam.name) {
+        state.team = myTeam.name;
+        profiles[state.id] = state;
+        saveProfiles();
+        pushProfileToCloud(state);
+      }
+    }
     renderAll();
   });
   syncTeamInvitesFromCloud().then(renderAll);

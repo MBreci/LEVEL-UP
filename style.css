@@ -245,6 +245,8 @@ section{padding:64px;border-bottom:var(--b1)}
 .fca-l{font-family:var(--ft);font-size:8px;letter-spacing:1.5px;color:var(--td);margin-top:2px}
 .fc-foot{position:relative;z-index:1;padding:11px 20px;display:flex;justify-content:space-between;border-top:0.5px solid rgba(255,255,255,0.08)}
 .fc-team{font-size:10px;color:var(--td);letter-spacing:1px}
+.fc-captain-badge{display:inline-block;margin-left:6px;padding:2px 8px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:#0a0a0a;background:linear-gradient(120deg,#ffd84d,#ffae00);border-radius:20px;box-shadow:0 0 8px rgba(255,174,0,0.6);animation:captainPulse 1.8s ease-in-out infinite}
+@keyframes captainPulse{0%,100%{box-shadow:0 0 6px rgba(255,174,0,0.5)}50%{box-shadow:0 0 14px rgba(255,174,0,0.95)}}
 .fc-val{font-family:var(--ft);font-size:11px;color:var(--gold)}
 
 /* RANGO → MARCO */
@@ -719,6 +721,74 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-hist-row{background:var(--bg2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t);font-family:var(--fb)}
 .team-hist-row span:nth-child(2){font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm)}
 .team-hist-row span:nth-child(3){font-family:var(--ft);font-weight:700;color:var(--g)}
+
+.team-leave-btn{background:var(--bg3);border:1px solid rgba(255,80,80,0.35);color:#ff8a8a}
+.team-leave-btn:hover{box-shadow:0 0 16px rgba(255,80,80,0.25)}
+.team-leave-btn:disabled{opacity:0.5;cursor:default}
+
+.team-kick-btn{background:var(--bg3);border:1px solid rgba(255,80,80,0.35);color:#ff8a8a;width:100%;margin-top:8px;position:relative;z-index:2}
+.team-kick-btn:hover{box-shadow:0 0 16px rgba(255,80,80,0.25)}
+
+/* ===== Recuadros neón de jugadores en el equipo ===== */
+.team-slot-neon{
+  background:radial-gradient(circle at 50% -10%,rgba(255,255,255,0.04),transparent 60%),var(--bg3);
+  border:0.5px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding:20px 14px 16px;
+  min-height:148px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
+  position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s;
+}
+.team-slot-neon:hover{transform:translateY(-3px)}
+.team-slot-neon .team-slot-smoke{
+  position:absolute;inset:-30%;z-index:0;pointer-events:none;opacity:.55;mix-blend-mode:screen;
+  background:
+    radial-gradient(circle at 30% 20%,var(--neon-c,rgba(0,245,140,0.35)),transparent 55%),
+    radial-gradient(circle at 75% 75%,var(--neon-c2,rgba(0,245,140,0.18)),transparent 60%);
+  filter:blur(14px);
+  animation:teamSlotSmokeDrift 7s ease-in-out infinite alternate;
+}
+@keyframes teamSlotSmokeDrift{
+  0%{transform:translate(-3%,-2%) scale(1) rotate(0deg)}
+  100%{transform:translate(3%,3%) scale(1.15) rotate(4deg)}
+}
+.team-slot-neon::before{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:10px;
+  box-shadow:0 0 0 1px var(--neon-c,rgba(0,245,140,0.25)) inset,0 0 22px -4px var(--neon-c,rgba(0,245,140,0.35));
+  transition:box-shadow .25s;
+}
+.team-slot-neon:hover::before{box-shadow:0 0 0 1px var(--neon-c,rgba(0,245,140,0.45)) inset,0 0 34px -2px var(--neon-c,rgba(0,245,140,0.55))}
+.team-slot-neon.neon-0{--neon-c:rgba(0,245,140,0.4);--neon-c2:rgba(0,245,140,0.16)}
+.team-slot-neon.neon-1{--neon-c:rgba(0,200,255,0.42);--neon-c2:rgba(0,200,255,0.16)}
+.team-slot-neon.neon-2{--neon-c:rgba(255,0,170,0.4);--neon-c2:rgba(255,0,170,0.16)}
+.team-slot-neon.neon-3{--neon-c:rgba(255,170,0,0.42);--neon-c2:rgba(255,170,0,0.16)}
+.team-slot-neon.neon-4{--neon-c:rgba(140,0,255,0.42);--neon-c2:rgba(140,0,255,0.16)}
+.team-slot-neon.neon-5{--neon-c:rgba(255,60,60,0.4);--neon-c2:rgba(255,60,60,0.16)}
+.team-slot-neon.captain{border-color:rgba(255,215,0,0.45)}
+.team-slot-neon.captain::before{box-shadow:0 0 0 1.5px rgba(255,215,0,0.5) inset,0 0 28px -2px rgba(255,215,0,0.5)}
+
+.team-slot-photo-wrap{position:relative;z-index:1;cursor:pointer;border-radius:50%;transition:transform .2s}
+.team-slot-photo-wrap:hover{transform:scale(1.08)}
+.team-slot-photo-wrap .team-slot-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;margin-bottom:0;border:1.5px solid var(--neon-c,rgba(0,245,140,0.45));box-shadow:0 0 14px -2px var(--neon-c,rgba(0,245,140,0.5))}
+.team-slot-photo-wrap .team-slot-av{width:56px;height:56px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--neon-c,rgba(0,245,140,0.45));box-shadow:0 0 14px -2px var(--neon-c,rgba(0,245,140,0.5));display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:13px;color:var(--w);margin:0}
+
+.team-slot-neon .team-slot-name{position:relative;z-index:1;font-size:13px;font-weight:700;color:var(--w);margin-top:8px}
+.team-slot-neon .team-slot-ovr{position:relative;z-index:1;font-size:10px;margin-top:2px}
+.team-slot-neon .team-slot-tag{position:relative;z-index:1;margin-top:8px}
+.team-slot-neon .team-slot-pos-select{position:relative;z-index:1;margin-top:8px}
+
+.team-slot-captain-badge{
+  position:relative;z-index:1;margin-top:8px;
+  font-family:var(--ft);font-size:8px;letter-spacing:1.5px;color:#1a1400;
+  padding:3px 10px;border-radius:4px;
+  background:linear-gradient(120deg,#ffe27a,#ffd700,#ff9d00,#ffd700,#ffe27a);
+  background-size:300% 100%;
+  box-shadow:0 0 14px rgba(255,215,0,0.55);
+  animation:teamCaptainGlow 2.2s ease-in-out infinite,teamCaptainShift 4s linear infinite;
+}
+@keyframes teamCaptainGlow{0%,100%{box-shadow:0 0 10px rgba(255,215,0,0.45)}50%{box-shadow:0 0 22px rgba(255,215,0,0.85)}}
+@keyframes teamCaptainShift{0%{background-position:0% 0}100%{background-position:300% 0}}
 
 @media(max-width:760px){
   .eq-tabs{flex-direction:column}
