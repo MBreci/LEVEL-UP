@@ -671,6 +671,89 @@ function renderAll() {
   renderTicker();
   updateProfileBtn();
   renderDashboard();
+  renderWelcomeHome();
+}
+
+const HW_ACTIONS = [
+  { icon: '🔍', title: 'BUSCAR PARTIDOS', text: 'Encuentra partidos cerca de ti. Filtra por ciudad, barrio y tipo de fútbol. Revisa horarios y cupos. Inscríbete y confirma asistencia.', btn: 'Buscar Partidos', href: 'buscar-partido.html' },
+  { icon: '📋', title: 'CREAR PARTIDOS', text: 'Organiza un partido en segundos. Selecciona cancha, fecha y hora. Invita jugadores y administra la lista de asistentes.', btn: 'Crear Partido', href: 'buscar-partido.html' },
+  { icon: '🛡️', title: 'CREAR EQUIPO', text: 'Construye tu propio club. Ponle nombre, diseña su identidad e invita hasta seis jugadores. Designa un capitán.', btn: 'Crear Equipo', href: 'equipos.html#crear' },
+  { icon: '👑', title: 'REY DEL BARRIO', text: 'Reta a otros equipos registrados. Compara OVR y jugadores, selecciona la cancha y programa el desafío.', btn: 'Retar Equipo', href: 'equipos.html#rey' },
+  { icon: '🃏', title: 'BUSCAR JUGADORES', text: 'Explora toda la comunidad. Consulta perfiles, estadísticas y posiciones. Invítalos a tu equipo.', btn: 'Buscar Jugadores', href: 'jugadores.html' },
+  { icon: '📈', title: 'MI CARRERA', text: 'Consulta tu trayectoria completa: OVR, LP, XP, partidos, goles, asistencias, MVP, logros y ranking.', btn: 'Ver Mi Carrera', href: 'carta.html' },
+];
+
+const HW_FLOW = [
+  'Creas tu jugador', 'Juegas partidos', 'Los administradores registran tus estadísticas',
+  'Tu carta evoluciona automáticamente', 'Obtienes LP y XP', 'Subes de OVR', 'Asciendes de rango',
+  'Ingresas a mejores partidos', 'Creas equipos', 'Retas equipos', 'Participas en temporadas', 'Construyes tu legado',
+];
+
+const HW_RANK_INFO = {
+  ROOKIE:   { desc: 'Tu punto de partida. Estás conociendo la plataforma y disputando tus primeros partidos.' },
+  NOVA:     { desc: 'Empiezas a sumar partidos y a mostrar regularidad en tu rendimiento.' },
+  VANGUARD: { desc: 'Jugador reconocido en su zona, con estadísticas consistentes.' },
+  PRIME:    { desc: 'Rendimiento sólido y constante. Empiezas a destacar entre tus pares.' },
+  RIVAL:    { desc: 'Compites en partidos de mayor nivel. Tu nombre empieza a sonar.' },
+  ELITE:    { desc: 'Jugador de alto nivel, buscado para los mejores partidos y equipos.' },
+  APEX:     { desc: 'Entre los mejores de la plataforma. Pocos llegan hasta aquí.' },
+  LEGACY:   { desc: 'El rango máximo. Una leyenda dentro de LEVEL UP.' },
+};
+
+const HW_SOON = [
+  { icon: '🎮', name: 'Fantasy League' },
+  { icon: '🤖', name: 'IA analizando partidos' },
+  { icon: '🛒', name: 'Marketplace' },
+  { icon: '🤝', name: 'Patrocinios' },
+  { icon: '🎬', name: 'Clips automáticos' },
+  { icon: '📱', name: 'App móvil' },
+  { icon: '📡', name: 'Streaming' },
+  { icon: '🏆', name: 'Torneos oficiales' },
+  { icon: '📊', name: 'Estadísticas avanzadas' },
+  { icon: '🌎', name: 'Ranking por ciudades' },
+];
+
+function renderWelcomeHome() {
+  if (!document.getElementById('hw-action-grid')) return;
+  const nameEl = document.getElementById('hw-name');
+  if (nameEl && state) nameEl.textContent = (state.nickname || state.name).toUpperCase();
+
+  document.getElementById('hw-action-grid').innerHTML = HW_ACTIONS.map(a => `
+    <div class="hw-action-card">
+      <div class="hw-action-icon">${a.icon}</div>
+      <div class="hw-action-title">${a.title}</div>
+      <div class="hw-action-text">${a.text}</div>
+      <button class="hw-action-btn" onclick="location.href='${a.href}'">${a.btn}</button>
+    </div>`).join('');
+
+  document.getElementById('hw-flow').innerHTML = HW_FLOW.map((step, i) => `
+    <div class="hw-flow-step">
+      <div class="hw-flow-n">${i + 1}</div>
+      <div class="hw-flow-text">${step}</div>
+    </div>${i < HW_FLOW.length - 1 ? '<div class="hw-flow-arrow">↓</div>' : ''}`).join('');
+
+  document.getElementById('hw-rank-track').innerHTML = RANKS.map(r => `
+    <div class="hw-rank-card rk-${r.name.toLowerCase()}">
+      <div class="hw-rank-badge">${r.name}</div>
+      <div class="hw-rank-ovr">DESDE ${r.min.toLocaleString('es')} XP</div>
+      <div class="hw-rank-desc">${HW_RANK_INFO[r.name] ? HW_RANK_INFO[r.name].desc : ''}</div>
+    </div>`).join('');
+
+  const soonGrid = document.getElementById('hw-soon-grid');
+  if (soonGrid) soonGrid.innerHTML = HW_SOON.map(s => `
+    <div class="hw-soon-tile"><div class="hw-soon-icon">${s.icon}</div><div class="hw-soon-name">${s.name}</div></div>`).join('');
+
+  const particles = document.getElementById('hw-particles');
+  if (particles && !particles.childElementCount) {
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement('div');
+      p.className = 'hw-particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      p.style.animationDuration = (6 + Math.random() * 6) + 's';
+      particles.appendChild(p);
+    }
+  }
 }
 
 function renderDashboard() {
@@ -1579,7 +1662,7 @@ function bpSelectModalidad(id) {
 function bpSelectCategoria(id) { bpWizard.categoria = id; renderBpWizard(); }
 function bpSelectSuperficie(id) { bpWizard.superficie = id; renderBpWizard(); }
 function bpSelectArena(id) { bpWizard.arenaId = id || null; renderBpWizard(); }
-function bpSelectFecha(v) { bpWizard.fechaISO = v || null; bpWizard.horaValue = null; renderBpWizard(); }
+function bpSelectFecha(v) { bpWizard.fechaISO = v || null; bpWizard.horaValue = null; renderBpSummary(); }
 function bpSelectHora(h) { bpWizard.horaValue = h; renderBpWizard(); }
 
 function bpWizardBack() {
@@ -3340,6 +3423,7 @@ initApp();
 /* ===== AUDIO ===== */
 
 const aud = document.getElementById('audio');
+const AUDIO_MUTED_KEY = 'levelup_audio_muted';
 let audPlaying = false;
 
 function setAudioUI(playing) {
@@ -3350,6 +3434,7 @@ function setAudioUI(playing) {
 }
 
 document.addEventListener('click', function startAudio() {
+  if (localStorage.getItem(AUDIO_MUTED_KEY) === '1') { document.removeEventListener('click', startAudio); return; }
   aud.volume = 0.7;
   aud.play().then(() => {
     audPlaying = true;
@@ -3362,9 +3447,11 @@ function toggleAudio() {
   if (audPlaying) {
     aud.pause();
     audPlaying = false;
+    localStorage.setItem(AUDIO_MUTED_KEY, '1');
   } else {
     aud.play();
     audPlaying = true;
+    localStorage.setItem(AUDIO_MUTED_KEY, '0');
   }
   setAudioUI(audPlaying);
 }

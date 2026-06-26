@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=1782513802">
 </head>
 <body>
 
@@ -45,14 +45,119 @@
   <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
 </div>
 
-<div class="page-banner">
-  <div class="page-banner-eyebrow">00 · TU CENTRO DE MANDO</div>
-  <div class="page-banner-title">CENTRO DE MANDO</div>
-  <div class="page-banner-desc">Tu progreso, tu próximo partido y tu ranking, en un solo lugar.</div>
+<!-- HERO BIENVENIDA -->
+<div class="hw-hero" id="hw-hero">
+  <div class="hw-hero-bg"></div>
+  <div class="hw-hero-fog"></div>
+  <div class="hw-hero-particles" id="hw-particles"></div>
+  <div class="hw-hero-content">
+    <div class="page-banner-eyebrow">BIENVENIDO, <span id="hw-name">JUGADOR</span></div>
+    <div class="hw-hero-title">BIENVENIDO A<br>LEVEL UP</div>
+    <div class="hw-hero-sub">Tu carrera como futbolista comienza aquí.<br>No vienes únicamente a jugar partidos. Vienes a construir una historia.</div>
+    <div class="hw-hero-cta-row">
+      <button class="hw-cta-main" onclick="location.href='buscar-partido.html'">COMENZAR MI CARRERA</button>
+      <button class="hw-cta-sec" onclick="document.getElementById('hw-que-es').scrollIntoView({behavior:'smooth'})">DESCUBRIR LEVEL UP</button>
+    </div>
+  </div>
 </div>
 
+<!-- QUÉ ES LEVEL UP -->
+<section id="hw-que-es">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">01 · EL CONCEPTO</div>
+    <div class="page-banner-title hw-sec-title">¿QUÉ ES LEVEL UP?</div>
+  </div>
+  <div class="hw-pillars">
+    <div class="hw-pillar">
+      <div class="hw-pillar-icon">⚽</div>
+      <div class="hw-pillar-title">FÚTBOL AMATEUR</div>
+      <div class="hw-pillar-text">Convertimos el fútbol amateur en una experiencia de progresión similar a un videojuego.</div>
+    </div>
+    <div class="hw-pillar">
+      <div class="hw-pillar-icon">📈</div>
+      <div class="hw-pillar-title">CRECIMIENTO REAL</div>
+      <div class="hw-pillar-text">Cada partido que juegas influye en tu crecimiento. Cada actuación modifica tu carta.</div>
+    </div>
+    <div class="hw-pillar">
+      <div class="hw-pillar-icon">🏆</div>
+      <div class="hw-pillar-title">TU HISTORIA</div>
+      <div class="hw-pillar-text">Cada temporada construye tu historia. Aquí no solo juegas fútbol. Construyes una carrera deportiva.</div>
+    </div>
+  </div>
+</section>
+
+<!-- QUÉ PUEDES HACER HOY -->
+<section id="hw-acciones">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">02 · TU PLATAFORMA</div>
+    <div class="page-banner-title hw-sec-title">¿QUÉ PUEDES HACER HOY?</div>
+  </div>
+  <div class="hw-action-grid" id="hw-action-grid"></div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="hw-como-funciona">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">03 · EL CICLO</div>
+    <div class="page-banner-title hw-sec-title">¿CÓMO FUNCIONA LEVEL UP?</div>
+  </div>
+  <div class="hw-flow" id="hw-flow"></div>
+</section>
+
+<!-- RANGOS -->
+<section id="hw-rangos">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">04 · PROGRESIÓN</div>
+    <div class="page-banner-title hw-sec-title">SISTEMA DE RANGOS</div>
+    <div class="sec-desc">Cada rango representa un escalón en tu evolución como futbolista dentro de LEVEL UP.</div>
+  </div>
+  <div class="hw-rank-track" id="hw-rank-track"></div>
+</section>
+
+<!-- CÓMO SUBO DE RANGO -->
+<section id="hw-subir-rango">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">05 · TU RENDIMIENTO</div>
+    <div class="page-banner-title hw-sec-title">¿CÓMO SUBO DE RANGO?</div>
+    <div class="sec-desc">No subes únicamente por ganar. Tampoco bajas únicamente por perder. LEVEL UP premia la constancia, no un solo partido.</div>
+  </div>
+  <div class="hw-checklist">
+    <div class="hw-check-item">✔ Juegas partidos</div>
+    <div class="hw-check-item">✔ Mantienes buen rendimiento</div>
+    <div class="hw-check-item">✔ Consigues MVP</div>
+    <div class="hw-check-item">✔ Ayudas a tu equipo</div>
+    <div class="hw-check-item">✔ Mejoras tus estadísticas</div>
+    <div class="hw-check-item">✔ Eres constante</div>
+    <div class="hw-check-item">✔ Mantienes buena asistencia</div>
+    <div class="hw-check-item">✔ Respetas las reglas</div>
+  </div>
+</section>
+
+<!-- TU PROGRESO HOY (centro de mando) -->
 <section id="dashboard">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">06 · TU CENTRO DE MANDO</div>
+    <div class="page-banner-title hw-sec-title">TU PROGRESO HOY</div>
+    <div class="sec-desc">Tu progreso, tu próximo partido y tu ranking, en un solo lugar.</div>
+  </div>
   <div class="dash-wrap" id="dash-content"></div>
+</section>
+
+<!-- PRÓXIMAMENTE -->
+<section id="hw-proximamente">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">07 · EL FUTURO</div>
+    <div class="page-banner-title hw-sec-title">PRÓXIMAMENTE</div>
+  </div>
+  <div class="hw-soon-grid" id="hw-soon-grid"></div>
+</section>
+
+<!-- MENSAJE FINAL -->
+<section id="hw-final">
+  <div class="hw-final-card">
+    <div class="hw-final-text">No importa dónde juegues.<br>No importa quién seas hoy.<br>Cada partido puede cambiar tu historia.<br><strong>Bienvenido a LEVEL UP.</strong></div>
+    <button class="hw-cta-main" onclick="location.href='buscar-partido.html'">JUGAR MI PRIMER PARTIDO</button>
+  </div>
 </section>
 
 <footer>
@@ -150,6 +255,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=1782513802"></script>
 </body>
 </html>
