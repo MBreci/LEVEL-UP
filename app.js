@@ -77,6 +77,7 @@ function profileToRow(p) {
     photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
+    notif_seen_count: p.notifSeenCount || 0,
   };
 }
 
@@ -88,6 +89,7 @@ function rowToProfile(r) {
     attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
+    notifSeenCount: r.notif_seen_count || 0,
   };
 }
 
@@ -156,6 +158,7 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     notifications: [
       { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
     ],
+    notifSeenCount: 0,
   };
 }
 
@@ -539,7 +542,14 @@ function renderNotifications() {
   const myTeamInvites = getMyTeamInvites();
   const myChallenges = getMyChallenges();
   const myLeaveRequests = getMyTeamLeaveRequests();
-  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length + myLeaveRequests.length;
+  const totalCount = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length + myLeaveRequests.length;
+  if (getCurrentPage() === 'notificaciones.html' && totalCount !== (state.notifSeenCount || 0)) {
+    state.notifSeenCount = totalCount;
+    profiles[state.id] = state;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
+  if (countEl) countEl.textContent = Math.max(0, totalCount - (state.notifSeenCount || 0));
   const el = document.getElementById('notif-list');
   if (!el) return;
   if (!state.notifications.length && !myInvites.length && !myTeamInvites.length && !myChallenges.length && !myLeaveRequests.length) {
@@ -730,64 +740,6 @@ function closeWip() {
 
 function addNotification(icon, text) {
   state.notifications.push({ icon, text, time: 'AHORA' });
-}
-
-function simularPartido() {
-  if (!state) { openAuth(true); return; }
-  document.getElementById('sim-result-modal').classList.add('open');
-}
-
-function closeSimResult() {
-  document.getElementById('sim-result-modal').classList.remove('open');
-}
-
-function registrarResultado(resultado) {
-  closeSimResult();
-  const golesFav = Math.floor(Math.random() * 4) + (resultado === 'VICTORIA' ? 2 : 0);
-  const golesRiv = resultado === 'DERROTA' ? golesFav + Math.ceil(Math.random() * 2) : resultado === 'EMPATE' ? golesFav : Math.max(0, golesFav - Math.ceil(Math.random() * 2));
-  const goals = Math.floor(Math.random() * 3);
-  const assists = Math.floor(Math.random() * 2);
-  const isMvp = Math.random() < 0.25;
-  const ovrDelta = isMvp ? (Math.random() < 0.8 ? 1 : 2) : (resultado === 'DERROTA' ? (Math.random() < 0.3 ? -1 : 0) : (Math.random() < 0.5 ? 1 : 0));
-
-  let xpGain = 50 + goals * 80 + assists * 60;
-  if (resultado === 'VICTORIA') xpGain += 100;
-  if (isMvp) xpGain += 200;
-
-  const lpGain = resultado === 'VICTORIA' ? 25 : resultado === 'EMPATE' ? 10 : 5;
-
-  state.matches += 1;
-  state.goals += goals;
-  state.assists += assists;
-  if (isMvp) state.mvps += 1;
-  state.ovr = Math.max(40, Math.min(99, state.ovr + ovrDelta));
-  ['pac', 'sho', 'pas', 'dri', 'def', 'fis'].forEach((k) => {
-    const jitter = Math.floor(Math.random() * 3) - 1;
-    state.attrs[k] = Math.max(40, Math.min(99, state.attrs[k] + ovrDelta + jitter));
-  });
-  state.xp += xpGain;
-  state.lp = (state.lp || 0) + lpGain;
-  state.lastUpdate = { ovrDelta, xpGain, lpGain };
-
-  const prevRank = getRank(state.xp - xpGain).name;
-  const newRank = getRank(state.xp).name;
-
-  const resultLabel = `${resultado} ${golesFav}-${golesRiv}`;
-  state.history.push({
-    date: new Date().toLocaleDateString('es-CO'),
-    result: resultLabel,
-    mvp: isMvp,
-    ovrDelta,
-  });
-
-  addNotification('⚡', 'Tu carta de LEVEL UP fue actualizada.');
-  if (ovrDelta !== 0) addNotification(ovrDelta > 0 ? '📈' : '📉', `Tu OVR cambió a ${state.ovr} tras tu último partido.`);
-  if (isMvp) addNotification('★', '¡Fuiste MVP de tu último partido!');
-  if (newRank !== prevRank) addNotification('🔥', `Subiste de rango: ahora eres ${newRank}.`);
-
-  saveState();
-  renderAll();
-  showPostMatch({ resultLabel, ovrDelta, xpGain, lpGain, isMvp, achievement: newRank !== prevRank ? `Nuevo rango desbloqueado: ${newRank}` : null });
 }
 
 function showPostMatch({ resultLabel, ovrDelta, xpGain, lpGain, isMvp, achievement }) {
