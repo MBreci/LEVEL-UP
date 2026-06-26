@@ -1957,13 +1957,15 @@ function initApp() {
 
   renderAll();
   syncProfilesFromCloud();
-  syncTeamsFromCloud();
+  syncTeamsFromCloud().then(() => {
+    const myTeam = getMyTeam();
+    if (myTeam) pushTeamToCloud(myTeam);
+    renderAll();
+  });
   syncTeamInvitesFromCloud().then(renderAll);
   syncChallengesFromCloud();
   syncTeamMatchesFromCloud();
   if (state) pushProfileToCloud(state);
-  const myTeam = getMyTeam();
-  if (myTeam) pushTeamToCloud(myTeam);
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
