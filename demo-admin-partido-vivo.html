@@ -196,11 +196,11 @@
         : mini('goles', 'GOL') + mini('asistencias', 'ASIST.') + mini('tiros', 'T. ARCO') + mini('pasesClave', 'P. CLAVE') + mini('recuperaciones', 'RECUP.') + mini('destacadas', 'DESTAC.');
       const negativeCols = mini('errores', 'ERROR') + mini('oportunidadesFalladas', 'OP. FALL.') + mini('faltas', 'FALTA') + mini('amarillas', 'AMAR.') + mini('rojas', 'ROJA') + mini('autogoles', 'AUTOGOL');
       return `
-        <div class="adm-lv-row">
+        <div class="adm-lv-row team-${p.side.toLowerCase()} ${p.isGK ? 'gk' : ''}">
           <div class="adm-lv-player">
             <div class="adm-lv-av">${initials}</div>
             <div>
-              <div class="adm-lv-name">#${p.squadNumber} ${p.nickname || p.name}</div>
+              <div class="adm-lv-name">#${p.squadNumber} ${p.nickname || p.name} ${p.isGK ? '<span class="adm-lv-gk-tag">POR</span>' : ''}</div>
               <div class="adm-lv-sub">${p.side === 'A' ? teamA.name : teamB.name} · ${p.position}${p.isGK ? ' · PORTERO' : ''} · OVR ${p.ovr}</div>
             </div>
           </div>

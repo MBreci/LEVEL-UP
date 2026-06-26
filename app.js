@@ -2339,11 +2339,11 @@ function renderLiveMatch() {
       : mini('goles', 'GOL') + mini('asistencias', 'ASIST.') + mini('tiros', 'T. ARCO') + mini('pasesClave', 'P. CLAVE') + mini('recuperaciones', 'RECUP.') + mini('destacadas', 'DESTAC.');
     const negativeCols = mini('errores', 'ERROR') + mini('oportunidadesFalladas', 'OP. FALL.') + mini('faltas', 'FALTA') + mini('amarillas', 'AMAR.') + mini('rojas', 'ROJA') + mini('autogoles', 'AUTOGOL');
     return `
-      <div class="adm-lv-row">
+      <div class="adm-lv-row team-${side.toLowerCase()} ${isGK ? 'gk' : ''}">
         <div class="adm-lv-player">
           ${photo}
           <div>
-            <div class="adm-lv-name">#${squadNumber} ${profile.nickname || profile.name}</div>
+            <div class="adm-lv-name">#${squadNumber} ${profile.nickname || profile.name} ${isGK ? '<span class="adm-lv-gk-tag">POR</span>' : ''}</div>
             <div class="adm-lv-sub">${side === 'A' ? (teamA ? teamA.name : '') : (teamB ? teamB.name : '')} · ${profile.position}${isGK ? ' · PORTERO' : ''} · OVR ${profile.ovr}</div>
           </div>
         </div>
