@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Configuración · LEVEL UP</title>
+<title>Admin · Jugadores · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -52,21 +52,16 @@
 </div>
 
 <div class="page-banner">
-  <div class="page-banner-eyebrow">CONFIGURACIÓN</div>
-  <div class="page-banner-title">CONFIGURACIÓN</div>
-  <div class="page-banner-desc">Edita los datos básicos de tu perfil.</div>
+  <div class="page-banner-eyebrow">ADMIN</div>
+  <div class="page-banner-title">JUGADORES</div>
+  <div class="page-banner-desc">Busca un jugador y registra su foto oficial y atributos físicos.</div>
 </div>
 
-<section id="config">
-  <div class="bp-form" style="display:block;max-width:480px;margin:0 auto">
-    <div class="auth-label">APODO</div>
-    <input class="auth-input" id="cfg-nickname" maxlength="16">
-    <div class="auth-label">EQUIPO</div>
-    <input class="auth-input" id="cfg-team" maxlength="24">
-    <div class="auth-error" id="cfg-error"></div>
-    <button class="auth-submit" onclick="submitConfig()">GUARDAR CAMBIOS</button>
-    <button class="auth-cancel" onclick="logout()" style="margin-top:10px">CERRAR SESIÓN</button>
+<section id="admin-jugadores">
+  <div class="pl-search-wrap">
+    <input class="pl-search-input" id="admin-pl-search" placeholder="Buscar por nombre, apodo o equipo..." autocomplete="off" oninput="renderAdminPlayerSearch(this.value)">
   </div>
+  <div class="pl-grid" id="admin-pl-grid"></div>
 </section>
 
 <footer>
@@ -78,6 +73,50 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
 </footer>
+
+<!-- MODAL EDITAR JUGADOR (ADMIN) -->
+<div class="modal-overlay" id="admin-player-edit-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">EDITAR JUGADOR</div></div>
+    <div class="auth-label" id="admin-edit-name" style="font-size:16px;color:var(--g)"></div>
+    <div class="auth-label" id="admin-edit-sub"></div>
+
+    <div class="auth-label">FOTO OFICIAL</div>
+    <img id="admin-edit-photo-preview" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:8px">
+    <input class="auth-input" type="file" accept="image/*" onchange="adminPickPhoto(this)">
+
+    <div class="auth-label">PESO (KG)</div>
+    <input class="auth-input" type="number" id="admin-edit-weight" placeholder="Ej: 72">
+    <div class="auth-label">ALTURA (CM)</div>
+    <input class="auth-input" type="number" id="admin-edit-height" placeholder="Ej: 178">
+    <div class="auth-label">EDAD</div>
+    <input class="auth-input" type="number" id="admin-edit-age" placeholder="Ej: 24">
+    <div class="auth-label">PIE DOMINANTE</div>
+    <select class="auth-input" id="admin-edit-foot">
+      <option value="">Seleccionar...</option>
+      <option value="DERECHO">DERECHO</option>
+      <option value="IZQUIERDO">IZQUIERDO</option>
+      <option value="AMBIDIESTRO">AMBIDIESTRO</option>
+    </select>
+
+    <div class="auth-error" id="admin-edit-error"></div>
+    <button class="auth-submit" onclick="saveAdminPlayerEdit()">GUARDAR</button>
+    <button class="auth-cancel" onclick="closeAdminPlayerEdit()">CANCELAR</button>
+  </div>
+</div>
+
+<!-- MODAL TRABAJO EN PROGRESO -->
+<div class="modal-overlay" id="wip-modal">
+  <div class="wip-card">
+    <div class="tape tape-top"></div>
+    <div class="wip-icon">🚧</div>
+    <div class="wip-title" id="wip-modal-title">MÓDULO</div>
+    <div class="wip-sub">TRABAJO EN PROGRESO</div>
+    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
+    <button class="wip-close" onclick="closeWip()">CERRAR</button>
+    <div class="tape tape-bottom"></div>
+  </div>
+</div>
 
 <!-- MODAL REGISTRO / INICIO DE SESIÓN -->
 <div class="modal-overlay" id="auth-modal">
@@ -148,22 +187,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
-<script>
-  function fillConfigForm() {
-    if (!state) return;
-    document.getElementById('cfg-nickname').value = state.nickname || '';
-    document.getElementById('cfg-team').value = state.team || '';
-  }
-  function submitConfig() {
-    state.nickname = document.getElementById('cfg-nickname').value.trim().toUpperCase();
-    const team = document.getElementById('cfg-team').value.trim();
-    state.team = team || 'SIN EQUIPO';
-    saveState();
-    document.getElementById('cfg-error').textContent = 'Cambios guardados.';
-    renderAll();
-  }
-  document.addEventListener('DOMContentLoaded', fillConfigForm);
-  fillConfigForm();
-</script>
 </body>
 </html>

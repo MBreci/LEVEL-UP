@@ -77,6 +77,7 @@ function profileToRow(p) {
     photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
+    is_admin: p.isAdmin,
   };
 }
 
@@ -88,6 +89,7 @@ function rowToProfile(r) {
     attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
+    isAdmin: !!r.is_admin,
   };
 }
 
@@ -152,6 +154,7 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     mvps: 0,
     attrs: { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     physical: { weight: null, height: null, age: null, foot: null },
+    isAdmin: false,
     history: [],
     notifications: [
       { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
@@ -217,6 +220,7 @@ function getCurrentPage() {
 
 function renderNav() {
   const nav = document.getElementById('nav-modules');
+  renderAdminMenu();
   if (!nav) return;
   nav.innerHTML = '';
   if (!state) return;
@@ -231,6 +235,14 @@ function renderNav() {
     nav.appendChild(el);
   });
 }
+
+function renderAdminMenu() {
+  const wrap = document.getElementById('admin-dropdown-wrap');
+  if (!wrap) return;
+  wrap.style.display = (state && state.isAdmin) ? '' : 'none';
+}
+
+const ADMIN_PAGES = ['admin-partidos.html', 'admin-jugadores.html'];
 
 function getPlatformStats() {
   const all = Object.values(profiles);
@@ -644,6 +656,8 @@ function renderAll() {
   renderTicker();
   updateProfileBtn();
   renderDashboard();
+  renderAdminPartidos();
+  renderAdminPlayerSearch(document.getElementById('admin-pl-search') ? document.getElementById('admin-pl-search').value : '');
 }
 
 function renderDashboard() {
@@ -2107,12 +2121,150 @@ function renderTicker() {
   if (el) el.innerHTML = feed;
 }
 
+/* ===== ADMIN · PARTIDOS ===== */
+
+function renderAdminPartidos() {
+  const el = document.getElementById('admin-matches-list');
+  if (!el) return;
+  if (!teamMatches.length) {
+    el.innerHTML = `<div class="rk-empty">Todavía no hay partidos de equipos creados.</div>`;
+    return;
+  }
+  const row = (m) => {
+    const teamA = teams[m.teamAId];
+    const teamB = teams[m.teamBId];
+    const finalized = m.estado === 'finalizado';
+    return `
+      <div class="team-hist-row">
+        <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
+        <span>${teamA ? teamA.name : 'EQUIPO A'} VS ${teamB ? teamB.name : 'EQUIPO B'}</span>
+        <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : 'PROGRAMADO'}</span>
+        <button class="mm-invite-btn" onclick="adminEditMatchResult('${m.id}')">${finalized ? 'EDITAR RESULTADO' : 'CARGAR RESULTADO'}</button>
+      </div>`;
+  };
+  el.innerHTML = teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt).map(row).join('');
+}
+
+function adminEditMatchResult(matchId) {
+  const match = teamMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  if (!teamA || !teamB) return;
+  const golesA = parseInt(prompt('Goles de ' + teamA.name + ':', (match.resultado && match.resultado.golesA) || 0), 10);
+  if (isNaN(golesA)) return;
+  const golesB = parseInt(prompt('Goles de ' + teamB.name + ':', (match.resultado && match.resultado.golesB) || 0), 10);
+  if (isNaN(golesB)) return;
+  if (match.estado === 'finalizado' && match.resultado) {
+    teamA.goalsFor -= match.resultado.golesA; teamA.goalsAgainst -= match.resultado.golesB;
+    teamB.goalsFor -= match.resultado.golesB; teamB.goalsAgainst -= match.resultado.golesA;
+    if (match.resultado.golesA > match.resultado.golesB) { teamA.wins--; teamB.losses--; }
+    else if (match.resultado.golesA < match.resultado.golesB) { teamB.wins--; teamA.losses--; }
+    else { teamA.draws--; teamB.draws--; }
+  }
+  match.resultado = { golesA, golesB };
+  match.estado = 'finalizado';
+  teamA.goalsFor += golesA; teamA.goalsAgainst += golesB;
+  teamB.goalsFor += golesB; teamB.goalsAgainst += golesA;
+  if (golesA > golesB) { teamA.wins++; teamB.losses++; }
+  else if (golesA < golesB) { teamB.wins++; teamA.losses++; }
+  else { teamA.draws++; teamB.draws++; }
+  saveTeamMatches(); saveTeams();
+  pushTeamMatchToCloud(match); pushTeamToCloud(teamA); pushTeamToCloud(teamB);
+  renderAdminPartidos();
+}
+
+/* ===== ADMIN · JUGADORES ===== */
+
+function renderAdminPlayerSearch(query) {
+  const el = document.getElementById('admin-pl-grid');
+  if (!el) return;
+  const q = (query || '').trim().toLowerCase();
+  const list = Object.values(profiles)
+    .filter(p => !q || p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q) || p.team.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (!list.length) {
+    el.innerHTML = `<div class="rk-empty">No se encontraron jugadores.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => `
+    <div class="pl-card" onclick="openAdminPlayerEdit('${p.id}')">
+      <div class="pl-card-av">${p.photo ? `<img class="team-card-av-img" src="${p.photo}">` : p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
+      <div class="pl-card-name">${p.nickname || p.name}</div>
+      <div class="pl-card-sub">${p.position} · ${p.team}</div>
+      <div class="pl-card-tags"><span class="pi-tag g">${(p.physical && p.physical.weight != null) ? 'ATRIBUTOS OK' : 'PENDIENTE'}</span></div>
+    </div>`).join('');
+}
+
+let adminEditingPlayerId = null;
+let adminEditingPhoto = null;
+
+function openAdminPlayerEdit(id) {
+  const p = profiles[id];
+  if (!p) return;
+  adminEditingPlayerId = id;
+  adminEditingPhoto = p.photo || null;
+  const ph = p.physical || {};
+  document.getElementById('admin-edit-name').textContent = p.nickname || p.name;
+  document.getElementById('admin-edit-sub').textContent = `${p.position} · ${p.team}`;
+  document.getElementById('admin-edit-photo-preview').src = p.photo || '';
+  document.getElementById('admin-edit-photo-preview').style.display = p.photo ? 'block' : 'none';
+  document.getElementById('admin-edit-weight').value = ph.weight != null ? ph.weight : '';
+  document.getElementById('admin-edit-height').value = ph.height != null ? ph.height : '';
+  document.getElementById('admin-edit-age').value = ph.age != null ? ph.age : '';
+  document.getElementById('admin-edit-foot').value = ph.foot || '';
+  document.getElementById('admin-edit-error').textContent = '';
+  document.getElementById('admin-player-edit-modal').classList.add('open');
+}
+
+function closeAdminPlayerEdit() {
+  document.getElementById('admin-player-edit-modal').classList.remove('open');
+  adminEditingPlayerId = null;
+  adminEditingPhoto = null;
+}
+
+async function adminPickPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  adminEditingPhoto = await fileToDataUrl(input.files[0]);
+  const preview = document.getElementById('admin-edit-photo-preview');
+  preview.src = adminEditingPhoto;
+  preview.style.display = 'block';
+}
+
+function saveAdminPlayerEdit() {
+  const p = profiles[adminEditingPlayerId];
+  const errorEl = document.getElementById('admin-edit-error');
+  if (!p) return;
+  const weight = document.getElementById('admin-edit-weight').value.trim();
+  const height = document.getElementById('admin-edit-height').value.trim();
+  const age = document.getElementById('admin-edit-age').value.trim();
+  const foot = document.getElementById('admin-edit-foot').value;
+  if ((weight && isNaN(weight)) || (height && isNaN(height)) || (age && isNaN(age))) {
+    errorEl.textContent = 'Peso, altura y edad deben ser números.';
+    return;
+  }
+  p.photo = adminEditingPhoto;
+  p.physical = {
+    weight: weight ? Number(weight) : null,
+    height: height ? Number(height) : null,
+    age: age ? Number(age) : null,
+    foot: foot || null,
+  };
+  profiles[p.id] = p;
+  saveProfiles();
+  pushProfileToCloud(p);
+  if (state && state.id === p.id) { state = p; saveState(); }
+  closeAdminPlayerEdit();
+  renderAdminPlayerSearch(document.getElementById('admin-pl-search') ? document.getElementById('admin-pl-search').value : '');
+}
+
 function initApp() {
   loadCurrentProfile();
   const page = getCurrentPage();
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
   if (!state && !PUBLIC_PAGES.includes(page)) { location.href = 'index.html'; return; }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
+  if (ADMIN_PAGES.includes(page) && !(state && state.isAdmin)) { location.href = 'dashboard.html'; return; }
 
   renderAll();
   syncProfilesFromCloud();
@@ -2131,7 +2283,7 @@ function initApp() {
   });
   syncTeamInvitesFromCloud().then(renderAll);
   syncChallengesFromCloud();
-  syncTeamMatchesFromCloud();
+  syncTeamMatchesFromCloud().then(renderAll);
   if (state) pushProfileToCloud(state);
 
   const fechaInput = document.getElementById('bp-fecha-date');
