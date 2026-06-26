@@ -458,6 +458,38 @@ function renderPlayerSearch(query) {
       <div class="pl-card-tags"><span class="pi-tag g">${rank.name}</span><span class="pi-tag gold">OVR ${p.ovr}</span></div>
     </div>`;
   }).join('');
+  renderPlayerSuggestions(query);
+}
+
+function renderPlayerSuggestions(query) {
+  const box = document.getElementById('pl-suggest');
+  if (!box) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  const list = Object.values(profiles)
+    .filter(p => p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q))
+    .sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name))
+    .slice(0, 6);
+  if (!list.length) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  box.innerHTML = list.map(p => `
+    <div class="pl-suggest-item" onclick="selectPlayerSuggestion('${p.id}')">
+      <span>${p.nickname || p.name}</span>
+      <span class="s-sub">${p.position} · ${p.team}</span>
+    </div>`).join('');
+  box.classList.add('open');
+}
+
+function selectPlayerSuggestion(id) {
+  closePlayerSuggestions();
+  const input = document.getElementById('pl-search');
+  const p = profiles[id];
+  if (input && p) input.value = p.nickname || p.name;
+  openPlayerView(id);
+}
+
+function closePlayerSuggestions() {
+  const box = document.getElementById('pl-suggest');
+  if (box) { box.classList.remove('open'); }
 }
 
 function openPlayerView(id) {

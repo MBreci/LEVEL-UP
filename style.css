@@ -403,9 +403,14 @@ section{padding:64px;border-bottom:var(--b1)}
 .rk-ovr{font-family:var(--ft);font-size:14px;color:var(--g)}
 
 /* BUSCADOR DE JUGADORES */
-.pl-search-wrap{max-width:1100px;margin:0 auto 24px;padding:0 24px}
+.pl-search-wrap{max-width:1100px;margin:0 auto 24px;padding:0 24px;position:relative}
 .pl-search-input{width:100%;background:var(--bg2);border:var(--b1);color:var(--w);font-family:'Inter',sans-serif;font-size:14px;padding:14px 18px;border-radius:6px;outline:none}
 .pl-search-input:focus{border-color:rgba(0,245,140,0.4)}
+.pl-suggest{position:absolute;top:calc(100% + 6px);left:24px;right:24px;background:var(--bg2);border:var(--b1);border-radius:6px;overflow:hidden;z-index:50;display:none;box-shadow:0 12px 30px rgba(0,0,0,0.4)}
+.pl-suggest.open{display:block}
+.pl-suggest-item{padding:10px 18px;font-size:13px;color:var(--w);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pl-suggest-item:hover{background:rgba(0,245,140,0.08)}
+.pl-suggest-item .s-sub{color:var(--td);font-size:11px;font-weight:300}
 .pl-grid{max-width:1100px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .pl-card{background:var(--bg2);border:var(--b1);border-radius:8px;padding:20px;cursor:pointer;transition:border-color .2s,transform .2s}
 .pl-card:hover{border-color:rgba(0,245,140,0.35);transform:translateY(-2px)}

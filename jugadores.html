@@ -52,7 +52,8 @@
 
 <section id="jugadores">
   <div class="pl-search-wrap">
-    <input class="pl-search-input" id="pl-search" placeholder="Buscar por nombre, apodo o equipo..." oninput="renderPlayerSearch(this.value)">
+    <input class="pl-search-input" id="pl-search" placeholder="Buscar por nombre, apodo o equipo..." autocomplete="off" oninput="renderPlayerSearch(this.value)" onfocus="renderPlayerSearch(this.value)" onblur="setTimeout(closePlayerSuggestions, 150)">
+    <div class="pl-suggest" id="pl-suggest"></div>
   </div>
   <div class="pl-grid" id="pl-grid"></div>
 </section>
