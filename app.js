@@ -303,8 +303,10 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.def}</div><div class="fca-l">DEF</div></div>
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
-    <div class="fc-foot"><div class="fc-team">${p.team || 'SIN EQUIPO'}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div></div>
-    ${buildPhysicalPillsHTML(p)}
+    <div class="fc-foot">
+      <div class="fc-team">${p.team || 'SIN EQUIPO'}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
+      ${buildPhysicalPillsHTML(p)}
+    </div>
   `;
   return { className, html };
 }
@@ -312,14 +314,14 @@ function buildCardHTML(p) {
 function buildPhysicalPillsHTML(p) {
   const ph = p.physical || {};
   const pill = (cls, label, val, unit) => `
-    <div class="fc-phys-pill ${cls}${val == null ? ' empty' : ''}">
-      <div class="fc-phys-l">${label}</div>
-      <div class="fc-phys-v">${val == null ? '—' : val + (unit || '')}</div>
+    <div class="fc-phys-pill ${cls}${val == null ? ' empty' : ''}" title="${label}">
+      <span class="fc-phys-l">${label}</span>
+      <span class="fc-phys-v">${val == null ? '—' : val + (unit || '')}</span>
     </div>`;
   return `
     <div class="fc-phys-row">
       ${pill('cyan', 'PESO', ph.weight, 'KG')}
-      ${pill('pink', 'ALTURA', ph.height, 'CM')}
+      ${pill('pink', 'ALT', ph.height, 'CM')}
       ${pill('orange', 'EDAD', ph.age, '')}
       ${pill('violet', 'PIE', ph.foot, '')}
     </div>`;
