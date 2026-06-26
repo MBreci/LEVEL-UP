@@ -52,6 +52,14 @@
 
 <!-- BUSCAR PARTIDO -->
 <section id="buscar-partido">
+  <div class="bp-conduct-panel">
+    <div class="bp-conduct-icon">⚠️</div>
+    <div class="bp-conduct-text">
+      <strong>La puntualidad y el compromiso hacen parte del rendimiento deportivo dentro de LEVEL UP.</strong>
+      Si confirmas asistencia a un partido y no te presentas sin cancelar dentro del tiempo permitido, la plataforma aplicará consecuencias progresivas: reducción leve de confiabilidad, LP y prioridad en invitaciones, además de una advertencia en tu historial. Nunca se destruye tu progreso por una sola inasistencia, pero la reincidencia puede llevar a suspensiones temporales para crear partidos, retar equipos o inscribirte.
+    </div>
+  </div>
+
   <div class="sec-hdr">
     <div class="sec-eyebrow">CREAR PARTIDO</div>
     <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
@@ -72,6 +80,8 @@
     </select>
     <div class="auth-label">CANCHA / SEDE (OPCIONAL)</div>
     <input class="auth-input" id="bp-cancha" placeholder="Ej: Cancha El Salitre" maxlength="30">
+    <div class="auth-label">DIRECCIÓN (OPCIONAL)</div>
+    <input class="auth-input" id="bp-direccion" placeholder="Ej: Calle 80 # 45-12" maxlength="60">
     <div class="auth-label">FORMATO</div>
     <select class="auth-input" id="bp-formato">
       <option value="5">FÚTBOL 5</option>
@@ -101,6 +111,14 @@
       <option value="21:30">9:30 PM</option>
       <option value="22:00">10:00 PM</option>
     </select>
+    <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
+    <input class="auth-input" type="number" min="0" id="bp-precio" placeholder="Ej: 10000">
+    <div class="auth-label">OVR MÍNIMO RECOMENDADO (OPCIONAL)</div>
+    <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" placeholder="Ej: 60">
+    <label class="auth-consent">
+      <input type="checkbox" id="bp-abierto" checked>
+      <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
+    </label>
     <div class="auth-label">POSICIONES QUE FALTAN</div>
     <div class="bp-pos-grid" id="bp-pos-grid">
       <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
@@ -119,11 +137,68 @@
     <div class="my-matches" id="my-matches"></div>
   </div>
 
-  <div class="sec-hdr">
-    <div class="sec-eyebrow">PARTIDOS REGISTRADOS</div>
+  <div class="bp-filters-bar">
+    <div class="sec-hdr">
+      <div class="sec-eyebrow">BUSCAR PARTIDOS</div>
+      <div class="sec-link" onclick="resetBpFilters()">LIMPIAR FILTROS</div>
+    </div>
+    <div class="bp-filters-grid" id="bp-filters-form">
+      <select class="auth-input" id="bp-filter-zona" onchange="applyBpFiltersFromUI()">
+        <option value="">CIUDAD / BARRIO</option>
+        <option>Chapinero</option>
+        <option>Usaquén</option>
+        <option>Suba</option>
+        <option>Engativá</option>
+        <option>Kennedy</option>
+        <option>Teusaquillo</option>
+        <option>Fontibón</option>
+        <option>Ciudad Bolívar</option>
+        <option>Bosa</option>
+        <option>Santa Fe</option>
+      </select>
+      <input class="auth-input" id="bp-filter-cancha" placeholder="Cancha" oninput="applyBpFiltersFromUI()">
+      <input class="auth-input" type="date" id="bp-filter-fecha" onchange="applyBpFiltersFromUI()">
+      <select class="auth-input" id="bp-filter-formato" onchange="applyBpFiltersFromUI()">
+        <option value="">TIPO DE FÚTBOL</option>
+        <option value="5">FÚTBOL 5</option>
+        <option value="6">FÚTBOL 6</option>
+        <option value="7">FÚTBOL 7</option>
+        <option value="8">FÚTBOL 8</option>
+        <option value="11">FÚTBOL 11</option>
+      </select>
+      <input class="auth-input" type="number" id="bp-filter-ovr" placeholder="OVR máximo recomendado" oninput="applyBpFiltersFromUI()">
+      <input class="auth-input" type="number" id="bp-filter-precio" placeholder="Precio máximo" oninput="applyBpFiltersFromUI()">
+      <label class="auth-consent bp-filter-check"><input type="checkbox" id="bp-filter-cupos" onchange="applyBpFiltersFromUI()"><span>Con cupos disponibles</span></label>
+      <label class="auth-consent bp-filter-check"><input type="checkbox" id="bp-filter-abiertos" onchange="applyBpFiltersFromUI()"><span>Solo partidos abiertos</span></label>
+    </div>
   </div>
-  <div class="bp-list" id="bp-list"></div>
+
+  <div class="bp-tabs">
+    <div class="bp-tab on" data-tab="proximos" onclick="switchBpTab('proximos')">PRÓXIMOS PARTIDOS</div>
+    <div class="bp-tab" data-tab="mia" onclick="switchBpTab('mia')">MI PARTICIPACIÓN</div>
+    <div class="bp-tab" data-tab="historial" onclick="switchBpTab('historial')">HISTORIAL DE PARTIDOS</div>
+  </div>
+
+  <div class="bp-panel" id="bp-panel-proximos" style="display:block">
+    <div class="bp-list-grid" id="bp-list-proximos"></div>
+  </div>
+  <div class="bp-panel" id="bp-panel-mia" style="display:none">
+    <div class="bp-list-grid" id="bp-list-mia"></div>
+  </div>
+  <div class="bp-panel" id="bp-panel-historial" style="display:none">
+    <div class="bp-list-grid" id="bp-list-historial"></div>
+  </div>
 </section>
+
+<!-- MODAL UNIRSE A PARTIDO -->
+<div class="modal-overlay" id="join-modal">
+  <div class="invite-card" id="join-modal-content"></div>
+</div>
+
+<!-- MODAL VER PARTICIPANTES -->
+<div class="modal-overlay" id="participants-modal">
+  <div class="invite-card" id="participants-content"></div>
+</div>
 
 <footer>
   <div class="ft-top">
