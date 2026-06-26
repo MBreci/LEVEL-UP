@@ -22,8 +22,11 @@ create table if not exists teams (
   goals_for integer default 0,
   goals_against integer default 0,
   streak text,
-  created_at bigint
+  created_at bigint,
+  slot_positions jsonb default '[]'::jsonb
 );
+
+alter table teams add column if not exists slot_positions jsonb default '[]'::jsonb;
 
 alter table teams enable row level security;
 

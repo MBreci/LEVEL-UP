@@ -1136,6 +1136,7 @@ function teamToRow(t) {
     captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
     join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
     goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
+    slot_positions: t.slotPositions,
   };
 }
 function rowToTeam(r) {
@@ -1144,6 +1145,7 @@ function rowToTeam(r) {
     captainId: r.captain_id, memberIds: r.member_ids || [], openForPlayers: r.open_for_players,
     joinRequests: r.join_requests || [], wins: r.wins || 0, draws: r.draws || 0, losses: r.losses || 0,
     goalsFor: r.goals_for || 0, goalsAgainst: r.goals_against || 0, streak: r.streak || '', createdAt: r.created_at,
+    slotPositions: r.slot_positions || [],
   };
 }
 async function pushTeamToCloud(t) {
@@ -1235,14 +1237,28 @@ function getMyTeam() {
   return Object.values(teams).find(t => t.memberIds.includes(state.id)) || null;
 }
 
+const POSITIONS = ['POR', 'DEF', 'MED', 'DEL'];
+
 function makeTeam({ name, desc, city, color, photo, captainId }) {
+  const captain = profiles[captainId];
   return {
     id: 'team_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(), desc: desc || '', city: city || '', color: color || '#00f58c', photo: photo || null,
     captainId, memberIds: [captainId], openForPlayers: false, joinRequests: [],
+    slotPositions: [captain ? captain.position : '', '', '', '', '', ''],
     wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, streak: '',
     createdAt: Date.now(),
   };
+}
+
+function setSlotPosition(teamId, idx, pos) {
+  const team = teams[teamId];
+  if (!team || !state || team.captainId !== state.id) return;
+  if (!team.slotPositions) team.slotPositions = ['', '', '', '', '', ''];
+  team.slotPositions[idx] = pos;
+  saveTeams();
+  pushTeamToCloud(team);
+  renderTeamProfile(teamId);
 }
 
 function containsProfanityImageName(name) {
@@ -1557,15 +1573,23 @@ function renderTeamProfile(teamId) {
   const { record, dg } = getTeamRecord(team);
   const captain = profiles[team.captainId];
   const isCaptain = state && state.id === team.captainId;
+  const slotPositions = team.slotPositions || [];
+  const positionSelect = (i, current) => `
+    <select class="auth-input team-slot-pos-select" onchange="setSlotPosition('${team.id}',${i},this.value)">
+      <option value="" ${!current ? 'selected' : ''}>POSICIÓN...</option>
+      ${POSITIONS.map(pos => `<option value="${pos}" ${current === pos ? 'selected' : ''}>${pos}</option>`).join('')}
+    </select>`;
   const slots = Array.from({ length: 6 }, (_, i) => {
     const memberId = team.memberIds[i];
+    const pos = slotPositions[i] || '';
     if (!memberId) {
       return isCaptain
         ? `<div class="team-slot empty">
+            ${positionSelect(i, pos)}
             <input class="auth-input team-invite-input" id="team-invite-search" placeholder="Buscar jugador para invitar..." autocomplete="off" oninput="searchPlayersToInvite(this.value,'${team.id}')" onblur="setTimeout(()=>document.getElementById('team-invite-suggest').classList.remove('open'),150)">
             <div class="pl-suggest" id="team-invite-suggest"></div>
           </div>`
-        : `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
+        : `<div class="team-slot empty">${pos ? `<div class="team-slot-tag">${pos}</div>` : ''}<span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
     }
     const p = profiles[memberId];
     if (!p) return `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
@@ -1575,6 +1599,7 @@ function renderTeamProfile(teamId) {
         ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
         <div class="team-slot-name">${p.nickname || p.name}</div>
         <div class="team-slot-ovr">OVR ${p.ovr}</div>
+        ${isCaptain ? positionSelect(i, pos) : (pos ? `<div class="team-slot-tag">${pos}</div>` : '')}
         ${isCap ? '<div class="team-slot-tag">CAPITÁN</div>' : ''}
       </div>`;
   }).join('');

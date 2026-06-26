@@ -709,6 +709,7 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-slot-ovr{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--g);margin-top:4px}
 .team-slot-tag{font-family:var(--ft);font-size:7px;letter-spacing:1px;color:#020510;background:var(--g);display:inline-block;padding:2px 6px;border-radius:3px;margin-top:6px}
 .team-invite-input{margin:0;font-size:11px;padding:8px 10px}
+.team-slot-pos-select{margin:0 0 8px;font-size:10px;padding:6px 8px;width:100%}
 
 .team-requests{display:flex;flex-direction:column;gap:10px}
 
