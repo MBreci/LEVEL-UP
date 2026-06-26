@@ -2557,13 +2557,17 @@ function getMyTeamInvites() {
   return teamInvites.filter(i => i.toId === state.id && i.status === 'pendiente');
 }
 
-function respondTeamInvite(inviteId, accept) {
+async function respondTeamInvite(inviteId, accept) {
   const invite = teamInvites.find(i => i.id === inviteId);
   if (!invite) return;
   invite.status = accept ? 'aceptada' : 'rechazada';
   saveTeamInvites();
   pushTeamInviteToCloud(invite);
-  const team = teams[invite.teamId];
+  let team = teams[invite.teamId];
+  if (accept && !team && sb) {
+    const { data, error } = await sb.from('teams').select('*').eq('id', invite.teamId).single();
+    if (!error && data) { team = rowToTeam(data); teams[invite.teamId] = team; saveTeams(); }
+  }
   if (accept && team && !team.memberIds.includes(state.id) && team.memberIds.length < 6) {
     team.memberIds.push(state.id);
     if (!team.joinLog) team.joinLog = [];
