@@ -1168,7 +1168,6 @@ async function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const nickname = document.getElementById('auth-nickname').value.trim();
   const position = document.getElementById('auth-position').value;
-  const team = document.getElementById('auth-team').value.trim();
   const password = document.getElementById('auth-password').value;
   const passwordConfirm = document.getElementById('auth-password-confirm').value;
   const consent = document.getElementById('auth-consent');
@@ -1177,8 +1176,8 @@ async function submitNewProfile() {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
     return;
   }
-  if (containsProfanity(name) || containsProfanity(nickname) || containsProfanity(team)) {
-    errorEl.textContent = 'Tu nombre, apodo o equipo contiene lenguaje ofensivo. Por favor elige otro.';
+  if (containsProfanity(name) || containsProfanity(nickname)) {
+    errorEl.textContent = 'Tu nombre o apodo contiene lenguaje ofensivo. Por favor elige otro.';
     return;
   }
   if (!isPasswordMediumStrength(password)) {
@@ -1200,7 +1199,7 @@ async function submitNewProfile() {
   }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
-  const profile = makeProfile({ name, position, team, nickname, passwordHash });
+  const profile = makeProfile({ name, position, nickname, passwordHash });
   profiles[profile.id] = profile;
   saveProfiles();
   pushProfileToCloud(profile);
