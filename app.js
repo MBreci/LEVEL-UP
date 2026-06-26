@@ -1375,7 +1375,7 @@ function sendTeamInvite(teamId, playerId) {
   if (!team || !player) return;
   if (team.memberIds.length >= 6) { alert('Tu equipo ya tiene los 6 cupos llenos.'); return; }
   const exists = teamInvites.find(i => i.teamId === teamId && i.toId === playerId && i.status === 'pendiente');
-  if (exists) return;
+  if (exists) { pushTeamInviteToCloud(exists); alert('Ya le habías enviado una invitación a este jugador. La reenviamos por si no había llegado.'); return; }
   const invite = {
     id: 'tinv_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     teamId, teamName: team.name, fromCaptainId: state.id, toId: playerId, status: 'pendiente',
