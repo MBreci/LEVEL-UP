@@ -19,15 +19,16 @@ function containsProfanity(text) {
 }
 
 const RANKS = [
-  { name: 'ROOKIE',   min: 0 },
-  { name: 'NOVA',     min: 1000 },
-  { name: 'VANGUARD', min: 3000 },
-  { name: 'PRIME',    min: 7000 },
-  { name: 'RIVAL',    min: 15000 },
-  { name: 'ELITE',    min: 30000 },
-  { name: 'APEX',     min: 60000 },
-  { name: 'LEGACY',   min: 120000 },
+  { name: 'CANTERANO',  slug: 'canterano',  emoji: '🥉', min: 0,      tagline: 'El comienzo de tu historia' },
+  { name: 'DEBUTANTE',  slug: 'debutante',  emoji: '🥈', min: 1000,   tagline: 'Das tus primeros pasos' },
+  { name: 'REVELACIÓN', slug: 'revelacion', emoji: '❄️', min: 3000,   tagline: 'Empiezas a llamar la atención' },
+  { name: 'CONSAGRADO', slug: 'consagrado', emoji: '🔥', min: 7000,   tagline: 'Tu nombre ya pesa en la cancha' },
+  { name: 'ELITE',      slug: 'elite',      emoji: '⭐', min: 15000,  tagline: 'Compites contra los mejores' },
+  { name: 'ÍDOLO',      slug: 'idolo',      emoji: '👑', min: 30000,  tagline: 'Eres referente e inspiración' },
+  { name: 'LEYENDA',    slug: 'leyenda',    emoji: '🏛', min: 60000,  tagline: 'Tu historia ya es parte de LEVEL UP' },
+  { name: 'GOAT',       slug: 'goat',       emoji: '🐐', min: 120000, tagline: 'Eres el mejor de todos los tiempos' },
 ];
+function rankSlug(rank) { return rank && rank.slug ? rank.slug : 'canterano'; }
 
 const FUNCTIONAL_MODULES = [
   { id: 'ficha', label: 'MI FICHA' },
@@ -276,11 +277,13 @@ function guestPrompt(text) {
 function buildCardHTML(p) {
   const rank = getRank(p.xp || 0);
   const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
-  const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
-  const tier = rank.name.toLowerCase();
+  const epicRanks = ['elite', 'idolo', 'leyenda', 'goat'];
+  const tier = rankSlug(rank);
   const className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
   const html = `
     <div class="fc-shine"></div>
+    <div class="fc-fx"></div>
+    ${tier === 'goat' ? '<div class="fc-cosmos"></div>' : ''}
     ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
     <span class="fc-corner tl"></span>
     <span class="fc-corner tr"></span>
@@ -289,7 +292,7 @@ function buildCardHTML(p) {
     <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
     <div class="fc-head">
       <div><div class="fc-ovr">${p.ovr}</div><div class="fc-pos">${p.position}</div></div>
-      <div class="fc-rank">${rank.name}</div>
+      <div class="fc-rank"><span class="fc-rank-emoji">${rank.emoji}</span>${rank.name}</div>
     </div>
     <div class="fc-player"><div class="fc-spotlight"></div>${p.photo ? `<img class="fc-photo-img" src="${p.photo}">` : `<div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">${p.id === (state && state.id) ? 'TU FOTO SE TOMARÁ EN TU PRIMER PARTIDO EN LA CANCHA' : 'AÚN SIN FOTO OFICIAL'}</span></div>`}</div>
     <div class="fc-namebar"><div class="fc-name">${p.name}${p.nickname ? ` <span class="fc-nick">"${p.nickname}"</span>` : ''}</div></div>
@@ -346,7 +349,7 @@ function renderCard() {
   if (!card) return;
   const piEl0 = document.getElementById('player-info');
   if (!state) {
-    card.className = 'fifa rk-rookie';
+    card.className = 'fifa rk-canterano';
     card.innerHTML = '';
     if (piEl0) piEl0.innerHTML = guestPrompt('Inicia sesión o crea tu perfil para ver tu carta de jugador.');
     return;
@@ -368,8 +371,16 @@ function renderCard() {
   piEl.innerHTML = `
     <div class="pi-name">${state.name} ${state.nickname ? `<span class="pi-nick" onclick="editNickname()">"${state.nickname}" ✎</span>` : `<span class="pi-nick pi-nick-add" onclick="editNickname()">+ AGREGAR APODO</span>`}</div>
     <div class="pi-sub">${state.position} · ${state.team || 'SIN EQUIPO'}</div>
+    <div class="pi-rank-hero rk-${rank.slug}">
+      <div class="pi-rank-hero-fx"></div>
+      <div class="pi-rank-hero-emoji">${rank.emoji}</div>
+      <div class="pi-rank-hero-body">
+        <div class="pi-rank-hero-label">RANGO ACTUAL</div>
+        <div class="pi-rank-hero-name">${rank.name}</div>
+        <div class="pi-rank-hero-tag">${rank.tagline}</div>
+      </div>
+    </div>
     <div class="pi-tags">
-      <div class="pi-tag g">RANGO: ${rank.name}</div>
       <div class="pi-tag gold">RANKING GENERAL #${rankPos}</div>
     </div>
     <div class="pi-stats">
@@ -445,7 +456,7 @@ function renderHistory() {
 }
 
 function getGeneralRanking() {
-  const list = Object.values(profiles).map(p => ({ id: p.id, name: p.nickname || p.name, ovr: p.ovr, rank: getRank(p.xp).name }));
+  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, rank: r.name, slug: r.slug, emoji: r.emoji }; });
   return list.sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name));
 }
 
@@ -458,10 +469,10 @@ function renderRanking() {
     return;
   }
   el.innerHTML = list.map((p, i) => `
-    <div class="rk-row ${state && p.id === state.id ? 'me' : ''}">
+    <div class="rk-row rk-${p.slug} ${state && p.id === state.id ? 'me' : ''}">
       <div class="rk-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
-      <div class="rk-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
-      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank">${p.rank}</div></div>
+      <div class="rk-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
+      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
       <div class="rk-ovr">${p.ovr}</div>
     </div>
   `).join('');
@@ -481,11 +492,11 @@ function renderPlayerSearch(query) {
   el.innerHTML = list.map(p => {
     const rank = getRank(p.xp);
     return `
-    <div class="pl-card" onclick="openPlayerView('${p.id}')">
-      <div class="pl-card-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
+    <div class="pl-card rk-${rank.slug}" onclick="openPlayerView('${p.id}')">
+      <div class="pl-card-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
       <div class="pl-card-name">${p.nickname || p.name}</div>
       <div class="pl-card-sub">${p.position} · ${p.team}</div>
-      <div class="pl-card-tags"><span class="pi-tag g">${rank.name}</span><span class="pi-tag gold">OVR ${p.ovr}</span></div>
+      <div class="pl-card-tags"><span class="rk-emblem"><span class="rk-emblem-emoji">${rank.emoji}</span>${rank.name}</span><span class="pi-tag gold">OVR ${p.ovr}</span></div>
     </div>`;
   }).join('');
   renderPlayerSuggestions(query);
@@ -690,14 +701,14 @@ const HW_FLOW = [
 ];
 
 const HW_RANK_INFO = {
-  ROOKIE:   { desc: 'Tu punto de partida. Estás conociendo la plataforma y disputando tus primeros partidos.' },
-  NOVA:     { desc: 'Empiezas a sumar partidos y a mostrar regularidad en tu rendimiento.' },
-  VANGUARD: { desc: 'Jugador reconocido en su zona, con estadísticas consistentes.' },
-  PRIME:    { desc: 'Rendimiento sólido y constante. Empiezas a destacar entre tus pares.' },
-  RIVAL:    { desc: 'Compites en partidos de mayor nivel. Tu nombre empieza a sonar.' },
-  ELITE:    { desc: 'Jugador de alto nivel, buscado para los mejores partidos y equipos.' },
-  APEX:     { desc: 'Entre los mejores de la plataforma. Pocos llegan hasta aquí.' },
-  LEGACY:   { desc: 'El rango máximo. Una leyenda dentro de LEVEL UP.' },
+  'CANTERANO':  { desc: 'Tu primer contrato profesional. Estás comenzando y disputando tus primeros partidos.', perk: 'Carta de bronce + acceso a partidos abiertos' },
+  'DEBUTANTE':  { desc: 'Tus primeros partidos oficiales. Empiezas a mostrar regularidad en la cancha.', perk: 'Carta azul eléctrico + prioridad media en invitaciones' },
+  'REVELACIÓN': { desc: 'El jugador que explotó. Empiezas a llamar la atención de toda la zona.', perk: 'Carta de hielo con escarcha + destacado en búsquedas' },
+  'CONSAGRADO': { desc: 'Jugador totalmente consolidado. Tu nombre ya pesa en la cancha.', perk: 'Carta esmeralda con aura + creación de equipos' },
+  'ELITE':      { desc: 'Jugador top. Compites contra los mejores de la plataforma.', perk: 'Carta dorada premium + retos de Rey del Barrio' },
+  'ÍDOLO':      { desc: 'Amado por toda la comunidad. Eres referente e inspiración.', perk: 'Carta granate y dorada + prioridad alta en invitaciones' },
+  'LEYENDA':    { desc: 'Carta histórica. Tu historia ya es parte de LEVEL UP.', perk: 'Carta plateada grabada + insignia de leyenda' },
+  'GOAT':       { desc: 'El mejor de todos los tiempos. Una carta imposible de conseguir.', perk: 'Carta cósmica animada + estatus máximo de la plataforma' },
 };
 
 const HW_SOON = [
@@ -732,12 +743,23 @@ function renderWelcomeHome() {
       <div class="hw-flow-text">${step}</div>
     </div>${i < HW_FLOW.length - 1 ? '<div class="hw-flow-arrow">↓</div>' : ''}`).join('');
 
-  document.getElementById('hw-rank-track').innerHTML = RANKS.map(r => `
-    <div class="hw-rank-card rk-${r.name.toLowerCase()}">
+  document.getElementById('hw-rank-track').innerHTML = RANKS.map((r, i) => {
+    const info = HW_RANK_INFO[r.name] || {};
+    return `
+    <div class="hw-rank-card rk-${r.slug}">
+      <div class="hw-rank-fx"></div>
+      ${r.slug === 'goat' ? '<div class="fc-cosmos"></div>' : ''}
+      <div class="hw-rank-top">
+        <span class="hw-rank-emoji">${r.emoji}</span>
+        <span class="hw-rank-num">${String(i + 1).padStart(2, '0')}</span>
+      </div>
       <div class="hw-rank-badge">${r.name}</div>
+      <div class="hw-rank-tagline">${r.tagline}</div>
       <div class="hw-rank-ovr">DESDE ${r.min.toLocaleString('es')} XP</div>
-      <div class="hw-rank-desc">${HW_RANK_INFO[r.name] ? HW_RANK_INFO[r.name].desc : ''}</div>
-    </div>`).join('');
+      <div class="hw-rank-desc">${info.desc || ''}</div>
+      ${info.perk ? `<div class="hw-rank-perk"><span class="hw-rank-perk-ico">✦</span>${info.perk}</div>` : ''}
+    </div>`;
+  }).join('');
 
   const soonGrid = document.getElementById('hw-soon-grid');
   if (soonGrid) soonGrid.innerHTML = HW_SOON.map(s => `
@@ -957,13 +979,90 @@ function playOvrEvolutionStep(data) {
 
 function playRankUpStep(data) {
   const stage = document.getElementById('reveal-stage');
-  stage.insertAdjacentHTML('beforeend', `
-    <div class="reveal-rankup" id="reveal-rankup">
-      <div class="reveal-rankup-label">NUEVO RANGO</div>
-      <div class="reveal-rankup-badge">${data.rankAfter}</div>
-      <div class="reveal-rankup-sub">${data.rankBefore} → ${data.rankAfter}</div>
-    </div>`);
-  setTimeout(() => playRewardsStep(data), 2200);
+  const slug = data.rankAfterSlug || 'canterano';
+  const cardEl = document.getElementById('reveal-card-el');
+  // 1) the old frame shatters on the card
+  if (cardEl) {
+    cardEl.classList.add('reveal-card-shatter');
+    const shards = document.createElement('div');
+    shards.className = 'reveal-shards';
+    for (let i = 0; i < 14; i++) {
+      const s = document.createElement('span');
+      s.style.setProperty('--sx', (Math.random() * 2 - 1).toFixed(2));
+      s.style.setProperty('--sy', (Math.random() * 2 - 1).toFixed(2));
+      s.style.setProperty('--sr', (Math.random() * 360) + 'deg');
+      s.style.left = (10 + Math.random() * 80) + '%';
+      s.style.top = (10 + Math.random() * 80) + '%';
+      shards.appendChild(s);
+    }
+    cardEl.appendChild(shards);
+  }
+  playRankUpSound();
+  // 2) shockwave + particle explosion + new rank badge in the rank's colors
+  setTimeout(() => {
+    stage.insertAdjacentHTML('beforeend', `
+      <div class="reveal-rankup rk-${slug}" id="reveal-rankup">
+        <div class="reveal-rankup-burst"></div>
+        <div class="reveal-rankup-ring"></div>
+        <div class="reveal-rankup-emoji">${data.rankAfterEmoji || '★'}</div>
+        <div class="reveal-rankup-label">¡SUBISTE DE RANGO!</div>
+        <div class="reveal-rankup-badge">${data.rankAfter}</div>
+        <div class="reveal-rankup-sub">${data.rankBefore} → ${data.rankAfter}</div>
+      </div>`);
+    const burst = document.querySelector('#reveal-rankup .reveal-rankup-burst');
+    if (burst) {
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('span');
+        const ang = (Math.PI * 2 * i) / 28;
+        const dist = 90 + Math.random() * 140;
+        p.style.setProperty('--px', Math.cos(ang) * dist + 'px');
+        p.style.setProperty('--py', Math.sin(ang) * dist + 'px');
+        p.style.animationDelay = (Math.random() * 0.12) + 's';
+        burst.appendChild(p);
+      }
+    }
+    if (cardEl) cardEl.classList.add('reveal-card-evolved');
+  }, 520);
+  setTimeout(() => playRewardsStep(data), 3000);
+}
+
+let _rankUpAudioCtx = null;
+function playRankUpSound() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    _rankUpAudioCtx = _rankUpAudioCtx || new AC();
+    const ctx = _rankUpAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.value = 0.18;
+    master.connect(ctx.destination);
+    // rising triumphant arpeggio
+    const notes = [392.0, 523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((f, i) => {
+      const t = now + i * 0.12;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.9, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      osc.connect(g); g.connect(master);
+      osc.start(t); osc.stop(t + 0.55);
+    });
+    // shimmer tail
+    const shimmer = ctx.createOscillator();
+    const sg = ctx.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.setValueAtTime(1568, now + 0.6);
+    sg.gain.setValueAtTime(0.0001, now + 0.6);
+    sg.gain.exponentialRampToValueAtTime(0.5, now + 0.66);
+    sg.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+    shimmer.connect(sg); sg.connect(master);
+    shimmer.start(now + 0.6); shimmer.stop(now + 1.45);
+  } catch (e) { /* audio no disponible */ }
 }
 
 function playRewardsStep(data) {
@@ -3019,6 +3118,7 @@ function submitFinalizeMatch() {
       matchId: match.id, resultLabel, teamName: teamA.name, rivalName: teamB.name,
       ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain,
       rankBefore: d.rankBefore.name, rankAfter: d.rankAfter.name, rankChanged,
+      rankAfterSlug: d.rankAfter.slug, rankAfterEmoji: d.rankAfter.emoji,
       isMvp: m2.mvp, achievementsNew: newAchievements, attrsGain: d.attrsGain,
       stats: m2, avgCalLast5,
     };
