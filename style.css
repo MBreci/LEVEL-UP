@@ -690,6 +690,10 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-card-head{display:flex;gap:20px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap}
 .team-escudo{width:72px;height:72px;border-radius:10px;object-fit:cover;border:0.5px solid rgba(255,255,255,0.12);flex-shrink:0}
 .team-escudo-placeholder{display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-weight:700;font-size:20px;color:#020510}
+.escudo-clickable{cursor:zoom-in;transition:transform 0.2s,box-shadow 0.2s}
+.escudo-clickable:hover{transform:scale(1.05);box-shadow:0 0 20px rgba(0,245,140,0.35)}
+.escudo-lightbox-card{background:var(--bg2);border:var(--b1);border-radius:10px;padding:24px;max-width:420px;margin:80px auto;text-align:center}
+.escudo-lightbox-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#020510}
 .team-card-name{font-family:var(--ft);font-weight:900;font-size:20px;color:var(--w);letter-spacing:0.5px}
 .team-card-sub{font-size:12px;color:var(--td);font-weight:300;margin-top:4px}
 .team-card-captain{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);margin-top:10px}

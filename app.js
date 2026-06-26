@@ -1527,6 +1527,27 @@ function renderTeamsModule() {
   else if (location.hash === '#programados') switchEquiposTab('programados');
 }
 
+async function previewTeamPhoto(input) {
+  const img = document.getElementById('team-photo-preview');
+  if (!img) return;
+  if (!input.files || !input.files[0]) { img.style.display = 'none'; return; }
+  img.src = await fileToDataUrl(input.files[0]);
+  img.style.display = 'block';
+}
+
+function openEscudoLightbox(src) {
+  if (!src) return;
+  const modal = document.getElementById('escudo-lightbox');
+  const img = document.getElementById('escudo-lightbox-img');
+  if (!modal || !img) return;
+  img.src = src;
+  modal.classList.add('open');
+}
+function closeEscudoLightbox() {
+  const modal = document.getElementById('escudo-lightbox');
+  if (modal) modal.classList.remove('open');
+}
+
 function renderTeamProfile(teamId) {
   const el = document.getElementById('team-profile-content');
   if (!el) return;
@@ -1576,7 +1597,7 @@ function renderTeamProfile(teamId) {
   el.innerHTML = `
     <div class="team-card">
       <div class="team-card-head">
-        ${team.photo ? `<img class="team-escudo" src="${team.photo}">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
+        ${team.photo ? `<img class="team-escudo escudo-clickable" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
         <div>
           <div class="team-card-name">${team.name}</div>
           <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>
@@ -1660,7 +1681,7 @@ function openTeamView(teamId) {
   content.innerHTML = `
     <div class="team-card">
       <div class="team-card-head">
-        ${team.photo ? `<img class="team-escudo" src="${team.photo}">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
+        ${team.photo ? `<img class="team-escudo escudo-clickable" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
         <div>
           <div class="team-card-name">${team.name}</div>
           <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>

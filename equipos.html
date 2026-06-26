@@ -73,7 +73,8 @@
         <div class="auth-label">COLOR DEL EQUIPO</div>
         <input class="auth-input" type="color" id="team-color" value="#00ff88">
         <div class="auth-label">ESCUDO (OPCIONAL)</div>
-        <input class="auth-input" type="file" id="team-photo" accept="image/*">
+        <input class="auth-input" type="file" id="team-photo" accept="image/*" onchange="previewTeamPhoto(this)">
+        <img id="team-photo-preview" class="team-escudo escudo-clickable" style="display:none;margin-top:10px" onclick="openEscudoLightbox(this.src)">
         <div class="auth-error" id="team-error"></div>
         <button class="auth-submit" onclick="submitCreateTeam()">CREAR EQUIPO</button>
       </div>
@@ -111,6 +112,14 @@
   <div class="player-view-card">
     <div class="card-section" id="team-view-content"></div>
     <button class="auth-cancel" onclick="closeTeamView()">CERRAR</button>
+  </div>
+</div>
+
+<!-- MODAL VER ESCUDO EN GRANDE -->
+<div class="modal-overlay" id="escudo-lightbox">
+  <div class="escudo-lightbox-card">
+    <img id="escudo-lightbox-img" class="escudo-lightbox-img" src="">
+    <button class="auth-cancel" onclick="closeEscudoLightbox()">CERRAR</button>
   </div>
 </div>
 
