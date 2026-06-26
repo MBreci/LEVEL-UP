@@ -1340,6 +1340,8 @@ const ARENAS = [
     horarios: ['18:00', '19:00', '20:00', '21:00', '22:00'],
     maxSimultaneos: 2,
     activa: true,
+    rating: 4.8,
+    matchesPlayed: 0,
   },
 ];
 
@@ -1371,6 +1373,10 @@ function getArenaSlotCounts(arenaId, fechaISO) {
   return counts;
 }
 
+function getArenaMatchesPlayed(arenaId) {
+  return openMatches.filter(m => m.arenaId === arenaId && m.finalizado).length;
+}
+
 function getArenaAvailableSlots(arenaId, fechaISO) {
   const arena = ARENAS.find(a => a.id === arenaId);
   if (!arena) return [];
@@ -1384,8 +1390,14 @@ function getArenaAvailableSlots(arenaId, fechaISO) {
 }
 
 let bpWizardStep = 1;
-const BPW_STEPS = ['CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA', 'HORARIO', 'DETALLES'];
-let bpWizard = { categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+const BPW_STEPS = ['MODALIDAD', 'CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA', 'HORARIO', 'DETALLES'];
+const MODALIDADES = [
+  { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
+  { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
+  { id: 'rey', label: 'REY DEL BARRIO', icon: '👑', desc: 'Reta a otro equipo. Se gestiona desde EQUIPOS.' },
+  { id: 'oficial', label: 'PARTIDO OFICIAL', icon: '🏆', desc: 'Próximamente: partidos arbitrados de LEVEL UP.' },
+];
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
 
 function openMatchForm() {
   if (!state) { openAuth(false); return; }
@@ -1394,8 +1406,9 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
     renderBpWizard();
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
@@ -1420,11 +1433,22 @@ function renderBpWizard() {
     </div>`).join('');
 
   backBtn.style.display = bpWizardStep > 1 ? 'inline-block' : 'none';
-  nextBtn.textContent = bpWizardStep === 6 ? 'PUBLICAR BÚSQUEDA' : 'SIGUIENTE';
+  nextBtn.textContent = bpWizardStep === 7 ? 'PUBLICAR PARTIDO' : 'SIGUIENTE';
 
   if (bpWizardStep === 1) {
     bodyEl.innerHTML = `
-      <div class="auth-label">PASO 1 · SELECCIONA EL TIPO DE CANCHA</div>
+      <div class="auth-label">PASO 1 · ¿QUÉ TIPO DE PARTIDO QUIERES ORGANIZAR?</div>
+      <div class="bpw-modal-grid">
+        ${MODALIDADES.map(m => `
+          <div class="bpw-modal-tile ${bpWizard.modalidad === m.id ? 'on' : ''}" onclick="bpSelectModalidad('${m.id}')">
+            <div class="bpw-modal-icon">${m.icon}</div>
+            <div class="bpw-modal-label">${m.label}</div>
+            <div class="bpw-modal-desc">${m.desc}</div>
+          </div>`).join('')}
+      </div>`;
+  } else if (bpWizardStep === 2) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 2 · SELECCIONA EL TIPO DE CANCHA</div>
       <div class="bpw-cat-grid">
         ${CATEGORIAS_CANCHA.map(c => `
           <div class="bpw-cat-tile ${bpWizard.categoria === c.id ? 'on' : ''}" onclick="bpSelectCategoria('${c.id}')">
@@ -1432,9 +1456,9 @@ function renderBpWizard() {
             <div class="bpw-cat-label">${c.label}</div>
           </div>`).join('')}
       </div>`;
-  } else if (bpWizardStep === 2) {
+  } else if (bpWizardStep === 3) {
     bodyEl.innerHTML = `
-      <div class="auth-label">PASO 2 · SELECCIONA LA SUPERFICIE</div>
+      <div class="auth-label">PASO 3 · SELECCIONA LA SUPERFICIE</div>
       <div class="bpw-surf-grid">
         ${SUPERFICIES.map(s => `
           <div class="bpw-surf-tile ${bpWizard.superficie === s.id ? 'on' : ''} ${!s.disponible ? 'soon' : ''}" onclick="${s.disponible ? `bpSelectSuperficie('${s.id}')` : ''}">
@@ -1442,14 +1466,20 @@ function renderBpWizard() {
             ${!s.disponible ? '<div class="bpw-surf-tag">PRÓXIMAMENTE</div>' : ''}
           </div>`).join('')}
       </div>`;
-  } else if (bpWizardStep === 3) {
+  } else if (bpWizardStep === 4) {
     const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
     bodyEl.innerHTML = `
-      <div class="auth-label">PASO 3 · SELECCIONA LA ARENA</div>
-      <select class="auth-input" id="bpw-arena-select" onchange="bpSelectArena(this.value)">
-        <option value="">SELECCIONA UNA SEDE</option>
-        ${ARENAS.map(a => `<option value="${a.id}" ${bpWizard.arenaId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-      </select>
+      <div class="auth-label">PASO 4 · SELECCIONA LA ARENA</div>
+      <div class="bpw-arena-grid">
+        ${ARENAS.map(a => `
+          <div class="bpw-arena-tile ${bpWizard.arenaId === a.id ? 'on' : ''}" onclick="bpSelectArena('${a.id}')" style="background-image:url('${a.photos[0]}')">
+            <div class="bpw-arena-overlay">
+              <div class="bpw-arena-name">${a.name}</div>
+              <div class="bpw-arena-addr">📍 ${a.address}</div>
+              <div class="bpw-arena-rating">⭐ ${a.rating || '4.8'} · ${getArenaMatchesPlayed(a.id)} PARTIDOS JUGADOS</div>
+            </div>
+          </div>`).join('')}
+      </div>
       ${arena ? `
         <div class="arena-card">
           <div class="arena-card-badge">${arena.badge}</div>
@@ -1462,42 +1492,90 @@ function renderBpWizard() {
           <div class="arena-card-features">
             ${arena.features.map(f => `<div class="arena-feature">✅ ${f}</div>`).join('')}
           </div>
+          <a class="arena-card-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(arena.address)}" target="_blank">VER CÓMO LLEGAR →</a>
         </div>` : ''}`;
-  } else if (bpWizardStep === 4) {
-    bodyEl.innerHTML = `
-      <div class="auth-label">PASO 4 · SELECCIONA LA FECHA</div>
-      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
   } else if (bpWizardStep === 5) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 5 · SELECCIONA LA FECHA</div>
+      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
+  } else if (bpWizardStep === 6) {
     const slots = bpWizard.arenaId && bpWizard.fechaISO ? getArenaAvailableSlots(bpWizard.arenaId, bpWizard.fechaISO) : [];
     bodyEl.innerHTML = `
-      <div class="auth-label">PASO 5 · SELECCIONA EL HORARIO</div>
+      <div class="auth-label">PASO 6 · SELECCIONA EL HORARIO</div>
       <div class="bpw-hora-grid">
-        ${slots.length ? slots.map(s => `
-          <div class="bpw-hora-tile ${bpWizard.horaValue === s.hora ? 'on' : ''} ${!s.disponible ? 'full' : ''}" onclick="${s.disponible ? `bpSelectHora('${s.hora}')` : ''}">
+        ${slots.length ? slots.map(s => {
+          const restantes = (ARENAS.find(a => a.id === bpWizard.arenaId).maxSimultaneos) - s.ocupados;
+          const cls = !s.disponible ? 'full' : restantes <= 1 ? 'last' : 'open';
+          return `<div class="bpw-hora-tile ${cls} ${bpWizard.horaValue === s.hora ? 'on' : ''}" onclick="${s.disponible ? `bpSelectHora('${s.hora}')` : ''}">
             <div class="bpw-hora-label">${s.label}</div>
-            <div class="bpw-hora-tag">${s.disponible ? 'DISPONIBLE' : 'HORARIO COMPLETO'}</div>
-          </div>`).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
+            <div class="bpw-hora-tag">${!s.disponible ? 'COMPLETO' : restantes <= 1 ? 'ÚLTIMO CUPO' : 'DISPONIBLE'}</div>
+          </div>`;
+        }).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
       </div>`;
-  } else if (bpWizardStep === 6) {
+  } else if (bpWizardStep === 7) {
     bodyEl.innerHTML = `
       <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
-      <input class="auth-input" type="number" min="0" id="bp-precio" placeholder="Ej: 10000">
+      <input class="auth-input" type="number" min="0" id="bp-precio" oninput="renderBpSummary()" placeholder="Ej: 10000">
       <div class="auth-label">OVR MÍNIMO RECOMENDADO (OPCIONAL)</div>
-      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" placeholder="Ej: 60">
+      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60">
       <label class="auth-consent">
-        <input type="checkbox" id="bp-abierto" checked>
+        <input type="checkbox" id="bp-abierto" ${bpWizard.modalidad !== 'privado' ? 'checked' : ''} onchange="renderBpSummary()">
         <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
       </label>
       <div class="auth-label">POSICIONES QUE FALTAN</div>
       <div class="bp-pos-grid" id="bp-pos-grid">
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
       </div>`;
   }
+  renderBpSummary();
 }
 
+function renderBpSummary() {
+  const el = document.getElementById('bpw-summary');
+  if (!el) return;
+  const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
+  const horaLabel = bpWizard.horaValue ? formatHoraLabel(bpWizard.horaValue) : null;
+  const fechaLabel = bpWizard.fechaISO ? formatFechaPartido(bpWizard.fechaISO, horaLabel || '') : null;
+  const precioEl = document.getElementById('bp-precio');
+  const abiertoEl = document.getElementById('bp-abierto');
+  const necesitaRows = bpWizardStep === 7
+    ? Array.from(document.querySelectorAll('#bp-pos-grid .bp-pos-chip')).map(chip => {
+        const cb = chip.querySelector('input[type=checkbox]');
+        const n = chip.querySelector('.bp-pos-n');
+        return { pos: cb.value, checked: cb.checked, cupos: parseInt(n.value, 10) || 1 };
+      })
+    : [];
+  const ready = arena && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaValue && necesitaRows.some(r => r.checked);
+  el.innerHTML = `
+    <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
+    <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
+    <div class="bpw-summary-row"><span>ARENA</span><strong>${arena ? arena.name : '—'}</strong></div>
+    <div class="bpw-summary-row"><span>FÚTBOL</span><strong>${bpWizard.categoria ? 'FÚTBOL ' + bpWizard.categoria : '—'}</strong></div>
+    <div class="bpw-summary-row"><span>FECHA</span><strong>${bpWizard.fechaISO || '—'}</strong></div>
+    <div class="bpw-summary-row"><span>HORA</span><strong>${horaLabel || '—'}</strong></div>
+    <div class="bpw-summary-row"><span>COSTO</span><strong>${precioEl && precioEl.value ? '$' + precioEl.value : 'GRATIS'}</strong></div>
+    <div class="bpw-summary-row"><span>CAPITÁN</span><strong>${state ? (state.nickname || state.name) : '—'}</strong></div>
+    <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
+    ${necesitaRows.length ? `
+      <div class="bpw-summary-cupos">
+        ${necesitaRows.filter(r => r.checked).map(r => `
+          <div class="bpw-summary-cupo">
+            <div class="bpw-summary-cupo-label"><span>${r.pos}</span><span>0/${r.cupos}</span></div>
+            <div class="bpw-cupos-bar"><div class="bpw-cupos-fill" style="width:0%"></div></div>
+          </div>`).join('')}
+      </div>` : ''}
+  `;
+}
+
+function bpSelectModalidad(id) {
+  if (id === 'rey') { openWip('Rey del Barrio'); return; }
+  if (id === 'oficial') { openWip('Partido Oficial'); return; }
+  bpWizard.modalidad = id;
+  renderBpWizard();
+}
 function bpSelectCategoria(id) { bpWizard.categoria = id; renderBpWizard(); }
 function bpSelectSuperficie(id) { bpWizard.superficie = id; renderBpWizard(); }
 function bpSelectArena(id) { bpWizard.arenaId = id || null; renderBpWizard(); }
@@ -1512,12 +1590,13 @@ function bpWizardBack() {
 
 function bpWizardNext() {
   const errorEl = document.getElementById('bp-error');
-  if (bpWizardStep === 1 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
-  if (bpWizardStep === 2 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
-  if (bpWizardStep === 3 && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena.'; return; }
-  if (bpWizardStep === 4 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
-  if (bpWizardStep === 5 && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
-  if (bpWizardStep < 6) { bpWizardStep++; renderBpWizard(); return; }
+  if (bpWizardStep === 1 && !bpWizard.modalidad) { errorEl.textContent = 'Selecciona la modalidad del partido.'; return; }
+  if (bpWizardStep === 2 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
+  if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
+  if (bpWizardStep === 4 && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena.'; return; }
+  if (bpWizardStep === 5 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
+  if (bpWizardStep === 6 && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
+  if (bpWizardStep < 7) { bpWizardStep++; renderBpWizard(); return; }
   submitMatchRequest();
 }
 
@@ -1533,7 +1612,7 @@ function submitMatchRequest() {
   const chosenSlot = slots.find(s => s.hora === bpWizard.horaValue);
   if (!chosenSlot || !chosenSlot.disponible) {
     errorEl.textContent = 'Ese horario ya no está disponible. Selecciona otro.';
-    bpWizardStep = 5;
+    bpWizardStep = 6;
     renderBpWizard();
     return;
   }
@@ -1595,16 +1674,6 @@ function joinMatchRequest(matchId, pos) {
   pushMatchToCloud(match);
   addNotification('⚽', `Te uniste al partido en ${match.zona} (${pos}) — ${match.fecha}`);
   saveState();
-  renderAll();
-}
-
-function deleteMyMatch(matchId) {
-  const match = openMatches.find(m => m.id === matchId);
-  if (!match || !state || match.creatorId !== state.id) return;
-  if (!confirm('¿Eliminar este partido? Esta acción no se puede deshacer.')) return;
-  openMatches = openMatches.filter(m => m.id !== matchId);
-  saveOpenMatches();
-  deleteMatchFromCloud(matchId);
   renderAll();
 }
 
@@ -1684,6 +1753,12 @@ function buildCancelButton(m) {
   return `<div class="bp-cancel-locked">⚠️ No puedes cancelar tu participación porque el partido inicia en menos de 24 horas.</div>`;
 }
 
+function buildDeleteMatchButton(m) {
+  const hoursLeft = (matchDateTime(m).getTime() - Date.now()) / 3600000;
+  if (hoursLeft >= 24) return `<button class="bp-cancel-btn" onclick="deleteMyMatch('${m.id}')">ELIMINAR PARTIDO</button>`;
+  return `<div class="bp-cancel-locked">⚠️ No puedes eliminar este partido porque inicia en menos de 24 horas.</div>`;
+}
+
 function buildMatchCard(m, mode) {
   const estado = getMatchEstado(m);
   const info = ESTADO_INFO[estado];
@@ -1743,6 +1818,7 @@ function buildMatchCard(m, mode) {
         <button onclick="openMatchLocation('${m.id}')">VER UBICACIÓN</button>
         <button onclick="openWip('Chat del partido')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
+        ${isCreator ? buildDeleteMatchButton(m) : ''}
       </div>
     </div>`;
 }
@@ -1858,9 +1934,39 @@ function cancelMyParticipation(matchId) {
   match.necesita.forEach(n => { n.unidos = n.unidos.filter(u => u.profileId !== state.id); });
   saveOpenMatches();
   pushMatchToCloud(match);
+  const creator = profiles[match.creatorId];
+  if (creator && creator.id !== state.id) {
+    creator.notifications.push({ icon: '🚫', text: `${state.nickname || state.name} canceló su participación en tu partido del ${match.fecha}.`, time: 'AHORA' });
+    profiles[creator.id] = creator;
+    saveProfiles();
+    pushProfileToCloud(creator);
+  }
   addNotification('🚫', `Cancelaste tu participación en el partido del ${match.fecha}.`);
   saveState();
   renderBuscarPartido();
+}
+
+function deleteMyMatch(matchId) {
+  const match = openMatches.find(m => m.id === matchId);
+  if (!match || !state || match.creatorId !== state.id) return;
+  if ((matchDateTime(match).getTime() - Date.now()) / 3600000 < 24) {
+    alert('No puedes eliminar este partido porque inicia en menos de 24 horas.');
+    return;
+  }
+  if (!confirm('¿Eliminar este partido? Esta acción no se puede deshacer.')) return;
+  const joinedIds = new Set(match.necesita.flatMap(n => n.unidos.map(u => u.profileId)));
+  joinedIds.forEach(id => {
+    const player = profiles[id];
+    if (!player) return;
+    player.notifications.push({ icon: '🚫', text: `${state.nickname || state.name} eliminó el partido del ${match.fecha} en ${match.zona}.`, time: 'AHORA' });
+    profiles[id] = player;
+    saveProfiles();
+    pushProfileToCloud(player);
+  });
+  openMatches = openMatches.filter(m => m.id !== matchId);
+  saveOpenMatches();
+  deleteMatchFromCloud(matchId);
+  renderAll();
 }
 
 function toggleSaveMatch(matchId) {
@@ -1910,8 +2016,42 @@ function renderBuscarPartido() {
   renderMyMatches();
   renderProximosPartidos();
   renderMiParticipacion();
+  renderMiParticipacionTimeline();
   const form = document.getElementById('bp-form');
   if (form && form.style.display !== 'none') renderBpWizard();
+}
+
+function renderMiParticipacionTimeline() {
+  const el = document.getElementById('bp-timeline');
+  if (!el) return;
+  if (!state) { el.innerHTML = ''; return; }
+  const mine = openMatches.filter(m =>
+    getMatchEstado(m) !== 'finalizado' &&
+    (m.creatorId === state.id || m.necesita.some(n => n.unidos.some(u => u.profileId === state.id)))
+  ).sort((a, b) => matchDateTime(a) - matchDateTime(b));
+  if (!mine.length) { el.innerHTML = ''; return; }
+  const now = Date.now();
+  el.innerHTML = `
+    <div class="sec-eyebrow">LÍNEA DE TIEMPO</div>
+    <div class="bp-timeline-track">
+      ${mine.map(m => {
+        const dt = matchDateTime(m);
+        const diffDays = Math.round((new Date(dt.toDateString()).getTime() - new Date(new Date(now).toDateString()).getTime()) / 86400000);
+        const when = diffDays === 0 ? 'HOY' : diffDays === 1 ? 'MAÑANA' : dt.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+        const estado = getMatchEstado(m);
+        const tag = estado === 'confirmado' ? 'CONFIRMADO' : estado === 'en_juego' ? 'EN JUEGO' : 'PENDIENTE';
+        return `
+        <div class="bp-timeline-item">
+          <div class="bp-timeline-dot ${estado}"></div>
+          <div class="bp-timeline-when">${when}</div>
+          <div class="bp-timeline-card">
+            <div class="bp-timeline-cancha">${m.cancha || m.zona}</div>
+            <div class="bp-timeline-meta">${formatHoraLabel(m.horaValue)} · FÚTBOL ${m.formato}</div>
+            <div class="bp-timeline-tag ${estado}">${tag}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 /* ===== INVITACIONES (jugadores ya registrados en este dispositivo) ===== */

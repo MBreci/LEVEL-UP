@@ -45,10 +45,19 @@
   <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
 </div>
 
-<div class="page-banner">
-  <div class="page-banner-eyebrow">05 · ENCUENTRA TU PARTIDO</div>
-  <div class="page-banner-title">BUSCAR PARTIDO</div>
-  <div class="page-banner-desc">Publica tu búsqueda de jugadores, únete a partidos abiertos o invita a jugadores de LEVEL UP a tu partido.</div>
+<div class="bp-hero">
+  <div class="bp-hero-glow bp-hero-glow-g"></div>
+  <div class="bp-hero-glow bp-hero-glow-p"></div>
+  <div class="bp-hero-content">
+    <div class="page-banner-eyebrow">05 · ENCUENTRA TU PARTIDO</div>
+    <div class="bp-hero-title">ORGANIZA TU PRÓXIMO PARTIDO</div>
+    <div class="bp-hero-desc">Crea un partido, invita jugadores, reserva una cancha y comienza a competir.</div>
+    <button class="bp-hero-cta" onclick="openMatchForm()">+ PUBLICAR PARTIDO</button>
+  </div>
+  <div class="bp-hero-art">
+    <div class="bp-hero-orb"></div>
+    <div class="bp-hero-ball">⚽</div>
+  </div>
 </div>
 
 <!-- BUSCAR PARTIDO -->
@@ -66,14 +75,21 @@
     <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
   </div>
   <div class="bp-form bp-wizard" id="bp-form" style="display:none">
-    <div class="bpw-steps" id="bpw-steps"></div>
-    <div class="bpw-body" id="bpw-body"></div>
-    <div class="auth-error" id="bp-error"></div>
-    <div class="bpw-nav">
-      <button class="auth-cancel" id="bpw-back" onclick="bpWizardBack()">ATRÁS</button>
-      <button class="auth-submit" id="bpw-next" onclick="bpWizardNext()">SIGUIENTE</button>
+    <div class="bpw-layout">
+      <div class="bpw-main">
+        <div class="bpw-steps" id="bpw-steps"></div>
+        <div class="bpw-body" id="bpw-body"></div>
+        <div class="auth-error" id="bp-error"></div>
+        <div class="bpw-nav">
+          <button class="auth-cancel" id="bpw-back" onclick="bpWizardBack()">ATRÁS</button>
+          <button class="auth-submit" id="bpw-next" onclick="bpWizardNext()">SIGUIENTE</button>
+        </div>
+      </div>
+      <div class="bpw-summary" id="bpw-summary"></div>
     </div>
   </div>
+
+  <div id="bp-timeline" class="bp-timeline-wrap"></div>
 
   <div id="invitar">
     <div class="sec-hdr">
