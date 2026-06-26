@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DEMO · Admin · Partido en vivo · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{padding-bottom:0}
+  .demo-banner{background:#1a0a00;border:1px solid rgba(255,170,0,.5);color:#ffaa00;font-family:var(--ft);font-size:11px;letter-spacing:2px;padding:10px 24px;text-align:center}
+</style>
+</head>
+<body class="lv-body">
+
+<div class="demo-banner">⚠ DEMO ESTÁTICO — SOLO PARA VISUALIZAR. NO GUARDA NADA NI ESTÁ CONECTADO A LA APP REAL NI A SUPABASE.</div>
+
+<div id="lv-root">
+  <div class="lv-topbar">
+    <div class="lv-topbar-left">
+      <span class="lv-back" style="cursor:default">← PARTIDOS</span>
+      <span class="lv-logo">LEVEL UP <span class="lv-logo-sub">ADMIN PANEL</span></span>
+    </div>
+    <div class="lv-topbar-mid">
+      <span class="lv-topbar-item">📍 <b id="lv-arena">Cancha El Salitre</b></span>
+      <span class="lv-topbar-item">📅 <b id="lv-fecha">2026-06-26 · 19:30</b></span>
+      <span class="lv-topbar-item">⚽ <b id="lv-modalidad">FÚTBOL 7</b></span>
+      <span class="lv-code" id="lv-code">LVP-2026-000148</span>
+    </div>
+    <div class="lv-topbar-right">
+      <span class="lv-autosave-badge" id="lv-autosave-badge">● GUARDADO AUTOMÁTICAMENTE</span>
+    </div>
+  </div>
+
+  <div class="lv-scoreboard">
+    <div class="lv-sb-team">
+      <div class="lv-sb-escudo" id="lv-team-a-escudo">HF</div>
+      <div class="lv-sb-name" id="lv-team-a-name">HALCONES FC</div>
+    </div>
+    <div class="lv-sb-center">
+      <span class="lv-status-badge paused" id="lv-status-badge">EN PAUSA</span>
+      <div class="lv-sb-score">
+        <span class="lv-score lv-score-a" id="lv-score-a">0</span>
+        <span class="lv-score-sep">—</span>
+        <span class="lv-score lv-score-b" id="lv-score-b">0</span>
+      </div>
+      <div class="lv-sb-clock" id="lv-clock">00:00</div>
+      <div class="lv-sb-half" id="lv-half">PRIMER TIEMPO</div>
+    </div>
+    <div class="lv-sb-team">
+      <div class="lv-sb-escudo" id="lv-team-b-escudo">LS</div>
+      <div class="lv-sb-name" id="lv-team-b-name">LOBOS DEL SUR</div>
+    </div>
+  </div>
+
+  <div class="lv-summary">
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">MARCADOR</span><span class="lv-sum-val" id="lv-sum-goles">0 - 0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">TIROS AL ARCO</span><span class="lv-sum-val" id="lv-sum-tiros">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">AMARILLAS</span><span class="lv-sum-val" id="lv-sum-amarillas">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">ROJAS</span><span class="lv-sum-val" id="lv-sum-rojas">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">MVP PROVISIONAL</span><span class="lv-sum-val good" id="lv-sum-mvp">—</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">PEOR CALIFICADO</span><span class="lv-sum-val bad" id="lv-sum-worst">—</span></div>
+  </div>
+
+  <div class="lv-main">
+    <div class="lv-sec-title">ESTADÍSTICAS POR JUGADOR</div>
+    <div class="adm-lv-table" id="lv-table"></div>
+
+    <div class="lv-bottom">
+      <div class="lv-bottom-col">
+        <div class="lv-sec-title">EVENTOS DEL PARTIDO</div>
+        <div class="adm-lv-timeline" id="lv-timeline"></div>
+      </div>
+      <div class="lv-bottom-col">
+        <div class="lv-sec-title">MINUTO ACTUAL</div>
+        <div class="lv-clock-ctrl">
+          <button class="lv-btn" id="lv-clock-toggle" onclick="demoClockToggle()">INICIAR</button>
+          <button class="lv-btn ghost" onclick="demoClockAdd(1)">+1 MIN</button>
+          <button class="lv-btn ghost" onclick="demoClockAdd(5)">+5 MIN</button>
+          <button class="lv-btn ghost" onclick="demoClockAdd(10)">+10 MIN</button>
+          <button class="lv-btn ghost" onclick="demoSetHalf(1)">1ER TIEMPO</button>
+          <button class="lv-btn ghost" onclick="demoSetHalf(2)">2DO TIEMPO</button>
+        </div>
+        <div class="lv-sec-title" style="margin-top:18px">NOTAS DEL PARTIDO</div>
+        <textarea class="lv-notes" id="lv-notes" placeholder="Lesiones, incidentes, disciplina, suspensiones..."></textarea>
+      </div>
+    </div>
+
+    <div class="lv-actions">
+      <button class="lv-btn primary" onclick="demoFinalize()">FINALIZAR Y ENVIAR ESTADÍSTICAS</button>
+      <button class="lv-btn ghost" onclick="alert('(DEMO) Esto solo simula guardar un borrador, no escribe en ninguna base de datos real.')">GUARDAR BORRADOR</button>
+      <button class="lv-btn danger" onclick="alert('(DEMO) Esto solo cierra el demo, no cancela ningún partido real.')">CANCELAR PARTIDO</button>
+    </div>
+  </div>
+
+  <div class="lv-footer">LEVEL UP · MOTOR DE ADMINISTRACIÓN DE PARTIDOS EN VIVO · TEMPORADA BETA · MODO DEMO</div>
+</div>
+
+<script>
+  const teamA = { name: 'HALCONES FC' };
+  const teamB = { name: 'LOBOS DEL SUR' };
+
+  function mkStat() {
+    return {
+      goles: 0, asistencias: 0, tiros: 0, pasesClave: 0, recuperaciones: 0, destacadas: 0,
+      atajadas: 0, atajadasArea: 0, achiques: 0, despejes: 0, pasesLargos: 0, jugadasIniciadas: 0,
+      errores: 0, oportunidadesFalladas: 0, faltas: 0, amarillas: 0, rojas: 0, autogoles: 0,
+    };
+  }
+
+  const players = [
+    { id: 'p1', side: 'A', squadNumber: 7, name: 'Miguel Breci', nickname: 'LOBO', position: 'DEL', ovr: 78, isGK: false, stat: mkStat() },
+    { id: 'p2', side: 'A', squadNumber: 10, name: 'Lobo González', nickname: '', position: 'MED', ovr: 74, isGK: false, stat: mkStat() },
+    { id: 'p3', side: 'A', squadNumber: 1, name: 'Esteban Roa', nickname: '', position: 'POR', ovr: 70, isGK: true, stat: mkStat() },
+    { id: 'p4', side: 'B', squadNumber: 9, name: 'Andrés Gómez', nickname: '', position: 'DEL', ovr: 76, isGK: false, stat: mkStat() },
+    { id: 'p5', side: 'B', squadNumber: 4, name: 'Camilo Vargas', nickname: '', position: 'DEF', ovr: 71, isGK: false, stat: mkStat() },
+    { id: 'p6', side: 'B', squadNumber: 1, name: 'David Ospina', nickname: '', position: 'POR', ovr: 73, isGK: true, stat: mkStat() },
+  ];
+
+  let elapsed = 0;
+  let running = false;
+  let half = 1;
+  let finalized = false;
+  let events = [];
+  let tickInterval = null;
+  let autosaveInterval = null;
+
+  function calcRating(stat, isGK) {
+    let score = 6;
+    score += stat.goles * 1.2 + stat.asistencias * 0.8 + stat.tiros * 0.15 + stat.pasesClave * 0.2 + stat.recuperaciones * 0.1 + stat.destacadas * 0.4;
+    if (isGK) score += stat.atajadas * 0.3 + stat.atajadasArea * 0.45 + stat.despejes * 0.1 + stat.pasesLargos * 0.05 + stat.jugadasIniciadas * 0.1;
+    score -= stat.errores * 0.6 + stat.oportunidadesFalladas * 0.25 + stat.faltas * 0.15 + stat.amarillas * 0.5 + stat.rojas * 2 + stat.autogoles * 1.5;
+    return Math.max(1, Math.min(10, Math.round(score * 10) / 10));
+  }
+
+  function formatClock(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function getScore() {
+    let golesA = 0, golesB = 0;
+    players.forEach(p => {
+      if (p.side === 'A') { golesA += p.stat.goles; golesB += p.stat.autogoles; }
+      else { golesB += p.stat.goles; golesA += p.stat.autogoles; }
+    });
+    return { golesA, golesB };
+  }
+
+  function renderClock() {
+    document.getElementById('lv-clock').textContent = formatClock(elapsed);
+  }
+
+  function render() {
+    const { golesA, golesB } = getScore();
+    document.getElementById('lv-score-a').textContent = golesA;
+    document.getElementById('lv-score-b').textContent = golesB;
+    document.getElementById('lv-status-badge').textContent = finalized ? 'FINALIZADO' : (running ? 'EN VIVO' : 'EN PAUSA');
+    document.getElementById('lv-status-badge').className = 'lv-status-badge ' + (finalized ? 'off' : (running ? 'on' : 'paused'));
+    document.getElementById('lv-half').textContent = half === 2 ? 'SEGUNDO TIEMPO' : 'PRIMER TIEMPO';
+    document.getElementById('lv-clock-toggle').textContent = running ? 'PAUSAR' : (finalized ? 'FINALIZADO' : 'INICIAR');
+    document.getElementById('lv-clock-toggle').disabled = finalized;
+    renderClock();
+
+    let amarillasTotal = 0, rojasTotal = 0, tirosTotal = 0;
+    let bestCalif = -1, worstCalif = 11, bestPlayer = null, worstPlayer = null;
+    players.forEach(p => {
+      amarillasTotal += p.stat.amarillas; rojasTotal += p.stat.rojas; tirosTotal += p.stat.tiros;
+      const calif = calcRating(p.stat, p.isGK);
+      if (calif > bestCalif) { bestCalif = calif; bestPlayer = p; }
+      if (calif < worstCalif) { worstCalif = calif; worstPlayer = p; }
+    });
+    document.getElementById('lv-sum-goles').textContent = golesA + ' - ' + golesB;
+    document.getElementById('lv-sum-amarillas').textContent = amarillasTotal;
+    document.getElementById('lv-sum-rojas').textContent = rojasTotal;
+    document.getElementById('lv-sum-tiros').textContent = tirosTotal;
+    document.getElementById('lv-sum-mvp').textContent = bestPlayer ? (bestPlayer.nickname || bestPlayer.name) : '—';
+    document.getElementById('lv-sum-worst').textContent = worstPlayer ? (worstPlayer.nickname || worstPlayer.name) : '—';
+
+    const rowHTML = (p) => {
+      const s = p.stat;
+      const calif = calcRating(s, p.isGK);
+      const calClass = calif >= 7.5 ? 'good' : calif <= 4.5 ? 'bad' : '';
+      const initials = p.name.split(' ').map(x => x[0]).join('').slice(0, 2);
+      const inc = (field) => `onclick="demoStatChange('${p.id}','${field}',1)"`;
+      const dec = (field) => `onclick="demoStatChange('${p.id}','${field}',-1)"`;
+      const mini = (field, label) => `
+        <div class="adm-lv-mini">
+          <button ${dec(field)} ${finalized ? 'disabled' : ''}>-</button>
+          <div><b>${s[field]}</b><span>${label}</span></div>
+          <button ${inc(field)} ${finalized ? 'disabled' : ''}>+</button>
+        </div>`;
+      const positiveCols = p.isGK
+        ? mini('atajadas', 'ATAJ.') + mini('atajadasArea', 'ATAJ. ÁREA') + mini('achiques', 'ACHIQ.') + mini('despejes', 'DESPEJ.') + mini('pasesLargos', 'P. LARGOS') + mini('jugadasIniciadas', 'J. INIC.')
+        : mini('goles', 'GOL') + mini('asistencias', 'ASIST.') + mini('tiros', 'T. ARCO') + mini('pasesClave', 'P. CLAVE') + mini('recuperaciones', 'RECUP.') + mini('destacadas', 'DESTAC.');
+      const negativeCols = mini('errores', 'ERROR') + mini('oportunidadesFalladas', 'OP. FALL.') + mini('faltas', 'FALTA') + mini('amarillas', 'AMAR.') + mini('rojas', 'ROJA') + mini('autogoles', 'AUTOGOL');
+      return `
+        <div class="adm-lv-row">
+          <div class="adm-lv-player">
+            <div class="adm-lv-av">${initials}</div>
+            <div>
+              <div class="adm-lv-name">#${p.squadNumber} ${p.nickname || p.name}</div>
+              <div class="adm-lv-sub">${p.side === 'A' ? teamA.name : teamB.name} · ${p.position}${p.isGK ? ' · PORTERO' : ''} · OVR ${p.ovr}</div>
+            </div>
+          </div>
+          <div class="adm-lv-cols pos">${positiveCols}</div>
+          <div class="adm-lv-cols neg">${negativeCols}</div>
+          <div class="adm-lv-calif ${calClass}">${calif.toFixed(1)}</div>
+        </div>`;
+    };
+    document.getElementById('lv-table').innerHTML = players.map(rowHTML).join('');
+
+    document.getElementById('lv-timeline').innerHTML = events.length
+      ? events.slice().reverse().map(e => `<div class="adm-lv-event"><span class="adm-lv-event-min">MIN ${e.min}</span>${e.icon} ${e.text}</div>`).join('')
+      : `<div class="rk-empty">Sin eventos registrados todavía.</div>`;
+  }
+
+  function demoStatChange(playerId, field, delta) {
+    if (finalized) return;
+    const p = players.find(x => x.id === playerId);
+    if (!p) return;
+    p.stat[field] = Math.max(0, p.stat[field] + delta);
+    if (delta > 0) {
+      const EVENT_LABEL = {
+        goles: ['⚽', 'GOOOL de'], asistencias: ['🎯', 'Asistencia de'], destacadas: ['✨', 'Jugada destacada de'],
+        atajadas: ['🧤', 'Atajada de'], atajadasArea: ['🧤', 'Atajada dentro del área de'],
+        amarillas: ['🟨', 'Tarjeta amarilla para'], rojas: ['🟥', 'Tarjeta roja para'],
+        autogoles: ['😱', 'Autogol de'], errores: ['⚠️', 'Error grave de'],
+      };
+      if (EVENT_LABEL[field]) {
+        const [icon, label] = EVENT_LABEL[field];
+        events.push({ min: Math.floor(elapsed / 60), icon, text: `${label} ${p.nickname || p.name}` });
+      }
+    }
+    render();
+  }
+
+  function demoClockToggle() {
+    if (finalized) return;
+    running = !running;
+    render();
+  }
+
+  function demoClockAdd(minutes) {
+    elapsed += minutes * 60;
+    renderClock();
+  }
+
+  function demoSetHalf(h) {
+    half = h;
+    render();
+  }
+
+  function flashAutosave() {
+    const badge = document.getElementById('lv-autosave-badge');
+    badge.classList.add('flash');
+    setTimeout(() => badge.classList.remove('flash'), 1200);
+  }
+
+  function demoFinalize() {
+    if (finalized) return;
+    if (!confirm('¿Finalizar el partido y enviar las estadísticas? (DEMO: no actualizará nada real, solo simula el flujo)')) return;
+    running = false;
+    finalized = true;
+    let bestCalif = -1, mvp = null;
+    players.forEach(p => {
+      const calif = calcRating(p.stat, p.isGK);
+      if (calif > bestCalif) { bestCalif = calif; mvp = p; }
+    });
+    render();
+    alert(`(DEMO) Estadísticas procesadas. MVP del partido: ${mvp ? (mvp.nickname || mvp.name) : 'N/A'}. Esto no escribió nada en ninguna base de datos real.`);
+  }
+
+  tickInterval = setInterval(() => {
+    if (running) { elapsed++; renderClock(); }
+  }, 1000);
+  autosaveInterval = setInterval(() => { if (!finalized) flashAutosave(); }, 15000);
+
+  render();
+</script>
+
+</body>
+</html>
