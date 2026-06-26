@@ -928,6 +928,274 @@ function renderTicker() {
   if (el) el.innerHTML = feed;
 }
 
+/* ===== ADMIN · CONSOLA DE PARTIDO EN VIVO ===== */
+
+const ADMIN_MATCH_KEY = 'levelup_admin_match';
+const ADM_STAT_FIELDS = ['goles', 'asistencias', 'tiros', 'recuperaciones', 'errores', 'fallos', 'amarillas', 'rojas'];
+
+let adminMatch = null;
+let adminClockInterval = null;
+
+function loadAdminMatch() {
+  try { return JSON.parse(sessionStorage.getItem(ADMIN_MATCH_KEY)) || null; } catch { return null; }
+}
+function saveAdminMatch() {
+  sessionStorage.setItem(ADMIN_MATCH_KEY, JSON.stringify(adminMatch));
+}
+
+function renderAdminSetup() {
+  const pickA = document.getElementById('adm-pick-a');
+  const pickB = document.getElementById('adm-pick-b');
+  if (!pickA || !pickB) return;
+  const ids = Object.keys(profiles);
+  const opts = ids.map(id => {
+    const p = profiles[id];
+    return `<label class="adm-chk"><input type="checkbox" value="${id}"> ${p.nickname || p.name} (${p.position})</label>`;
+  }).join('');
+  pickA.innerHTML = opts || '<div class="auth-empty">No hay perfiles creados en este dispositivo.</div>';
+  pickB.innerHTML = opts || '<div class="auth-empty">No hay perfiles creados en este dispositivo.</div>';
+}
+
+function adminStartMatch() {
+  const teamA = document.getElementById('adm-team-a').value.trim() || 'EQUIPO LOCAL';
+  const teamB = document.getElementById('adm-team-b').value.trim() || 'EQUIPO VISITANTE';
+  const idsA = Array.from(document.querySelectorAll('#adm-pick-a input:checked')).map(c => c.value);
+  const idsB = Array.from(document.querySelectorAll('#adm-pick-b input:checked')).map(c => c.value);
+  if (!idsA.length && !idsB.length) {
+    alert('Selecciona al menos un jugador para iniciar el partido.');
+    return;
+  }
+  const mkPlayer = (id, side) => {
+    const p = profiles[id];
+    const stats = {};
+    ADM_STAT_FIELDS.forEach(f => stats[f] = 0);
+    return { id, name: p.nickname || p.name, pos: p.position, side, stats };
+  };
+  adminMatch = {
+    teamA, teamB,
+    players: idsA.map(id => mkPlayer(id, 'A')).concat(idsB.map(id => mkPlayer(id, 'B'))),
+    seconds: 0,
+    running: false,
+  };
+  saveAdminMatch();
+  document.getElementById('adm-setup').classList.add('off');
+  document.getElementById('adm-live').classList.add('on');
+  document.getElementById('adm-score-name-a').textContent = teamA;
+  document.getElementById('adm-score-name-b').textContent = teamB;
+  renderAdminStatRows();
+  renderAdminScore();
+}
+
+function computeRating(stats) {
+  let r = 6.0;
+  r += stats.goles * 1.0;
+  r += stats.asistencias * 0.6;
+  r += stats.tiros * 0.15;
+  r += stats.recuperaciones * 0.05;
+  r -= stats.errores * 0.8;
+  r -= stats.fallos * 0.3;
+  r -= stats.amarillas * 0.4;
+  r -= stats.rojas * 1.5;
+  return Math.max(1, Math.min(10, r));
+}
+
+function ratingClass(r) {
+  if (r >= 7.5) return 'good';
+  if (r >= 6) return 'mid';
+  return 'bad';
+}
+
+function adminStatChange(playerId, field, delta) {
+  const p = adminMatch.players.find(pl => pl.id === playerId);
+  if (!p) return;
+  p.stats[field] = Math.max(0, p.stats[field] + delta);
+  if (field === 'goles') renderAdminScore();
+  saveAdminMatch();
+  renderAdminStatRows();
+}
+
+function renderAdminScore() {
+  const a = adminMatch.players.filter(p => p.side === 'A').reduce((s, p) => s + p.stats.goles, 0);
+  const b = adminMatch.players.filter(p => p.side === 'B').reduce((s, p) => s + p.stats.goles, 0);
+  document.getElementById('adm-score-a').textContent = a;
+  document.getElementById('adm-score-b').textContent = b;
+}
+
+function renderAdminStatRows() {
+  const el = document.getElementById('adm-stat-rows');
+  if (!el || !adminMatch) return;
+  const ctrl = (p, field, label) => `
+    <td><div class="adm-stat-ctrl">
+      <button onclick="adminStatChange('${p.id}','${field}',-1)">-</button>
+      <span>${p.stats[field]}</span>
+      <button onclick="adminStatChange('${p.id}','${field}',1)">+</button>
+    </div></td>`;
+  el.innerHTML = adminMatch.players.map(p => {
+    const rating = computeRating(p.stats);
+    return `
+      <tr>
+        <td class="adm-name">${p.name} <span style="color:var(--tm);font-size:9px">· ${p.side === 'A' ? adminMatch.teamA : adminMatch.teamB}</span></td>
+        <td>${p.pos}</td>
+        ${ctrl(p, 'goles', 'GOL')}
+        ${ctrl(p, 'asistencias', 'AST')}
+        ${ctrl(p, 'tiros', 'TA')}
+        ${ctrl(p, 'recuperaciones', 'REC')}
+        ${ctrl(p, 'errores', 'ERR')}
+        ${ctrl(p, 'fallos', 'OPF')}
+        ${ctrl(p, 'amarillas', 'TA')}
+        ${ctrl(p, 'rojas', 'TR')}
+        <td><span class="adm-rating ${ratingClass(rating)}">${rating.toFixed(1)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function adminClockToggle() {
+  adminMatch.running = !adminMatch.running;
+  document.getElementById('adm-clock-toggle').textContent = adminMatch.running ? 'DETENER' : 'INICIAR';
+  if (adminMatch.running) {
+    adminClockInterval = setInterval(() => {
+      adminMatch.seconds += 1;
+      renderAdminClock();
+      saveAdminMatch();
+    }, 1000);
+  } else {
+    clearInterval(adminClockInterval);
+  }
+}
+
+function adminClockAdd(min) {
+  adminMatch.seconds += min * 60;
+  renderAdminClock();
+  saveAdminMatch();
+}
+
+function renderAdminClock() {
+  const m = Math.floor(adminMatch.seconds / 60).toString().padStart(2, '0');
+  const s = (adminMatch.seconds % 60).toString().padStart(2, '0');
+  const el = document.getElementById('adm-clock-display');
+  if (el) el.textContent = `${m}:${s}`;
+}
+
+function adminCancelMatch() {
+  if (!confirm('¿Cancelar este partido? Se perderán las estadísticas registradas.')) return;
+  clearInterval(adminClockInterval);
+  adminMatch = null;
+  sessionStorage.removeItem(ADMIN_MATCH_KEY);
+  document.getElementById('adm-setup').classList.remove('off');
+  document.getElementById('adm-live').classList.remove('on');
+}
+
+function ratingToOvrDelta(rating) {
+  if (rating >= 8.5) return 2;
+  if (rating >= 7) return 1;
+  if (rating >= 5.5) return 0;
+  if (rating >= 4) return -1;
+  return -2;
+}
+
+function adminFinishMatch() {
+  if (!adminMatch) return;
+  clearInterval(adminClockInterval);
+  const golesA = adminMatch.players.filter(p => p.side === 'A').reduce((s, p) => s + p.stats.goles, 0);
+  const golesB = adminMatch.players.filter(p => p.side === 'B').reduce((s, p) => s + p.stats.goles, 0);
+  const results = [];
+
+  adminMatch.players.forEach(p => {
+    const profile = profiles[p.id];
+    if (!profile) return;
+    const rating = computeRating(p.stats);
+    const ovrDelta = ratingToOvrDelta(rating);
+    const teamGoals = p.side === 'A' ? golesA : golesB;
+    const rivalGoals = p.side === 'A' ? golesB : golesA;
+    const resultado = teamGoals > rivalGoals ? 'VICTORIA' : teamGoals === rivalGoals ? 'EMPATE' : 'DERROTA';
+    const isMvp = rating >= 8.5;
+
+    let xpGain = 50 + p.stats.goles * 80 + p.stats.asistencias * 60 + Math.round((rating - 6) * 20);
+    xpGain = Math.max(10, xpGain);
+    if (resultado === 'VICTORIA') xpGain += 100;
+    if (isMvp) xpGain += 200;
+    const lpGain = resultado === 'VICTORIA' ? 25 : resultado === 'EMPATE' ? 10 : 5;
+
+    profile.matches += 1;
+    profile.goals += p.stats.goles;
+    profile.assists += p.stats.asistencias;
+    if (isMvp) profile.mvps += 1;
+    profile.ovr = Math.max(40, Math.min(99, profile.ovr + ovrDelta));
+    ['pac', 'sho', 'pas', 'dri', 'def', 'fis'].forEach((k) => {
+      let kDelta = ovrDelta;
+      if (k === 'sho') kDelta += Math.sign(p.stats.goles) * 1;
+      if (k === 'pas') kDelta += Math.sign(p.stats.asistencias) * 1;
+      if (k === 'def') kDelta += Math.sign(p.stats.recuperaciones) * 1;
+      const jitter = Math.floor(Math.random() * 3) - 1;
+      profile.attrs[k] = Math.max(40, Math.min(99, profile.attrs[k] + kDelta + jitter));
+    });
+    profile.xp += xpGain;
+    profile.lp = (profile.lp || 0) + lpGain;
+    profile.lastUpdate = { ovrDelta, xpGain, lpGain };
+
+    const prevRank = getRank(profile.xp - xpGain).name;
+    const newRank = getRank(profile.xp).name;
+    profile.history.push({
+      date: new Date().toLocaleDateString('es-CO'),
+      result: `${resultado} ${teamGoals}-${rivalGoals}`,
+      mvp: isMvp,
+      ovrDelta,
+    });
+    profile.notifications.push({ icon: '⚡', text: `Tu carta de LEVEL UP fue actualizada tras el partido vs ${p.side === 'A' ? adminMatch.teamB : adminMatch.teamA}.`, time: 'AHORA' });
+    if (ovrDelta !== 0) profile.notifications.push({ icon: ovrDelta > 0 ? '📈' : '📉', text: `Tu OVR cambió a ${profile.ovr} tras el partido (calificación ${rating.toFixed(1)}).`, time: 'AHORA' });
+    if (isMvp) profile.notifications.push({ icon: '★', text: '¡Fuiste MVP del partido!', time: 'AHORA' });
+    if (newRank !== prevRank) profile.notifications.push({ icon: '🔥', text: `Subiste de rango: ahora eres ${newRank}.`, time: 'AHORA' });
+
+    results.push({ name: p.name, rating, ovrDelta, xpGain, isMvp });
+  });
+
+  saveProfiles();
+  if (state && profiles[state.id]) state = profiles[state.id];
+
+  document.getElementById('adm-result-content').innerHTML = `
+    <div class="pm-label">RESULTADO FINAL</div>
+    <div class="pm-result">${adminMatch.teamA} ${golesA} - ${golesB} ${adminMatch.teamB}</div>
+    ${results.map(r => `
+      <div class="adm-result-row">
+        <span>${r.name}${r.isMvp ? ' ★' : ''}</span>
+        <span>CALIF. ${r.rating.toFixed(1)}</span>
+        <span class="adm-result-delta ${r.ovrDelta > 0 ? 'up' : r.ovrDelta < 0 ? 'down' : 'zero'}">${r.ovrDelta >= 0 ? '+' : ''}${r.ovrDelta} OVR</span>
+        <span>+${r.xpGain} XP</span>
+      </div>
+    `).join('')}
+    <button class="pm-close" onclick="closeAdminResult()">FINALIZAR</button>
+  `;
+  document.getElementById('adm-result-modal').classList.add('open');
+
+  adminMatch = null;
+  sessionStorage.removeItem(ADMIN_MATCH_KEY);
+}
+
+function closeAdminResult() {
+  document.getElementById('adm-result-modal').classList.remove('open');
+  document.getElementById('adm-setup').classList.remove('off');
+  document.getElementById('adm-live').classList.remove('on');
+  renderAdminSetup();
+  renderAll();
+}
+
+function initAdminPanel() {
+  if (!document.getElementById('adm-setup')) return;
+  renderAdminSetup();
+  adminMatch = loadAdminMatch();
+  if (adminMatch) {
+    document.getElementById('adm-setup').classList.add('off');
+    document.getElementById('adm-live').classList.add('on');
+    document.getElementById('adm-score-name-a').textContent = adminMatch.teamA;
+    document.getElementById('adm-score-name-b').textContent = adminMatch.teamB;
+    renderAdminStatRows();
+    renderAdminScore();
+    renderAdminClock();
+    if (adminMatch.running) adminClockToggle();
+  }
+}
+
 function initApp() {
   loadCurrentProfile();
   const page = location.pathname.split('/').pop() || 'index.html';
@@ -935,6 +1203,7 @@ function initApp() {
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
 
   renderAll();
+  initAdminPanel();
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];

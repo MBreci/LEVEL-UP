@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Partido · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.adm-wrap{max-width:1300px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:18px}
+.adm-setup{background:var(--bg2);border:0.5px solid rgba(0,255,136,0.2);border-radius:6px;padding:22px;display:flex;flex-direction:column;gap:14px}
+.adm-setup-row{display:flex;gap:12px;flex-wrap:wrap}
+.adm-setup-row .auth-input{flex:1;min-width:160px}
+.adm-team-pick{display:flex;flex-direction:column;gap:8px;flex:1;min-width:240px}
+.adm-team-pick-label{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--g)}
+.adm-chk-list{display:flex;flex-wrap:wrap;gap:8px;max-height:160px;overflow-y:auto;padding:8px;background:var(--bg3);border-radius:4px;border:0.5px solid rgba(255,255,255,0.08)}
+.adm-chk{display:flex;align-items:center;gap:6px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);background:var(--bg2);padding:6px 10px;border-radius:3px;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer}
+.adm-chk input{accent-color:var(--g)}
+.adm-start-btn{align-self:flex-start;font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:12px 24px;background:var(--g);color:#020510;border:none;border-radius:3px;cursor:pointer}
+
+.adm-live{display:none;flex-direction:column;gap:18px}
+.adm-live.on{display:flex}
+.adm-setup.off{display:none}
+
+.adm-scorebar{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--bg2);border:0.5px solid rgba(0,255,136,0.2);border-radius:6px;padding:18px 24px;flex-wrap:wrap}
+.adm-score-team{font-family:var(--ft);font-size:14px;letter-spacing:1px;color:var(--w)}
+.adm-score-num{font-family:var(--ft);font-weight:900;font-size:32px;color:var(--g)}
+.adm-clock{font-family:var(--ft);font-size:20px;color:var(--w);text-align:center}
+.adm-clock-ctrl{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.adm-clock-ctrl button{font-family:var(--ft);font-size:8px;letter-spacing:1px;background:var(--bg3);color:var(--tm);border:0.5px solid rgba(255,255,255,0.15);border-radius:3px;padding:5px 9px;cursor:pointer}
+
+.adm-table-wrap{background:var(--bg2);border:0.5px solid rgba(0,255,136,0.2);border-radius:6px;overflow-x:auto}
+table.adm-table{width:100%;border-collapse:collapse;min-width:1100px}
+table.adm-table th{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--g);text-align:center;padding:10px 6px;border-bottom:0.5px solid rgba(0,255,136,0.2);white-space:nowrap}
+table.adm-table td{text-align:center;padding:8px 6px;border-bottom:0.5px solid rgba(255,255,255,0.06);font-size:11px;color:var(--w)}
+table.adm-table td.adm-name{text-align:left;font-family:var(--ft);font-size:10px;letter-spacing:0.5px}
+.adm-stat-ctrl{display:inline-flex;align-items:center;gap:4px}
+.adm-stat-ctrl button{width:18px;height:18px;line-height:18px;font-size:11px;background:var(--bg3);color:var(--tm);border:0.5px solid rgba(255,255,255,0.15);border-radius:2px;cursor:pointer}
+.adm-stat-ctrl span{min-width:14px;display:inline-block;font-family:var(--ft)}
+.adm-rating{font-family:var(--ft);font-weight:700;font-size:12px;padding:4px 8px;border-radius:3px;display:inline-block}
+.adm-rating.good{color:var(--g);border:1px solid rgba(0,255,136,0.4);background:rgba(0,255,136,0.08)}
+.adm-rating.mid{color:var(--gold);border:1px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.08)}
+.adm-rating.bad{color:var(--f);border:1px solid rgba(255,0,170,0.4);background:rgba(255,0,170,0.08)}
+
+.adm-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+.adm-btn-send{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:13px 26px;background:var(--g);color:#020510;border:none;border-radius:3px;cursor:pointer}
+.adm-btn-cancel{font-family:var(--ft);font-size:10px;letter-spacing:1px;padding:13px 22px;background:transparent;color:var(--f);border:0.5px solid rgba(255,0,170,0.5);border-radius:3px;cursor:pointer}
+
+.adm-result-modal .post-match-card{max-height:80vh;overflow-y:auto}
+.adm-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.08);font-family:var(--ft);font-size:10px;letter-spacing:1px}
+.adm-result-delta.up{color:var(--g)}
+.adm-result-delta.down{color:var(--f)}
+.adm-result-delta.zero{color:var(--tm)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-top">
+    <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <nav class="nav-modules" id="nav-modules"></nav>
+    <div class="nav-right">
+      <div class="season-badge">PANEL ADMIN</div>
+      <div class="dropdown-wrap">
+        <button class="btn-g" id="profile-btn">PERFIL</button>
+        <div class="dropdown-menu" id="account-dropdown">
+          <a class="dropdown-item" href="carta.html">PERFIL</a>
+          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
+          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
+          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-banner">
+  <div class="page-banner-eyebrow">ADMIN · CONSOLA DE PARTIDO</div>
+  <div class="page-banner-title">REGISTRO EN VIVO</div>
+  <div class="page-banner-desc">Registra las estadísticas de cada jugador mientras avanza el partido. Al finalizar, se actualizan automáticamente OVR, atributos y carta de cada perfil.</div>
+</div>
+
+<div class="adm-wrap">
+
+  <!-- SETUP -->
+  <div class="adm-setup" id="adm-setup">
+    <div class="adm-setup-row">
+      <input class="auth-input" id="adm-team-a" placeholder="Equipo local (ej: Los Intocables FC)">
+      <input class="auth-input" id="adm-team-b" placeholder="Equipo visitante (ej: Halcones FC)">
+    </div>
+    <div class="adm-setup-row">
+      <div class="adm-team-pick">
+        <div class="adm-team-pick-label">JUGADORES EQUIPO LOCAL (perfiles de este dispositivo)</div>
+        <div class="adm-chk-list" id="adm-pick-a"></div>
+      </div>
+      <div class="adm-team-pick">
+        <div class="adm-team-pick-label">JUGADORES EQUIPO VISITANTE</div>
+        <div class="adm-chk-list" id="adm-pick-b"></div>
+      </div>
+    </div>
+    <button class="adm-start-btn" onclick="adminStartMatch()">INICIAR PARTIDO</button>
+  </div>
+
+  <!-- LIVE -->
+  <div class="adm-live" id="adm-live">
+    <div class="adm-scorebar">
+      <div class="adm-score-team" id="adm-score-name-a"></div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="adm-score-num" id="adm-score-a">0</div>
+        <div class="adm-clock">
+          <div id="adm-clock-display">00:00</div>
+          <div class="adm-clock-ctrl">
+            <button onclick="adminClockAdd(1)">+1 MIN</button>
+            <button onclick="adminClockAdd(5)">+5 MIN</button>
+            <button onclick="adminClockToggle()" id="adm-clock-toggle">INICIAR</button>
+          </div>
+        </div>
+        <div class="adm-score-num" id="adm-score-b">0</div>
+      </div>
+      <div class="adm-score-team" id="adm-score-name-b"></div>
+    </div>
+
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th>JUGADOR</th><th>POS</th>
+            <th>GOL</th><th>ASIST.</th><th>TIRO ARCO</th><th>RECUP.</th>
+            <th>ERROR</th><th>OP. FALLADA</th><th>AMARILLA</th><th>ROJA</th>
+            <th>CALIF.</th>
+          </tr>
+        </thead>
+        <tbody id="adm-stat-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="adm-actions">
+      <button class="adm-btn-cancel" onclick="adminCancelMatch()">CANCELAR PARTIDO</button>
+      <button class="adm-btn-send" onclick="adminFinishMatch()">FINALIZAR Y ENVIAR ESTADÍSTICAS</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL RESULTADO FINAL -->
+<div class="modal-overlay adm-result-modal" id="adm-result-modal">
+  <div class="post-match-card" id="adm-result-content"></div>
+</div>
+
+<footer>
+  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA PILOTO · TODOS LOS DATOS SON DE EJEMPLO</div>
+</footer>
+
+<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+  <span class="a-dot"></span>
+  <span id="audio-lbl">LET'S ROLL</span>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
