@@ -526,10 +526,12 @@ function renderNotifications() {
     return;
   }
   const myInvites = getMyInvites();
-  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length;
+  const myTeamInvites = getMyTeamInvites();
+  const myChallenges = getMyChallenges();
+  if (countEl) countEl.textContent = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length;
   const el = document.getElementById('notif-list');
   if (!el) return;
-  if (!state.notifications.length && !myInvites.length) {
+  if (!state.notifications.length && !myInvites.length && !myTeamInvites.length && !myChallenges.length) {
     el.innerHTML = `<div class="notif-empty">No tienes notificaciones.</div>`;
     return;
   }
@@ -544,13 +546,34 @@ function renderNotifications() {
         : `<div class="notif-invite-status">${inv.status === 'aceptada' ? '✓ ACEPTASTE ESTA INVITACIÓN' : '✕ RECHAZASTE ESTA INVITACIÓN'}</div>`}
     </div>
   `).join('');
+  const teamInviteRows = myTeamInvites.slice().reverse().map(inv => `
+    <div class="notif-invite">
+      <div class="notif-invite-txt">🛡️ <strong>${inv.teamName}</strong> te invitó a unirte como jugador.</div>
+      <div class="notif-invite-actions">
+        <button class="notif-accept" onclick="respondTeamInvite('${inv.id}',true)">ACEPTAR</button>
+        <button class="notif-reject" onclick="respondTeamInvite('${inv.id}',false)">RECHAZAR</button>
+      </div>
+    </div>
+  `).join('');
+  const challengeRows = myChallenges.slice().reverse().map(c => {
+    const fromTeam = teams[c.fromTeamId];
+    return `
+    <div class="notif-invite">
+      <div class="notif-invite-txt">⚔️ <strong>${fromTeam ? fromTeam.name : 'Un equipo'}</strong> te retó a un partido en ${c.cancha} — ${c.fecha} ${c.hora}</div>
+      <div class="notif-invite-actions">
+        <button class="notif-accept" onclick="respondChallenge('${c.id}',true)">ACEPTAR</button>
+        <button class="notif-reject" onclick="respondChallenge('${c.id}',false)">RECHAZAR</button>
+      </div>
+    </div>
+  `;
+  }).join('');
   const normalRows = state.notifications.slice().reverse().map(n => `
     <div class="notif-row">
       <div class="notif-icon">${n.icon}</div>
       <div><div class="notif-txt">${n.text}</div><div class="notif-time">${n.time}</div></div>
     </div>
   `).join('');
-  el.innerHTML = inviteRows + normalRows;
+  el.innerHTML = inviteRows + teamInviteRows + challengeRows + normalRows;
 }
 
 function renderWipGrid() {
@@ -588,6 +611,7 @@ function renderAll() {
   renderNotifications();
   renderWipGrid();
   renderBuscarPartido();
+  renderTeamsModule();
   renderTicker();
   updateProfileBtn();
   renderDashboard();
@@ -1083,6 +1107,653 @@ function getMyInvites() {
   return invites.filter(i => i.toId === state.id);
 }
 
+/* ===== EQUIPOS · REY DEL BARRIO · RETOS ===== */
+
+const TEAMS_KEY = 'levelup_teams';
+const TEAM_INVITES_KEY = 'levelup_team_invites';
+const CHALLENGES_KEY = 'levelup_challenges';
+const TEAM_MATCHES_KEY = 'levelup_team_matches';
+
+function loadTeams() { try { return JSON.parse(localStorage.getItem(TEAMS_KEY)) || {}; } catch { return {}; } }
+function saveTeams() { localStorage.setItem(TEAMS_KEY, JSON.stringify(teams)); }
+let teams = loadTeams();
+
+function loadTeamInvites() { try { return JSON.parse(localStorage.getItem(TEAM_INVITES_KEY)) || []; } catch { return []; } }
+function saveTeamInvites() { localStorage.setItem(TEAM_INVITES_KEY, JSON.stringify(teamInvites)); }
+let teamInvites = loadTeamInvites();
+
+function loadChallenges() { try { return JSON.parse(localStorage.getItem(CHALLENGES_KEY)) || []; } catch { return []; } }
+function saveChallenges() { localStorage.setItem(CHALLENGES_KEY, JSON.stringify(challenges)); }
+let challenges = loadChallenges();
+
+function loadTeamMatches() { try { return JSON.parse(localStorage.getItem(TEAM_MATCHES_KEY)) || []; } catch { return []; } }
+function saveTeamMatches() { localStorage.setItem(TEAM_MATCHES_KEY, JSON.stringify(teamMatches)); }
+let teamMatches = loadTeamMatches();
+
+function teamToRow(t) {
+  return {
+    id: t.id, name: t.name, desc: t.desc, city: t.city, color: t.color, photo: t.photo,
+    captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
+    join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
+    goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
+  };
+}
+function rowToTeam(r) {
+  return {
+    id: r.id, name: r.name, desc: r.desc, city: r.city, color: r.color, photo: r.photo,
+    captainId: r.captain_id, memberIds: r.member_ids || [], openForPlayers: r.open_for_players,
+    joinRequests: r.join_requests || [], wins: r.wins || 0, draws: r.draws || 0, losses: r.losses || 0,
+    goalsFor: r.goals_for || 0, goalsAgainst: r.goals_against || 0, streak: r.streak || '', createdAt: r.created_at,
+  };
+}
+async function pushTeamToCloud(t) {
+  if (!sb) return;
+  const { error } = await sb.from('teams').upsert(teamToRow(t));
+  if (error) console.error('Error guardando equipo en la nube:', error.message);
+}
+async function syncTeamsFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('teams').select('*');
+  if (error || !data) { console.error('Error sincronizando equipos:', error && error.message); return; }
+  data.forEach(row => { teams[row.id] = rowToTeam(row); });
+  saveTeams();
+}
+
+function challengeToRow(c) {
+  return {
+    id: c.id, from_team_id: c.fromTeamId, to_team_id: c.toTeamId, cancha: c.cancha, costo: c.costo,
+    fecha: c.fecha, hora: c.hora, jugadores: c.jugadores, observaciones: c.observaciones,
+    status: c.status, created_at: c.createdAt,
+  };
+}
+function rowToChallenge(r) {
+  return {
+    id: r.id, fromTeamId: r.from_team_id, toTeamId: r.to_team_id, cancha: r.cancha, costo: r.costo,
+    fecha: r.fecha, hora: r.hora, jugadores: r.jugadores, observaciones: r.observaciones,
+    status: r.status, createdAt: r.created_at,
+  };
+}
+async function pushChallengeToCloud(c) {
+  if (!sb) return;
+  const { error } = await sb.from('team_challenges').upsert(challengeToRow(c));
+  if (error) console.error('Error guardando reto en la nube:', error.message);
+}
+async function syncChallengesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('team_challenges').select('*');
+  if (error || !data) { console.error('Error sincronizando retos:', error && error.message); return; }
+  const localIds = new Set(challenges.map(c => c.id));
+  data.forEach(row => { if (!localIds.has(row.id)) challenges.push(rowToChallenge(row)); else Object.assign(challenges.find(c => c.id === row.id), rowToChallenge(row)); });
+  saveChallenges();
+}
+
+function teamMatchToRow(m) {
+  return {
+    id: m.id, team_a_id: m.teamAId, team_b_id: m.teamBId, cancha: m.cancha, costo: m.costo,
+    fecha: m.fecha, hora: m.hora, jugadores: m.jugadores, observaciones: m.observaciones,
+    estado: m.estado, resultado: m.resultado, mvp_id: m.mvpId, created_at: m.createdAt,
+  };
+}
+function rowToTeamMatch(r) {
+  return {
+    id: r.id, teamAId: r.team_a_id, teamBId: r.team_b_id, cancha: r.cancha, costo: r.costo,
+    fecha: r.fecha, hora: r.hora, jugadores: r.jugadores, observaciones: r.observaciones,
+    estado: r.estado, resultado: r.resultado, mvpId: r.mvp_id, createdAt: r.created_at,
+  };
+}
+async function pushTeamMatchToCloud(m) {
+  if (!sb) return;
+  const { error } = await sb.from('team_matches').upsert(teamMatchToRow(m));
+  if (error) console.error('Error guardando partido de equipos en la nube:', error.message);
+}
+async function syncTeamMatchesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('team_matches').select('*');
+  if (error || !data) { console.error('Error sincronizando partidos de equipos:', error && error.message); return; }
+  const localIds = new Set(teamMatches.map(m => m.id));
+  data.forEach(row => { if (!localIds.has(row.id)) teamMatches.push(rowToTeamMatch(row)); else Object.assign(teamMatches.find(m => m.id === row.id), rowToTeamMatch(row)); });
+  saveTeamMatches();
+}
+
+const CANCHAS_REGISTRADAS = [
+  'Cancha El Salitre', 'Polideportivo Kennedy', 'Cancha Sintética Suba', 'Coliseo Teusaquillo',
+  'Cancha Bosa Central', 'Estadio Barrio Olaya', 'Cancha El Tunal', 'Polideportivo Fontibón',
+];
+
+function getTeamOVR(team) {
+  const members = team.memberIds.map(id => profiles[id]).filter(Boolean);
+  if (!members.length) return 0;
+  return Math.round(members.reduce((s, p) => s + (p.ovr || 60), 0) / members.length);
+}
+
+function getTeamRecord(team) {
+  return { record: `${team.wins}-${team.draws}-${team.losses}`, dg: team.goalsFor - team.goalsAgainst };
+}
+
+function getMyTeam() {
+  if (!state) return null;
+  return Object.values(teams).find(t => t.memberIds.includes(state.id)) || null;
+}
+
+function makeTeam({ name, desc, city, color, photo, captainId }) {
+  return {
+    id: 'team_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    name: name.toUpperCase(), desc: desc || '', city: city || '', color: color || '#00f58c', photo: photo || null,
+    captainId, memberIds: [captainId], openForPlayers: false, joinRequests: [],
+    wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, streak: '',
+    createdAt: Date.now(),
+  };
+}
+
+function containsProfanityImageName(name) {
+  return containsProfanity(name || '');
+}
+
+async function submitCreateTeam() {
+  const errorEl = document.getElementById('team-error');
+  const name = document.getElementById('team-name').value.trim();
+  const desc = document.getElementById('team-desc').value.trim();
+  const city = document.getElementById('team-city').value.trim();
+  const color = document.getElementById('team-color').value;
+  const photoInput = document.getElementById('team-photo');
+  if (!state) { openAuth(true); return; }
+  if (getMyTeam()) { errorEl.textContent = 'Ya perteneces a un equipo en este dispositivo.'; return; }
+  if (!name) { errorEl.textContent = 'Escribe el nombre del equipo.'; return; }
+  if (containsProfanity(name) || containsProfanity(desc) || containsProfanity(city)) {
+    errorEl.textContent = 'El nombre, descripción o ciudad contiene lenguaje ofensivo. Por favor elige otro.';
+    return;
+  }
+  errorEl.textContent = '';
+  let photo = null;
+  if (photoInput && photoInput.files && photoInput.files[0]) {
+    photo = await fileToDataUrl(photoInput.files[0]);
+  }
+  const team = makeTeam({ name, desc, city, color, photo, captainId: state.id });
+  teams[team.id] = team;
+  saveTeams();
+  pushTeamToCloud(team);
+  renderTeamsModule();
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function toggleOpenForPlayers(teamId) {
+  const team = teams[teamId];
+  if (!team || team.captainId !== state.id) return;
+  team.openForPlayers = !team.openForPlayers;
+  saveTeams();
+  pushTeamToCloud(team);
+  renderTeamsModule();
+}
+
+function searchPlayersToInvite(query, teamId) {
+  const el = document.getElementById('team-invite-suggest');
+  if (!el) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { el.innerHTML = ''; el.classList.remove('open'); return; }
+  const team = teams[teamId];
+  const list = Object.values(profiles)
+    .filter(p => !team.memberIds.includes(p.id))
+    .filter(p => p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q))
+    .slice(0, 6);
+  if (!list.length) { el.innerHTML = `<div class="pl-suggest-item">Sin resultados.</div>`; el.classList.add('open'); return; }
+  el.innerHTML = list.map(p => {
+    const rank = getRank(p.xp);
+    return `
+    <div class="pl-suggest-item team-invite-row" onclick="sendTeamInvite('${teamId}','${p.id}')">
+      <span>${p.nickname || p.name} <span class="s-sub">OVR ${p.ovr} · ${rank.name}</span></span>
+      <span class="notif-accept" style="padding:6px 12px;font-size:10px">INVITAR</span>
+    </div>`;
+  }).join('');
+  el.classList.add('open');
+}
+
+function sendTeamInvite(teamId, playerId) {
+  const team = teams[teamId];
+  const player = profiles[playerId];
+  if (!team || !player) return;
+  if (team.memberIds.length >= 6) { alert('Tu equipo ya tiene los 6 cupos llenos.'); return; }
+  const exists = teamInvites.find(i => i.teamId === teamId && i.toId === playerId && i.status === 'pendiente');
+  if (exists) return;
+  const invite = {
+    id: 'tinv_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    teamId, teamName: team.name, fromCaptainId: state.id, toId: playerId, status: 'pendiente',
+  };
+  teamInvites.push(invite);
+  saveTeamInvites();
+  player.notifications.push({ icon: '🛡️', text: `${team.name} te invitó a unirte como jugador. Capitán: ${state.nickname || state.name}.`, time: 'AHORA' });
+  profiles[playerId] = player;
+  saveProfiles();
+  pushProfileToCloud(player);
+  document.getElementById('team-invite-search').value = '';
+  document.getElementById('team-invite-suggest').classList.remove('open');
+  renderTeamsModule();
+}
+
+function getMyTeamInvites() {
+  if (!state) return [];
+  return teamInvites.filter(i => i.toId === state.id && i.status === 'pendiente');
+}
+
+function respondTeamInvite(inviteId, accept) {
+  const invite = teamInvites.find(i => i.id === inviteId);
+  if (!invite) return;
+  invite.status = accept ? 'aceptada' : 'rechazada';
+  saveTeamInvites();
+  const team = teams[invite.teamId];
+  if (accept && team && !team.memberIds.includes(state.id) && team.memberIds.length < 6) {
+    team.memberIds.push(state.id);
+    saveTeams();
+    pushTeamToCloud(team);
+  }
+  const captain = profiles[invite.fromCaptainId];
+  if (captain) {
+    captain.notifications.push({ icon: accept ? '✅' : '❌', text: `${state.nickname || state.name} ${accept ? 'aceptó' : 'rechazó'} tu invitación a ${invite.teamName}.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(captain);
+  }
+  renderAll();
+}
+
+function requestJoinTeam(teamId) {
+  const team = teams[teamId];
+  if (!team || !state) return;
+  if (team.memberIds.includes(state.id)) return;
+  if (team.joinRequests.includes(state.id)) return;
+  team.joinRequests.push(state.id);
+  saveTeams();
+  pushTeamToCloud(team);
+  const captain = profiles[team.captainId];
+  if (captain) {
+    captain.notifications.push({ icon: '🙋', text: `${state.nickname || state.name} solicitó unirse a ${team.name}.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(captain);
+  }
+  alert('Solicitud enviada al capitán de ' + team.name + '.');
+}
+
+function respondJoinRequest(teamId, playerId, accept) {
+  const team = teams[teamId];
+  if (!team || team.captainId !== state.id) return;
+  team.joinRequests = team.joinRequests.filter(id => id !== playerId);
+  if (accept && team.memberIds.length < 6 && !team.memberIds.includes(playerId)) {
+    team.memberIds.push(playerId);
+  }
+  saveTeams();
+  pushTeamToCloud(team);
+  const player = profiles[playerId];
+  if (player) {
+    player.notifications.push({ icon: accept ? '✅' : '❌', text: `Tu solicitud para unirte a ${team.name} fue ${accept ? 'aceptada' : 'rechazada'}.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(player);
+  }
+  renderTeamProfile(teamId);
+}
+
+function searchTeams(query) {
+  const q = (query || '').trim().toLowerCase();
+  return Object.values(teams)
+    .filter(t => !q || t.name.toLowerCase().includes(q) || (t.city || '').toLowerCase().includes(q))
+    .sort((a, b) => getTeamOVR(b) - getTeamOVR(a) || a.name.localeCompare(b.name));
+}
+
+function sendChallenge() {
+  const errorEl = document.getElementById('challenge-error');
+  const toTeamId = document.getElementById('challenge-to-team').value;
+  const cancha = document.getElementById('challenge-cancha').value;
+  const costo = document.getElementById('challenge-costo').value.trim();
+  const fecha = document.getElementById('challenge-fecha').value;
+  const hora = document.getElementById('challenge-hora').value;
+  const jugadores = document.getElementById('challenge-jugadores').value;
+  const observaciones = document.getElementById('challenge-obs').value.trim();
+  const myTeam = getMyTeam();
+  if (!myTeam || myTeam.captainId !== state.id) { errorEl.textContent = 'Solo el capitán puede retar a otro equipo.'; return; }
+  if (!fecha || !hora) { errorEl.textContent = 'Escoge fecha y hora para el reto.'; return; }
+  errorEl.textContent = '';
+  const challenge = {
+    id: 'ch_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    fromTeamId: myTeam.id, toTeamId, cancha, costo, fecha, hora, jugadores, observaciones,
+    status: 'pendiente', createdAt: Date.now(),
+  };
+  challenges.push(challenge);
+  saveChallenges();
+  pushChallengeToCloud(challenge);
+  const toTeam = teams[toTeamId];
+  const captain = toTeam && profiles[toTeam.captainId];
+  if (captain) {
+    captain.notifications.push({ icon: '⚔️', text: `${myTeam.name} te retó a un partido en ${cancha} — ${fecha} ${hora}.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(captain);
+  }
+  closeChallengeModal();
+  alert('Reto enviado al capitán de ' + (toTeam ? toTeam.name : 'equipo rival') + '.');
+}
+
+function getMyChallenges() {
+  const myTeam = getMyTeam();
+  if (!myTeam || !state || myTeam.captainId !== state.id) return [];
+  return challenges.filter(c => c.toTeamId === myTeam.id && c.status === 'pendiente');
+}
+
+function respondChallenge(challengeId, accept) {
+  const challenge = challenges.find(c => c.id === challengeId);
+  if (!challenge) return;
+  challenge.status = accept ? 'aceptado' : 'rechazado';
+  saveChallenges();
+  pushChallengeToCloud(challenge);
+  const fromTeam = teams[challenge.fromTeamId];
+  const toTeam = teams[challenge.toTeamId];
+  if (accept && fromTeam && toTeam) {
+    const match = {
+      id: 'tm_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      teamAId: fromTeam.id, teamBId: toTeam.id, cancha: challenge.cancha, costo: challenge.costo,
+      fecha: challenge.fecha, hora: challenge.hora, jugadores: challenge.jugadores, observaciones: challenge.observaciones,
+      estado: 'programado', resultado: null, mvpId: null, createdAt: Date.now(),
+    };
+    teamMatches.push(match);
+    saveTeamMatches();
+    pushTeamMatchToCloud(match);
+  }
+  const captain = fromTeam && profiles[fromTeam.captainId];
+  if (captain) {
+    captain.notifications.push({ icon: accept ? '✅' : '❌', text: `${toTeam ? toTeam.name : 'El equipo rival'} ${accept ? 'aceptó' : 'rechazó'} tu reto.`, time: 'AHORA' });
+    saveProfiles();
+    pushProfileToCloud(captain);
+  }
+  renderAll();
+}
+
+function finalizeTeamMatch(matchId) {
+  const match = teamMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  if (!teamA || !teamB || teamA.captainId !== state.id) return;
+  const golesA = parseInt(prompt('Goles de ' + teamA.name + ':', '0'), 10) || 0;
+  const golesB = parseInt(prompt('Goles de ' + teamB.name + ':', '0'), 10) || 0;
+  match.resultado = { golesA, golesB };
+  match.estado = 'finalizado';
+  teamA.goalsFor += golesA; teamA.goalsAgainst += golesB;
+  teamB.goalsFor += golesB; teamB.goalsAgainst += golesA;
+  if (golesA > golesB) { teamA.wins++; teamB.losses++; }
+  else if (golesA < golesB) { teamB.wins++; teamA.losses++; }
+  else { teamA.draws++; teamB.draws++; }
+  saveTeamMatches(); saveTeams();
+  pushTeamMatchToCloud(match); pushTeamToCloud(teamA); pushTeamToCloud(teamB);
+  renderTeamsModule();
+}
+
+function getTeamMatches(teamId, estado) {
+  return teamMatches.filter(m => (m.teamAId === teamId || m.teamBId === teamId) && m.estado === estado)
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+function switchEquiposTab(tab) {
+  ['crear', 'rey', 'programados'].forEach(t => {
+    document.getElementById('eq-tab-' + t).classList.toggle('on', t === tab);
+    document.getElementById('eq-panel-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'rey') renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
+  if (tab === 'programados') renderTeamMatchesPanel();
+}
+
+function renderTeamsModule() {
+  if (!document.getElementById('team-profile-content')) return;
+  if (!state) {
+    document.getElementById('team-create-panel').innerHTML = guestPrompt('Inicia sesión para crear o gestionar tu equipo.');
+    document.getElementById('team-profile-content').innerHTML = '';
+    renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
+    renderTeamMatchesPanel();
+    return;
+  }
+  const myTeam = getMyTeam();
+  const createPanel = document.getElementById('team-create-panel');
+  if (createPanel) createPanel.style.display = myTeam ? 'none' : 'block';
+  if (myTeam) {
+    renderTeamProfile(myTeam.id);
+  } else {
+    document.getElementById('team-profile-content').innerHTML = '';
+  }
+  renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
+  renderTeamMatchesPanel();
+
+  if (location.hash === '#rey') switchEquiposTab('rey');
+  else if (location.hash === '#programados') switchEquiposTab('programados');
+}
+
+function renderTeamProfile(teamId) {
+  const el = document.getElementById('team-profile-content');
+  if (!el) return;
+  const team = teams[teamId];
+  if (!team) { el.innerHTML = `<div class="rk-empty">No se pudo cargar este equipo.</div>`; return; }
+  const ovr = getTeamOVR(team);
+  const { record, dg } = getTeamRecord(team);
+  const captain = profiles[team.captainId];
+  const isCaptain = state && state.id === team.captainId;
+  const slots = Array.from({ length: 6 }, (_, i) => {
+    const memberId = team.memberIds[i];
+    if (!memberId) {
+      return isCaptain
+        ? `<div class="team-slot empty">
+            <input class="auth-input team-invite-input" id="team-invite-search" placeholder="Buscar jugador para invitar..." autocomplete="off" oninput="searchPlayersToInvite(this.value,'${team.id}')" onblur="setTimeout(()=>document.getElementById('team-invite-suggest').classList.remove('open'),150)">
+            <div class="pl-suggest" id="team-invite-suggest"></div>
+          </div>`
+        : `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
+    }
+    const p = profiles[memberId];
+    if (!p) return `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
+    const isCap = memberId === team.captainId;
+    return `
+      <div class="team-slot ${isCap ? 'captain' : ''}">
+        ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
+        <div class="team-slot-name">${p.nickname || p.name}</div>
+        <div class="team-slot-ovr">OVR ${p.ovr}</div>
+        ${isCap ? '<div class="team-slot-tag">CAPITÁN</div>' : ''}
+      </div>`;
+  }).join('');
+  const requests = isCaptain && team.joinRequests.length
+    ? `<div class="sec-hdr"><div class="sec-eyebrow">SOLICITUDES PARA UNIRSE</div></div>
+       <div class="team-requests">
+        ${team.joinRequests.map(pid => {
+          const p = profiles[pid];
+          if (!p) return '';
+          return `<div class="notif-invite">
+            <div class="notif-invite-txt">🙋 <strong>${p.nickname || p.name}</strong> · OVR ${p.ovr} · ${p.position}</div>
+            <div class="notif-invite-actions">
+              <button class="notif-accept" onclick="respondJoinRequest('${team.id}','${pid}',true)">ACEPTAR</button>
+              <button class="notif-reject" onclick="respondJoinRequest('${team.id}','${pid}',false)">RECHAZAR</button>
+            </div>
+          </div>`;
+        }).join('')}
+       </div>`
+    : '';
+  el.innerHTML = `
+    <div class="team-card">
+      <div class="team-card-head">
+        ${team.photo ? `<img class="team-escudo" src="${team.photo}">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
+        <div>
+          <div class="team-card-name">${team.name}</div>
+          <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>
+          <div class="pi-tags">
+            <div class="pi-tag g">OVR ${ovr}</div>
+            <div class="pi-tag gold">RÉCORD ${record}</div>
+            <div class="pi-tag g">DIF. GOLES ${dg >= 0 ? '+' : ''}${dg}</div>
+          </div>
+          <div class="team-card-captain">Capitán: ${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</div>
+        </div>
+      </div>
+      ${isCaptain ? `<button class="mm-invite-btn" onclick="toggleOpenForPlayers('${team.id}')">${team.openForPlayers ? '✓ ABIERTO A SOLICITUDES' : 'CERRADO A SOLICITUDES — ABRIR'}</button>` : ''}
+      <div class="team-slots">${slots}</div>
+    </div>
+    ${requests}
+  `;
+}
+
+function closeTeamSuggestions() {
+  const box = document.getElementById('team-suggest');
+  if (box) box.classList.remove('open');
+}
+
+function renderTeamSuggestions(query) {
+  const box = document.getElementById('team-suggest');
+  if (!box) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  const list = searchTeams(query).slice(0, 6);
+  if (!list.length) { box.classList.remove('open'); box.innerHTML = ''; return; }
+  box.innerHTML = list.map(t => `
+    <div class="pl-suggest-item" onclick="openTeamView('${t.id}')">
+      <span>${t.name}</span>
+      <span class="s-sub">${t.city || ''} · OVR ${getTeamOVR(t)}</span>
+    </div>`).join('');
+  box.classList.add('open');
+}
+
+function renderTeamSearch(query) {
+  const el = document.getElementById('team-grid');
+  if (!el) return;
+  const list = searchTeams(query);
+  if (!list.length) {
+    el.innerHTML = `<div class="rk-empty">No se encontraron equipos. ¡Sé el primero en crear uno!</div>`;
+    renderTeamSuggestions(query);
+    return;
+  }
+  el.innerHTML = list.map(t => {
+    const ovr = getTeamOVR(t);
+    const { record } = getTeamRecord(t);
+    return `
+    <div class="pl-card" onclick="openTeamView('${t.id}')">
+      ${t.photo ? `<img class="pl-card-av team-card-av-img" src="${t.photo}">` : `<div class="pl-card-av" style="background:${t.color}">${t.name.slice(0, 2)}</div>`}
+      <div class="pl-card-name">${t.name}</div>
+      <div class="pl-card-sub">${t.city || 'SIN CIUDAD'} · ${t.memberIds.length}/6 JUGADORES</div>
+      <div class="pl-card-tags"><span class="pi-tag g">OVR ${ovr}</span><span class="pi-tag gold">${record}</span></div>
+    </div>`;
+  }).join('');
+  renderTeamSuggestions(query);
+}
+
+function openTeamView(teamId) {
+  const team = teams[teamId];
+  const modal = document.getElementById('team-view-modal');
+  const content = document.getElementById('team-view-content');
+  if (!modal || !content) return;
+  if (!team) {
+    content.innerHTML = `<div class="rk-empty">No se pudo cargar este equipo.</div>`;
+    modal.classList.add('open');
+    return;
+  }
+  const ovr = getTeamOVR(team);
+  const { record, dg } = getTeamRecord(team);
+  const captain = profiles[team.captainId];
+  const members = team.memberIds.map(id => profiles[id]).filter(Boolean);
+  const recentMatches = teamMatches.filter(m => (m.teamAId === teamId || m.teamBId === teamId) && m.estado === 'finalizado')
+    .sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+  const isMine = !!(getMyTeam() && getMyTeam().id === teamId);
+  const alreadyMember = state && team.memberIds.includes(state.id);
+  const alreadyRequested = state && team.joinRequests.includes(state.id);
+  content.innerHTML = `
+    <div class="team-card">
+      <div class="team-card-head">
+        ${team.photo ? `<img class="team-escudo" src="${team.photo}">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
+        <div>
+          <div class="team-card-name">${team.name}</div>
+          <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>
+          <div class="pi-tags">
+            <div class="pi-tag g">OVR ${ovr}</div>
+            <div class="pi-tag gold">RÉCORD ${record}</div>
+            <div class="pi-tag g">DIF. GOLES ${dg >= 0 ? '+' : ''}${dg}</div>
+          </div>
+          <div class="team-card-captain">Capitán: ${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</div>
+        </div>
+      </div>
+      <div class="team-slots">
+        ${members.map(p => `
+          <div class="team-slot ${p.id === team.captainId ? 'captain' : ''}">
+            ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
+            <div class="team-slot-name">${p.nickname || p.name}</div>
+            <div class="team-slot-ovr">OVR ${p.ovr}</div>
+            ${p.id === team.captainId ? '<div class="team-slot-tag">CAPITÁN</div>' : ''}
+          </div>`).join('')}
+      </div>
+      ${recentMatches.length ? `
+        <div class="sec-hdr"><div class="sec-eyebrow">PARTIDOS RECIENTES</div></div>
+        <div class="team-hist-list">
+          ${recentMatches.map(m => `
+            <div class="team-hist-row">
+              <span>${m.fecha} ${m.hora || ''}</span>
+              <span>${m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : '—'}</span>
+            </div>`).join('')}
+        </div>` : ''}
+      ${isMine ? '' : state
+        ? `<button class="auth-submit" onclick="closeTeamView();openChallengeModal('${team.id}')">RETAR EQUIPO</button>`
+        : ''}
+      ${!isMine && !alreadyMember && !getMyTeam() && team.openForPlayers
+        ? `<button class="mm-invite-btn" onclick="requestJoinTeam('${team.id}')" ${alreadyRequested ? 'disabled' : ''}>${alreadyRequested ? 'SOLICITUD ENVIADA' : '+ SOLICITAR UNIRME'}</button>`
+        : ''}
+    </div>
+  `;
+  modal.classList.add('open');
+}
+
+function closeTeamView() {
+  const modal = document.getElementById('team-view-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function openChallengeModal(teamId) {
+  if (!state) { openAuth(true); return; }
+  const myTeam = getMyTeam();
+  if (!myTeam || myTeam.captainId !== state.id) { alert('Solo el capitán de un equipo puede enviar retos.'); return; }
+  document.getElementById('challenge-to-team').value = teamId;
+  document.getElementById('challenge-error').textContent = '';
+  const canchaSel = document.getElementById('challenge-cancha');
+  canchaSel.innerHTML = CANCHAS_REGISTRADAS.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('challenge-modal').classList.add('open');
+}
+
+function closeChallengeModal() {
+  document.getElementById('challenge-modal').classList.remove('open');
+}
+
+function renderTeamMatchesPanel() {
+  const el = document.getElementById('team-matches-content');
+  if (!el) return;
+  if (!state) { el.innerHTML = guestPrompt('Inicia sesión para ver tus partidos programados.'); return; }
+  const myTeam = getMyTeam();
+  if (!myTeam) { el.innerHTML = `<div class="rk-empty">Aún no tienes equipo. Crea uno en "CREAR EQUIPO / MI EQUIPO".</div>`; return; }
+  const programados = getTeamMatches(myTeam.id, 'programado');
+  const finalizados = getTeamMatches(myTeam.id, 'finalizado');
+  const isCaptain = myTeam.captainId === state.id;
+  const row = (m, finalized) => {
+    const rivalId = m.teamAId === myTeam.id ? m.teamBId : m.teamAId;
+    const rival = teams[rivalId];
+    const canFinalize = !finalized && isCaptain && m.teamAId === myTeam.id;
+    return `
+      <div class="team-hist-row">
+        <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
+        <span>VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
+        <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : (finalized ? '—' : 'PROGRAMADO')}</span>
+        ${canFinalize ? `<button class="mm-invite-btn" onclick="finalizeTeamMatch('${m.id}')">FINALIZAR PARTIDO</button>` : ''}
+      </div>`;
+  };
+  el.innerHTML = `
+    <div class="sec-hdr"><div class="sec-eyebrow">PARTIDOS PROGRAMADOS</div></div>
+    <div class="team-hist-list">
+      ${programados.length ? programados.map(m => row(m, false)).join('') : `<div class="rk-empty">No tienes partidos programados.</div>`}
+    </div>
+    <div class="sec-hdr"><div class="sec-eyebrow">HISTORIAL</div></div>
+    <div class="team-hist-list">
+      ${finalizados.length ? finalizados.map(m => row(m, true)).join('') : `<div class="rk-empty">Aún no has finalizado partidos de equipo.</div>`}
+    </div>
+  `;
+}
+
 function renderMyMatches() {
   const el = document.getElementById('my-matches');
   if (!el) return;
@@ -1199,7 +1870,12 @@ function initApp() {
 
   renderAll();
   syncProfilesFromCloud();
+  syncTeamsFromCloud();
+  syncChallengesFromCloud();
+  syncTeamMatchesFromCloud();
   if (state) pushProfileToCloud(state);
+  const myTeam = getMyTeam();
+  if (myTeam) pushTeamToCloud(myTeam);
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
@@ -1207,6 +1883,10 @@ function initApp() {
   if (location.hash === '#crear' && state) {
     const form = document.getElementById('bp-form');
     if (form) form.style.display = 'block';
+  }
+
+  if (document.getElementById('eq-tab-rey') && (location.hash === '#rey' || location.hash === '#programados')) {
+    switchEquiposTab(location.hash.slice(1));
   }
 }
 

@@ -676,3 +676,47 @@ footer{padding:48px 64px;border-top:var(--b1)}
   .dash-top-stats{grid-template-columns:1fr 1fr}
   .how-grid{grid-template-columns:1fr 1fr}
 }
+
+/* EQUIPOS · REY DEL BARRIO · RETOS */
+.eq-tabs{display:flex;border-bottom:var(--b1);margin-bottom:32px;max-width:1100px;margin-left:auto;margin-right:auto}
+.eq-tab{flex:1;text-align:center;padding:14px 10px;font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--td);cursor:pointer;border-bottom:1.5px solid transparent;transition:color .2s,border-color .2s}
+.eq-tab.on{color:var(--g);border-bottom-color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.4)}
+.eq-tab:hover{color:var(--w)}
+.eq-panel{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+
+.eq-create-wrap{max-width:480px;margin:0 auto}
+
+.team-card{background:var(--bg2);border:var(--b1);border-radius:8px;padding:24px;max-width:760px;margin:0 auto}
+.team-card-head{display:flex;gap:20px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap}
+.team-escudo{width:72px;height:72px;border-radius:10px;object-fit:cover;border:0.5px solid rgba(255,255,255,0.12);flex-shrink:0}
+.team-escudo-placeholder{display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-weight:700;font-size:20px;color:#020510}
+.team-card-name{font-family:var(--ft);font-weight:900;font-size:20px;color:var(--w);letter-spacing:0.5px}
+.team-card-sub{font-size:12px;color:var(--td);font-weight:300;margin-top:4px}
+.team-card-captain{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm);margin-top:10px}
+
+.team-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.team-slot{background:var(--bg3);border:0.5px solid rgba(255,255,255,0.08);border-radius:6px;padding:14px 10px;text-align:center;position:relative}
+.team-slot.captain{border-color:rgba(0,255,136,0.4);box-shadow:0 0 16px rgba(0,255,136,0.1)}
+.team-slot.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:96px;gap:6px}
+.team-slot-empty-txt{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--td)}
+.team-slot-photo{width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px}
+.team-slot-av{width:40px;height:40px;border-radius:50%;background:var(--bg2);border:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:11px;color:var(--w);margin:0 auto 8px}
+.team-slot-name{font-size:12px;font-weight:600;color:var(--w)}
+.team-slot-ovr{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--g);margin-top:4px}
+.team-slot-tag{font-family:var(--ft);font-size:7px;letter-spacing:1px;color:#020510;background:var(--g);display:inline-block;padding:2px 6px;border-radius:3px;margin-top:6px}
+.team-invite-input{margin:0;font-size:11px;padding:8px 10px}
+
+.team-requests{display:flex;flex-direction:column;gap:10px}
+
+.team-card-av-img{object-fit:cover}
+
+.team-hist-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.team-hist-row{background:var(--bg2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t);font-family:var(--fb)}
+.team-hist-row span:nth-child(2){font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm)}
+.team-hist-row span:nth-child(3){font-family:var(--ft);font-weight:700;color:var(--g)}
+
+@media(max-width:760px){
+  .eq-tabs{flex-direction:column}
+  .team-slots{grid-template-columns:repeat(2,1fr)}
+  .team-card-head{flex-direction:column;align-items:center;text-align:center}
+}

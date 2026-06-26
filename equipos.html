@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard · LEVEL UP</title>
+<title>Equipos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -45,15 +45,54 @@
 </div>
 
 <div class="page-banner">
-  <div class="page-banner-eyebrow">00 · TU CENTRO DE CONTROL</div>
-  <div class="page-banner-title">DASHBOARD</div>
-  <div class="page-banner-desc">Tu progreso, tu próximo partido y tu ranking, en un solo lugar.</div>
+  <div class="page-banner-eyebrow">06 · EQUIPOS</div>
+  <div class="page-banner-title">EQUIPOS · REY DEL BARRIO</div>
+  <div class="page-banner-desc">Crea tu equipo, invita jugadores, reta a otros equipos del barrio y revisa tus partidos programados.</div>
 </div>
 
-<section id="dashboard">
-  <div class="dash-wrap" id="dash-content"></div>
-  <div style="max-width:760px;margin:24px auto 0;text-align:center">
-    <button class="hb1" onclick="simularPartido()">SIMULAR PARTIDO</button>
+<section id="equipos">
+  <div class="eq-tabs">
+    <div class="eq-tab on" id="eq-tab-crear" onclick="switchEquiposTab('crear')">CREAR EQUIPO / MI EQUIPO</div>
+    <div class="eq-tab" id="eq-tab-rey" onclick="switchEquiposTab('rey')">REY DEL BARRIO</div>
+    <div class="eq-tab" id="eq-tab-programados" onclick="switchEquiposTab('programados')">PARTIDOS PROGRAMADOS</div>
+  </div>
+
+  <!-- PANEL: CREAR / MI EQUIPO -->
+  <div id="eq-panel-crear" class="eq-panel">
+    <div id="team-create-panel" class="eq-create-wrap">
+      <div class="sec-hdr">
+        <div class="sec-eyebrow">CREAR EQUIPO</div>
+      </div>
+      <div class="bp-form" id="team-create-form">
+        <div class="auth-label">NOMBRE DEL EQUIPO</div>
+        <input class="auth-input" id="team-name" placeholder="Ej: Halcones FC" maxlength="24">
+        <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
+        <input class="auth-input" id="team-desc" placeholder="Ej: Equipo de barrio, jugamos los domingos" maxlength="80">
+        <div class="auth-label">CIUDAD / BARRIO</div>
+        <input class="auth-input" id="team-city" placeholder="Ej: Suba, Bogotá" maxlength="24">
+        <div class="auth-label">COLOR DEL EQUIPO</div>
+        <input class="auth-input" type="color" id="team-color" value="#00ff88">
+        <div class="auth-label">ESCUDO (OPCIONAL)</div>
+        <input class="auth-input" type="file" id="team-photo" accept="image/*">
+        <div class="auth-error" id="team-error"></div>
+        <button class="auth-submit" onclick="submitCreateTeam()">CREAR EQUIPO</button>
+      </div>
+    </div>
+    <div id="team-profile-content"></div>
+  </div>
+
+  <!-- PANEL: REY DEL BARRIO -->
+  <div id="eq-panel-rey" class="eq-panel" style="display:none">
+    <div class="pl-search-wrap">
+      <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" oninput="renderTeamSearch(this.value)" onfocus="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
+      <div class="pl-suggest" id="team-suggest"></div>
+    </div>
+    <div class="pl-grid" id="team-grid"></div>
+  </div>
+
+  <!-- PANEL: PARTIDOS PROGRAMADOS -->
+  <div id="eq-panel-programados" class="eq-panel" style="display:none">
+    <div id="team-matches-content"></div>
   </div>
 </section>
 
@@ -67,23 +106,35 @@
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
 </footer>
 
-<!-- MODAL RESULTADO DE PARTIDO -->
-<div class="modal-overlay" id="sim-result-modal">
-  <div class="sim-card">
-    <div class="sim-label">REGISTRAR RESULTADO</div>
-    <div class="sim-title">¿CÓMO TERMINÓ TU PARTIDO?</div>
-    <div class="sim-opts">
-      <button class="sim-opt win" onclick="registrarResultado('VICTORIA')">VICTORIA</button>
-      <button class="sim-opt draw" onclick="registrarResultado('EMPATE')">EMPATE</button>
-      <button class="sim-opt loss" onclick="registrarResultado('DERROTA')">DERROTA</button>
-    </div>
-    <button class="sim-cancel" onclick="closeSimResult()">CANCELAR</button>
+<!-- MODAL FICHA DE EQUIPO RIVAL -->
+<div class="modal-overlay" id="team-view-modal">
+  <div class="player-view-card">
+    <div class="card-section" id="team-view-content"></div>
+    <button class="auth-cancel" onclick="closeTeamView()">CERRAR</button>
   </div>
 </div>
 
-<!-- MODAL POST-PARTIDO -->
-<div class="modal-overlay" id="post-match-modal">
-  <div class="post-match-card" id="post-match-content"></div>
+<!-- MODAL RETAR EQUIPO -->
+<div class="modal-overlay" id="challenge-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">RETAR EQUIPO</div></div>
+    <input type="hidden" id="challenge-to-team">
+    <div class="auth-label">CANCHA</div>
+    <select class="auth-input" id="challenge-cancha"></select>
+    <div class="auth-label">COSTO (OPCIONAL)</div>
+    <input class="auth-input" id="challenge-costo" placeholder="Ej: $10.000 por jugador" maxlength="30">
+    <div class="auth-label">FECHA</div>
+    <input class="auth-input" type="date" id="challenge-fecha">
+    <div class="auth-label">HORA</div>
+    <input class="auth-input" id="challenge-hora" placeholder="Ej: 7:00 PM" maxlength="20">
+    <div class="auth-label">JUGADORES POR EQUIPO</div>
+    <input class="auth-input" type="number" id="challenge-jugadores" min="1" max="11" value="6">
+    <div class="auth-label">OBSERVACIONES (OPCIONAL)</div>
+    <textarea class="auth-input" id="challenge-obs" rows="3" maxlength="200" placeholder="Ej: Llevar peto, cancha sintética"></textarea>
+    <div class="auth-error" id="challenge-error"></div>
+    <button class="auth-submit" onclick="sendChallenge()">ENVIAR RETO</button>
+    <button class="auth-cancel" onclick="closeChallengeModal()">CANCELAR</button>
+  </div>
 </div>
 
 <!-- MODAL TRABAJO EN PROGRESO -->
