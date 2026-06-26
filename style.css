@@ -247,6 +247,20 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-team{font-size:10px;color:var(--td);letter-spacing:1px}
 .fc-captain-badge{display:inline-block;margin-left:6px;padding:2px 8px;font-family:var(--ft);font-size:9px;letter-spacing:1px;color:#0a0a0a;background:linear-gradient(120deg,#ffd84d,#ffae00);border-radius:20px;box-shadow:0 0 8px rgba(255,174,0,0.6);animation:captainPulse 1.8s ease-in-out infinite}
 @keyframes captainPulse{0%,100%{box-shadow:0 0 6px rgba(255,174,0,0.5)}50%{box-shadow:0 0 14px rgba(255,174,0,0.95)}}
+.fc-phys-row{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 20px 14px}
+.fc-phys-pill{border-radius:6px;padding:6px 4px;text-align:center;border:0.5px solid rgba(255,255,255,0.1)}
+.fc-phys-l{font-family:var(--ft);font-size:7px;letter-spacing:1.4px;color:var(--td);margin-bottom:3px}
+.fc-phys-v{font-family:var(--ft);font-size:11px;font-weight:700}
+.fc-phys-pill.cyan{background:rgba(0,225,255,0.07);border-color:rgba(0,225,255,0.3);box-shadow:0 0 10px rgba(0,225,255,0.15)}
+.fc-phys-pill.cyan .fc-phys-v{color:#3fe3ff;text-shadow:0 0 8px rgba(0,225,255,0.6)}
+.fc-phys-pill.pink{background:rgba(255,0,170,0.07);border-color:rgba(255,0,170,0.3);box-shadow:0 0 10px rgba(255,0,170,0.15)}
+.fc-phys-pill.pink .fc-phys-v{color:#ff6fd0;text-shadow:0 0 8px rgba(255,0,170,0.6)}
+.fc-phys-pill.orange{background:rgba(255,140,0,0.07);border-color:rgba(255,140,0,0.3);box-shadow:0 0 10px rgba(255,140,0,0.15)}
+.fc-phys-pill.orange .fc-phys-v{color:#ffac4d;text-shadow:0 0 8px rgba(255,140,0,0.6)}
+.fc-phys-pill.violet{background:rgba(170,0,255,0.07);border-color:rgba(170,0,255,0.3);box-shadow:0 0 10px rgba(170,0,255,0.15)}
+.fc-phys-pill.violet .fc-phys-v{color:#c98bff;text-shadow:0 0 8px rgba(170,0,255,0.6)}
+.fc-phys-pill.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.08);box-shadow:none}
+.fc-phys-pill.empty .fc-phys-v{color:var(--td);text-shadow:none}
 .fc-val{font-family:var(--ft);font-size:11px;color:var(--gold)}
 
 /* RANGO → MARCO */

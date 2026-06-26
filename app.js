@@ -304,8 +304,25 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
     <div class="fc-foot"><div class="fc-team">${p.team || 'SIN EQUIPO'}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div></div>
+    ${buildPhysicalPillsHTML(p)}
   `;
   return { className, html };
+}
+
+function buildPhysicalPillsHTML(p) {
+  const ph = p.physical || {};
+  const pill = (cls, label, val, unit) => `
+    <div class="fc-phys-pill ${cls}${val == null ? ' empty' : ''}">
+      <div class="fc-phys-l">${label}</div>
+      <div class="fc-phys-v">${val == null ? '—' : val + (unit || '')}</div>
+    </div>`;
+  return `
+    <div class="fc-phys-row">
+      ${pill('cyan', 'PESO', ph.weight, 'KG')}
+      ${pill('pink', 'ALTURA', ph.height, 'CM')}
+      ${pill('orange', 'EDAD', ph.age, '')}
+      ${pill('violet', 'PIE', ph.foot, '')}
+    </div>`;
 }
 
 function buildPhysicalHTML(p) {
@@ -2065,6 +2082,13 @@ function initApp() {
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
   if (!state && !PUBLIC_PAGES.includes(page)) { location.href = 'index.html'; return; }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
+
+  if (state && (state.nickname === 'Lobo' || state.name === 'Miguel Breci') && (!state.physical || state.physical.weight == null)) {
+    state.physical = Object.assign({}, state.physical, { weight: 85, height: 180, foot: 'DERECHO' });
+    profiles[state.id] = state;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
 
   renderAll();
   syncProfilesFromCloud();
