@@ -1480,7 +1480,11 @@ const MODALIDADES = [
   { id: 'rey', label: 'REY DEL BARRIO', icon: '👑', desc: 'Reta a otro equipo. Se gestiona desde EQUIPOS.' },
   { id: 'oficial', label: 'PARTIDO OFICIAL', icon: '🏆', desc: 'Próximamente: partidos arbitrados de LEVEL UP.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null, invitados: [] };
+
+function getMaxFaltan() {
+  return bpWizard.categoria ? Math.max(1, parseInt(bpWizard.categoria, 10) - 1) : 10;
+}
 
 function openMatchForm() {
   if (!state) { openAuth(false); return; }
@@ -1489,7 +1493,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null, invitados: [] };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -1596,6 +1600,7 @@ function renderBpWizard() {
         }).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
       </div>`;
   } else if (bpWizardStep === 7) {
+    const maxFaltan = getMaxFaltan();
     bodyEl.innerHTML = `
       <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
       <input class="auth-input" type="number" min="0" id="bp-precio" oninput="renderBpSummary()" placeholder="Ej: 10000">
@@ -1605,15 +1610,97 @@ function renderBpWizard() {
         <input type="checkbox" id="bp-abierto" ${bpWizard.modalidad !== 'privado' ? 'checked' : ''} onchange="renderBpSummary()">
         <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
       </label>
-      <div class="auth-label">POSICIONES QUE FALTAN</div>
+
+      <div class="auth-label">INVITAR JUGADORES YA CONFIRMADOS</div>
+      <div style="position:relative">
+        <input class="auth-input" id="bp-invite-search" placeholder="Busca por nombre o apodo" oninput="bpSearchInvitados(this.value)" autocomplete="off">
+        <div class="pl-suggest" id="bp-invite-suggest"></div>
+      </div>
+      <div id="bp-invite-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">
+        ${bpWizard.invitados.map((inv, i) => `
+          <span class="bp-invite-chip">
+            ${inv.name}
+            <select onchange="bpSetInvitadoPos(${i}, this.value)">
+              ${['DEL','MED','DEF','POR'].map(p => `<option value="${p}" ${inv.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+            <span class="bp-invite-chip-x" onclick="bpRemoveInvitado(${i})">✕</span>
+          </span>`).join('')}
+      </div>
+
+      <div class="auth-label">POSICIONES QUE FALTAN <span style="color:var(--td);font-weight:300">· Máximo ${maxFaltan} jugador${maxFaltan === 1 ? '' : 'es'} adicional${maxFaltan === 1 ? '' : 'es'} para fútbol ${bpWizard.categoria || '—'}</span></div>
       <div class="bp-pos-grid" id="bp-pos-grid">
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n" oninput="renderBpSummary()"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> DEL</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> MED</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> DEF</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> POR</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
       </div>`;
   }
   renderBpSummary();
+}
+
+function bpClampPosInput(input) {
+  const max = getMaxFaltan();
+  let v = parseInt(input.value, 10) || 1;
+  if (v > max) v = max;
+  if (v < 1) v = 1;
+  input.value = v;
+  renderBpSummary();
+}
+
+function bpSearchInvitados(query) {
+  const el = document.getElementById('bp-invite-suggest');
+  if (!el) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { el.innerHTML = ''; el.classList.remove('open'); return; }
+  const invitedIds = new Set(bpWizard.invitados.map(i => i.profileId));
+  const list = Object.values(profiles)
+    .filter(p => !state || p.id !== state.id)
+    .filter(p => !invitedIds.has(p.id))
+    .filter(p => p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q))
+    .slice(0, 6);
+  if (!list.length) { el.innerHTML = `<div class="pl-suggest-item">Sin resultados.</div>`; el.classList.add('open'); return; }
+  el.innerHTML = list.map(p => `
+    <div class="pl-suggest-item" onclick="bpAddInvitado('${p.id}')">
+      <span>${p.nickname || p.name} <span class="s-sub">${p.position}</span></span>
+      <span class="notif-accept" style="padding:6px 12px;font-size:10px">INVITAR</span>
+    </div>`).join('');
+  el.classList.add('open');
+}
+
+function bpAddInvitado(profileId) {
+  const p = profiles[profileId];
+  if (!p) return;
+  const totalAhora = bpWizard.invitados.length + bpFaltanTotalChecked();
+  if (totalAhora >= getMaxFaltan()) {
+    document.getElementById('bp-error').textContent = `Ya alcanzaste el máximo de ${getMaxFaltan()} jugadores adicionales para fútbol ${bpWizard.categoria}.`;
+    return;
+  }
+  bpWizard.invitados.push({ profileId, name: p.nickname || p.name, pos: p.position });
+  document.getElementById('bp-invite-search').value = '';
+  document.getElementById('bp-invite-suggest').innerHTML = '';
+  document.getElementById('bp-invite-suggest').classList.remove('open');
+  renderBpWizard();
+}
+
+function bpSetInvitadoPos(idx, pos) {
+  if (bpWizard.invitados[idx]) bpWizard.invitados[idx].pos = pos;
+  renderBpSummary();
+}
+
+function bpRemoveInvitado(idx) {
+  bpWizard.invitados.splice(idx, 1);
+  renderBpWizard();
+}
+
+function bpFaltanTotalChecked() {
+  const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
+  let total = 0;
+  chips.forEach(chip => {
+    const cb = chip.querySelector('input[type=checkbox]');
+    const n = chip.querySelector('.bp-pos-n');
+    if (cb && cb.checked) total += parseInt(n.value, 10) || 1;
+  });
+  return total;
 }
 
 function renderBpSummary() {
@@ -1631,7 +1718,15 @@ function renderBpSummary() {
         return { pos: cb.value, checked: cb.checked, cupos: parseInt(n.value, 10) || 1 };
       })
     : [];
-  const ready = arena && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaValue && necesitaRows.some(r => r.checked);
+  const maxFaltan = getMaxFaltan();
+  const totalFaltan = necesitaRows.filter(r => r.checked).reduce((s, r) => s + r.cupos, 0);
+  const totalAdicionales = totalFaltan + bpWizard.invitados.length;
+  const sobrepasado = bpWizardStep === 7 && totalAdicionales > maxFaltan;
+  const ready = arena && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaValue && necesitaRows.some(r => r.checked) && !sobrepasado;
+  if (sobrepasado) {
+    const errorEl = document.getElementById('bp-error');
+    if (errorEl) errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores, pero fútbol ${bpWizard.categoria} solo permite ${maxFaltan} adicionales (sin contarte a ti).`;
+  }
   el.innerHTML = `
     <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
     <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
@@ -1641,6 +1736,8 @@ function renderBpSummary() {
     <div class="bpw-summary-row"><span>HORA</span><strong>${horaLabel || '—'}</strong></div>
     <div class="bpw-summary-row"><span>COSTO</span><strong>${precioEl && precioEl.value ? '$' + precioEl.value : 'GRATIS'}</strong></div>
     <div class="bpw-summary-row"><span>CAPITÁN</span><strong>${state ? (state.nickname || state.name) : '—'}</strong></div>
+    ${bpWizard.invitados.length ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${bpWizard.invitados.map(i => i.name).join(', ')}</strong></div>` : ''}
+    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CUPOS ADICIONALES</span><strong class="${sobrepasado ? 'over' : ''}">${totalAdicionales}/${maxFaltan}</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
     ${necesitaRows.length ? `
       <div class="bpw-summary-cupos">
@@ -1702,17 +1799,33 @@ function submitMatchRequest() {
   const precio = document.getElementById('bp-precio').value.trim();
   const ovrMin = document.getElementById('bp-ovr-min').value.trim();
   const abierto = document.getElementById('bp-abierto').checked;
+  const maxFaltan = getMaxFaltan();
   const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
   const necesita = [];
+  const getSlot = (pos) => {
+    let slot = necesita.find(n => n.pos === pos);
+    if (!slot) { slot = { pos, cupos: 0, unidos: [] }; necesita.push(slot); }
+    return slot;
+  };
   chips.forEach(chip => {
     const checkbox = chip.querySelector('input[type=checkbox]');
     const n = chip.querySelector('.bp-pos-n');
     if (checkbox.checked) {
-      necesita.push({ pos: checkbox.value, cupos: parseInt(n.value, 10) || 1, unidos: [] });
+      getSlot(checkbox.value).cupos += parseInt(n.value, 10) || 1;
     }
   });
+  bpWizard.invitados.forEach(inv => {
+    const slot = getSlot(inv.pos);
+    slot.cupos += 1;
+    slot.unidos.push({ profileId: inv.profileId, name: inv.name });
+  });
   if (necesita.length === 0) {
-    errorEl.textContent = 'Selecciona al menos una posición que te falte.';
+    errorEl.textContent = 'Selecciona al menos una posición que te falte o invita a un jugador.';
+    return;
+  }
+  const totalAdicionales = necesita.reduce((s, n) => s + n.cupos, 0);
+  if (totalAdicionales > maxFaltan) {
+    errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores, pero fútbol ${bpWizard.categoria} solo permite ${maxFaltan} adicionales (sin contarte a ti).`;
     return;
   }
   errorEl.textContent = '';
@@ -1741,6 +1854,14 @@ function submitMatchRequest() {
   const created = openMatches[0];
   saveOpenMatches();
   pushMatchToCloud(created);
+  bpWizard.invitados.forEach(inv => {
+    const player = profiles[inv.profileId];
+    if (!player) return;
+    player.notifications.push({ icon: '⚽', text: `${state.nickname || state.name} te confirmó en su partido (${inv.pos}) en ${arena.name} — ${fecha}.`, time: 'AHORA' });
+    profiles[inv.profileId] = player;
+    saveProfiles();
+    pushProfileToCloud(player);
+  });
   openMatchForm();
   renderAll();
 }
@@ -2321,7 +2442,7 @@ function makeTeam({ name, desc, city, color, photo, captainId }) {
     captainId, memberIds: [captainId], openForPlayers: false, joinRequests: [],
     slotPositions: [captain ? captain.position : '', '', '', '', '', ''],
     wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, streak: '',
-    createdAt: Date.now(), leaveRequests: [],
+    createdAt: Date.now(), leaveRequests: [], joinLog: [],
   };
 }
 
@@ -2366,7 +2487,7 @@ async function submitCreateTeam() {
   profiles[state.id] = state;
   saveProfiles();
   pushProfileToCloud(state);
-  renderTeamsModule();
+  renderAll();
 }
 
 function fileToDataUrl(file) {
@@ -2445,6 +2566,8 @@ function respondTeamInvite(inviteId, accept) {
   const team = teams[invite.teamId];
   if (accept && team && !team.memberIds.includes(state.id) && team.memberIds.length < 6) {
     team.memberIds.push(state.id);
+    if (!team.joinLog) team.joinLog = [];
+    team.joinLog.push({ name: state.nickname || state.name, time: Date.now() });
     saveTeams();
     pushTeamToCloud(team);
     state.team = team.name;
@@ -2484,6 +2607,9 @@ function respondJoinRequest(teamId, playerId, accept) {
   team.joinRequests = team.joinRequests.filter(id => id !== playerId);
   if (accept && team.memberIds.length < 6 && !team.memberIds.includes(playerId)) {
     team.memberIds.push(playerId);
+    if (!team.joinLog) team.joinLog = [];
+    const player0 = profiles[playerId];
+    team.joinLog.push({ name: player0 ? (player0.nickname || player0.name) : '', time: Date.now() });
   }
   saveTeams();
   pushTeamToCloud(team);
@@ -2496,7 +2622,7 @@ function respondJoinRequest(teamId, playerId, accept) {
     pushProfileToCloud(player);
     if (state && state.id === playerId) state.team = player.team;
   }
-  renderTeamProfile(teamId);
+  renderAll();
 }
 
 function requestLeaveTeam() {
@@ -2556,7 +2682,7 @@ function respondLeaveRequest(teamId, playerId, accept) {
       if (state && state.id === id) state.notifications = member.notifications;
     });
   }
-  renderTeamProfile(teamId);
+  renderAll();
 }
 
 let kickTeamModalCtx = null;
@@ -3360,6 +3486,11 @@ function renderTicker() {
     const p = profiles[i.toId];
     if (p) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${p.nickname || p.name} se unió a ${i.teamName}</span>`);
   });
+  Object.values(teams).forEach(t => {
+    (t.joinLog || []).slice(-3).forEach(j => {
+      if (j.name) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${j.name} se unió a ${t.name}</span>`);
+    });
+  });
   if (items.length === 0) {
     items.push(`<span class="tk-item">⚽ Sé el primero en publicar tu búsqueda en "BUSCAR PARTIDO"</span>`);
   }
@@ -3415,6 +3546,16 @@ function initApp() {
 
   if (document.getElementById('eq-tab-rey') && (location.hash === '#rey' || location.hash === '#programados')) {
     switchEquiposTab(location.hash.slice(1));
+  }
+
+  if (state) {
+    setInterval(() => {
+      syncProfilesFromCloud();
+      syncTeamsFromCloud().then(renderAll);
+      syncTeamInvitesFromCloud().then(renderAll);
+      syncOpenMatchesFromCloud().then(renderAll);
+      syncMatchInvitesFromCloud().then(renderAll);
+    }, 20000);
   }
 }
 
