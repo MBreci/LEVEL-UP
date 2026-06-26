@@ -164,6 +164,28 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR EQUIPO -->
+<div class="modal-overlay" id="edit-team-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">EDITAR EQUIPO</div></div>
+    <input type="hidden" id="edit-team-id">
+    <div class="auth-label">NOMBRE DEL EQUIPO</div>
+    <input class="auth-input" id="edit-team-name" maxlength="24">
+    <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
+    <input class="auth-input" id="edit-team-desc" maxlength="80">
+    <div class="auth-label">CIUDAD / BARRIO</div>
+    <input class="auth-input" id="edit-team-city" maxlength="24">
+    <div class="auth-label">COLOR DEL EQUIPO</div>
+    <input class="auth-input" type="color" id="edit-team-color">
+    <div class="auth-label">ESCUDO (OPCIONAL)</div>
+    <input class="auth-input" type="file" id="edit-team-photo" accept="image/*" onchange="previewEditTeamPhoto(this)">
+    <img id="edit-team-photo-preview" class="team-escudo" style="display:none;margin-top:10px">
+    <div class="auth-error" id="edit-team-error"></div>
+    <button class="auth-submit" onclick="submitEditTeam()">GUARDAR CAMBIOS</button>
+    <button class="auth-cancel" onclick="closeEditTeamModal()">CANCELAR</button>
+  </div>
+</div>
+
 <!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
   <div class="wip-card">

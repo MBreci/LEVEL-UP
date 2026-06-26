@@ -1527,6 +1527,69 @@ function confirmKickTeamMember() {
   kickTeamMember(teamId, playerId);
 }
 
+function openEditTeamModal(teamId) {
+  const team = teams[teamId];
+  if (!team || !state || team.captainId !== state.id) return;
+  document.getElementById('edit-team-id').value = team.id;
+  document.getElementById('edit-team-name').value = team.name;
+  document.getElementById('edit-team-desc').value = team.desc || '';
+  document.getElementById('edit-team-city').value = team.city || '';
+  document.getElementById('edit-team-color').value = team.color || '#00ff88';
+  document.getElementById('edit-team-error').textContent = '';
+  const preview = document.getElementById('edit-team-photo-preview');
+  document.getElementById('edit-team-photo').value = '';
+  if (team.photo) { preview.src = team.photo; preview.style.display = 'block'; }
+  else preview.style.display = 'none';
+  document.getElementById('edit-team-modal').classList.add('open');
+}
+
+function closeEditTeamModal() {
+  document.getElementById('edit-team-modal').classList.remove('open');
+}
+
+async function previewEditTeamPhoto(input) {
+  const img = document.getElementById('edit-team-photo-preview');
+  if (!img) return;
+  if (!input.files || !input.files[0]) return;
+  img.src = await fileToDataUrl(input.files[0]);
+  img.style.display = 'block';
+}
+
+async function submitEditTeam() {
+  const errorEl = document.getElementById('edit-team-error');
+  const teamId = document.getElementById('edit-team-id').value;
+  const team = teams[teamId];
+  if (!team || !state || team.captainId !== state.id) return;
+  const name = document.getElementById('edit-team-name').value.trim();
+  const desc = document.getElementById('edit-team-desc').value.trim();
+  const city = document.getElementById('edit-team-city').value.trim();
+  const color = document.getElementById('edit-team-color').value;
+  const photoInput = document.getElementById('edit-team-photo');
+  if (!name) { errorEl.textContent = 'Escribe el nombre del equipo.'; return; }
+  if (containsProfanity(name) || containsProfanity(desc) || containsProfanity(city)) {
+    errorEl.textContent = 'El nombre, descripción o ciudad contiene lenguaje ofensivo. Por favor elige otro.';
+    return;
+  }
+  errorEl.textContent = '';
+  if (photoInput && photoInput.files && photoInput.files[0]) {
+    team.photo = await fileToDataUrl(photoInput.files[0]);
+  }
+  team.name = name.toUpperCase();
+  team.desc = desc;
+  team.city = city;
+  team.color = color;
+  saveTeams();
+  pushTeamToCloud(team);
+  if (state.team) {
+    state.team = team.name;
+    profiles[state.id] = state;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
+  closeEditTeamModal();
+  renderTeamProfile(teamId);
+}
+
 function kickTeamMember(teamId, playerId) {
   const team = teams[teamId];
   if (!team || !state || state.id !== team.captainId) return;
@@ -1795,6 +1858,7 @@ function renderTeamProfile(teamId) {
           </div>
           <div class="team-card-captain">Capitán: ${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</div>
         </div>
+        ${isCaptain ? `<button class="mm-invite-btn team-edit-btn" onclick="openEditTeamModal('${team.id}')">✎ EDITAR EQUIPO</button>` : ''}
       </div>
       ${isCaptain ? `<button class="mm-invite-btn" onclick="toggleOpenForPlayers('${team.id}')">${team.openForPlayers ? '✓ ABIERTO A SOLICITUDES' : 'CERRADO A SOLICITUDES — ABRIR'}</button>` : ''}
       ${leaveBtn}
