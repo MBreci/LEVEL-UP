@@ -78,7 +78,7 @@ function profileToRow(p) {
     photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
-    notif_seen_count: p.notifSeenCount || 0,
+    notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
   };
 }
 
@@ -90,7 +90,7 @@ function rowToProfile(r) {
     attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
-    notifSeenCount: r.notif_seen_count || 0,
+    notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
   };
 }
 
@@ -160,6 +160,8 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
       { icon: '👋', text: 'Bienvenido a LEVEL UP. Juega tu primer partido para activar tu carta.', time: 'AHORA' },
     ],
     notifSeenCount: 0,
+    achievements: [],
+    pendingReveal: null,
   };
 }
 
@@ -779,6 +781,259 @@ function showPostMatch({ resultLabel, ovrDelta, xpGain, lpGain, isMvp, achieveme
 function closePostMatch() {
   document.getElementById('post-match-modal').classList.remove('open');
   location.href = 'carta.html';
+}
+
+/* ===== SECUENCIA CINEMATOGRÁFICA DE EVOLUCIÓN ===== */
+
+let revealPlaying = false;
+
+function ensureRevealOverlay() {
+  if (document.getElementById('reveal-overlay')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="reveal-overlay" id="reveal-overlay">
+      <div class="reveal-particles"></div>
+      <div class="reveal-stage" id="reveal-stage"></div>
+    </div>`);
+}
+
+function checkPendingReveal() {
+  if (state && state.pendingReveal && !revealPlaying) {
+    revealPlaying = true;
+    playRevealSequence(state.pendingReveal);
+  }
+}
+
+function playRevealSequence(data) {
+  ensureRevealOverlay();
+  document.getElementById('reveal-overlay').classList.add('open');
+  playProcessingStep(data);
+}
+
+function playProcessingStep(data) {
+  const stage = document.getElementById('reveal-stage');
+  const msgs = ['ANALIZANDO RENDIMIENTO...', 'CALCULANDO EXPERIENCIA...', 'EVALUANDO DESEMPEÑO...', 'COMPARANDO CONTRA JUGADORES SIMILARES...', 'ACTUALIZANDO CLASIFICACIÓN...', 'VERIFICANDO RÉCORDS...', 'ACTUALIZANDO PLAYER CARD...'];
+  stage.innerHTML = `
+    <div class="reveal-processing">
+      <div class="reveal-proc-title">PROCESANDO ESTADÍSTICAS DEL PARTIDO...</div>
+      <div class="reveal-progress-bar"><div class="reveal-progress-fill" id="reveal-progress-fill"></div></div>
+      <div class="reveal-proc-msg" id="reveal-proc-msg"></div>
+    </div>`;
+  const msgEl = document.getElementById('reveal-proc-msg');
+  const fillEl = document.getElementById('reveal-progress-fill');
+  let i = 0;
+  const interval = setInterval(() => {
+    if (msgEl) msgEl.textContent = msgs[i % msgs.length];
+    if (fillEl) fillEl.style.width = Math.min(100, Math.round(((i + 1) / msgs.length) * 100)) + '%';
+    i++;
+    if (i > msgs.length) {
+      clearInterval(interval);
+      setTimeout(() => playCardRevealStep(data), 400);
+    }
+  }, 420);
+}
+
+function playCardRevealStep(data) {
+  const stage = document.getElementById('reveal-stage');
+  stage.innerHTML = `<div class="reveal-flash"></div>`;
+  setTimeout(() => {
+    const { className, html } = buildCardHTML(state);
+    stage.innerHTML = `
+      <div class="reveal-card-wrap">
+        <div class="reveal-card-spin ${className}" id="reveal-card-el">${html}</div>
+        <div class="reveal-ovr-evo" id="reveal-ovr-evo" style="display:none">
+          <div class="reveal-ovr-before">${data.ovrBefore}</div>
+          <div class="reveal-ovr-arrow">→</div>
+          <div class="reveal-ovr-after" id="reveal-ovr-after">${data.ovrBefore}</div>
+        </div>
+      </div>`;
+    setTimeout(() => playOvrEvolutionStep(data), 1600);
+  }, 350);
+}
+
+function playOvrEvolutionStep(data) {
+  const evo = document.getElementById('reveal-ovr-evo');
+  const afterEl = document.getElementById('reveal-ovr-after');
+  const cardEl = document.getElementById('reveal-card-el');
+  if (evo) evo.style.display = 'flex';
+  const goNext = () => { if (data.rankChanged) playRankUpStep(data); else playRewardsStep(data); };
+  if (data.ovrAfter > data.ovrBefore && afterEl && cardEl) {
+    cardEl.classList.add('reveal-card-glow-up');
+    let cur = data.ovrBefore;
+    const step = () => {
+      cur++;
+      afterEl.textContent = cur;
+      if (cur < data.ovrAfter) { setTimeout(step, 220); }
+      else { cardEl.classList.add('reveal-card-flash'); setTimeout(goNext, 900); }
+    };
+    setTimeout(step, 300);
+  } else {
+    setTimeout(goNext, 600);
+  }
+}
+
+function playRankUpStep(data) {
+  const stage = document.getElementById('reveal-stage');
+  stage.insertAdjacentHTML('beforeend', `
+    <div class="reveal-rankup" id="reveal-rankup">
+      <div class="reveal-rankup-label">NUEVO RANGO</div>
+      <div class="reveal-rankup-badge">${data.rankAfter}</div>
+      <div class="reveal-rankup-sub">${data.rankBefore} → ${data.rankAfter}</div>
+    </div>`);
+  setTimeout(() => playRewardsStep(data), 2200);
+}
+
+function playRewardsStep(data) {
+  const stage = document.getElementById('reveal-stage');
+  stage.innerHTML = `<div class="reveal-rewards-title">RECOMPENSAS</div><div class="reveal-rewards-list" id="reveal-rewards-list"></div>`;
+  const items = [];
+  items.push({ icon: '⚡', label: `+${data.xpGain} XP` });
+  items.push({ icon: '🔷', label: `+${data.lpGain} LP` });
+  (data.attrsGain || []).forEach(k => items.push({ icon: '📈', label: `+1 ${ATTR_LABELS[k] || k.toUpperCase()}` }));
+  if (data.isMvp) items.push({ icon: '★', label: 'MVP DEL PARTIDO' });
+  (data.achievementsNew || []).forEach(id => { const a = ACHIEVEMENTS_DEF[id]; if (a) items.push({ icon: a.icon, label: 'LOGRO: ' + a.label }); });
+  if (data.stats && data.stats.calificacion >= 9) items.push({ icon: '🌟', label: 'NUEVO RÉCORD PERSONAL' });
+  const list = document.getElementById('reveal-rewards-list');
+  let idx = 0;
+  const addNext = () => {
+    if (idx >= items.length) { setTimeout(() => playStatsStep(data), 700); return; }
+    const it = items[idx++];
+    list.insertAdjacentHTML('beforeend', `<div class="reveal-reward-item">${it.icon} ${it.label}</div>`);
+    setTimeout(addNext, 550);
+  };
+  addNext();
+}
+
+function playStatsStep(data) {
+  window.__revealData = data;
+  const stage = document.getElementById('reveal-stage');
+  const s = data.stats || {};
+  stage.innerHTML = `
+    <div class="reveal-stats-title">RESUMEN DEL PARTIDO</div>
+    <div class="reveal-stats-grid">
+      <div class="reveal-stat"><div class="reveal-stat-v">${s.calificacion}</div><div class="reveal-stat-l">CALIFICACIÓN</div></div>
+      <div class="reveal-stat"><div class="reveal-stat-v">${s.pases}</div><div class="reveal-stat-l">PASES</div></div>
+      <div class="reveal-stat"><div class="reveal-stat-v">${s.recuperaciones}</div><div class="reveal-stat-l">RECUPERACIONES</div></div>
+      <div class="reveal-stat"><div class="reveal-stat-v">${s.asistencias}</div><div class="reveal-stat-l">ASISTENCIAS</div></div>
+      <div class="reveal-stat"><div class="reveal-stat-v">${s.goles}</div><div class="reveal-stat-l">GOLES</div></div>
+    </div>
+    ${data.avgCalLast5 != null ? `<div class="reveal-stats-compare">${s.calificacion > data.avgCalLast5 ? '📈 Mejoraste respecto a tu promedio de los últimos partidos.' : 'Sigue así, tu constancia suma.'}</div>` : ''}
+    <button class="reveal-next-btn" onclick="playAchievementsStep()">CONTINUAR</button>
+  `;
+}
+
+function playAchievementsStep() {
+  const data = window.__revealData;
+  const stage = document.getElementById('reveal-stage');
+  const news = data.achievementsNew || [];
+  if (!news.length) { playShareStep(); return; }
+  stage.innerHTML = `
+    <div class="reveal-ach-title">LOGROS DESBLOQUEADOS</div>
+    <div class="reveal-ach-grid">
+      ${news.map(id => { const a = ACHIEVEMENTS_DEF[id]; return a ? `<div class="reveal-ach-badge"><div class="reveal-ach-icon">${a.icon}</div><div class="reveal-ach-label">${a.label}</div></div>` : ''; }).join('')}
+    </div>
+    <button class="reveal-next-btn" onclick="playShareStep()">CONTINUAR</button>
+  `;
+}
+
+function playShareStep() {
+  const stage = document.getElementById('reveal-stage');
+  stage.innerHTML = `
+    <div class="reveal-share-title">TU CARRERA ACABA DE EVOLUCIONAR</div>
+    <button class="reveal-share-btn" onclick="shareRevealCard()">📤 COMPARTIR MI NUEVA PLAYER CARD</button>
+    <button class="reveal-close-btn" onclick="closeRevealSequence()">CERRAR</button>
+  `;
+}
+
+function shareRevealCard() {
+  const data = window.__revealData;
+  const p = state;
+  if (!data || !p) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1350;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, '#05060a'); grad.addColorStop(1, '#0c0f16');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const glow = (x, y, r, color) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, color); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height); };
+  glow(150, 150, 500, 'rgba(0,255,136,0.35)');
+  glow(950, 1150, 550, 'rgba(255,0,170,0.3)');
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#00ff88';
+  ctx.font = '700 38px Orbitron, sans-serif';
+  ctx.fillText('LEVEL UP', canvas.width / 2, 90);
+
+  const finish = () => {
+    ctx.fillStyle = '#fff';
+    ctx.font = '900 130px Orbitron, sans-serif';
+    ctx.fillText(String(data.ovrAfter), canvas.width / 2, 900);
+    ctx.font = '600 34px Inter, sans-serif';
+    ctx.fillStyle = '#ff00aa';
+    ctx.fillText(data.rankAfter, canvas.width / 2, 950);
+
+    ctx.font = '700 46px Orbitron, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(p.nickname || p.name, canvas.width / 2, 1020);
+
+    let y = 1070;
+    if (data.isMvp) {
+      ctx.fillStyle = '#ffd54a';
+      ctx.font = '700 30px Inter, sans-serif';
+      ctx.fillText('★ MVP DEL PARTIDO', canvas.width / 2, y);
+      y += 45;
+    }
+
+    ctx.font = '500 26px Inter, sans-serif';
+    ctx.fillStyle = '#9fb0c8';
+    ctx.fillText(data.resultLabel || '', canvas.width / 2, y);
+    y += 50;
+
+    ctx.fillStyle = '#00ff88';
+    ctx.font = '700 32px Inter, sans-serif';
+    ctx.fillText(`+${data.xpGain} XP   ·   +${data.lpGain} LP`, canvas.width / 2, y);
+
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'levelup-card.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'LEVEL UP', text: 'Mi Player Card evolucionó en LEVEL UP' }).catch(() => {});
+      } else {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'levelup-card.png';
+        a.click();
+      }
+    });
+  };
+
+  if (p.photo) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, 650, 220, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(img, canvas.width / 2 - 220, 430, 440, 440);
+      ctx.restore();
+      finish();
+    };
+    img.onerror = finish;
+    img.src = p.photo;
+  } else {
+    finish();
+  }
+}
+
+function closeRevealSequence() {
+  const overlay = document.getElementById('reveal-overlay');
+  if (overlay) overlay.classList.remove('open');
+  const stage = document.getElementById('reveal-stage');
+  if (stage) stage.innerHTML = '';
+  if (state) { state.pendingReveal = null; saveState(); }
+  revealPlaying = false;
+  window.__revealData = null;
+  renderAll();
 }
 
 /* ===== AUTH / PERFILES ===== */
@@ -2008,24 +2263,168 @@ function respondChallenge(challengeId, accept) {
   renderAll();
 }
 
-function finalizeTeamMatch(matchId) {
+const ACHIEVEMENTS_DEF = {
+  first_mvp: { icon: '🥇', label: 'PRIMER MVP' },
+  hat_trick: { icon: '⚡', label: 'HAT-TRICK' },
+  perfect_assist: { icon: '🎯', label: 'ASISTENCIA PERFECTA' },
+  defensive_wall: { icon: '🧱', label: 'MURALLA DEFENSIVA' },
+  century: { icon: '💯', label: '100 PARTIDOS OFICIALES' },
+  top100: { icon: '🏆', label: 'TOP 100' },
+};
+
+const ATTR_LABELS = { pac: 'RITMO', sho: 'TIRO', pas: 'PASE', dri: 'REGATE', def: 'DEFENSA', fis: 'FÍSICO' };
+
+function checkAchievements(p, m) {
+  const have = new Set(p.achievements || []);
+  const unlocked = [];
+  const add = id => { if (!have.has(id)) { unlocked.push(id); have.add(id); } };
+  if (m.mvp) add('first_mvp');
+  if (m.goles >= 3) add('hat_trick');
+  if (m.asistencias >= 3) add('perfect_assist');
+  if (m.recuperaciones >= 8) add('defensive_wall');
+  if ((p.matches + 1) === 100) add('century');
+  const pos = getGeneralRanking().findIndex(r => r.id === p.id) + 1;
+  if (pos > 0 && pos <= 100) add('top100');
+  p.achievements = Array.from(have);
+  return unlocked;
+}
+
+function computeMatchDeltas(p, m) {
+  const cal = m.calificacion;
+  let ovrDelta = 0;
+  if (cal >= 9) ovrDelta = 2;
+  else if (cal >= 7.5) ovrDelta = 1;
+  else if (cal < 5) ovrDelta = -1;
+  const ovrBefore = p.ovr;
+  const ovrAfter = Math.max(40, Math.min(99, ovrBefore + ovrDelta));
+  const xpGain = 80 + m.goles * 15 + m.asistencias * 10 + (m.mvp ? 50 : 0) + Math.round(cal * 5);
+  const lpGain = 4 + (m.mvp ? 3 : 0) + (cal >= 8 ? 2 : 0);
+  const rankBefore = getRank(p.xp);
+  const xpAfter = p.xp + xpGain;
+  const rankAfter = getRank(xpAfter);
+  const attrsGain = [];
+  if (m.goles > 0) attrsGain.push('sho');
+  if (m.asistencias > 0 || m.pases > 0) attrsGain.push('pas');
+  if (m.recuperaciones > 0) attrsGain.push('def');
+  if (cal >= 8) attrsGain.push('dri');
+  return { ovrDelta, ovrBefore, ovrAfter, xpGain, xpAfter, lpGain, rankBefore, rankAfter, attrsGain };
+}
+
+function openFinalizeMatchModal(matchId) {
   const match = teamMatches.find(m => m.id === matchId);
   if (!match) return;
   const teamA = teams[match.teamAId];
   const teamB = teams[match.teamBId];
   if (!teamA || !teamB || teamA.captainId !== state.id) return;
-  const golesA = parseInt(prompt('Goles de ' + teamA.name + ':', '0'), 10) || 0;
-  const golesB = parseInt(prompt('Goles de ' + teamB.name + ':', '0'), 10) || 0;
+  document.getElementById('finalize-match-id').value = matchId;
+  document.getElementById('finalize-team-a-name').textContent = teamA.name;
+  document.getElementById('finalize-team-b-name').textContent = teamB.name;
+  const rows = teamA.memberIds.map(id => profiles[id]).filter(Boolean).map(p => `
+    <div class="fm-player-row" data-pid="${p.id}">
+      <div class="fm-player-name">${p.nickname || p.name}</div>
+      <input type="number" min="0" max="15" value="0" class="fm-goles auth-input" placeholder="Goles">
+      <input type="number" min="0" max="15" value="0" class="fm-asist auth-input" placeholder="Asist.">
+      <input type="number" min="0" max="60" value="20" class="fm-pases auth-input" placeholder="Pases">
+      <input type="number" min="0" max="20" value="3" class="fm-recup auth-input" placeholder="Recup.">
+      <input type="number" min="1" max="10" step="0.1" value="6.5" class="fm-calif auth-input" placeholder="Calif.">
+      <label class="fm-mvp-label"><input type="radio" name="fm-mvp" value="${p.id}"> MVP</label>
+    </div>`).join('');
+  document.getElementById('finalize-players-list').innerHTML = rows;
+  document.getElementById('finalize-match-modal').classList.add('open');
+}
+
+function closeFinalizeMatchModal() {
+  document.getElementById('finalize-match-modal').classList.remove('open');
+}
+
+function submitFinalizeMatch() {
+  const matchId = document.getElementById('finalize-match-id').value;
+  const match = teamMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  if (!teamA || !teamB || teamA.captainId !== state.id) return;
+  const golesA = parseInt(document.getElementById('finalize-goles-a').value, 10) || 0;
+  const golesB = parseInt(document.getElementById('finalize-goles-b').value, 10) || 0;
+  const mvpId = (document.querySelector('input[name="fm-mvp"]:checked') || {}).value || null;
+
   match.resultado = { golesA, golesB };
   match.estado = 'finalizado';
+  match.mvpId = mvpId;
   teamA.goalsFor += golesA; teamA.goalsAgainst += golesB;
   teamB.goalsFor += golesB; teamB.goalsAgainst += golesA;
   if (golesA > golesB) { teamA.wins++; teamB.losses++; }
   else if (golesA < golesB) { teamB.wins++; teamA.losses++; }
   else { teamA.draws++; teamB.draws++; }
+
+  const resultLabel = golesA > golesB ? `${teamA.name} VENCIÓ A ${teamB.name} ${golesA}-${golesB}`
+    : golesA < golesB ? `${teamB.name} VENCIÓ A ${teamA.name} ${golesB}-${golesA}`
+    : `${teamA.name} EMPATÓ CON ${teamB.name} ${golesA}-${golesB}`;
+
+  const rows = document.querySelectorAll('#finalize-players-list .fm-player-row');
+  const headlines = [];
+  rows.forEach(row => {
+    const pid = row.dataset.pid;
+    const p = profiles[pid];
+    if (!p) return;
+    const m2 = {
+      goles: parseInt(row.querySelector('.fm-goles').value, 10) || 0,
+      asistencias: parseInt(row.querySelector('.fm-asist').value, 10) || 0,
+      pases: parseInt(row.querySelector('.fm-pases').value, 10) || 0,
+      recuperaciones: parseInt(row.querySelector('.fm-recup').value, 10) || 0,
+      calificacion: parseFloat(row.querySelector('.fm-calif').value) || 6,
+      mvp: pid === mvpId,
+    };
+    const d = computeMatchDeltas(p, m2);
+    p.ovr = d.ovrAfter;
+    p.xp = d.xpAfter;
+    p.lp = (p.lp || 0) + d.lpGain;
+    p.matches = (p.matches || 0) + 1;
+    p.goals = (p.goals || 0) + m2.goles;
+    p.assists = (p.assists || 0) + m2.asistencias;
+    if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+    d.attrsGain.forEach(k => { p.attrs[k] = Math.min(99, p.attrs[k] + 1); });
+    p.lastUpdate = new Date().toISOString();
+    const newAchievements = checkAchievements(p, m2);
+    p.history.push({
+      date: new Date().toLocaleDateString('es-CO'), result: resultLabel, mvp: m2.mvp, ovrDelta: d.ovrDelta,
+      goles: m2.goles, asistencias: m2.asistencias, calificacion: m2.calificacion, pases: m2.pases, recuperaciones: m2.recuperaciones,
+      xpGain: d.xpGain, lpGain: d.lpGain,
+    });
+    const recent = p.history.slice(-6, -1);
+    const avgCalLast5 = recent.length ? recent.reduce((s, h) => s + (h.calificacion || 0), 0) / recent.length : null;
+    const rankChanged = d.rankBefore.name !== d.rankAfter.name;
+    p.pendingReveal = {
+      matchId: match.id, resultLabel, teamName: teamA.name, rivalName: teamB.name,
+      ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain,
+      rankBefore: d.rankBefore.name, rankAfter: d.rankAfter.name, rankChanged,
+      isMvp: m2.mvp, achievementsNew: newAchievements, attrsGain: d.attrsGain,
+      stats: m2, avgCalLast5,
+    };
+    profiles[pid] = p;
+    pushProfileToCloud(p);
+    const name = p.nickname || p.name;
+    if (d.ovrAfter > d.ovrBefore) headlines.push(`${name} evolucionó su Player Card a OVR ${d.ovrAfter}.`);
+    if (rankChanged) headlines.push(`${name} ascendió al rango ${d.rankAfter.name}.`);
+    if (m2.mvp) headlines.push(`${name} fue el MVP del partido.`);
+  });
+
+  const audience = new Set([...teamA.memberIds, ...teamB.memberIds]);
+  audience.forEach(id => {
+    const member = profiles[id];
+    if (!member) return;
+    member.notifications.push({ icon: '⚽', text: resultLabel + '.', time: 'AHORA' });
+    headlines.forEach(h => member.notifications.push({ icon: '📈', text: h, time: 'AHORA' }));
+    profiles[id] = member;
+    if (member !== state) pushProfileToCloud(member);
+  });
+
+  saveProfiles();
   saveTeamMatches(); saveTeams();
   pushTeamMatchToCloud(match); pushTeamToCloud(teamA); pushTeamToCloud(teamB);
+  closeFinalizeMatchModal();
   renderTeamsModule();
+  checkPendingReveal();
 }
 
 function getTeamMatches(teamId, estado) {
@@ -2338,7 +2737,7 @@ function renderTeamMatchesPanel() {
         <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
         <span>VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
         <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : (finalized ? '—' : 'PROGRAMADO')}</span>
-        ${canFinalize ? `<button class="mm-invite-btn" onclick="finalizeTeamMatch('${m.id}')">FINALIZAR PARTIDO</button>` : ''}
+        ${canFinalize ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR PARTIDO</button>` : ''}
       </div>`;
   };
   el.innerHTML = `
@@ -2482,6 +2881,7 @@ function initApp() {
   }
 
   renderAll();
+  checkPendingReveal();
   syncProfilesFromCloud();
   syncTeamsFromCloud().then(() => {
     const myTeam = getMyTeam();

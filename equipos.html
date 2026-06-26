@@ -164,6 +164,26 @@
   </div>
 </div>
 
+<!-- MODAL FINALIZAR PARTIDO -->
+<div class="modal-overlay" id="finalize-match-modal">
+  <div class="auth-card fm-card">
+    <div class="auth-tabs"><div class="auth-tab on">FINALIZAR PARTIDO</div></div>
+    <input type="hidden" id="finalize-match-id">
+    <div class="fm-score-row">
+      <div class="fm-score-team"><div class="auth-label" id="finalize-team-a-name">EQUIPO A</div><input class="auth-input" type="number" min="0" id="finalize-goles-a" value="0"></div>
+      <div class="fm-score-vs">VS</div>
+      <div class="fm-score-team"><div class="auth-label" id="finalize-team-b-name">EQUIPO B</div><input class="auth-input" type="number" min="0" id="finalize-goles-b" value="0"></div>
+    </div>
+    <div class="auth-label">ESTADÍSTICAS DE TU EQUIPO</div>
+    <div class="fm-players-head">
+      <span>JUGADOR</span><span>GOLES</span><span>ASIST.</span><span>PASES</span><span>RECUP.</span><span>CALIF.</span><span>MVP</span>
+    </div>
+    <div id="finalize-players-list" class="fm-players-list"></div>
+    <button class="auth-submit" onclick="submitFinalizeMatch()">PROCESAR PARTIDO</button>
+    <button class="auth-cancel" onclick="closeFinalizeMatchModal()">CANCELAR</button>
+  </div>
+</div>
+
 <!-- MODAL EDITAR EQUIPO -->
 <div class="modal-overlay" id="edit-team-modal">
   <div class="auth-card">
