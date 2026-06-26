@@ -2354,7 +2354,15 @@ function renderLiveMatch() {
   };
 
   document.getElementById('lv-table').innerHTML = players.length
-    ? players.map(rowHTML).join('')
+    ? `
+      <div class="adm-lv-team-group team-a">
+        <div class="adm-lv-team-head team-a">${teamA ? teamA.name : 'EQUIPO A'}</div>
+        ${players.filter(p => p.side === 'A').map(rowHTML).join('')}
+      </div>
+      <div class="adm-lv-team-group team-b">
+        <div class="adm-lv-team-head team-b">${teamB ? teamB.name : 'EQUIPO B'}</div>
+        ${players.filter(p => p.side === 'B').map(rowHTML).join('')}
+      </div>`
     : `<div class="rk-empty">Ninguno de los dos equipos tiene jugadores registrados todavía.</div>`;
 
   document.getElementById('lv-timeline').innerHTML = live.events.length

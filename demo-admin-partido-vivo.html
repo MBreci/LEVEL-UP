@@ -24,7 +24,7 @@
     <div class="lv-topbar-mid">
       <span class="lv-topbar-item">📍 <b id="lv-arena">Cancha El Salitre</b></span>
       <span class="lv-topbar-item">📅 <b id="lv-fecha">2026-06-26 · 19:30</b></span>
-      <span class="lv-topbar-item">⚽ <b id="lv-modalidad">FÚTBOL 7</b></span>
+      <span class="lv-topbar-item">⚽ <b id="lv-modalidad">FÚTBOL 6</b></span>
       <span class="lv-code" id="lv-code">LVP-2026-000148</span>
     </div>
     <div class="lv-topbar-right">
@@ -109,12 +109,18 @@
   }
 
   const players = [
-    { id: 'p1', side: 'A', squadNumber: 7, name: 'Miguel Breci', nickname: 'LOBO', position: 'DEL', ovr: 78, isGK: false, stat: mkStat() },
-    { id: 'p2', side: 'A', squadNumber: 10, name: 'Lobo González', nickname: '', position: 'MED', ovr: 74, isGK: false, stat: mkStat() },
-    { id: 'p3', side: 'A', squadNumber: 1, name: 'Esteban Roa', nickname: '', position: 'POR', ovr: 70, isGK: true, stat: mkStat() },
-    { id: 'p4', side: 'B', squadNumber: 9, name: 'Andrés Gómez', nickname: '', position: 'DEL', ovr: 76, isGK: false, stat: mkStat() },
-    { id: 'p5', side: 'B', squadNumber: 4, name: 'Camilo Vargas', nickname: '', position: 'DEF', ovr: 71, isGK: false, stat: mkStat() },
-    { id: 'p6', side: 'B', squadNumber: 1, name: 'David Ospina', nickname: '', position: 'POR', ovr: 73, isGK: true, stat: mkStat() },
+    { id: 'p1', side: 'A', squadNumber: 1, name: 'Esteban Roa', nickname: '', position: 'POR', ovr: 70, isGK: true, stat: mkStat() },
+    { id: 'p2', side: 'A', squadNumber: 3, name: 'Julián Castro', nickname: '', position: 'DEF', ovr: 72, isGK: false, stat: mkStat() },
+    { id: 'p3', side: 'A', squadNumber: 5, name: 'Felipe Naranjo', nickname: '', position: 'DEF', ovr: 73, isGK: false, stat: mkStat() },
+    { id: 'p4', side: 'A', squadNumber: 8, name: 'Lobo González', nickname: '', position: 'MED', ovr: 74, isGK: false, stat: mkStat() },
+    { id: 'p5', side: 'A', squadNumber: 7, name: 'Miguel Breci', nickname: 'LOBO', position: 'MED', ovr: 78, isGK: false, stat: mkStat() },
+    { id: 'p6', side: 'A', squadNumber: 9, name: 'Sebastián Ríos', nickname: '', position: 'DEL', ovr: 75, isGK: false, stat: mkStat() },
+    { id: 'p7', side: 'B', squadNumber: 1, name: 'David Ospina', nickname: '', position: 'POR', ovr: 73, isGK: true, stat: mkStat() },
+    { id: 'p8', side: 'B', squadNumber: 2, name: 'Camilo Vargas', nickname: '', position: 'DEF', ovr: 71, isGK: false, stat: mkStat() },
+    { id: 'p9', side: 'B', squadNumber: 4, name: 'Nicolás Pardo', nickname: '', position: 'DEF', ovr: 70, isGK: false, stat: mkStat() },
+    { id: 'p10', side: 'B', squadNumber: 6, name: 'Santiago Muñoz', nickname: '', position: 'MED', ovr: 72, isGK: false, stat: mkStat() },
+    { id: 'p11', side: 'B', squadNumber: 8, name: 'Daniel Cárdenas', nickname: '', position: 'MED', ovr: 74, isGK: false, stat: mkStat() },
+    { id: 'p12', side: 'B', squadNumber: 9, name: 'Andrés Gómez', nickname: '', position: 'DEL', ovr: 76, isGK: false, stat: mkStat() },
   ];
 
   let elapsed = 0;
@@ -209,7 +215,17 @@
           <div class="adm-lv-calif ${calClass}">${calif.toFixed(1)}</div>
         </div>`;
     };
-    document.getElementById('lv-table').innerHTML = players.map(rowHTML).join('');
+    const teamARows = players.filter(p => p.side === 'A').map(rowHTML).join('');
+    const teamBRows = players.filter(p => p.side === 'B').map(rowHTML).join('');
+    document.getElementById('lv-table').innerHTML = `
+      <div class="adm-lv-team-group team-a">
+        <div class="adm-lv-team-head team-a">${teamA.name}</div>
+        ${teamARows}
+      </div>
+      <div class="adm-lv-team-group team-b">
+        <div class="adm-lv-team-head team-b">${teamB.name}</div>
+        ${teamBRows}
+      </div>`;
 
     document.getElementById('lv-timeline').innerHTML = events.length
       ? events.slice().reverse().map(e => `<div class="adm-lv-event"><span class="adm-lv-event-min">MIN ${e.min}</span>${e.icon} ${e.text}</div>`).join('')
