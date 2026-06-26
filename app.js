@@ -1,5 +1,23 @@
 /* ===== LEVEL UP — MVP ===== */
 
+const BANNED_WORDS = [
+  'puta', 'puto', 'mierda', 'pendejo', 'pendeja', 'cabron', 'cabrón', 'gonorrea',
+  'malparido', 'malparida', 'hijueputa', 'hpta', 'verga', 'culo', 'marica', 'maricon', 'maricón',
+  'perra', 'zorra', 'idiota', 'imbecil', 'imbécil', 'estupido', 'estúpido', 'estupida', 'estúpida',
+  'mamavergas', 'chupavergas', 'nazi', 'hitler',
+  'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'nigger', 'nigga', 'retard', 'retarded',
+];
+
+function normalizeForFilter(text) {
+  return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function containsProfanity(text) {
+  if (!text) return false;
+  const norm = normalizeForFilter(text);
+  return BANNED_WORDS.some(w => norm.includes(normalizeForFilter(w)));
+}
+
 const RANKS = [
   { name: 'ROOKIE',   min: 0 },
   { name: 'NOVA',     min: 1000 },
@@ -180,12 +198,18 @@ const PAGE_HREFS = {
   temporada: 'temporada-piloto.html',
 };
 
+function getCurrentPage() {
+  let page = location.pathname.split('/').pop() || 'index.html';
+  if (page && !page.includes('.')) page += '.html';
+  return page;
+}
+
 function renderNav() {
   const nav = document.getElementById('nav-modules');
   if (!nav) return;
   nav.innerHTML = '';
   if (!state) return;
-  const page = location.pathname.split('/').pop() || 'index.html';
+  const page = getCurrentPage();
   FUNCTIONAL_MODULES.forEach(m => {
     const href = PAGE_HREFS[m.id] || '#';
     const el = document.createElement('a');
@@ -741,7 +765,7 @@ async function submitLogin() {
     closeAuth();
     document.getElementById('login-id').value = '';
     document.getElementById('login-password').value = '';
-    if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
+    if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
     renderAll();
   } finally {
     btn.disabled = false;
@@ -828,6 +852,10 @@ async function submitNewProfile() {
     errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
     return;
   }
+  if (containsProfanity(name) || containsProfanity(nickname) || containsProfanity(team)) {
+    errorEl.textContent = 'Tu nombre, apodo o equipo contiene lenguaje ofensivo. Por favor elige otro.';
+    return;
+  }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
@@ -853,7 +881,7 @@ async function submitNewProfile() {
   pushProfileToCloud(profile);
   setCurrentProfile(profile.id);
   closeAuth();
-  if ((location.pathname.split('/').pop() || 'index.html') === 'index.html') { location.href = 'dashboard.html'; return; }
+  if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
   renderAll();
 }
 
@@ -861,7 +889,12 @@ function editNickname() {
   const current = state.nickname || '';
   const value = prompt('¿Cuál es tu apodo?', current);
   if (value === null) return;
-  state.nickname = value.trim().toUpperCase();
+  const trimmed = value.trim();
+  if (containsProfanity(trimmed)) {
+    alert('Ese apodo contiene lenguaje ofensivo. Por favor elige otro.');
+    return;
+  }
+  state.nickname = trimmed.toUpperCase();
   saveState();
   renderAll();
 }
@@ -1117,7 +1150,7 @@ function renderTicker() {
 
 function initApp() {
   loadCurrentProfile();
-  const page = location.pathname.split('/').pop() || 'index.html';
+  const page = getCurrentPage();
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
   if (!state && !PUBLIC_PAGES.includes(page)) { location.href = 'index.html'; return; }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
