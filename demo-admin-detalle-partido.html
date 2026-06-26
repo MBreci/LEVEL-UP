@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DEMO · Admin · Detalle de Partido · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{padding-bottom:60px}
+  .demo-banner{background:#1a0a00;border:1px solid rgba(255,170,0,.5);color:#ffaa00;font-family:var(--ft);font-size:11px;letter-spacing:2px;padding:10px 24px;text-align:center}
+  .admp-wrap{max-width:760px;margin:40px auto;padding:0 20px}
+  .admp-card{background:rgba(10,14,20,.85);border:0.5px solid rgba(0,255,136,0.25);border-radius:10px;padding:28px}
+  .admp-vs{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .admp-team{text-align:center;flex:1}
+  .admp-team-name{font-family:var(--ft);font-weight:700;font-size:15px;color:var(--w);letter-spacing:1px}
+  .admp-team-sub{font-size:11px;color:var(--tm);margin-top:4px}
+  .admp-score{display:flex;align-items:center;gap:10px;font-family:var(--ft);font-weight:900;font-size:32px;color:var(--g);text-shadow:0 0 16px rgba(0,255,136,.5)}
+  .admp-score-ctrl{display:flex;flex-direction:column;gap:4px}
+  .admp-score-btn{width:26px;height:22px;border:0.5px solid rgba(0,255,136,0.4);background:transparent;color:var(--g);cursor:pointer;font-family:var(--ft);font-size:11px}
+  .admp-meta{display:flex;flex-wrap:wrap;gap:18px;font-size:11px;color:var(--tm);margin-bottom:24px;border-top:0.5px solid rgba(255,255,255,.08);border-bottom:0.5px solid rgba(255,255,255,.08);padding:14px 0}
+  .admp-meta b{color:var(--w)}
+  .admp-sec-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--g);margin-bottom:10px}
+  .admp-stat-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,.06);font-size:12px;color:var(--w)}
+  .admp-stat-row .adm-stat-lbl{font-size:9px;color:var(--tm);text-align:center}
+  .admp-mini{display:flex;align-items:center;gap:4px}
+  .admp-mini button{width:20px;height:20px;border:0.5px solid rgba(255,255,255,.2);background:transparent;color:var(--w);cursor:pointer;font-size:11px}
+  .admp-actions{display:flex;gap:12px;margin-top:24px}
+  .admp-mvp{margin-top:18px}
+  .admp-mvp select{width:100%}
+</style>
+</head>
+<body>
+
+<div class="demo-banner">⚠ DEMO ESTÁTICO — SOLO PARA VISUALIZAR. NO GUARDA NADA NI ESTÁ CONECTADO A LA APP REAL.</div>
+
+<div class="page-banner">
+  <div class="page-banner-eyebrow">ADMIN</div>
+  <div class="page-banner-title">DETALLE DE PARTIDO</div>
+  <div class="page-banner-desc">Así vería un administrador la carga de resultado de un partido específico.</div>
+</div>
+
+<div class="admp-wrap">
+  <div class="admp-card">
+    <div class="admp-vs">
+      <div class="admp-team">
+        <div class="admp-team-name">HALCONES FC</div>
+        <div class="admp-team-sub">CAPITÁN: MIGUEL BRECI</div>
+      </div>
+      <div class="admp-score">
+        <div class="admp-score-ctrl">
+          <button class="admp-score-btn" onclick="changeScore('a',1)">▲</button>
+          <button class="admp-score-btn" onclick="changeScore('a',-1)">▼</button>
+        </div>
+        <span id="score-a">2</span>
+        <span style="color:var(--tm);font-size:18px">—</span>
+        <span id="score-b">1</span>
+        <div class="admp-score-ctrl">
+          <button class="admp-score-btn" onclick="changeScore('b',1)">▲</button>
+          <button class="admp-score-btn" onclick="changeScore('b',-1)">▼</button>
+        </div>
+      </div>
+      <div class="admp-team">
+        <div class="admp-team-name">LOBOS DEL SUR</div>
+        <div class="admp-team-sub">CAPITÁN: ANDRÉS GÓMEZ</div>
+      </div>
+    </div>
+
+    <div class="admp-meta">
+      <span>📅 <b>26 JUN 2026</b> · 7:30 PM</span>
+      <span>📍 <b>CANCHA EL SALITRE</b></span>
+      <span>⚽ <b>FÚTBOL 7</b></span>
+      <span>💰 <b>$120.000</b></span>
+      <span>🏷 <b id="estado-badge">PROGRAMADO</b></span>
+    </div>
+
+    <div class="admp-sec-title">ESTADÍSTICAS POR JUGADOR</div>
+    <div class="admp-stat-row" style="font-size:9px;color:var(--tm)">
+      <span>JUGADOR</span><span class="adm-stat-lbl">GOLES</span><span class="adm-stat-lbl">ASIST.</span><span class="adm-stat-lbl">TARJETAS</span>
+    </div>
+    <div class="admp-stat-row">
+      <span>Miguel Breci <span style="color:var(--tm);font-size:9px">· Halcones FC</span></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>1</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>0</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>0</b><button onclick="step(this,1)">+</button></span>
+    </div>
+    <div class="admp-stat-row">
+      <span>Lobo González <span style="color:var(--tm);font-size:9px">· Halcones FC</span></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>1</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>1</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>0</b><button onclick="step(this,1)">+</button></span>
+    </div>
+    <div class="admp-stat-row">
+      <span>Andrés Gómez <span style="color:var(--tm);font-size:9px">· Lobos del Sur</span></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>1</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>0</b><button onclick="step(this,1)">+</button></span>
+      <span class="admp-mini"><button onclick="step(this,-1)">-</button><b>1</b><button onclick="step(this,1)">+</button></span>
+    </div>
+
+    <div class="admp-mvp">
+      <div class="admp-sec-title">MVP DEL PARTIDO</div>
+      <select class="auth-input">
+        <option>Seleccionar jugador...</option>
+        <option selected>Lobo González (Halcones FC)</option>
+        <option>Miguel Breci (Halcones FC)</option>
+        <option>Andrés Gómez (Lobos del Sur)</option>
+      </select>
+    </div>
+
+    <div class="admp-actions">
+      <button class="auth-submit" style="flex:1" onclick="finalizar()">FINALIZAR Y GUARDAR RESULTADO</button>
+      <button class="auth-cancel" style="flex:0 0 auto" onclick="alert('Esto solo cierra el demo, no borra nada real.')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function changeScore(side, delta) {
+    const el = document.getElementById('score-' + side);
+    el.textContent = Math.max(0, parseInt(el.textContent) + delta);
+  }
+  function step(btn, delta) {
+    const valEl = btn.parentElement.querySelector('b');
+    valEl.textContent = Math.max(0, parseInt(valEl.textContent) + delta);
+  }
+  function finalizar() {
+    document.getElementById('estado-badge').textContent = 'FINALIZADO';
+    alert('(DEMO) Resultado guardado: este botón no escribe en ninguna base de datos real, es solo para mostrar el flujo.');
+  }
+</script>
+
+</body>
+</html>
