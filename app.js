@@ -84,8 +84,9 @@ function rowToProfile(r) {
   return {
     id: r.id, name: r.name, nickname: r.nickname, position: r.position, team: r.team,
     photo: r.photo, passwordHash: r.password_hash, ovr: r.ovr, xp: r.xp, lp: r.lp,
-    lastUpdate: r.last_update, matches: r.matches, goals: r.goals, assists: r.assists, mvps: r.mvps,
-    attrs: r.attrs, history: r.history, notifications: r.notifications,
+    lastUpdate: r.last_update, matches: r.matches || 0, goals: r.goals || 0, assists: r.assists || 0, mvps: r.mvps || 0,
+    attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
+    history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
   };
 }
@@ -262,8 +263,8 @@ function guestPrompt(text) {
 }
 
 function buildCardHTML(p) {
-  const rank = getRank(p.xp);
-  const a = p.attrs;
+  const rank = getRank(p.xp || 0);
+  const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
   const epicRanks = ['rival', 'elite', 'apex', 'legacy'];
   const tier = rank.name.toLowerCase();
   const className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
@@ -1157,6 +1158,7 @@ function initApp() {
 
   renderAll();
   syncProfilesFromCloud();
+  if (state) pushProfileToCloud(state);
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
