@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin · Partido en vivo · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="lv-body">
+
+<div id="lv-root">
+  <div class="lv-topbar">
+    <div class="lv-topbar-left">
+      <a href="admin-partidos.html" class="lv-back">← PARTIDOS</a>
+      <span class="lv-logo">LEVEL UP <span class="lv-logo-sub">ADMIN PANEL</span></span>
+    </div>
+    <div class="lv-topbar-mid">
+      <span class="lv-topbar-item">📍 <b id="lv-arena">—</b></span>
+      <span class="lv-topbar-item">📅 <b id="lv-fecha">—</b></span>
+      <span class="lv-topbar-item">⚽ <b id="lv-modalidad">—</b></span>
+      <span class="lv-code" id="lv-code">LVP-0000-000000</span>
+    </div>
+    <div class="lv-topbar-right">
+      <span class="lv-autosave-badge" id="lv-autosave-badge">● GUARDADO AUTOMÁTICAMENTE</span>
+    </div>
+  </div>
+
+  <div class="lv-scoreboard">
+    <div class="lv-sb-team">
+      <div class="lv-sb-escudo" id="lv-team-a-escudo">--</div>
+      <div class="lv-sb-name" id="lv-team-a-name">EQUIPO A</div>
+    </div>
+    <div class="lv-sb-center">
+      <span class="lv-status-badge off" id="lv-status-badge">PROGRAMADO</span>
+      <div class="lv-sb-score">
+        <span class="lv-score lv-score-a" id="lv-score-a">0</span>
+        <span class="lv-score-sep">—</span>
+        <span class="lv-score lv-score-b" id="lv-score-b">0</span>
+      </div>
+      <div class="lv-sb-clock" id="lv-clock">00:00</div>
+      <div class="lv-sb-half" id="lv-half">PRIMER TIEMPO</div>
+    </div>
+    <div class="lv-sb-team">
+      <div class="lv-sb-escudo" id="lv-team-b-escudo">--</div>
+      <div class="lv-sb-name" id="lv-team-b-name">EQUIPO B</div>
+    </div>
+  </div>
+
+  <div class="lv-summary">
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">MARCADOR</span><span class="lv-sum-val" id="lv-sum-goles">0 - 0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">TIROS AL ARCO</span><span class="lv-sum-val" id="lv-sum-tiros">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">AMARILLAS</span><span class="lv-sum-val" id="lv-sum-amarillas">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">ROJAS</span><span class="lv-sum-val" id="lv-sum-rojas">0</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">MVP PROVISIONAL</span><span class="lv-sum-val good" id="lv-sum-mvp">—</span></div>
+    <div class="lv-sum-tile"><span class="lv-sum-lbl">PEOR CALIFICADO</span><span class="lv-sum-val bad" id="lv-sum-worst">—</span></div>
+  </div>
+
+  <div class="lv-main">
+    <div class="lv-sec-title">ESTADÍSTICAS POR JUGADOR</div>
+    <div class="adm-lv-table" id="lv-table"></div>
+
+    <div class="lv-bottom">
+      <div class="lv-bottom-col">
+        <div class="lv-sec-title">EVENTOS DEL PARTIDO</div>
+        <div class="adm-lv-timeline" id="lv-timeline"></div>
+      </div>
+      <div class="lv-bottom-col">
+        <div class="lv-sec-title">MINUTO ACTUAL</div>
+        <div class="lv-clock-ctrl">
+          <button class="lv-btn" id="lv-clock-toggle" onclick="liveClockToggle()">INICIAR</button>
+          <button class="lv-btn ghost" onclick="liveClockAdd(1)">+1 MIN</button>
+          <button class="lv-btn ghost" onclick="liveClockAdd(5)">+5 MIN</button>
+          <button class="lv-btn ghost" onclick="liveClockAdd(10)">+10 MIN</button>
+          <button class="lv-btn ghost" onclick="liveSetHalf(1)">1ER TIEMPO</button>
+          <button class="lv-btn ghost" onclick="liveSetHalf(2)">2DO TIEMPO</button>
+        </div>
+        <div class="lv-sec-title" style="margin-top:18px">NOTAS DEL PARTIDO</div>
+        <textarea class="lv-notes" id="lv-notes" placeholder="Lesiones, incidentes, disciplina, suspensiones..." oninput="liveNotesChange(this.value)"></textarea>
+      </div>
+    </div>
+
+    <div class="lv-actions">
+      <button class="lv-btn primary" onclick="liveFinalizeMatch()">FINALIZAR Y ENVIAR ESTADÍSTICAS</button>
+      <button class="lv-btn ghost" onclick="liveSaveDraft()">GUARDAR BORRADOR</button>
+      <button class="lv-btn danger" onclick="liveCancelMatch()">CANCELAR PARTIDO</button>
+    </div>
+  </div>
+
+  <div class="lv-footer">LEVEL UP · MOTOR DE ADMINISTRACIÓN DE PARTIDOS EN VIVO · TEMPORADA BETA</div>
+</div>
+
+<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof initLiveMatchPage === 'function') initLiveMatchPage();
+  });
+</script>
+</body>
+</html>

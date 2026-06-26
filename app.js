@@ -242,7 +242,7 @@ function renderAdminMenu() {
   wrap.style.display = (state && state.isAdmin) ? '' : 'none';
 }
 
-const ADMIN_PAGES = ['admin-partidos.html', 'admin-jugadores.html'];
+const ADMIN_PAGES = ['admin-partidos.html', 'admin-jugadores.html', 'admin-partido-vivo.html'];
 
 function getPlatformStats() {
   const all = Object.values(profiles);
@@ -1266,6 +1266,7 @@ function teamMatchToRow(m) {
     id: m.id, team_a_id: m.teamAId, team_b_id: m.teamBId, cancha: m.cancha, costo: m.costo,
     fecha: m.fecha, hora: m.hora, jugadores: m.jugadores, observaciones: m.observaciones,
     estado: m.estado, resultado: m.resultado, mvp_id: m.mvpId, created_at: m.createdAt,
+    live: m.live,
   };
 }
 function rowToTeamMatch(r) {
@@ -1273,7 +1274,74 @@ function rowToTeamMatch(r) {
     id: r.id, teamAId: r.team_a_id, teamBId: r.team_b_id, cancha: r.cancha, costo: r.costo,
     fecha: r.fecha, hora: r.hora, jugadores: r.jugadores, observaciones: r.observaciones,
     estado: r.estado, resultado: r.resultado, mvpId: r.mvp_id, createdAt: r.created_at,
+    live: r.live || null,
   };
+}
+
+function getMatchCode(m) {
+  const year = new Date(m.createdAt).getFullYear();
+  const num = String(m.id).replace(/\D/g, '').slice(-6).padStart(6, '0');
+  return `LVP-${year}-${num}`;
+}
+
+function makeEmptyLiveStat() {
+  return {
+    goles: 0, asistencias: 0, tiros: 0, pasesClave: 0, recuperaciones: 0, destacadas: 0,
+    atajadas: 0, atajadasArea: 0, achiques: 0, despejes: 0, pasesLargos: 0, jugadasIniciadas: 0,
+    errores: 0, oportunidadesFalladas: 0, faltas: 0, amarillas: 0, rojas: 0, autogoles: 0,
+  };
+}
+
+function getMatchRoster(match) {
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  const side = (team, sideKey) => (team ? team.memberIds : []).map((id, i) => {
+    const profile = profiles[id];
+    if (!profile) return null;
+    return { profile, side: sideKey, squadNumber: i + 1, isGK: profile.position === 'POR' };
+  }).filter(Boolean);
+  return { teamA, teamB, players: [...side(teamA, 'A'), ...side(teamB, 'B')] };
+}
+
+function ensureLiveMatch(match) {
+  if (!match.live) {
+    match.live = {
+      elapsed: 0, running: false, startedAt: null, half: 1,
+      stats: {}, events: [], notes: '', mvpId: null,
+    };
+  }
+  const { players } = getMatchRoster(match);
+  players.forEach(({ profile }) => {
+    if (!match.live.stats[profile.id]) match.live.stats[profile.id] = makeEmptyLiveStat();
+  });
+  return match.live;
+}
+
+function getLiveElapsedSeconds(match) {
+  const live = match.live;
+  if (!live) return 0;
+  return live.elapsed + (live.running && live.startedAt ? Math.floor((Date.now() - live.startedAt) / 1000) : 0);
+}
+
+function getMatchScore(match) {
+  const { teamA, teamB, players } = getMatchRoster(match);
+  const stats = (match.live && match.live.stats) || {};
+  let golesA = 0, golesB = 0;
+  players.forEach(({ profile, side }) => {
+    const s = stats[profile.id];
+    if (!s) return;
+    if (side === 'A') { golesA += s.goles; golesB += s.autogoles; }
+    else { golesB += s.goles; golesA += s.autogoles; }
+  });
+  return { golesA, golesB, teamA, teamB };
+}
+
+function calcPlayerRating(stat, isGK) {
+  let score = 6;
+  score += stat.goles * 1.2 + stat.asistencias * 0.8 + stat.tiros * 0.15 + stat.pasesClave * 0.2 + stat.recuperaciones * 0.1 + stat.destacadas * 0.4;
+  if (isGK) score += stat.atajadas * 0.3 + stat.atajadasArea * 0.45 + stat.despejes * 0.1 + stat.pasesLargos * 0.05 + stat.jugadasIniciadas * 0.1;
+  score -= stat.errores * 0.6 + stat.oportunidadesFalladas * 0.25 + stat.faltas * 0.15 + stat.amarillas * 0.5 + stat.rojas * 2 + stat.autogoles * 1.5;
+  return Math.max(1, Math.min(10, Math.round(score * 10) / 10));
 }
 async function pushTeamMatchToCloud(m) {
   if (!sb) return;
@@ -2121,7 +2189,12 @@ function renderTicker() {
   if (el) el.innerHTML = feed;
 }
 
-/* ===== ADMIN · PARTIDOS ===== */
+/* ===== ADMIN · PARTIDOS (listado) ===== */
+
+const MATCH_STATE_LABEL = {
+  programado: 'PROGRAMADO', en_curso: 'EN CURSO', procesando: 'PROCESANDO ESTADÍSTICAS',
+  finalizado: 'FINALIZADO', archivado: 'ARCHIVADO',
+};
 
 function renderAdminPartidos() {
   const el = document.getElementById('admin-matches-list');
@@ -2130,48 +2203,336 @@ function renderAdminPartidos() {
     el.innerHTML = `<div class="rk-empty">Todavía no hay partidos de equipos creados.</div>`;
     return;
   }
-  const row = (m) => {
+  const card = (m) => {
     const teamA = teams[m.teamAId];
     const teamB = teams[m.teamBId];
-    const finalized = m.estado === 'finalizado';
+    const estado = m.estado || 'programado';
+    const actionLabel = estado === 'programado' ? 'INICIAR PARTIDO'
+      : estado === 'en_curso' ? 'CONTINUAR EN VIVO'
+      : 'VER RESUMEN';
     return `
-      <div class="team-hist-row">
-        <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
-        <span>${teamA ? teamA.name : 'EQUIPO A'} VS ${teamB ? teamB.name : 'EQUIPO B'}</span>
-        <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : 'PROGRAMADO'}</span>
-        <button class="mm-invite-btn" onclick="adminEditMatchResult('${m.id}')">${finalized ? 'EDITAR RESULTADO' : 'CARGAR RESULTADO'}</button>
+      <div class="adm-match-card">
+        <div class="adm-match-top">
+          <span class="adm-match-code">${getMatchCode(m)}</span>
+          <span class="adm-match-state st-${estado}">${MATCH_STATE_LABEL[estado] || estado.toUpperCase()}</span>
+        </div>
+        <div class="adm-match-teams">${teamA ? teamA.name : 'EQUIPO A'} <span class="adm-match-vs">VS</span> ${teamB ? teamB.name : 'EQUIPO B'}</div>
+        <div class="adm-match-meta">
+          <span>📍 ${m.cancha}</span>
+          <span>📅 ${m.fecha} · ${m.hora || '--:--'}</span>
+          <span>⚽ FÚTBOL ${m.jugadores || '?'}</span>
+        </div>
+        ${estado === 'finalizado' && m.resultado ? `<div class="adm-match-score">${m.resultado.golesA} - ${m.resultado.golesB}</div>` : ''}
+        <button class="auth-submit adm-match-btn" onclick="adminOpenLiveMatch('${m.id}')">${actionLabel}</button>
       </div>`;
   };
-  el.innerHTML = teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt).map(row).join('');
+  el.innerHTML = `<div class="adm-match-grid">${teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt).map(card).join('')}</div>`;
 }
 
-function adminEditMatchResult(matchId) {
+function adminOpenLiveMatch(matchId) {
   const match = teamMatches.find(m => m.id === matchId);
   if (!match) return;
-  const teamA = teams[match.teamAId];
-  const teamB = teams[match.teamBId];
-  if (!teamA || !teamB) return;
-  const golesA = parseInt(prompt('Goles de ' + teamA.name + ':', (match.resultado && match.resultado.golesA) || 0), 10);
-  if (isNaN(golesA)) return;
-  const golesB = parseInt(prompt('Goles de ' + teamB.name + ':', (match.resultado && match.resultado.golesB) || 0), 10);
-  if (isNaN(golesB)) return;
-  if (match.estado === 'finalizado' && match.resultado) {
-    teamA.goalsFor -= match.resultado.golesA; teamA.goalsAgainst -= match.resultado.golesB;
-    teamB.goalsFor -= match.resultado.golesB; teamB.goalsAgainst -= match.resultado.golesA;
-    if (match.resultado.golesA > match.resultado.golesB) { teamA.wins--; teamB.losses--; }
-    else if (match.resultado.golesA < match.resultado.golesB) { teamB.wins--; teamA.losses--; }
-    else { teamA.draws--; teamB.draws--; }
+  if (!match.estado || match.estado === 'programado') {
+    match.estado = 'en_curso';
+    const live = ensureLiveMatch(match);
+    live.running = true;
+    live.startedAt = Date.now();
+    saveTeamMatches();
+    pushTeamMatchToCloud(match);
   }
+  location.href = 'admin-partido-vivo.html?id=' + encodeURIComponent(matchId);
+}
+
+/* ===== ADMIN · PARTIDO EN VIVO ===== */
+
+let liveMatchId = null;
+let liveTickInterval = null;
+let liveAutosaveInterval = null;
+
+function getLiveMatch() {
+  return teamMatches.find(m => m.id === liveMatchId) || null;
+}
+
+function initLiveMatchPage() {
+  const params = new URLSearchParams(location.search);
+  liveMatchId = params.get('id');
+  const match = getLiveMatch();
+  if (!match) {
+    document.getElementById('lv-root').innerHTML = `<div class="rk-empty">No se encontró este partido. <a href="admin-partidos.html" style="color:var(--g)">Volver al listado</a></div>`;
+    return;
+  }
+  ensureLiveMatch(match);
+  renderLiveMatch();
+  liveTickInterval = setInterval(renderLiveClock, 1000);
+  liveAutosaveInterval = setInterval(liveAutosave, 15000);
+}
+
+function formatClock(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function renderLiveClock() {
+  const match = getLiveMatch();
+  if (!match) return;
+  const el = document.getElementById('lv-clock');
+  if (el) el.textContent = formatClock(getLiveElapsedSeconds(match));
+}
+
+function renderLiveMatch() {
+  const match = getLiveMatch();
+  if (!match) return;
+  const { teamA, teamB, players } = getMatchRoster(match);
+  const live = match.live;
+  const { golesA, golesB } = getMatchScore(match);
+  const finalized = match.estado === 'finalizado';
+
+  document.getElementById('lv-code').textContent = getMatchCode(match);
+  document.getElementById('lv-arena').textContent = match.cancha;
+  document.getElementById('lv-fecha').textContent = match.fecha + ' · ' + (match.hora || '--:--');
+  document.getElementById('lv-modalidad').textContent = 'FÚTBOL ' + (match.jugadores || '?');
+  document.getElementById('lv-team-a-name').textContent = teamA ? teamA.name : 'EQUIPO A';
+  document.getElementById('lv-team-b-name').textContent = teamB ? teamB.name : 'EQUIPO B';
+  document.getElementById('lv-team-a-escudo').innerHTML = teamA && teamA.photo ? `<img src="${teamA.photo}">` : (teamA ? teamA.name.slice(0, 2) : '--');
+  document.getElementById('lv-team-b-escudo').innerHTML = teamB && teamB.photo ? `<img src="${teamB.photo}">` : (teamB ? teamB.name.slice(0, 2) : '--');
+  document.getElementById('lv-score-a').textContent = golesA;
+  document.getElementById('lv-score-b').textContent = golesB;
+  document.getElementById('lv-status-badge').textContent = finalized ? 'FINALIZADO' : (live.running ? 'EN VIVO' : 'EN PAUSA');
+  document.getElementById('lv-status-badge').className = 'lv-status-badge ' + (finalized ? 'off' : (live.running ? 'on' : 'paused'));
+  document.getElementById('lv-half').textContent = live.half === 2 ? 'SEGUNDO TIEMPO' : 'PRIMER TIEMPO';
+  document.getElementById('lv-clock-toggle').textContent = live.running ? 'PAUSAR' : (finalized ? 'FINALIZADO' : 'INICIAR');
+  document.getElementById('lv-clock-toggle').disabled = finalized;
+  renderLiveClock();
+
+  let amarillasTotal = 0, rojasTotal = 0, tirosTotal = 0;
+  let bestCalif = -1, worstCalif = 11, bestPlayer = null, worstPlayer = null;
+  players.forEach(({ profile, isGK }) => {
+    const s = live.stats[profile.id];
+    amarillasTotal += s.amarillas; rojasTotal += s.rojas; tirosTotal += s.tiros;
+    const calif = calcPlayerRating(s, isGK);
+    if (calif > bestCalif) { bestCalif = calif; bestPlayer = profile; }
+    if (calif < worstCalif) { worstCalif = calif; worstPlayer = profile; }
+  });
+  document.getElementById('lv-sum-goles').textContent = golesA + ' - ' + golesB;
+  document.getElementById('lv-sum-amarillas').textContent = amarillasTotal;
+  document.getElementById('lv-sum-rojas').textContent = rojasTotal;
+  document.getElementById('lv-sum-tiros').textContent = tirosTotal;
+  document.getElementById('lv-sum-mvp').textContent = bestPlayer ? (bestPlayer.nickname || bestPlayer.name) : '—';
+  document.getElementById('lv-sum-worst').textContent = worstPlayer ? (worstPlayer.nickname || worstPlayer.name) : '—';
+
+  const rowHTML = ({ profile, side, squadNumber, isGK }) => {
+    const s = live.stats[profile.id];
+    const calif = calcPlayerRating(s, isGK);
+    const calClass = calif >= 7.5 ? 'good' : calif <= 4.5 ? 'bad' : '';
+    const photo = profile.photo ? `<img class="adm-lv-av-img" src="${profile.photo}">` : `<div class="adm-lv-av">${profile.name.split(' ').map(x => x[0]).join('').slice(0, 2)}</div>`;
+    const inc = (field) => `onclick="liveStatChange('${profile.id}','${field}',1)"`;
+    const dec = (field) => `onclick="liveStatChange('${profile.id}','${field}',-1)"`;
+    const mini = (field, label) => `
+      <div class="adm-lv-mini">
+        <button ${dec(field)} ${finalized ? 'disabled' : ''}>-</button>
+        <div><b>${s[field]}</b><span>${label}</span></div>
+        <button ${inc(field)} ${finalized ? 'disabled' : ''}>+</button>
+      </div>`;
+    const positiveCols = isGK
+      ? mini('atajadas', 'ATAJ.') + mini('atajadasArea', 'ATAJ. ÁREA') + mini('achiques', 'ACHIQ.') + mini('despejes', 'DESPEJ.') + mini('pasesLargos', 'P. LARGOS') + mini('jugadasIniciadas', 'J. INIC.')
+      : mini('goles', 'GOL') + mini('asistencias', 'ASIST.') + mini('tiros', 'T. ARCO') + mini('pasesClave', 'P. CLAVE') + mini('recuperaciones', 'RECUP.') + mini('destacadas', 'DESTAC.');
+    const negativeCols = mini('errores', 'ERROR') + mini('oportunidadesFalladas', 'OP. FALL.') + mini('faltas', 'FALTA') + mini('amarillas', 'AMAR.') + mini('rojas', 'ROJA') + mini('autogoles', 'AUTOGOL');
+    return `
+      <div class="adm-lv-row">
+        <div class="adm-lv-player">
+          ${photo}
+          <div>
+            <div class="adm-lv-name">#${squadNumber} ${profile.nickname || profile.name}</div>
+            <div class="adm-lv-sub">${side === 'A' ? (teamA ? teamA.name : '') : (teamB ? teamB.name : '')} · ${profile.position}${isGK ? ' · PORTERO' : ''} · OVR ${profile.ovr}</div>
+          </div>
+        </div>
+        <div class="adm-lv-cols pos">${positiveCols}</div>
+        <div class="adm-lv-cols neg">${negativeCols}</div>
+        <div class="adm-lv-calif ${calClass}">${calif.toFixed(1)}</div>
+      </div>`;
+  };
+
+  document.getElementById('lv-table').innerHTML = players.length
+    ? players.map(rowHTML).join('')
+    : `<div class="rk-empty">Ninguno de los dos equipos tiene jugadores registrados todavía.</div>`;
+
+  document.getElementById('lv-timeline').innerHTML = live.events.length
+    ? live.events.slice().reverse().map(e => `<div class="adm-lv-event"><span class="adm-lv-event-min">MIN ${e.min}</span>${e.icon} ${e.text}</div>`).join('')
+    : `<div class="rk-empty">Sin eventos registrados todavía.</div>`;
+
+  const notesEl = document.getElementById('lv-notes');
+  if (notesEl && notesEl.value !== live.notes) notesEl.value = live.notes || '';
+}
+
+function liveStatChange(playerId, field, delta) {
+  const match = getLiveMatch();
+  if (!match || match.estado === 'finalizado') return;
+  const s = match.live.stats[playerId];
+  if (!s) return;
+  s[field] = Math.max(0, s[field] + delta);
+  if (delta > 0) {
+    const { players } = getMatchRoster(match);
+    const entry = players.find(p => p.profile.id === playerId);
+    const profile = entry ? entry.profile : null;
+    const EVENT_LABEL = {
+      goles: ['⚽', 'GOOOL de'], asistencias: ['🎯', 'Asistencia de'], destacadas: ['✨', 'Jugada destacada de'],
+      atajadas: ['🧤', 'Atajada de'], atajadasArea: ['🧤', 'Atajada dentro del área de'],
+      amarillas: ['🟨', 'Tarjeta amarilla para'], rojas: ['🟥', 'Tarjeta roja para'],
+      autogoles: ['😱', 'Autogol de'], errores: ['⚠️', 'Error grave de'],
+    };
+    if (profile && EVENT_LABEL[field]) {
+      const [icon, label] = EVENT_LABEL[field];
+      match.live.events.push({ min: Math.floor(getLiveElapsedSeconds(match) / 60), icon, text: `${label} ${profile.nickname || profile.name}`, ts: Date.now() });
+    }
+  }
+  saveTeamMatches();
+  renderLiveMatch();
+}
+
+function liveClockToggle() {
+  const match = getLiveMatch();
+  if (!match || match.estado === 'finalizado') return;
+  const live = match.live;
+  if (live.running) {
+    live.elapsed = getLiveElapsedSeconds(match);
+    live.running = false;
+    live.startedAt = null;
+  } else {
+    live.running = true;
+    live.startedAt = Date.now();
+  }
+  saveTeamMatches();
+  renderLiveMatch();
+}
+
+function liveClockAdd(minutes) {
+  const match = getLiveMatch();
+  if (!match) return;
+  match.live.elapsed = getLiveElapsedSeconds(match) + minutes * 60;
+  if (match.live.running) match.live.startedAt = Date.now();
+  saveTeamMatches();
+  renderLiveClock();
+}
+
+function liveSetHalf(half) {
+  const match = getLiveMatch();
+  if (!match) return;
+  match.live.half = half;
+  saveTeamMatches();
+  renderLiveMatch();
+}
+
+function liveNotesChange(value) {
+  const match = getLiveMatch();
+  if (!match) return;
+  match.live.notes = value.slice(0, 600);
+}
+
+function liveAutosave() {
+  const match = getLiveMatch();
+  if (!match) return;
+  saveTeamMatches();
+  pushTeamMatchToCloud(match);
+  const badge = document.getElementById('lv-autosave-badge');
+  if (badge) {
+    badge.classList.add('flash');
+    setTimeout(() => badge.classList.remove('flash'), 1200);
+  }
+}
+
+function liveSaveDraft() {
+  liveAutosave();
+  alert('Borrador guardado.');
+}
+
+function liveCancelMatch() {
+  const match = getLiveMatch();
+  if (!match) return;
+  if (!confirm('¿Cancelar este partido? Volverá a estado PROGRAMADO y se perderán las estadísticas en vivo registradas.')) return;
+  match.estado = 'programado';
+  match.live = null;
+  saveTeamMatches();
+  pushTeamMatchToCloud(match);
+  location.href = 'admin-partidos.html';
+}
+
+function liveFinalizeMatch() {
+  const match = getLiveMatch();
+  if (!match || match.estado === 'finalizado') return;
+  if (!confirm('¿Finalizar el partido y enviar las estadísticas? Esto actualizará OVR, XP, ranking e historial de todos los jugadores.')) return;
+
+  match.estado = 'procesando';
+  renderLiveMatch();
+
+  const { teamA, teamB, players } = getMatchRoster(match);
+  const { golesA, golesB } = getMatchScore(match);
+  const live = match.live;
+  live.running = false;
+
+  let bestCalif = -1, mvpProfile = null;
+  const ratings = players.map(({ profile, side, isGK }) => {
+    const s = live.stats[profile.id];
+    const calif = calcPlayerRating(s, isGK);
+    if (calif > bestCalif) { bestCalif = calif; mvpProfile = profile; }
+    return { profile, side, isGK, s, calif };
+  });
+
+  ratings.forEach(({ profile, side, s, calif }) => {
+    const teamWon = side === 'A' ? golesA > golesB : golesB > golesA;
+    const teamLost = side === 'A' ? golesA < golesB : golesB < golesA;
+    const resultFactor = teamWon ? 1 : teamLost ? -1 : 0;
+    const perfFactor = (calif - 6) * 0.5;
+    const isMvp = profile.id === (mvpProfile && mvpProfile.id);
+    const rawDelta = resultFactor * 0.4 + perfFactor;
+    const ovrDelta = Math.max(-2, Math.min(2, Math.round(rawDelta)));
+    const xpGain = Math.max(20, Math.round(80 + calif * 15 + (isMvp ? 100 : 0)));
+    const lpGain = Math.round(xpGain / 8);
+
+    profile.ovr = Math.max(40, Math.min(99, profile.ovr + ovrDelta));
+    profile.xp = (profile.xp || 0) + xpGain;
+    profile.lp = (profile.lp || 0) + lpGain;
+    profile.matches = (profile.matches || 0) + 1;
+    profile.goals = (profile.goals || 0) + s.goles;
+    profile.assists = (profile.assists || 0) + s.asistencias;
+    if (isMvp) profile.mvps = (profile.mvps || 0) + 1;
+    profile.lastUpdate = { ovrDelta, xpGain, lpGain };
+    profile.history = profile.history || [];
+    profile.history.push({ matchId: match.id, code: getMatchCode(match), fecha: match.fecha, calif, ovrDelta, xpGain, lpGain, isMvp, goles: s.goles, asistencias: s.asistencias });
+    profile.notifications = profile.notifications || [];
+    profile.notifications.push({
+      icon: isMvp ? '🏆' : (ovrDelta > 0 ? '📈' : ovrDelta < 0 ? '📉' : '📋'),
+      text: `Tu partido de ${match.fecha} fue procesado: calificación ${calif.toFixed(1)}, OVR ${ovrDelta >= 0 ? '+' : ''}${ovrDelta}, XP +${xpGain}${isMvp ? ' · ¡MVP DEL PARTIDO!' : ''}.`,
+      time: 'AHORA',
+    });
+    profiles[profile.id] = profile;
+    if (state && state.id === profile.id) state = profile;
+    pushProfileToCloud(profile);
+  });
+  saveProfiles();
+
+  if (teamA && teamB) {
+    teamA.goalsFor += golesA; teamA.goalsAgainst += golesB;
+    teamB.goalsFor += golesB; teamB.goalsAgainst += golesA;
+    if (golesA > golesB) { teamA.wins++; teamB.losses++; }
+    else if (golesA < golesB) { teamB.wins++; teamA.losses++; }
+    else { teamA.draws++; teamB.draws++; }
+    saveTeams();
+    pushTeamToCloud(teamA); pushTeamToCloud(teamB);
+  }
+
   match.resultado = { golesA, golesB };
+  match.mvpId = mvpProfile ? mvpProfile.id : null;
   match.estado = 'finalizado';
-  teamA.goalsFor += golesA; teamA.goalsAgainst += golesB;
-  teamB.goalsFor += golesB; teamB.goalsAgainst += golesA;
-  if (golesA > golesB) { teamA.wins++; teamB.losses++; }
-  else if (golesA < golesB) { teamB.wins++; teamA.losses++; }
-  else { teamA.draws++; teamB.draws++; }
-  saveTeamMatches(); saveTeams();
-  pushTeamMatchToCloud(match); pushTeamToCloud(teamA); pushTeamToCloud(teamB);
-  renderAdminPartidos();
+  live.status = 'finalizado';
+  saveTeamMatches();
+  pushTeamMatchToCloud(match);
+
+  if (liveTickInterval) clearInterval(liveTickInterval);
+  if (liveAutosaveInterval) clearInterval(liveAutosaveInterval);
+
+  renderLiveMatch();
+  alert(`Estadísticas procesadas. MVP del partido: ${mvpProfile ? (mvpProfile.nickname || mvpProfile.name) : 'N/A'}.`);
 }
 
 /* ===== ADMIN · JUGADORES ===== */
