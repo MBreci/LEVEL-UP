@@ -12,7 +12,7 @@
 <!-- NAV -->
 <header>
   <div class="nav-top">
-    <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
     <nav class="nav-modules" id="nav-modules"></nav>
     <div class="nav-right">
       <div class="season-badge">TEMPORADA BETA</div>
@@ -20,6 +20,7 @@
       <div class="dropdown-wrap">
         <button class="btn-g" id="profile-btn">PERFIL</button>
         <div class="dropdown-menu" id="account-dropdown">
+          <a class="dropdown-item" href="dashboard.html">CENTRO DE MANDO</a>
           <a class="dropdown-item" href="carta.html">PERFIL</a>
           <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
           <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
@@ -64,70 +65,14 @@
     <div class="sec-eyebrow">CREAR PARTIDO</div>
     <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
   </div>
-  <div class="bp-form" id="bp-form" style="display:none">
-    <div class="auth-label">ZONA DE BOGOTÁ</div>
-    <select class="auth-input" id="bp-zona">
-      <option>Chapinero</option>
-      <option>Usaquén</option>
-      <option>Suba</option>
-      <option>Engativá</option>
-      <option>Kennedy</option>
-      <option>Teusaquillo</option>
-      <option>Fontibón</option>
-      <option>Ciudad Bolívar</option>
-      <option>Bosa</option>
-      <option>Santa Fe</option>
-    </select>
-    <div class="auth-label">CANCHA / SEDE (OPCIONAL)</div>
-    <input class="auth-input" id="bp-cancha" placeholder="Ej: Cancha El Salitre" maxlength="30">
-    <div class="auth-label">DIRECCIÓN (OPCIONAL)</div>
-    <input class="auth-input" id="bp-direccion" placeholder="Ej: Calle 80 # 45-12" maxlength="60">
-    <div class="auth-label">FORMATO</div>
-    <select class="auth-input" id="bp-formato">
-      <option value="5">FÚTBOL 5</option>
-      <option value="6">FÚTBOL 6</option>
-      <option value="7">FÚTBOL 7</option>
-      <option value="8">FÚTBOL 8</option>
-      <option value="11">FÚTBOL 11</option>
-    </select>
-    <div class="auth-label">TIPO DE CANCHA</div>
-    <select class="auth-input" id="bp-superficie">
-      <option value="SINTÉTICO">SINTÉTICO — Pasto artificial</option>
-      <option value="CEMENTO">CEMENTO — Canchas duras de barrio</option>
-      <option value="NATURAL">NATURAL — Pasto real</option>
-      <option value="COLISEO">COLISEO — Cubierto</option>
-    </select>
-    <div class="auth-label">FECHA</div>
-    <input class="auth-input" type="date" id="bp-fecha-date">
-    <div class="auth-label">HORA</div>
-    <select class="auth-input" id="bp-fecha-hora">
-      <option value="18:00">6:00 PM</option>
-      <option value="18:30">6:30 PM</option>
-      <option value="19:00">7:00 PM</option>
-      <option value="19:30">7:30 PM</option>
-      <option value="20:00">8:00 PM</option>
-      <option value="20:30">8:30 PM</option>
-      <option value="21:00">9:00 PM</option>
-      <option value="21:30">9:30 PM</option>
-      <option value="22:00">10:00 PM</option>
-    </select>
-    <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
-    <input class="auth-input" type="number" min="0" id="bp-precio" placeholder="Ej: 10000">
-    <div class="auth-label">OVR MÍNIMO RECOMENDADO (OPCIONAL)</div>
-    <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" placeholder="Ej: 60">
-    <label class="auth-consent">
-      <input type="checkbox" id="bp-abierto" checked>
-      <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
-    </label>
-    <div class="auth-label">POSICIONES QUE FALTAN</div>
-    <div class="bp-pos-grid" id="bp-pos-grid">
-      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-      <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
-    </div>
+  <div class="bp-form bp-wizard" id="bp-form" style="display:none">
+    <div class="bpw-steps" id="bpw-steps"></div>
+    <div class="bpw-body" id="bpw-body"></div>
     <div class="auth-error" id="bp-error"></div>
-    <button class="auth-submit" onclick="submitMatchRequest()">PUBLICAR BÚSQUEDA</button>
+    <div class="bpw-nav">
+      <button class="auth-cancel" id="bpw-back" onclick="bpWizardBack()">ATRÁS</button>
+      <button class="auth-submit" id="bpw-next" onclick="bpWizardNext()">SIGUIENTE</button>
+    </div>
   </div>
 
   <div id="invitar">
@@ -176,7 +121,6 @@
   <div class="bp-tabs">
     <div class="bp-tab on" data-tab="proximos" onclick="switchBpTab('proximos')">PRÓXIMOS PARTIDOS</div>
     <div class="bp-tab" data-tab="mia" onclick="switchBpTab('mia')">MI PARTICIPACIÓN</div>
-    <div class="bp-tab" data-tab="historial" onclick="switchBpTab('historial')">HISTORIAL DE PARTIDOS</div>
   </div>
 
   <div class="bp-panel" id="bp-panel-proximos" style="display:block">
@@ -184,9 +128,6 @@
   </div>
   <div class="bp-panel" id="bp-panel-mia" style="display:none">
     <div class="bp-list-grid" id="bp-list-mia"></div>
-  </div>
-  <div class="bp-panel" id="bp-panel-historial" style="display:none">
-    <div class="bp-list-grid" id="bp-list-historial"></div>
   </div>
 </section>
 

@@ -39,15 +39,12 @@ const FUNCTIONAL_MODULES = [
 ];
 
 const WIP_MODULES = [
-  { name: 'LOGROS', icon: '🏆' },
   { name: 'EQUIPO DE LA SEMANA', icon: '⭐' },
   { name: 'RANKING POR POSICIÓN', icon: '📊' },
   { name: 'RANKING ENTRE AMIGOS', icon: '🤝' },
   { name: 'PERFIL PÚBLICO', icon: '🌐' },
-  { name: 'ESTADIOS LEVEL UP', icon: '🏟️' },
   { name: 'VALOR DE MERCADO', icon: '💹' },
   { name: 'LEVEL COINS', icon: '🪙' },
-  { name: 'CLUBES', icon: '🛡️' },
   { name: 'FICHAJES', icon: '🔄' },
   { name: 'TEMPORADAS', icon: '📅' },
   { name: 'HALL OF FAME', icon: '🗿' },
@@ -741,6 +738,12 @@ document.addEventListener('click', (e) => {
   }
 });
 
+function goToHome(e) {
+  if (e) e.preventDefault();
+  location.href = state ? 'dashboard.html' : 'index.html';
+  return false;
+}
+
 function logout() {
   state = null;
   localStorage.removeItem(CURRENT_KEY);
@@ -1250,10 +1253,82 @@ let savedMatchIds = loadSavedMatches();
 let bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false };
 let joinModalCtx = null;
 
+/* ===== ARENAS AFILIADAS (sistema de reserva de canchas) ===== */
+/* Para agregar una nueva sede en el futuro: solo se agrega un nuevo objeto a este arreglo. */
+const ARENAS = [
+  {
+    id: 'arena_170',
+    name: 'ARENA 170',
+    badge: 'PRIMERA SEDE OFICIAL DE LEVEL UP',
+    address: 'Cra. 56 #169A - 94, Bogotá D.C.',
+    city: 'Bogotá D.C.',
+    description: 'La primera sede oficial de Level Up. Un complejo deportivo diseñado para vivir el fútbol amateur con la mejor experiencia posible.',
+    features: [
+      'Canchas de césped sintético', 'Excelente iluminación nocturna', 'Parqueadero disponible',
+      'Zona para espectadores', 'Mesas y espacio para descansar', 'Venta de bebidas y alimentos',
+      'Ambiente seguro', 'Instalaciones modernas',
+    ],
+    photos: ['assets/bg-hero-stadium.jpg', 'assets/bg-competitivo-aerea.jpg', 'assets/bg-comunidad-tribuna.jpg'],
+    horarios: ['18:00', '19:00', '20:00', '21:00', '22:00'],
+    maxSimultaneos: 2,
+    activa: true,
+  },
+];
+
+const CATEGORIAS_CANCHA = [
+  { id: '5', label: 'FÚTBOL 5', icon: '⚽' },
+  { id: '6', label: 'FÚTBOL 6', icon: '⚽' },
+  { id: '8', label: 'FÚTBOL 8', icon: '⚽' },
+  { id: '11', label: 'FÚTBOL 11', icon: '⚽' },
+];
+
+const SUPERFICIES = [
+  { id: 'SINTÉTICA', label: 'SINTÉTICA', disponible: true },
+  { id: 'NATURAL', label: 'NATURAL', disponible: false },
+  { id: 'CEMENTO', label: 'CEMENTO', disponible: false },
+];
+
+function formatHoraLabel(hora24) {
+  const [h, m] = hora24.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function getArenaSlotCounts(arenaId, fechaISO) {
+  const counts = {};
+  openMatches.forEach(m => {
+    if (m.arenaId === arenaId && m.fechaISO === fechaISO) counts[m.horaValue] = (counts[m.horaValue] || 0) + 1;
+  });
+  return counts;
+}
+
+function getArenaAvailableSlots(arenaId, fechaISO) {
+  const arena = ARENAS.find(a => a.id === arenaId);
+  if (!arena) return [];
+  const counts = getArenaSlotCounts(arenaId, fechaISO);
+  return arena.horarios.map(h => ({
+    hora: h,
+    label: formatHoraLabel(h),
+    ocupados: counts[h] || 0,
+    disponible: (counts[h] || 0) < arena.maxSimultaneos,
+  }));
+}
+
+let bpWizardStep = 1;
+const BPW_STEPS = ['CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA', 'HORARIO', 'DETALLES'];
+let bpWizard = { categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+
 function openMatchForm() {
   if (!state) { openAuth(false); return; }
   const form = document.getElementById('bp-form');
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  const opening = form.style.display === 'none';
+  form.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    bpWizardStep = 1;
+    bpWizard = { categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null };
+    renderBpWizard();
+  }
 }
 
 function formatFechaPartido(dateStr, horaLabel) {
@@ -1262,20 +1337,141 @@ function formatFechaPartido(dateStr, horaLabel) {
   return `${dateLabel.charAt(0).toUpperCase()}${dateLabel.slice(1)}, ${horaLabel}`;
 }
 
+function renderBpWizard() {
+  const stepsEl = document.getElementById('bpw-steps');
+  const bodyEl = document.getElementById('bpw-body');
+  const backBtn = document.getElementById('bpw-back');
+  const nextBtn = document.getElementById('bpw-next');
+  const errorEl = document.getElementById('bp-error');
+  if (!stepsEl || !bodyEl) return;
+  errorEl.textContent = '';
+
+  stepsEl.innerHTML = BPW_STEPS.map((s, i) => `
+    <div class="bpw-step ${i + 1 === bpWizardStep ? 'on' : ''} ${i + 1 < bpWizardStep ? 'done' : ''}">
+      <span class="bpw-step-n">${i + 1}</span><span class="bpw-step-l">${s}</span>
+    </div>`).join('');
+
+  backBtn.style.display = bpWizardStep > 1 ? 'inline-block' : 'none';
+  nextBtn.textContent = bpWizardStep === 6 ? 'PUBLICAR BÚSQUEDA' : 'SIGUIENTE';
+
+  if (bpWizardStep === 1) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 1 · SELECCIONA EL TIPO DE CANCHA</div>
+      <div class="bpw-cat-grid">
+        ${CATEGORIAS_CANCHA.map(c => `
+          <div class="bpw-cat-tile ${bpWizard.categoria === c.id ? 'on' : ''}" onclick="bpSelectCategoria('${c.id}')">
+            <div class="bpw-cat-icon">${c.icon}</div>
+            <div class="bpw-cat-label">${c.label}</div>
+          </div>`).join('')}
+      </div>`;
+  } else if (bpWizardStep === 2) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 2 · SELECCIONA LA SUPERFICIE</div>
+      <div class="bpw-surf-grid">
+        ${SUPERFICIES.map(s => `
+          <div class="bpw-surf-tile ${bpWizard.superficie === s.id ? 'on' : ''} ${!s.disponible ? 'soon' : ''}" onclick="${s.disponible ? `bpSelectSuperficie('${s.id}')` : ''}">
+            <div class="bpw-surf-label">${s.label}</div>
+            ${!s.disponible ? '<div class="bpw-surf-tag">PRÓXIMAMENTE</div>' : ''}
+          </div>`).join('')}
+      </div>`;
+  } else if (bpWizardStep === 3) {
+    const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 3 · SELECCIONA LA ARENA</div>
+      <select class="auth-input" id="bpw-arena-select" onchange="bpSelectArena(this.value)">
+        <option value="">SELECCIONA UNA SEDE</option>
+        ${ARENAS.map(a => `<option value="${a.id}" ${bpWizard.arenaId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+      </select>
+      ${arena ? `
+        <div class="arena-card">
+          <div class="arena-card-badge">${arena.badge}</div>
+          <div class="arena-card-gallery">
+            ${arena.photos.map(p => `<div class="arena-photo" style="background-image:url('${p}')"></div>`).join('')}
+          </div>
+          <div class="arena-card-name">${arena.name}</div>
+          <div class="arena-card-addr">📍 ${arena.address}</div>
+          <div class="arena-card-desc">${arena.description}</div>
+          <div class="arena-card-features">
+            ${arena.features.map(f => `<div class="arena-feature">✅ ${f}</div>`).join('')}
+          </div>
+        </div>` : ''}`;
+  } else if (bpWizardStep === 4) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 4 · SELECCIONA LA FECHA</div>
+      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
+  } else if (bpWizardStep === 5) {
+    const slots = bpWizard.arenaId && bpWizard.fechaISO ? getArenaAvailableSlots(bpWizard.arenaId, bpWizard.fechaISO) : [];
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 5 · SELECCIONA EL HORARIO</div>
+      <div class="bpw-hora-grid">
+        ${slots.length ? slots.map(s => `
+          <div class="bpw-hora-tile ${bpWizard.horaValue === s.hora ? 'on' : ''} ${!s.disponible ? 'full' : ''}" onclick="${s.disponible ? `bpSelectHora('${s.hora}')` : ''}">
+            <div class="bpw-hora-label">${s.label}</div>
+            <div class="bpw-hora-tag">${s.disponible ? 'DISPONIBLE' : 'HORARIO COMPLETO'}</div>
+          </div>`).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
+      </div>`;
+  } else if (bpWizardStep === 6) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
+      <input class="auth-input" type="number" min="0" id="bp-precio" placeholder="Ej: 10000">
+      <div class="auth-label">OVR MÍNIMO RECOMENDADO (OPCIONAL)</div>
+      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" placeholder="Ej: 60">
+      <label class="auth-consent">
+        <input type="checkbox" id="bp-abierto" checked>
+        <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
+      </label>
+      <div class="auth-label">POSICIONES QUE FALTAN</div>
+      <div class="bp-pos-grid" id="bp-pos-grid">
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL"> DEL</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED"> MED</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF"> DEF</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR"> POR</label><input type="number" min="1" max="10" value="1" class="bp-pos-n"></div>
+      </div>`;
+  }
+}
+
+function bpSelectCategoria(id) { bpWizard.categoria = id; renderBpWizard(); }
+function bpSelectSuperficie(id) { bpWizard.superficie = id; renderBpWizard(); }
+function bpSelectArena(id) { bpWizard.arenaId = id || null; renderBpWizard(); }
+function bpSelectFecha(v) { bpWizard.fechaISO = v || null; bpWizard.horaValue = null; renderBpWizard(); }
+function bpSelectHora(h) { bpWizard.horaValue = h; renderBpWizard(); }
+
+function bpWizardBack() {
+  if (bpWizardStep <= 1) return;
+  bpWizardStep--;
+  renderBpWizard();
+}
+
+function bpWizardNext() {
+  const errorEl = document.getElementById('bp-error');
+  if (bpWizardStep === 1 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
+  if (bpWizardStep === 2 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
+  if (bpWizardStep === 3 && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena.'; return; }
+  if (bpWizardStep === 4 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
+  if (bpWizardStep === 5 && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
+  if (bpWizardStep < 6) { bpWizardStep++; renderBpWizard(); return; }
+  submitMatchRequest();
+}
+
 function submitMatchRequest() {
   if (!state) { openAuth(true); return; }
-  const zona = document.getElementById('bp-zona').value;
-  const cancha = document.getElementById('bp-cancha').value.trim();
-  const direccion = document.getElementById('bp-direccion').value.trim();
-  const formato = document.getElementById('bp-formato').value;
-  const superficie = document.getElementById('bp-superficie').value;
-  const fechaDate = document.getElementById('bp-fecha-date').value;
-  const horaSel = document.getElementById('bp-fecha-hora');
-  const horaValue = horaSel.value;
+  const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
+  const errorEl = document.getElementById('bp-error');
+  if (!arena || !bpWizard.categoria || !bpWizard.fechaISO || !bpWizard.horaValue) {
+    errorEl.textContent = 'Completa todos los pasos antes de publicar.';
+    return;
+  }
+  const slots = getArenaAvailableSlots(arena.id, bpWizard.fechaISO);
+  const chosenSlot = slots.find(s => s.hora === bpWizard.horaValue);
+  if (!chosenSlot || !chosenSlot.disponible) {
+    errorEl.textContent = 'Ese horario ya no está disponible. Selecciona otro.';
+    bpWizardStep = 5;
+    renderBpWizard();
+    return;
+  }
   const precio = document.getElementById('bp-precio').value.trim();
   const ovrMin = document.getElementById('bp-ovr-min').value.trim();
   const abierto = document.getElementById('bp-abierto').checked;
-  const errorEl = document.getElementById('bp-error');
   const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
   const necesita = [];
   chips.forEach(chip => {
@@ -1285,32 +1481,25 @@ function submitMatchRequest() {
       necesita.push({ pos: checkbox.value, cupos: parseInt(n.value, 10) || 1, unidos: [] });
     }
   });
-  if (!fechaDate) {
-    errorEl.textContent = 'Selecciona la fecha del partido.';
-    return;
-  }
-  const fecha = formatFechaPartido(fechaDate, horaSel.options[horaSel.selectedIndex].textContent);
   if (necesita.length === 0) {
     errorEl.textContent = 'Selecciona al menos una posición que te falte.';
     return;
   }
-  if (containsProfanity(cancha) || containsProfanity(direccion)) {
-    errorEl.textContent = 'La cancha o dirección contiene lenguaje ofensivo. Por favor elige otro texto.';
-    return;
-  }
   errorEl.textContent = '';
+  const fecha = formatFechaPartido(bpWizard.fechaISO, formatHoraLabel(bpWizard.horaValue));
   openMatches.unshift({
     id: 'm_' + Date.now(),
     creatorId: state.id,
     creatorName: state.nickname || state.name,
-    zona,
-    cancha: cancha || null,
-    direccion: direccion || null,
-    formato,
-    superficie,
+    zona: arena.city,
+    cancha: arena.name,
+    direccion: arena.address,
+    arenaId: arena.id,
+    formato: bpWizard.categoria,
+    superficie: bpWizard.superficie,
     fecha,
-    fechaISO: fechaDate,
-    horaValue,
+    fechaISO: bpWizard.fechaISO,
+    horaValue: bpWizard.horaValue,
     precio: precio || null,
     ovrMin: ovrMin ? parseInt(ovrMin, 10) : null,
     abierto,
@@ -1320,12 +1509,6 @@ function submitMatchRequest() {
     createdAt: Date.now(),
   });
   saveOpenMatches();
-  document.getElementById('bp-fecha-date').value = '';
-  document.getElementById('bp-cancha').value = '';
-  document.getElementById('bp-direccion').value = '';
-  document.getElementById('bp-precio').value = '';
-  document.getElementById('bp-ovr-min').value = '';
-  chips.forEach(chip => { chip.querySelector('input[type=checkbox]').checked = false; });
   openMatchForm();
   renderAll();
 }
@@ -1420,23 +1603,6 @@ function buildCancelButton(m) {
   return `<div class="bp-cancel-locked">⚠️ No puedes cancelar tu participación porque el partido inicia en menos de 24 horas.</div>`;
 }
 
-function buildHistorialCard(m) {
-  return `
-    <div class="bp-historial-stats">
-      <div class="bp-hist-item"><span>RESULTADO</span><strong>FINALIZADO</strong></div>
-      <div class="bp-hist-item"><span>MVP</span><strong>—</strong></div>
-      <div class="bp-hist-item"><span>MI CALIFICACIÓN</span><strong>—</strong></div>
-      <div class="bp-hist-item"><span>OVR</span><strong>—</strong></div>
-      <div class="bp-hist-item"><span>XP</span><strong>—</strong></div>
-      <div class="bp-hist-item"><span>LP</span><strong>—</strong></div>
-    </div>
-    <div class="bp-card-actions">
-      <button onclick="openWip('Resumen del partido')">VER RESUMEN</button>
-      <button onclick="openWip('Estadísticas completas')">VER ESTADÍSTICAS</button>
-      <button onclick="openWip('Video del partido')">VER VIDEO</button>
-    </div>`;
-}
-
 function buildMatchCard(m, mode) {
   const estado = getMatchEstado(m);
   const info = ESTADO_INFO[estado];
@@ -1497,7 +1663,6 @@ function buildMatchCard(m, mode) {
         <button onclick="openWip('Chat del partido')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
       </div>
-      ${mode === 'historial' ? buildHistorialCard(m) : ''}
     </div>`;
 }
 
@@ -1520,17 +1685,6 @@ function renderMiParticipacion() {
   el.innerHTML = list.length
     ? list.map(m => buildMatchCard(m, 'mia')).join('')
     : `<div class="bp-empty">No estás inscrito en ningún partido próximo.</div>`;
-}
-
-function renderHistorialPartidos() {
-  const el = document.getElementById('bp-list-historial');
-  if (!el) return;
-  if (!state) { el.innerHTML = guestPrompt('Inicia sesión para ver tu historial.'); return; }
-  const list = openMatches.filter(m => getMatchEstado(m) === 'finalizado' && m.necesita.some(n => n.unidos.some(u => u.profileId === state.id)))
-    .sort((a, b) => matchDateTime(b) - matchDateTime(a));
-  el.innerHTML = list.length
-    ? list.map(m => buildMatchCard(m, 'historial')).join('')
-    : `<div class="bp-empty">Aún no tienes partidos jugados.</div>`;
 }
 
 function openJoinModal(matchId, pos) {
@@ -1669,7 +1823,8 @@ function renderBuscarPartido() {
   renderMyMatches();
   renderProximosPartidos();
   renderMiParticipacion();
-  renderHistorialPartidos();
+  const form = document.getElementById('bp-form');
+  if (form && form.style.display !== 'none') renderBpWizard();
 }
 
 /* ===== INVITACIONES (jugadores ya registrados en este dispositivo) ===== */

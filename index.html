@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LEVEL UP</title>
+<script>
+(function(){
+  try {
+    var id = localStorage.getItem('levelup_current_profile');
+    var profiles = JSON.parse(localStorage.getItem('levelup_profiles') || '{}');
+    if (id && profiles[id]) location.replace('dashboard.html');
+  } catch (e) {}
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +21,7 @@
 <!-- NAV (SOLO INVITADO) -->
 <header>
   <div class="nav-top">
-    <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
     <nav class="nav-modules">
       <a class="nm-item nm-item-link on" href="#inicio">INICIO</a>
       <a class="nm-item nm-item-link" href="#como-funciona">CÓMO FUNCIONA</a>

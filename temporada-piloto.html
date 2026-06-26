@@ -12,7 +12,7 @@
 <!-- NAV -->
 <header>
   <div class="nav-top">
-    <a href="index.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
     <nav class="nav-modules" id="nav-modules"></nav>
     <div class="nav-right">
       <div class="season-badge">TEMPORADA BETA</div>
@@ -20,6 +20,7 @@
       <div class="dropdown-wrap">
         <button class="btn-g" id="profile-btn">PERFIL</button>
         <div class="dropdown-menu" id="account-dropdown">
+          <a class="dropdown-item" href="dashboard.html">CENTRO DE MANDO</a>
           <a class="dropdown-item" href="carta.html">PERFIL</a>
           <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
           <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
