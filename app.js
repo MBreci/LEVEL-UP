@@ -462,12 +462,21 @@ function renderPlayerSearch(query) {
 
 function openPlayerView(id) {
   const p = profiles[id];
-  if (!p) return;
-  const { className, html } = buildCardHTML(p);
   const modal = document.getElementById('player-view-modal');
   const content = document.getElementById('player-view-content');
   if (!modal || !content) return;
-  content.innerHTML = `<div class="${className}">${html}</div>`;
+  if (!p) {
+    content.innerHTML = `<div class="rk-empty">No se pudo cargar este jugador.</div>`;
+    modal.classList.add('open');
+    return;
+  }
+  try {
+    const { className, html } = buildCardHTML(p);
+    content.innerHTML = `<div class="${className}">${html}</div>`;
+  } catch (e) {
+    console.error('Error mostrando ficha de jugador:', e);
+    content.innerHTML = `<div class="rk-empty">No se pudo cargar la ficha de este jugador.</div>`;
+  }
   modal.classList.add('open');
 }
 
