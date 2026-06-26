@@ -1042,7 +1042,7 @@ function renderAdminStatRows() {
         ${ctrl(p, 'recuperaciones', 'REC')}
         ${ctrl(p, 'errores', 'ERR')}
         ${ctrl(p, 'fallos', 'OPF')}
-        ${ctrl(p, 'amarillas', 'TA')}
+        ${ctrl(p, 'amarillas', 'TAM')}
         ${ctrl(p, 'rojas', 'TR')}
         <td><span class="adm-rating ${ratingClass(rating)}">${rating.toFixed(1)}</span></td>
       </tr>
