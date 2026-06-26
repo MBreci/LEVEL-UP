@@ -604,6 +604,9 @@ section{padding:64px;border-bottom:var(--b1)}
 .mm-zona{font-family:var(--ft);font-size:12px;color:var(--w);letter-spacing:0.5px;margin-bottom:3px}
 .mm-invite-btn{font-family:var(--ft);font-size:9px;letter-spacing:1px;padding:8px 14px;background:transparent;border:0.5px solid rgba(0,255,136,0.4);color:var(--g);cursor:pointer}
 .mm-invite-btn:hover{background:rgba(0,255,136,0.1)}
+.mm-actions{display:flex;gap:8px;flex-wrap:wrap}
+.mm-delete-btn{font-family:var(--ft);font-size:9px;letter-spacing:1px;padding:8px 14px;background:transparent;border:0.5px solid rgba(255,77,77,0.4);color:#ff4d4d;cursor:pointer}
+.mm-delete-btn:hover{background:rgba(255,77,77,0.1)}
 .mm-confirmados{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .mm-confirm-chip{font-family:var(--ft);font-size:8px;letter-spacing:0.5px;padding:2px 7px;border-radius:2px;border:0.5px solid rgba(255,255,255,0.15);color:var(--td)}
 .mm-confirm-chip.aceptada{color:var(--g);border-color:rgba(0,255,136,0.3)}

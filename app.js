@@ -1247,6 +1247,77 @@ function saveSavedMatches() {
 
 let openMatches = loadOpenMatches();
 let savedMatchIds = loadSavedMatches();
+
+function matchToRow(m) {
+  return {
+    id: m.id, creator_id: m.creatorId, creator_name: m.creatorName, zona: m.zona, cancha: m.cancha,
+    direccion: m.direccion, arena_id: m.arenaId, formato: m.formato, superficie: m.superficie,
+    fecha: m.fecha, fecha_iso: m.fechaISO, hora_value: m.horaValue, precio: m.precio, ovr_min: m.ovrMin,
+    abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
+    created_at: m.createdAt,
+  };
+}
+function rowToMatch(r) {
+  return {
+    id: r.id, creatorId: r.creator_id, creatorName: r.creator_name, zona: r.zona, cancha: r.cancha,
+    direccion: r.direccion, arenaId: r.arena_id, formato: r.formato, superficie: r.superficie,
+    fecha: r.fecha, fechaISO: r.fecha_iso, horaValue: r.hora_value, precio: r.precio, ovrMin: r.ovr_min,
+    abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
+    createdAt: r.created_at,
+  };
+}
+async function pushMatchToCloud(m) {
+  if (!sb) return;
+  const { error } = await sb.from('open_matches').upsert(matchToRow(m));
+  if (error) console.error('Error guardando partido en la nube:', error.message);
+}
+async function deleteMatchFromCloud(id) {
+  if (!sb) return;
+  const { error } = await sb.from('open_matches').delete().eq('id', id);
+  if (error) console.error('Error borrando partido en la nube:', error.message);
+}
+async function syncOpenMatchesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('open_matches').select('*');
+  if (error || !data) { console.error('Error sincronizando partidos:', error && error.message); return; }
+  const cloudIds = new Set(data.map(r => r.id));
+  openMatches = openMatches.filter(m => cloudIds.has(m.id) || m.creatorId === (state && state.id));
+  data.forEach(row => {
+    const existing = openMatches.find(m => m.id === row.id);
+    if (existing) Object.assign(existing, rowToMatch(row));
+    else openMatches.push(rowToMatch(row));
+  });
+  saveOpenMatches();
+}
+
+function matchInviteToRow(i) {
+  return {
+    id: i.id, match_id: i.matchId, zona: i.zona, fecha: i.fecha,
+    from_id: i.fromId, from_name: i.fromName, to_id: i.toId, to_name: i.toName, status: i.status,
+  };
+}
+function rowToMatchInvite(r) {
+  return {
+    id: r.id, matchId: r.match_id, zona: r.zona, fecha: r.fecha,
+    fromId: r.from_id, fromName: r.from_name, toId: r.to_id, toName: r.to_name, status: r.status,
+  };
+}
+async function pushMatchInviteToCloud(i) {
+  if (!sb) return;
+  const { error } = await sb.from('match_invites').upsert(matchInviteToRow(i));
+  if (error) console.error('Error guardando invitación de partido en la nube:', error.message);
+}
+async function syncMatchInvitesFromCloud() {
+  if (!sb) return;
+  const { data, error } = await sb.from('match_invites').select('*');
+  if (error || !data) { console.error('Error sincronizando invitaciones de partido:', error && error.message); return; }
+  const localIds = new Set(invites.map(i => i.id));
+  data.forEach(row => {
+    if (!localIds.has(row.id)) invites.push(rowToMatchInvite(row));
+    else Object.assign(invites.find(i => i.id === row.id), rowToMatchInvite(row));
+  });
+  saveInvites();
+}
 let bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false };
 let joinModalCtx = null;
 
@@ -1505,7 +1576,9 @@ function submitMatchRequest() {
     finalizado: false,
     createdAt: Date.now(),
   });
+  const created = openMatches[0];
   saveOpenMatches();
+  pushMatchToCloud(created);
   openMatchForm();
   renderAll();
 }
@@ -1519,8 +1592,19 @@ function joinMatchRequest(matchId, pos) {
   if (slot.unidos.some(u => u.profileId === state.id)) return;
   slot.unidos.push({ profileId: state.id, name: state.nickname || state.name });
   saveOpenMatches();
+  pushMatchToCloud(match);
   addNotification('⚽', `Te uniste al partido en ${match.zona} (${pos}) — ${match.fecha}`);
   saveState();
+  renderAll();
+}
+
+function deleteMyMatch(matchId) {
+  const match = openMatches.find(m => m.id === matchId);
+  if (!match || !state || match.creatorId !== state.id) return;
+  if (!confirm('¿Eliminar este partido? Esta acción no se puede deshacer.')) return;
+  openMatches = openMatches.filter(m => m.id !== matchId);
+  saveOpenMatches();
+  deleteMatchFromCloud(matchId);
   renderAll();
 }
 
@@ -1729,8 +1813,11 @@ function confirmJoinMatch() {
       if (creator) {
         creator.notifications.push({ icon: '🙋', text: `${state.nickname || state.name} solicitó unirse a tu partido (${pos}) — ${match.fecha}.`, time: 'AHORA' });
         saveProfiles();
+        pushProfileToCloud(creator);
       }
     }
+    saveOpenMatches();
+    pushMatchToCloud(match);
     closeJoinModal();
     renderBuscarPartido();
     return;
@@ -1753,10 +1840,12 @@ function respondMatchJoinRequest(matchId, profileId, accept) {
     }
   }
   saveOpenMatches();
+  pushMatchToCloud(match);
   const player = profiles[profileId];
   if (player) {
     player.notifications.push({ icon: accept ? '✅' : '❌', text: `Tu solicitud para el partido en ${match.zona} (${req.pos}) fue ${accept ? 'aceptada' : 'rechazada'}.`, time: 'AHORA' });
     saveProfiles();
+    pushProfileToCloud(player);
   }
   renderBuscarPartido();
 }
@@ -1768,6 +1857,7 @@ function cancelMyParticipation(matchId) {
   if ((matchDateTime(match).getTime() - Date.now()) / 3600000 < 24) return;
   match.necesita.forEach(n => { n.unidos = n.unidos.filter(u => u.profileId !== state.id); });
   saveOpenMatches();
+  pushMatchToCloud(match);
   addNotification('🚫', `Cancelaste tu participación en el partido del ${match.fecha}.`);
   saveState();
   renderBuscarPartido();
@@ -2213,9 +2303,11 @@ function respondLeaveRequest(teamId, playerId, accept) {
   const team = teams[teamId];
   if (!team || !state || team.captainId !== state.id) return;
   if (!team.leaveRequests) team.leaveRequests = [];
+  const leavingPlayer = profiles[playerId];
+  const remainingMemberIds = team.memberIds.filter(id => id !== playerId);
   team.leaveRequests = team.leaveRequests.filter(id => id !== playerId);
   if (accept) {
-    team.memberIds = team.memberIds.filter(id => id !== playerId);
+    team.memberIds = remainingMemberIds;
   }
   saveTeams();
   pushTeamToCloud(team);
@@ -2229,6 +2321,17 @@ function respondLeaveRequest(teamId, playerId, accept) {
     profiles[playerId] = player;
     saveProfiles();
     pushProfileToCloud(player);
+  }
+  if (accept && leavingPlayer) {
+    remainingMemberIds.forEach(id => {
+      const member = profiles[id];
+      if (!member) return;
+      member.notifications.push({ icon: '🚪', text: `${leavingPlayer.nickname || leavingPlayer.name} salió de ${team.name}.`, time: 'AHORA' });
+      profiles[id] = member;
+      saveProfiles();
+      pushProfileToCloud(member);
+      if (state && state.id === id) state.notifications = member.notifications;
+    });
   }
   renderTeamProfile(teamId);
 }
@@ -2327,7 +2430,9 @@ function kickTeamMember(teamId, playerId) {
   if (!team || !state || state.id !== team.captainId) return;
   if (playerId === team.captainId) return;
   if (!team.memberIds.includes(playerId)) return;
-  team.memberIds = team.memberIds.filter(id => id !== playerId);
+  const kickedPlayer = profiles[playerId];
+  const remainingMemberIds = team.memberIds.filter(id => id !== playerId);
+  team.memberIds = remainingMemberIds;
   saveTeams();
   pushTeamToCloud(team);
   const player = profiles[playerId];
@@ -2338,6 +2443,17 @@ function kickTeamMember(teamId, playerId) {
     saveProfiles();
     pushProfileToCloud(player);
     if (state && state.id === playerId) state.team = player.team;
+  }
+  if (kickedPlayer) {
+    remainingMemberIds.forEach(id => {
+      const member = profiles[id];
+      if (!member) return;
+      member.notifications.push({ icon: '🚪', text: `${kickedPlayer.nickname || kickedPlayer.name} fue retirado de ${team.name} por el capitán.`, time: 'AHORA' });
+      profiles[id] = member;
+      saveProfiles();
+      pushProfileToCloud(member);
+      if (state && state.id === id) state.notifications = member.notifications;
+    });
   }
   renderTeamProfile(teamId);
 }
@@ -2922,7 +3038,10 @@ function renderMyMatches() {
           <div>FÚTBOL ${m.formato} · ${m.superficie}</div>
           ${myInvites.length ? `<div class="mm-confirmados">${myInvites.map(i => `<span class="mm-confirm-chip ${i.status}">${i.toName} · ${i.status}</span>`).join('')}</div>` : ''}
         </div>
-        <button class="mm-invite-btn" onclick="openInviteModal('${m.id}')">+ INVITAR JUGADORES</button>
+        <div class="mm-actions">
+          <button class="mm-invite-btn" onclick="openInviteModal('${m.id}')">+ INVITAR JUGADORES</button>
+          <button class="mm-delete-btn" onclick="deleteMyMatch('${m.id}')">ELIMINAR PARTIDO</button>
+        </div>
       </div>
     `;
   }).join('');
@@ -2936,7 +3055,7 @@ function openInviteModal(matchId) {
   const available = others.filter(p => !alreadyInvited.has(p.id));
   document.getElementById('invite-content').innerHTML = `
     <div class="invite-title">INVITAR JUGADORES</div>
-    <div class="invite-sub">${match.zona} — ${match.fecha}. Por ahora solo puedes invitar perfiles creados en este mismo dispositivo. Cuando conectemos LEVEL UP a un servidor compartido podrás invitar a cualquier jugador real.</div>
+    <div class="invite-sub">${match.zona} — ${match.fecha}. Invita a cualquier jugador registrado en LEVEL UP.</div>
     <div class="invite-list" id="invite-list">
       ${available.length
         ? available.map(p => `<label class="invite-row"><input type="checkbox" value="${p.id}"> ${p.nickname || p.name} (${p.position})</label>`).join('')
@@ -2970,6 +3089,12 @@ function submitInvites(matchId) {
       toName: toProfile.nickname || toProfile.name,
       status: 'pendiente',
     });
+    const invite = invites[invites.length - 1];
+    pushMatchInviteToCloud(invite);
+    toProfile.notifications.push({ icon: '⚽', text: `${state.nickname || state.name} te invitó a su partido en ${match.zona} — ${match.fecha}.`, time: 'AHORA' });
+    profiles[toProfile.id] = toProfile;
+    saveProfiles();
+    pushProfileToCloud(toProfile);
   });
   saveInvites();
   closeInviteModal();
@@ -2981,6 +3106,7 @@ function respondInvite(inviteId, accept) {
   if (!invite) return;
   invite.status = accept ? 'aceptada' : 'rechazada';
   saveInvites();
+  pushMatchInviteToCloud(invite);
   const fromProfile = profiles[invite.fromId];
   if (fromProfile) {
     fromProfile.notifications.push({
@@ -2989,6 +3115,7 @@ function respondInvite(inviteId, accept) {
       time: 'AHORA',
     });
     saveProfiles();
+    pushProfileToCloud(fromProfile);
   }
   renderNotifications();
 }
@@ -3051,6 +3178,8 @@ function initApp() {
   syncTeamInvitesFromCloud().then(renderAll);
   syncChallengesFromCloud();
   syncTeamMatchesFromCloud();
+  syncOpenMatchesFromCloud().then(renderAll);
+  syncMatchInvitesFromCloud().then(renderAll);
   if (state) pushProfileToCloud(state);
 
   const fechaInput = document.getElementById('bp-fecha-date');
