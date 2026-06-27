@@ -1644,7 +1644,7 @@ const ARENAS = [
       'Ambiente seguro', 'Instalaciones modernas',
     ],
     photos: ['assets/bg-hero-stadium.jpg', 'assets/bg-competitivo-aerea.jpg', 'assets/bg-comunidad-tribuna.jpg'],
-    horarios: ['18:00', '19:00', '20:00', '21:00', '22:00'],
+    horarios: ['18:30', '19:30', '20:30', '21:30'],
     maxSimultaneos: 2,
     activa: true,
     rating: 4.8,
