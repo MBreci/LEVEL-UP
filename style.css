@@ -1495,11 +1495,11 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
   .nav-top{padding:0 12px;height:60px}
   .logo-img{height:40px}
   .nav-modules{display:none}
-  .nav-right{gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;scrollbar-width:none}
-  .nav-right::-webkit-scrollbar{display:none}
+  .nav-right{gap:5px;flex-wrap:nowrap}
   .season-badge{display:none}
   .btn-g,.btn-p{padding:6px 10px;font-size:8px;white-space:nowrap;flex-shrink:0}
   .dropdown-wrap{flex-shrink:0}
+  .dropdown-menu{min-width:170px}
   .ticker{top:60px;padding:7px 12px}
   .tk-lbl{font-size:8px}
 }
