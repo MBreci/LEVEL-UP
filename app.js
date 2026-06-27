@@ -117,6 +117,7 @@ async function syncProfilesFromCloud() {
         const key = n.icon + n.text + n.time;
         if (!seen.has(key)) { state.notifications.push(n); seen.add(key); }
       });
+      state.team = row.team || 'SIN EQUIPO';
       profiles[state.id] = state;
     }
   });
