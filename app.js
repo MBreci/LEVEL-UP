@@ -2554,7 +2554,7 @@ function teamToRow(t) {
     captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
     join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
     goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
-    slot_positions: t.slotPositions, leave_requests: t.leaveRequests,
+    slot_positions: t.slotPositions, leave_requests: t.leaveRequests, join_log: t.joinLog || [],
   };
 }
 function rowToTeam(r) {
@@ -2563,7 +2563,7 @@ function rowToTeam(r) {
     captainId: r.captain_id, memberIds: r.member_ids || [], openForPlayers: r.open_for_players,
     joinRequests: r.join_requests || [], wins: r.wins || 0, draws: r.draws || 0, losses: r.losses || 0,
     goalsFor: r.goals_for || 0, goalsAgainst: r.goals_against || 0, streak: r.streak || '', createdAt: r.created_at,
-    slotPositions: r.slot_positions || [], leaveRequests: r.leave_requests || [],
+    slotPositions: r.slot_positions || [], leaveRequests: r.leave_requests || [], joinLog: r.join_log || [],
   };
 }
 async function pushTeamToCloud(t) {

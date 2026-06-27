@@ -23,10 +23,18 @@ create table if not exists teams (
   goals_against integer default 0,
   streak text,
   created_at bigint,
-  slot_positions jsonb default '[]'::jsonb
+  slot_positions jsonb default '[]'::jsonb,
+  leave_requests jsonb default '[]'::jsonb,
+  join_log jsonb default '[]'::jsonb
 );
 
+-- Columnas que se agregaron después de crear la tabla. Ejecutar siempre (idempotente).
+-- IMPORTANTE: si falta `leave_requests`, TODAS las escrituras de equipos fallan
+-- (upsert rechazado) y por eso los equipos no se sincronizan ni aparecen en Rey
+-- del Barrio, ni se actualiza el equipo en las fichas de los jugadores.
 alter table teams add column if not exists slot_positions jsonb default '[]'::jsonb;
+alter table teams add column if not exists leave_requests jsonb default '[]'::jsonb;
+alter table teams add column if not exists join_log jsonb default '[]'::jsonb;
 
 alter table teams enable row level security;
 
