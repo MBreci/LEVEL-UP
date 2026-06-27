@@ -58,6 +58,37 @@
 </div>
 
 <section id="admin-partidos">
+  <button class="auth-submit" id="adm-create-toggle" style="max-width:320px;margin:0 0 24px" onclick="toggleAdminCreateMatch()">+ CREAR PARTIDO MANUALMENTE</button>
+
+  <div class="adm-create-card" id="adm-create-form" style="display:none">
+    <div class="admp-sec-title" style="margin-bottom:14px">NUEVO PARTIDO</div>
+    <div class="auth-label">EQUIPO A</div>
+    <select class="auth-input" id="adm-create-team-a"></select>
+    <div class="auth-label">EQUIPO B</div>
+    <select class="auth-input" id="adm-create-team-b"></select>
+    <div class="auth-label">CANCHA</div>
+    <select class="auth-input" id="adm-create-cancha"></select>
+    <div class="auth-label">MODALIDAD</div>
+    <select class="auth-input" id="adm-create-jugadores">
+      <option value="5">FÚTBOL 5</option>
+      <option value="6" selected>FÚTBOL 6</option>
+      <option value="7">FÚTBOL 7</option>
+      <option value="8">FÚTBOL 8</option>
+      <option value="11">FÚTBOL 11</option>
+    </select>
+    <div class="auth-label">FECHA</div>
+    <input class="auth-input" type="date" id="adm-create-fecha">
+    <div class="auth-label">HORA</div>
+    <input class="auth-input" type="time" id="adm-create-hora">
+    <div class="auth-label">COSTO (OPCIONAL)</div>
+    <input class="auth-input" type="number" id="adm-create-costo" placeholder="Ej: 120000">
+    <div class="auth-error" id="adm-create-error"></div>
+    <div style="display:flex;gap:12px;margin-top:14px">
+      <button class="auth-submit" style="flex:1" onclick="submitAdminCreateMatch()">CREAR PARTIDO</button>
+      <button class="auth-cancel" onclick="toggleAdminCreateMatch()">CANCELAR</button>
+    </div>
+  </div>
+
   <div class="team-hist-list" id="admin-matches-list"></div>
 </section>
 

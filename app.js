@@ -2229,6 +2229,47 @@ function renderAdminPartidos() {
   el.innerHTML = `<div class="adm-match-grid">${teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt).map(card).join('')}</div>`;
 }
 
+function toggleAdminCreateMatch() {
+  const form = document.getElementById('adm-create-form');
+  if (!form) return;
+  const opening = form.style.display === 'none';
+  form.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const teamOptions = Object.values(teams).map(t => `<option value="${t.id}">${t.name} (${t.memberIds.length} jugadores)</option>`).join('');
+    document.getElementById('adm-create-team-a').innerHTML = `<option value="">Seleccionar equipo...</option>${teamOptions}`;
+    document.getElementById('adm-create-team-b').innerHTML = `<option value="">Seleccionar equipo...</option>${teamOptions}`;
+    document.getElementById('adm-create-cancha').innerHTML = CANCHAS_REGISTRADAS.map(c => `<option value="${c}">${c}</option>`).join('');
+    document.getElementById('adm-create-fecha').min = new Date().toISOString().split('T')[0];
+    document.getElementById('adm-create-error').textContent = '';
+  }
+}
+
+function submitAdminCreateMatch() {
+  const teamAId = document.getElementById('adm-create-team-a').value;
+  const teamBId = document.getElementById('adm-create-team-b').value;
+  const cancha = document.getElementById('adm-create-cancha').value;
+  const jugadores = parseInt(document.getElementById('adm-create-jugadores').value, 10);
+  const fecha = document.getElementById('adm-create-fecha').value;
+  const hora = document.getElementById('adm-create-hora').value;
+  const costo = parseInt(document.getElementById('adm-create-costo').value, 10) || 0;
+  const errorEl = document.getElementById('adm-create-error');
+
+  if (!teamAId || !teamBId) { errorEl.textContent = 'Selecciona ambos equipos.'; return; }
+  if (teamAId === teamBId) { errorEl.textContent = 'Los dos equipos deben ser distintos.'; return; }
+  if (!cancha || !fecha || !hora) { errorEl.textContent = 'Completa cancha, fecha y hora.'; return; }
+
+  const match = {
+    id: 'tm_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    teamAId, teamBId, cancha, costo, fecha, hora, jugadores, observaciones: '',
+    estado: 'programado', resultado: null, mvpId: null, createdAt: Date.now(), live: null,
+  };
+  teamMatches.push(match);
+  saveTeamMatches();
+  pushTeamMatchToCloud(match);
+  toggleAdminCreateMatch();
+  renderAdminPartidos();
+}
+
 function adminOpenLiveMatch(matchId) {
   const match = teamMatches.find(m => m.id === matchId);
   if (!match) return;
