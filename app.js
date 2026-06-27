@@ -2637,7 +2637,7 @@ async function syncTeamMatchesFromCloud() {
 }
 
 const CANCHAS_REGISTRADAS = [
-  'Cancha El Salitre', 'Polideportivo Kennedy', 'Cancha Sintética Suba', 'Coliseo Teusaquillo',
+  'Arena 170', 'Polideportivo Kennedy', 'Cancha Sintética Suba', 'Coliseo Teusaquillo',
   'Cancha Bosa Central', 'Estadio Barrio Olaya', 'Cancha El Tunal', 'Polideportivo Fontibón',
 ];
 
@@ -2715,9 +2715,24 @@ async function submitCreateTeam() {
 }
 
 function fileToDataUrl(file) {
+  const MAX_DIM = 640;
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale) || 1;
+        const h = Math.round(img.height * scale) || 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => resolve(reader.result);
+      img.src = reader.result;
+    };
     reader.readAsDataURL(file);
   });
 }
