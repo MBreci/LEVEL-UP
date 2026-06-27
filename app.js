@@ -18,6 +18,12 @@ function containsProfanity(text) {
   return BANNED_WORDS.some(w => norm.includes(normalizeForFilter(w)));
 }
 
+function playerTeamLabel(p) {
+  if (!p) return 'SIN EQUIPO';
+  const realTeam = typeof teams === 'object' && teams ? Object.values(teams).find(t => t.memberIds && t.memberIds.includes(p.id)) : null;
+  return realTeam ? realTeam.name : 'SIN EQUIPO';
+}
+
 const RANKS = [
   { name: 'CANTERANO',  slug: 'canterano',  emoji: '🥉', min: 0,      tagline: 'El comienzo de tu historia' },
   { name: 'DEBUTANTE',  slug: 'debutante',  emoji: '🥈', min: 1000,   tagline: 'Das tus primeros pasos' },
@@ -393,7 +399,7 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
     <div class="fc-foot">
-      <div class="fc-team">${p.team || 'SIN EQUIPO'}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
+      <div class="fc-team">${playerTeamLabel(p)}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
       ${buildPhysicalPillsHTML(p)}
     </div>
   `;
@@ -458,7 +464,7 @@ function renderCard() {
   if (!piEl) return;
   piEl.innerHTML = `
     <div class="pi-name">${state.name} ${state.nickname ? `<span class="pi-nick" onclick="editNickname()">"${state.nickname}" ✎</span>` : `<span class="pi-nick pi-nick-add" onclick="editNickname()">+ AGREGAR APODO</span>`}</div>
-    <div class="pi-sub">${state.position} · ${state.team || 'SIN EQUIPO'}</div>
+    <div class="pi-sub">${state.position} · ${playerTeamLabel(state)}</div>
     <div class="pi-rank-hero rk-${rank.slug}">
       <div class="pi-rank-hero-fx"></div>
       <div class="pi-rank-hero-emoji">${rank.emoji}</div>
@@ -583,7 +589,7 @@ function renderPlayerSearch(query) {
     <div class="pl-card rk-${rank.slug}" onclick="openPlayerView('${p.id}')">
       <div class="pl-card-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
       <div class="pl-card-name">${p.nickname || p.name}</div>
-      <div class="pl-card-sub">${p.position} · ${p.team}</div>
+      <div class="pl-card-sub">${p.position} · ${playerTeamLabel(p)}</div>
       <div class="pl-card-tags"><span class="rk-emblem"><span class="rk-emblem-emoji">${rank.emoji}</span>${rank.name}</span><span class="pi-tag gold">OVR ${p.ovr}</span></div>
     </div>`;
   }).join('');
@@ -603,7 +609,7 @@ function renderPlayerSuggestions(query) {
   box.innerHTML = list.map(p => `
     <div class="pl-suggest-item" onclick="selectPlayerSuggestion('${p.id}')">
       <span>${p.nickname || p.name}</span>
-      <span class="s-sub">${p.position} · ${p.team}</span>
+      <span class="s-sub">${p.position} · ${playerTeamLabel(p)}</span>
     </div>`).join('');
   box.classList.add('open');
 }
