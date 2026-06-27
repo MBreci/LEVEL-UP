@@ -277,12 +277,18 @@ function guestPrompt(text) {
 // ===== MARCOS DE RANGO POR IMAGEN =====
 // Si existe assets/ranks/<slug>.png se usa el marco-imagen con los datos
 // reales del jugador superpuestos; si no, se usa la carta CSS por defecto.
+// Activación RANGO POR RANGO: solo los slugs en esta lista usan el marco-imagen.
+// Vamos agregando cada rango aquí cuando su marco LIMPIO (sin texto) esté listo
+// y la información encima se vea perfecta. Los demás usan la carta CSS.
+const RANK_FRAMES_READY = [];
+function rankFrameReady(slug) { return RANK_FRAMES_READY.indexOf(slug) !== -1; }
 const RANK_FRAME_OK = {};
 let _rankFramesChecked = false;
 function preloadRankFrames(cb) {
-  let pending = RANKS.length;
+  const list = RANKS.filter(r => rankFrameReady(r.slug));
+  let pending = list.length;
   if (!pending) { _rankFramesChecked = true; if (cb) cb(); return; }
-  RANKS.forEach(r => {
+  list.forEach(r => {
     const img = new Image();
     const done = () => { if (--pending === 0) { _rankFramesChecked = true; if (cb) cb(); } };
     img.onload = () => { RANK_FRAME_OK[r.slug] = img.naturalWidth > 0; done(); };
@@ -290,26 +296,44 @@ function preloadRankFrames(cb) {
     img.src = 'assets/ranks/' + r.slug + '.png';
   });
 }
-// Layout (porcentajes sobre la imagen del marco). Ajustable por rango.
-const RANK_FRAME_LAYOUT_DEFAULT = {
-  ovr:   { left: 20.5, top: 21,  size: 12 },
-  pos:   { left: 21,   top: 30,  size: 3.8 },
-  photo: { left: 31,   top: 30,  width: 38 },
-  name:  { top: 60.5,  h: 5.2,   size: 5,  inset: 11 },
-  stats: { top: 73,    padX: 14, size: 5 },
+// Layout (porcentajes sobre la imagen del marco) por grupo de proporción.
+// Grupo A (0.666): canterano, debutante | B (0.750): revelacion, elite, idolo, leyenda, goat | C (0.800): consagrado
+const _frmCanterano = {
+  ovr:   { left: 13.5, top: 18,   size: 13,  possize: 4.2 },
+  photo: { left: 30,   top: 30,   width: 40 },
+  name:  { top: 59,    h: 6,      inset: 15.5, size: 5 },
+  stats: { top: 72.6,  h: 6.4,    inset: 14,   size: 5.2 },
+};
+const _frmDebutante = {
+  ovr:   { left: 13.5, top: 18,   size: 13,  possize: 4.2 },
+  photo: { left: 30,   top: 30,   width: 40 },
+  name:  { top: 62.3,  h: 5.8,    inset: 15.5, size: 4.9 },
+  stats: { top: 73.8,  h: 6.2,    inset: 14,   size: 5 },
+};
+const _frmB = {
+  ovr:   { left: 12,   top: 19.5, size: 12.5, possize: 4 },
+  photo: { left: 30,   top: 30,   width: 40 },
+  name:  { top: 64.3,  h: 5.8,    inset: 12.5, size: 4.7 },
+  stats: { top: 75.2,  h: 6,      inset: 12,   size: 4.7 },
+};
+const _frmGoat = {
+  ovr:   { left: 12,   top: 19.5, size: 12.5, possize: 4 },
+  photo: { left: 30,   top: 28,   width: 38 },
+  name:  { top: 61.6,  h: 5.6,    inset: 11,   size: 4.7 },
+  stats: { top: 68,    h: 5.8,    inset: 10.5, size: 4.7 },
+};
+const _frmC = {
+  ovr:   { left: 12,   top: 18.5, size: 12.5, possize: 4 },
+  photo: { left: 31,   top: 30,   width: 38 },
+  name:  { top: 62.8,  h: 5.8,    inset: 13,   size: 4.7 },
+  stats: { top: 73.6,  h: 6,      inset: 11.5, size: 4.7 },
 };
 const RANK_FRAME_LAYOUT = {
-  /* overrides por slug cuando el marco lo requiera (se calibra con la imagen real) */
+  canterano: _frmCanterano, debutante: _frmDebutante,
+  revelacion: _frmB, elite: _frmB, idolo: _frmB, leyenda: _frmB, goat: _frmGoat,
+  consagrado: _frmC,
 };
-function frameLayout(slug) {
-  const o = RANK_FRAME_LAYOUT[slug] || {};
-  const d = RANK_FRAME_LAYOUT_DEFAULT;
-  return {
-    ovr: Object.assign({}, d.ovr, o.ovr), pos: Object.assign({}, d.pos, o.pos),
-    photo: Object.assign({}, d.photo, o.photo), name: Object.assign({}, d.name, o.name),
-    stats: Object.assign({}, d.stats, o.stats),
-  };
-}
+function frameLayout(slug) { return RANK_FRAME_LAYOUT[slug] || _frmB; }
 function buildFrameCardHTML(p, rank) {
   const tier = rank.slug;
   const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
@@ -322,12 +346,14 @@ function buildFrameCardHTML(p, rank) {
   const html = `
     <img class="fcard-img" src="assets/ranks/${tier}.png" alt="${rank.name}">
     ${photo}
-    <div class="fco fco-ovr" style="left:${L.ovr.left}%;top:${L.ovr.top}%;font-size:${L.ovr.size}cqw">${p.ovr}</div>
-    <div class="fco fco-pos" style="left:${L.pos.left}%;top:${L.pos.top}%;font-size:${L.pos.size}cqw">${p.position}</div>
+    <div class="fco-ovrwrap" style="left:${L.ovr.left}%;top:${L.ovr.top}%">
+      <div class="fco fco-ovr" style="font-size:${L.ovr.size}cqw">${p.ovr}</div>
+      <div class="fco fco-pos" style="font-size:${L.ovr.possize}cqw">${p.position}</div>
+    </div>
     <div class="fco-namewrap" style="top:${L.name.top}%;height:${L.name.h}%;left:${L.name.inset}%;right:${L.name.inset}%">
       <div class="fco-name" style="font-size:${L.name.size}cqw">${p.name}${p.nickname ? ` <span class="fco-nick">"${p.nickname}"</span>` : ''}</div>
     </div>
-    <div class="fco-stats" style="top:${L.stats.top}%;left:${L.stats.padX}%;right:${L.stats.padX}%;font-size:${L.stats.size}cqw">
+    <div class="fco-statswrap" style="top:${L.stats.top}%;height:${L.stats.h}%;left:${L.stats.inset}%;right:${L.stats.inset}%;font-size:${L.stats.size}cqw">
       ${statsArr.map(v => `<span class="fco-stat">${v}</span>`).join('')}
     </div>
   `;
@@ -336,7 +362,7 @@ function buildFrameCardHTML(p, rank) {
 
 function buildCardHTML(p) {
   const rank = getRank(p.xp || 0);
-  if (RANK_FRAME_OK[rankSlug(rank)]) return buildFrameCardHTML(p, rank);
+  if (rankFrameReady(rankSlug(rank)) && RANK_FRAME_OK[rankSlug(rank)]) return buildFrameCardHTML(p, rank);
   const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
   const epicRanks = ['elite', 'consagrado', 'idolo', 'leyenda', 'goat'];
   const tier = rankSlug(rank);
