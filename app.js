@@ -3057,6 +3057,11 @@ function searchTeams(query) {
     .sort((a, b) => getTeamOVR(b) - getTeamOVR(a) || a.name.localeCompare(b.name));
 }
 
+function teamHasMatchAt(teamId, fecha, hora, excludeMatchId) {
+  return teamMatches.some(m => m.id !== excludeMatchId && m.estado === 'programado' && m.fecha === fecha && m.hora === hora &&
+    (m.teamAId === teamId || m.teamBId === teamId));
+}
+
 function sendChallenge() {
   const errorEl = document.getElementById('challenge-error');
   const toTeamId = document.getElementById('challenge-to-team').value;
@@ -3069,6 +3074,8 @@ function sendChallenge() {
   const myTeam = getMyTeam();
   if (!myTeam || myTeam.captainId !== state.id) { errorEl.textContent = 'Solo el capitán puede retar a otro equipo.'; return; }
   if (!fecha || !hora) { errorEl.textContent = 'Escoge fecha y hora para el reto.'; return; }
+  if (teamHasMatchAt(myTeam.id, fecha, hora)) { errorEl.textContent = 'Tu equipo ya tiene un partido programado a esa fecha y hora.'; return; }
+  if (teamHasMatchAt(toTeamId, fecha, hora)) { errorEl.textContent = 'El equipo rival ya tiene un partido programado a esa fecha y hora.'; return; }
   errorEl.textContent = '';
   const challenge = {
     id: 'ch_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -3098,11 +3105,15 @@ function getMyChallenges() {
 function respondChallenge(challengeId, accept) {
   const challenge = challenges.find(c => c.id === challengeId);
   if (!challenge) return;
+  const fromTeam = teams[challenge.fromTeamId];
+  const toTeam = teams[challenge.toTeamId];
+  if (accept && (teamHasMatchAt(challenge.fromTeamId, challenge.fecha, challenge.hora) || teamHasMatchAt(challenge.toTeamId, challenge.fecha, challenge.hora))) {
+    alert('No puedes aceptar este reto: uno de los dos equipos ya tiene un partido programado a esa fecha y hora.');
+    return;
+  }
   challenge.status = accept ? 'aceptado' : 'rechazado';
   saveChallenges();
   pushChallengeToCloud(challenge);
-  const fromTeam = teams[challenge.fromTeamId];
-  const toTeam = teams[challenge.toTeamId];
   if (accept && fromTeam && toTeam) {
     const match = {
       id: 'tm_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
