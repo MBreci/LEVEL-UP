@@ -463,6 +463,24 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-rank-emoji{margin-right:4px;font-size:10px;-webkit-text-fill-color:initial}
 /* Marco de rango por imagen (se superpone solo si el PNG existe; centro transparente) */
 .fc-frame-img{position:absolute;inset:0;z-index:0;background-size:100% 100%;background-position:center;background-repeat:no-repeat;pointer-events:none;border-radius:16px}
+
+/* ===== CARTA CON MARCO-IMAGEN (datos reales del jugador sobre el PNG) ===== */
+.fcard{position:relative;width:340px;max-width:100%;container-type:inline-size;line-height:1;filter:drop-shadow(0 28px 60px rgba(0,0,0,0.7))}
+.fcard-img{display:block;width:100%;height:auto;border-radius:8px}
+.fcard .fco{position:absolute;font-family:var(--ft);font-weight:900;color:#fff;z-index:3;white-space:nowrap;
+  text-shadow:0 0 10px rgba(5,6,10,0.96),0 0 6px rgba(5,6,10,0.96),0 2px 3px rgba(0,0,0,0.95),0 0 18px rgba(5,6,10,0.85)}
+.fcard .fco-pos{color:var(--rc,#fff);font-weight:700}
+.fcard .fco-photo{position:absolute;aspect-ratio:1;object-fit:cover;border-radius:50%;z-index:2;box-shadow:0 0 24px -6px rgba(0,0,0,0.8)}
+.fcard .fco-namewrap{position:absolute;display:flex;align-items:center;justify-content:center;z-index:3;overflow:hidden;
+  background:linear-gradient(180deg,#06070b,#080a10 55%,#06070b)}
+.fcard .fco-name{font-family:var(--ft);font-weight:800;color:#fff;letter-spacing:1px;white-space:nowrap;
+  text-shadow:0 0 8px rgba(5,6,10,0.9),0 1px 2px #000}
+.fcard .fco-nick{color:var(--rc,#fff);font-weight:600;margin-left:.35em}
+.fcard .fco-stats{position:absolute;display:flex;justify-content:space-between;align-items:center;z-index:3;gap:0}
+.fcard .fco-stat{flex:1;text-align:center;font-family:var(--ft);font-weight:800;color:#fff;
+  text-shadow:0 0 9px rgba(5,6,10,0.96),0 0 5px rgba(5,6,10,0.96),0 1px 2px #000}
+.fcard.rk-goat .fco-name,.fcard.rk-leyenda .fco-name{color:#fff}
+.fcard:hover{filter:drop-shadow(0 34px 70px rgba(0,0,0,0.78)) drop-shadow(0 0 30px var(--rcglow,rgba(0,255,136,0.4)))}
 .fc-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
 .fc-cosmos{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
 

@@ -22,8 +22,8 @@ const RANKS = [
   { name: 'CANTERANO',  slug: 'canterano',  emoji: '🥉', min: 0,      tagline: 'El comienzo de tu historia' },
   { name: 'DEBUTANTE',  slug: 'debutante',  emoji: '🥈', min: 1000,   tagline: 'Das tus primeros pasos' },
   { name: 'REVELACIÓN', slug: 'revelacion', emoji: '❄️', min: 3000,   tagline: 'Empiezas a llamar la atención' },
-  { name: 'CONSAGRADO', slug: 'consagrado', emoji: '🔥', min: 7000,   tagline: 'Tu nombre ya pesa en la cancha' },
-  { name: 'ELITE',      slug: 'elite',      emoji: '⭐', min: 15000,  tagline: 'Compites contra los mejores' },
+  { name: 'ELITE',      slug: 'elite',      emoji: '⭐', min: 7000,   tagline: 'Compites contra los mejores' },
+  { name: 'CONSAGRADO', slug: 'consagrado', emoji: '🔥', min: 15000,  tagline: 'Tu nombre ya pesa en la cancha' },
   { name: 'ÍDOLO',      slug: 'idolo',      emoji: '👑', min: 30000,  tagline: 'Eres referente e inspiración' },
   { name: 'LEYENDA',    slug: 'leyenda',    emoji: '🏛', min: 60000,  tagline: 'Tu historia ya es parte de LEVEL UP' },
   { name: 'GOAT',       slug: 'goat',       emoji: '🐐', min: 120000, tagline: 'Eres el mejor de todos los tiempos' },
@@ -274,10 +274,71 @@ function guestPrompt(text) {
   return `<div class="guest-prompt"><div class="guest-prompt-text">${text}</div><button class="guest-prompt-btn" onclick="openAuth(false)">INICIAR SESIÓN</button></div>`;
 }
 
+// ===== MARCOS DE RANGO POR IMAGEN =====
+// Si existe assets/ranks/<slug>.png se usa el marco-imagen con los datos
+// reales del jugador superpuestos; si no, se usa la carta CSS por defecto.
+const RANK_FRAME_OK = {};
+let _rankFramesChecked = false;
+function preloadRankFrames(cb) {
+  let pending = RANKS.length;
+  if (!pending) { _rankFramesChecked = true; if (cb) cb(); return; }
+  RANKS.forEach(r => {
+    const img = new Image();
+    const done = () => { if (--pending === 0) { _rankFramesChecked = true; if (cb) cb(); } };
+    img.onload = () => { RANK_FRAME_OK[r.slug] = img.naturalWidth > 0; done(); };
+    img.onerror = () => { RANK_FRAME_OK[r.slug] = false; done(); };
+    img.src = 'assets/ranks/' + r.slug + '.png';
+  });
+}
+// Layout (porcentajes sobre la imagen del marco). Ajustable por rango.
+const RANK_FRAME_LAYOUT_DEFAULT = {
+  ovr:   { left: 20.5, top: 21,  size: 12 },
+  pos:   { left: 21,   top: 30,  size: 3.8 },
+  photo: { left: 31,   top: 30,  width: 38 },
+  name:  { top: 60.5,  h: 5.2,   size: 5,  inset: 11 },
+  stats: { top: 73,    padX: 14, size: 5 },
+};
+const RANK_FRAME_LAYOUT = {
+  /* overrides por slug cuando el marco lo requiera (se calibra con la imagen real) */
+};
+function frameLayout(slug) {
+  const o = RANK_FRAME_LAYOUT[slug] || {};
+  const d = RANK_FRAME_LAYOUT_DEFAULT;
+  return {
+    ovr: Object.assign({}, d.ovr, o.ovr), pos: Object.assign({}, d.pos, o.pos),
+    photo: Object.assign({}, d.photo, o.photo), name: Object.assign({}, d.name, o.name),
+    stats: Object.assign({}, d.stats, o.stats),
+  };
+}
+function buildFrameCardHTML(p, rank) {
+  const tier = rank.slug;
+  const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
+  const L = frameLayout(tier);
+  const statsArr = [a.pac, a.sho, a.pas, a.dri, a.def, a.fis];
+  const photo = p.photo
+    ? `<img class="fco-photo" style="left:${L.photo.left}%;top:${L.photo.top}%;width:${L.photo.width}%" src="${p.photo}">`
+    : '';
+  const className = 'fcard rk-' + tier;
+  const html = `
+    <img class="fcard-img" src="assets/ranks/${tier}.png" alt="${rank.name}">
+    ${photo}
+    <div class="fco fco-ovr" style="left:${L.ovr.left}%;top:${L.ovr.top}%;font-size:${L.ovr.size}cqw">${p.ovr}</div>
+    <div class="fco fco-pos" style="left:${L.pos.left}%;top:${L.pos.top}%;font-size:${L.pos.size}cqw">${p.position}</div>
+    <div class="fco-namewrap" style="top:${L.name.top}%;height:${L.name.h}%;left:${L.name.inset}%;right:${L.name.inset}%">
+      <div class="fco-name" style="font-size:${L.name.size}cqw">${p.name}${p.nickname ? ` <span class="fco-nick">"${p.nickname}"</span>` : ''}</div>
+    </div>
+    <div class="fco-stats" style="top:${L.stats.top}%;left:${L.stats.padX}%;right:${L.stats.padX}%;font-size:${L.stats.size}cqw">
+      ${statsArr.map(v => `<span class="fco-stat">${v}</span>`).join('')}
+    </div>
+  `;
+  return { className, html };
+}
+
 function buildCardHTML(p) {
   const rank = getRank(p.xp || 0);
+  if (RANK_FRAME_OK[rankSlug(rank)]) return buildFrameCardHTML(p, rank);
   const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
-  const epicRanks = ['elite', 'idolo', 'leyenda', 'goat'];
+  const epicRanks = ['elite', 'consagrado', 'idolo', 'leyenda', 'goat'];
   const tier = rankSlug(rank);
   const className = 'fifa rk-' + tier + (epicRanks.includes(tier) ? ' epic' : '');
   const html = `
@@ -285,7 +346,6 @@ function buildCardHTML(p) {
     <div class="fc-fx"></div>
     ${tier === 'goat' ? '<div class="fc-cosmos"></div>' : ''}
     ${epicRanks.includes(tier) ? '<div class="fc-sparks"></div>' : ''}
-    <div class="fc-frame-img" style="background-image:url('assets/ranks/${tier}.png')"></div>
     <span class="fc-corner tl"></span>
     <span class="fc-corner tr"></span>
     <span class="fc-corner bl"></span>
@@ -3699,6 +3759,9 @@ function initApp() {
       syncMatchInvitesFromCloud().then(renderAll);
     }, 20000);
   }
+
+  // Carga los marcos-imagen de rango; si existen, vuelve a renderizar las cartas con el marco
+  preloadRankFrames(() => { try { renderAll(); } catch (e) {} });
 }
 
 initApp();
