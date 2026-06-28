@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Configuración · LEVEL UP</title>
+<title>Mi Saldo · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=1782689374">
 </head>
@@ -46,22 +46,14 @@
 </div>
 
 <div class="page-banner">
-  <div class="page-banner-eyebrow">CONFIGURACIÓN</div>
-  <div class="page-banner-title">CONFIGURACIÓN</div>
-  <div class="page-banner-desc">Edita los datos básicos de tu perfil.</div>
+  <div class="page-banner-eyebrow">TU DINERO EN LEVEL UP</div>
+  <div class="page-banner-title">MI SALDO LEVEL UP</div>
+  <div class="page-banner-desc">Tu saldo disponible para usar dentro de la plataforma: recarga una vez y paga tus partidos sin fricciones.</div>
 </div>
 
-<section id="config">
-  <div class="bp-form" style="display:block;max-width:480px;margin:0 auto">
-    <div class="auth-label">APODO</div>
-    <input class="auth-input" id="cfg-nickname" autocomplete="off" maxlength="16">
-    <div class="auth-label">EQUIPO</div>
-    <input class="auth-input" id="cfg-team" autocomplete="off" maxlength="24" disabled style="opacity:0.6;cursor:not-allowed">
-    <div class="auth-photo-note">Tu equipo se gestiona desde <a href="equipos.html">EQUIPOS</a>, no se puede editar aquí.</div>
-    <div class="auth-error" id="cfg-error"></div>
-    <button class="auth-submit" onclick="submitConfig()">GUARDAR CAMBIOS</button>
-    <button class="auth-cancel" onclick="logout()" style="margin-top:10px">CERRAR SESIÓN</button>
-  </div>
+<!-- SALDO -->
+<section id="saldo">
+  <div class="wallet-wrap" id="saldo-content"></div>
 </section>
 
 <footer>
@@ -73,6 +65,24 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
 </footer>
+
+<!-- MODAL POST-PARTIDO -->
+<div class="modal-overlay" id="post-match-modal">
+  <div class="post-match-card" id="post-match-content"></div>
+</div>
+
+<!-- MODAL TRABAJO EN PROGRESO -->
+<div class="modal-overlay" id="wip-modal">
+  <div class="wip-card">
+    <div class="tape tape-top"></div>
+    <div class="wip-icon">🚧</div>
+    <div class="wip-title" id="wip-modal-title">MÓDULO</div>
+    <div class="wip-sub">TRABAJO EN PROGRESO</div>
+    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
+    <button class="wip-close" onclick="closeWip()">CERRAR</button>
+    <div class="tape tape-bottom"></div>
+  </div>
+</div>
 
 <!-- MODAL REGISTRO / INICIO DE SESIÓN -->
 <div class="modal-overlay" id="auth-modal">
@@ -141,20 +151,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js?v=1782689374"></script>
-<script>
-  function fillConfigForm() {
-    if (!state) return;
-    document.getElementById('cfg-nickname').value = state.nickname || '';
-    document.getElementById('cfg-team').value = state.team || '';
-  }
-  function submitConfig() {
-    state.nickname = document.getElementById('cfg-nickname').value.trim().toUpperCase();
-    saveState();
-    document.getElementById('cfg-error').textContent = 'Cambios guardados.';
-    renderAll();
-  }
-  document.addEventListener('DOMContentLoaded', fillConfigForm);
-  fillConfigForm();
-</script>
 </body>
 </html>

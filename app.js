@@ -75,6 +75,13 @@ const sb = (typeof window !== 'undefined' && window.supabase)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
 
+/* ===== SALDO LEVEL UP (Wompi) ===== */
+// Llave pública de Wompi: no es secreta, puede vivir en el frontend.
+// Reemplázala por la llave real de tu cuenta de Wompi cuando la tengas.
+const WOMPI_PUBLIC_KEY = 'pub_test_REEMPLAZAR_CON_TU_LLAVE_PUBLICA';
+const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1');
+const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
+
 function profileToRow(p) {
   return {
     id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
@@ -83,6 +90,8 @@ function profileToRow(p) {
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
   };
+  // saldo no se incluye aquí a propósito: nunca se escribe desde el frontend,
+  // solo se lee. Modificarlo solo es posible vía apply_wallet_transaction (backend).
 }
 
 function rowToProfile(r) {
@@ -94,6 +103,7 @@ function rowToProfile(r) {
     history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
     notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
+    saldo: r.saldo || 0,
   };
 }
 
@@ -124,6 +134,7 @@ async function syncProfilesFromCloud() {
         if (!seen.has(key)) { state.notifications.push(n); seen.add(key); }
       });
       state.team = row.team || 'SIN EQUIPO';
+      state.saldo = row.saldo || 0;
       profiles[state.id] = state;
     }
   });
@@ -165,6 +176,7 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     ],
     notifSeenCount: 0,
     achievements: [],
+    saldo: 0,
     pendingReveal: null,
   };
 }
@@ -226,6 +238,7 @@ function getCurrentPage() {
 
 function renderNav() {
   const nav = document.getElementById('nav-modules');
+  renderWalletPill();
   if (!nav) return;
   nav.innerHTML = '';
   if (!state) return;
@@ -239,6 +252,23 @@ function renderNav() {
     el.href = href;
     nav.appendChild(el);
   });
+}
+
+function renderWalletPill() {
+  const navRight = document.querySelector('.nav-right');
+  if (!navRight) return;
+  let pill = document.getElementById('wallet-pill');
+  if (!state) { if (pill) pill.remove(); return; }
+  if (!pill) {
+    pill = document.createElement('a');
+    pill.id = 'wallet-pill';
+    pill.className = 'wallet-pill';
+    pill.href = 'saldo.html';
+    pill.title = 'Saldo disponible para utilizar dentro de LEVEL UP.';
+    navRight.insertBefore(pill, navRight.firstChild);
+  }
+  const saldo = state.saldo || 0;
+  pill.innerHTML = `<span class="wallet-dot"></span> Saldo <strong>$${saldo.toLocaleString('es-CO')}</strong>`;
 }
 
 function getPlatformStats() {
@@ -777,6 +807,7 @@ function renderAll() {
   updateProfileBtn();
   renderDashboard();
   renderWelcomeHome();
+  renderSaldoPage();
 }
 
 const HW_ACTIONS = [
@@ -959,6 +990,144 @@ function renderDashboard() {
       ${recentNotifs.length ? recentNotifs.map(n => `<div class="dash-activity-row">${n.icon} ${n.text}</div>`).join('') : `<div class="dash-empty">Sin actividad reciente.</div>`}
     </div>
   `;
+}
+
+/* ===== PÁGINA DE SALDO ===== */
+let walletTx = [];
+let walletCustomAmount = '';
+
+async function fetchWalletTransactions() {
+  if (!sb || !state) { walletTx = []; return; }
+  const { data, error } = await sb.from('wallet_transactions').select('*').eq('profile_id', state.id).order('created_at', { ascending: false }).limit(30);
+  if (!error && data) walletTx = data;
+}
+
+function walletMovLabel(t) {
+  const labels = { recarga: 'RECARGA', pago_partido: 'PAGO DE PARTIDO', reembolso: 'REEMBOLSO', bonificacion: 'BONIFICACIÓN', promocion: 'PROMOCIÓN', premio: 'PREMIO' };
+  return labels[t.type] || t.type.toUpperCase();
+}
+
+async function renderSaldoPage() {
+  const el = document.getElementById('saldo-content');
+  if (!el || !state) return;
+  if (!walletTx.length) await fetchWalletTransactions();
+  const totalRecargado = walletTx.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
+  const totalUtilizado = walletTx.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+  el.innerHTML = `
+    <div class="wallet-balance-card">
+      <div class="wallet-balance-label">SALDO DISPONIBLE</div>
+      <div class="wallet-balance-amount" id="wallet-balance-amount">$${(state.saldo || 0).toLocaleString('es-CO')}</div>
+      <button class="hw-cta-main" onclick="openRecharge()">RECARGAR SALDO</button>
+    </div>
+    <div class="wallet-stats-row">
+      <div class="wallet-stat"><div class="wallet-stat-v">$${totalRecargado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL RECARGADO</div></div>
+      <div class="wallet-stat"><div class="wallet-stat-v">$${totalUtilizado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL UTILIZADO</div></div>
+    </div>
+    <div class="wallet-history">
+      <div class="wallet-history-title">MOVIMIENTOS RECIENTES</div>
+      ${walletTx.length ? walletTx.map(t => `
+        <div class="wallet-row">
+          <div class="wallet-row-l">
+            <div class="wallet-row-type">${walletMovLabel(t)}</div>
+            <div class="wallet-row-date">${new Date(t.created_at).toLocaleString('es-CO')}</div>
+          </div>
+          <div class="wallet-row-amount ${t.amount >= 0 ? 'pos' : 'neg'}">${t.amount >= 0 ? '+' : ''}$${Number(t.amount).toLocaleString('es-CO')}</div>
+        </div>
+      `).join('') : `<div class="dash-empty">Aún no tienes movimientos.</div>`}
+    </div>
+    <div class="modal-overlay" id="recharge-modal">
+      <div class="auth-card">
+        <div class="auth-label">ELIGE UN VALOR</div>
+        <div class="wallet-quick-grid">
+          ${RECARGA_RAPIDA.map(v => `<button class="wallet-quick-btn" onclick="selectRechargeAmount(${v})">$${v.toLocaleString('es-CO')}</button>`).join('')}
+        </div>
+        <div class="auth-label">O INGRESA UN VALOR PERSONALIZADO</div>
+        <input class="auth-input" type="number" min="5000" step="1000" id="recharge-custom" placeholder="Ej: 45000" oninput="walletCustomAmount=this.value">
+        <div class="auth-error" id="recharge-error"></div>
+        <button class="auth-submit" onclick="submitRecharge()">CONTINUAR</button>
+        <button class="auth-cancel" onclick="closeRecharge()">CANCELAR</button>
+      </div>
+    </div>
+  `;
+}
+
+function openRecharge() {
+  walletCustomAmount = '';
+  document.getElementById('recharge-modal').classList.add('open');
+}
+function closeRecharge() {
+  document.getElementById('recharge-modal').classList.remove('open');
+}
+function selectRechargeAmount(v) {
+  document.getElementById('recharge-custom').value = v;
+  walletCustomAmount = String(v);
+}
+
+function loadWompiWidgetScript() {
+  return new Promise((resolve) => {
+    if (document.getElementById('wompi-widget-script')) return resolve();
+    const s = document.createElement('script');
+    s.id = 'wompi-widget-script';
+    s.src = 'https://checkout.wompi.co/widget.js';
+    s.onload = resolve;
+    document.body.appendChild(s);
+  });
+}
+
+async function submitRecharge() {
+  const errEl = document.getElementById('recharge-error');
+  const amount = parseInt(walletCustomAmount || document.getElementById('recharge-custom').value, 10);
+  if (!amount || amount < 5000) { errEl.textContent = 'Ingresa un valor válido (mínimo $5.000).'; return; }
+
+  try {
+    const res = await fetch(`${FUNCTIONS_URL}/wallet-init-recharge`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profileId: state.id, amount }),
+    });
+    const payload = await res.json();
+    if (!res.ok) { errEl.textContent = payload.error || 'No se pudo iniciar la recarga.'; return; }
+
+    closeRecharge();
+    await loadWompiWidgetScript();
+    const checkout = new window.WidgetCheckout({
+      currency: payload.currency,
+      amountInCents: payload.amountInCents,
+      reference: payload.reference,
+      publicKey: payload.publicKey,
+      signature: { integrity: payload.signature },
+    });
+    checkout.open(async (result) => {
+      if (result && result.transaction && result.transaction.status === 'APPROVED') {
+        showWalletSuccessAnim(amount);
+        await pollWalletBalance();
+      }
+    });
+  } catch (e) {
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+function showWalletSuccessAnim(amount) {
+  const badge = document.createElement('div');
+  badge.className = 'wallet-success-toast';
+  badge.innerHTML = `<div class="wallet-success-amt">+$${amount.toLocaleString('es-CO')}</div><div>Saldo actualizado</div>`;
+  document.body.appendChild(badge);
+  setTimeout(() => badge.remove(), 3200);
+}
+
+async function pollWalletBalance(attempts = 8) {
+  for (let i = 0; i < attempts; i++) {
+    await new Promise(r => setTimeout(r, 2500));
+    const { data } = await sb.from('profiles').select('saldo').eq('id', state.id).maybeSingle();
+    if (data && Number(data.saldo) !== Number(state.saldo)) {
+      state.saldo = Number(data.saldo);
+      saveProfiles();
+      walletTx = [];
+      renderWalletPill();
+      renderSaldoPage();
+      return;
+    }
+  }
 }
 
 function toggleDropdown(id) {
