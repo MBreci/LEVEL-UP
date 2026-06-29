@@ -1365,63 +1365,33 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-fc-kick{position:absolute;top:4px;left:4px;background:rgba(255,80,80,0.2);border:0.5px solid rgba(255,80,80,0.4);color:#ff8a8a;width:16px;height:16px;border-radius:50%;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .2s}
 .team-fc-slot:hover .team-fc-kick{opacity:1}
 
-/* Suplentes — banca de estadio con sillas CSS */
+/* Suplentes — banca de estadio (dugout) */
 .team-bench-section{
   position:relative;overflow:hidden;
   border:0.5px solid rgba(255,255,255,0.08);border-top:none;
-  padding:18px 28px 24px;
-  background:linear-gradient(180deg,#0a1520 0%,#060e18 100%);
+  padding:18px 28px 92px;
+  background:linear-gradient(180deg,#0a1626 0%,#060d18 100%);
 }
-/* Suelo de la banca */
+/* Banca SVG en la parte inferior */
+.bench-svg{
+  position:absolute;bottom:14px;left:0;right:0;
+  width:100%;height:66px;pointer-events:none;z-index:0;
+  filter:drop-shadow(0 5px 7px rgba(0,0,12,0.55));
+}
+/* sombra de piso bajo la banca */
 .team-bench-section::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:28px;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(30,60,100,0.18));
-}
-/* Fila de sillas CSS — dos filas con perspectiva */
-.team-bench-seats{
-  position:absolute;bottom:0;left:0;right:0;height:54px;pointer-events:none;
-  display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:0 12px;
-  perspective:200px;
-}
-.team-bench-seat{
-  flex:1;max-width:36px;height:40px;
-  border-radius:5px 5px 3px 3px;
-  background:linear-gradient(180deg,#1a3a6a 0%,#0f2448 60%,#0a1830 100%);
-  border:1px solid rgba(60,120,200,0.35);
-  box-shadow:0 2px 8px rgba(0,0,10,0.5), inset 0 1px 0 rgba(100,160,255,0.12);
-  position:relative;transform:rotateX(18deg);transform-origin:bottom center;
-}
-.team-bench-seat::before{
-  content:'';position:absolute;top:4px;left:3px;right:3px;height:14px;
-  border-radius:3px 3px 0 0;
-  background:linear-gradient(180deg,rgba(80,140,220,0.18),transparent);
-  border-top:1px solid rgba(80,150,255,0.2);
-}
-.team-bench-seat::after{
-  content:'';position:absolute;bottom:-6px;left:30%;right:30%;height:6px;
-  background:#060e18;border-radius:0 0 2px 2px;
-}
-.team-bench-seats-back{
-  position:absolute;bottom:38px;left:0;right:0;height:32px;pointer-events:none;
-  display:flex;align-items:flex-end;justify-content:center;gap:5px;padding:0 12px;
-  opacity:0.45;
-}
-.team-bench-seat-back{
-  flex:1;max-width:36px;height:26px;
-  border-radius:4px 4px 2px 2px;
-  background:linear-gradient(180deg,#122848,#0a1c38);
-  border:1px solid rgba(50,100,170,0.25);
-  transform:rotateX(12deg);transform-origin:bottom center;
+  content:'';position:absolute;bottom:0;left:0;right:0;height:16px;pointer-events:none;
+  background:radial-gradient(ellipse 70% 100% at 50% 0%, rgba(40,80,140,0.22), transparent 75%);
 }
 .team-bench-label{
   position:relative;z-index:1;
   font-family:var(--ft);font-size:9px;letter-spacing:2px;
-  color:#4a6a9a;margin-bottom:14px;
+  color:#5a7aaa;margin-bottom:14px;
   display:flex;align-items:center;gap:8px;
 }
 .team-bench-label::before{
   content:'';display:inline-block;width:10px;height:2px;
-  background:rgba(80,140,220,0.4);border-radius:2px;
+  background:rgba(90,150,230,0.5);border-radius:2px;
 }
 .team-bench-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .team-bench-grid .team-fc-slot{
