@@ -92,6 +92,7 @@ function profileToRow(p) {
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
+    is_admin: p.isAdmin || false,
   };
   // saldo no se incluye aquí a propósito: nunca se escribe desde el frontend,
   // solo se lee. Modificarlo solo es posible vía apply_wallet_transaction (backend).
@@ -110,6 +111,7 @@ function rowToProfile(r) {
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
     notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
     saldo: r.saldo || 0,
+    isAdmin: r.is_admin || false,
   };
 }
 
@@ -157,7 +159,7 @@ function isPasswordMediumStrength(password) {
   return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
-function makeProfile({ name, position, team, nickname, passwordHash, securityQuestion, securityAnswerHash }) {
+function makeProfile({ name, position, team, nickname, passwordHash, securityQuestion, securityAnswerHash, isAdmin }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
@@ -186,6 +188,7 @@ function makeProfile({ name, position, team, nickname, passwordHash, securityQue
     achievements: [],
     saldo: 0,
     pendingReveal: null,
+    isAdmin: isAdmin || false,
   };
 }
 
@@ -263,6 +266,13 @@ function renderNav() {
     el.href = href;
     nav.appendChild(el);
   });
+  if (isAdmin()) {
+    const adminBtn = document.createElement('button');
+    adminBtn.className = 'nm-item nm-admin-pill';
+    adminBtn.textContent = '⚙ ADMIN';
+    adminBtn.onclick = () => openAdminPanel();
+    nav.appendChild(adminBtn);
+  }
 }
 
 function renderWalletPill() {
@@ -2669,6 +2679,7 @@ function buildMatchCard(m, mode) {
         <button onclick="openWip('Chat del partido')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
         ${isCreator ? buildDeleteMatchButton(m) : ''}
+        ${isAdmin() && !m.finalizado ? `<button class="mm-admin-btn" onclick="openAdminMatch('${m.id}')">⚙ ADMINISTRAR</button>` : ''}
       </div>
     </div>`;
 }
@@ -3808,9 +3819,23 @@ function submitFinalizeMatch() {
   checkPendingReveal();
 }
 
+function isTeamMatchPast(m) {
+  if (m.estado === 'finalizado') return true;
+  if (m.fechaISO && m.hora) {
+    return new Date(`${m.fechaISO}T${m.hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
+  }
+  // fallback: if created more than 3 days ago and still programado, consider past
+  return !!(m.createdAt && Date.now() - m.createdAt > 3 * 24 * 60 * 60 * 1000);
+}
+
 function getTeamMatches(teamId, estado) {
-  return teamMatches.filter(m => (m.teamAId === teamId || m.teamBId === teamId) && m.estado === estado)
-    .sort((a, b) => b.createdAt - a.createdAt);
+  return teamMatches.filter(m => {
+    if (m.teamAId !== teamId && m.teamBId !== teamId) return false;
+    const past = isTeamMatchPast(m);
+    if (estado === 'finalizado') return past;
+    if (estado === 'programado') return !past;
+    return m.estado === estado;
+  }).sort((a, b) => b.createdAt - a.createdAt);
 }
 
 function switchEquiposTab(tab) {
@@ -4177,12 +4202,16 @@ function renderTeamMatchesPanel() {
     const rivalId = m.teamAId === myTeam.id ? m.teamBId : m.teamAId;
     const rival = teams[rivalId];
     const canFinalize = !finalized && isCaptain && m.teamAId === myTeam.id;
+    const hasResult = finalized && m.resultado;
+    const resultLabel = hasResult ? `${m.resultado.golesA} - ${m.resultado.golesB}` : (finalized ? 'SIN RESULTADO' : 'PROGRAMADO');
+    const badgeCls = finalized ? (hasResult ? 'hist-badge-done' : 'hist-badge-old') : 'hist-badge-prog';
     return `
-      <div class="team-hist-row">
-        <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
-        <span>VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
-        <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : (finalized ? '—' : 'PROGRAMADO')}</span>
-        ${canFinalize ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR PARTIDO</button>` : ''}
+      <div class="team-hist-row ${finalized ? 'past' : ''}">
+        <span class="thr-info">${m.fecha}${m.hora ? ' · ' + m.hora : ''} · ${m.cancha}</span>
+        <span class="thr-rival">VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
+        <span class="thr-badge ${badgeCls}">${resultLabel}</span>
+        ${canFinalize && isAdmin() ? `<button class="mm-admin-btn" onclick="openFinalizeMatchModal('${m.id}')">⚙ REGISTRAR</button>` : ''}
+        ${canFinalize && !isAdmin() ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR</button>` : ''}
       </div>`;
   };
   el.innerHTML = `
@@ -4395,10 +4424,7 @@ initApp();
 /* ===== TORNEOS ===== */
 
 function isAdmin() {
-  if (!state) return false;
-  const nick = (state.nickname || '').toUpperCase();
-  const name = (state.name || '').toLowerCase();
-  return nick === 'BRECO' || name === 'miguel breci';
+  return !!(state && state.isAdmin);
 }
 
 function loadTournaments() {
@@ -4746,3 +4772,333 @@ function toggleAudio() {
   }
   requestAnimationFrame(tick);
 })();
+
+/* ===== ADMIN SYSTEM ===== */
+
+let adminMatchTimer = null;
+let adminMatchTimerSeconds = 0;
+let adminMatchId = null;
+
+function openAdminPanel() {
+  // For now, navigate to buscar-partido to manage matches
+  if (document.getElementById('bp-list-proximos')) {
+    alert('Panel de admin: usa los botones ⚙ ADMINISTRAR en cada partido.');
+  } else {
+    location.href = 'buscar-partido.html';
+  }
+}
+
+function openAdminMatch(matchId) {
+  if (!isAdmin()) return;
+  const m = openMatches.find(x => x.id === matchId);
+  if (!m) return;
+  adminMatchId = matchId;
+  adminMatchTimerSeconds = 0;
+
+  // Build confirmed players list
+  const allUnidos = [];
+  (m.necesita || []).forEach(slot => {
+    (slot.unidos || []).forEach(u => allUnidos.push(u.profileId));
+  });
+  if (m.creatorId && !allUnidos.includes(m.creatorId)) allUnidos.unshift(m.creatorId);
+  const playerIds = [...new Set(allUnidos)];
+
+  const modal = document.getElementById('admin-match-modal');
+  if (!modal) return;
+
+  const playerRows = playerIds.map(pid => {
+    const p = profiles[pid] || { name: pid, position: '?', ovr: 60 };
+    return `
+      <tr data-pid="${pid}">
+        <td class="am-name-cell">${p.nickname || p.name}<br><span class="am-pos">${p.position} · OVR ${p.ovr}</span></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','goles',-1)">−</button> <span id="am-goles-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','goles',1)">+</button></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','asistencias',-1)">−</button> <span id="am-asistencias-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','asistencias',1)">+</button></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','tirosAlArco',-1)">−</button> <span id="am-tirosAlArco-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','tirosAlArco',1)">+</button></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','recuperaciones',-1)">−</button> <span id="am-recuperaciones-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','recuperaciones',1)">+</button></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','errores',-1)">−</button> <span id="am-errores-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','errores',1)">+</button></td>
+        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','amarillas',-1)">−</button> <span id="am-amarillas-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','amarillas',1)">+</button></td>
+        <td><input class="am-cal-input" id="am-cal-${pid}" type="number" min="1" max="10" step="0.5" value="6.5"></td>
+        <td><input type="radio" name="am-mvp" value="${pid}"></td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('admin-match-content').innerHTML = `
+    <div class="am-header">
+      <div>
+        <div class="am-match-title">⚙ ADMINISTRAR PARTIDO</div>
+        <div class="am-match-sub">${m.cancha || m.zona} · ${m.fecha} · ${m.horaValue || ''}</div>
+      </div>
+      <button class="am-close-btn" onclick="closeAdminMatch()">✕ CERRAR</button>
+    </div>
+
+    <div class="am-scoreboard">
+      <div class="am-score-team">LOCAL</div>
+      <input class="am-score-input" id="am-goles-local" type="number" min="0" value="0">
+      <div class="am-score-sep">·</div>
+      <input class="am-score-input" id="am-goles-visitante" type="number" min="0" value="0">
+      <div class="am-score-team">VISITANTE</div>
+    </div>
+
+    <div class="am-timer">
+      <span id="am-timer-display">00:00</span>
+      <button class="am-timer-btn" onclick="adminAddTime(1)">+1 MIN</button>
+      <button class="am-timer-btn" onclick="adminAddTime(5)">+5 MIN</button>
+      <button class="am-timer-btn" onclick="adminAddTime(10)">+10 MIN</button>
+      <button class="am-timer-btn" id="am-timer-toggle" onclick="adminToggleTimer()">▶ INICIAR</button>
+    </div>
+
+    <div class="am-table-wrap">
+      <table class="am-table">
+        <thead>
+          <tr>
+            <th>JUGADOR</th>
+            <th>⚽ GOL</th>
+            <th>🎯 ASIST</th>
+            <th>🥅 TIRO</th>
+            <th>🛡 RECUP</th>
+            <th>❌ ERROR</th>
+            <th>🟨 AMARILLA</th>
+            <th>CALIF (1-10)</th>
+            <th>MVP</th>
+          </tr>
+        </thead>
+        <tbody id="am-player-tbody">
+          ${playerRows}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="am-events">
+      <div class="am-events-title">EVENTOS</div>
+      <div id="am-events-list" class="am-events-list"></div>
+    </div>
+
+    <div class="am-notes-wrap">
+      <label class="am-notes-label">NOTAS DEL PARTIDO</label>
+      <textarea class="am-notes" id="am-notes" rows="3" placeholder="Observaciones, incidentes, etc."></textarea>
+    </div>
+
+    <button class="am-finalize-btn" onclick="adminFinalizeMatch()">✅ FINALIZAR Y ENVIAR ESTADÍSTICAS</button>
+  `;
+
+  modal.classList.add('open');
+}
+
+function closeAdminMatch() {
+  if (adminMatchTimer) { clearInterval(adminMatchTimer); adminMatchTimer = null; }
+  adminMatchId = null;
+  const modal = document.getElementById('admin-match-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+const _adminStats = {};
+
+function adminStatChange(pid, stat, delta) {
+  if (!_adminStats[pid]) _adminStats[pid] = { goles: 0, asistencias: 0, tirosAlArco: 0, recuperaciones: 0, errores: 0, amarillas: 0 };
+  _adminStats[pid][stat] = Math.max(0, (_adminStats[pid][stat] || 0) + delta);
+  const el = document.getElementById(`am-${stat}-${pid}`);
+  if (el) el.textContent = _adminStats[pid][stat];
+
+  // Log event
+  const m = openMatches.find(x => x.id === adminMatchId);
+  const p = profiles[pid];
+  const min = Math.floor(adminMatchTimerSeconds / 60);
+  const pName = p ? (p.nickname || p.name) : pid;
+  if (delta > 0) {
+    const evtMap = { goles: `⚽ GOL de ${pName}`, asistencias: `🎯 ASISTENCIA de ${pName}`, tirosAlArco: `🥅 TIRO de ${pName}`, recuperaciones: `🛡 RECUPERACIÓN de ${pName}`, errores: `❌ ERROR de ${pName}`, amarillas: `🟨 AMARILLA a ${pName}` };
+    const evt = evtMap[stat] || `${stat} → ${pName}`;
+    const listEl = document.getElementById('am-events-list');
+    if (listEl) {
+      const div = document.createElement('div');
+      div.className = 'am-event-item';
+      div.textContent = `${min}' · ${evt}`;
+      listEl.prepend(div);
+    }
+  }
+}
+
+function adminAddTime(mins) {
+  adminMatchTimerSeconds += mins * 60;
+  updateAdminTimerDisplay();
+}
+
+function adminToggleTimer() {
+  const btn = document.getElementById('am-timer-toggle');
+  if (adminMatchTimer) {
+    clearInterval(adminMatchTimer);
+    adminMatchTimer = null;
+    if (btn) btn.textContent = '▶ INICIAR';
+  } else {
+    adminMatchTimer = setInterval(() => {
+      adminMatchTimerSeconds++;
+      updateAdminTimerDisplay();
+    }, 1000);
+    if (btn) btn.textContent = '⏹ DETENER';
+  }
+}
+
+function updateAdminTimerDisplay() {
+  const el = document.getElementById('am-timer-display');
+  if (!el) return;
+  const m = Math.floor(adminMatchTimerSeconds / 60);
+  const s = adminMatchTimerSeconds % 60;
+  el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+async function adminFinalizeMatch() {
+  if (!isAdmin() || !adminMatchId) return;
+  const match = openMatches.find(x => x.id === adminMatchId);
+  if (!match) return;
+
+  const golesLocal = parseInt(document.getElementById('am-goles-local').value) || 0;
+  const golesVisitante = parseInt(document.getElementById('am-goles-visitante').value) || 0;
+  const notes = (document.getElementById('am-notes').value || '').trim();
+  const mvpRadio = document.querySelector('input[name="am-mvp"]:checked');
+  const mvpId = mvpRadio ? mvpRadio.value : null;
+
+  // Collect all player IDs
+  const allUnidos = [];
+  (match.necesita || []).forEach(slot => {
+    (slot.unidos || []).forEach(u => allUnidos.push(u.profileId));
+  });
+  if (match.creatorId && !allUnidos.includes(match.creatorId)) allUnidos.unshift(match.creatorId);
+  const playerIds = [...new Set(allUnidos)];
+
+  const statsMap = {};
+  for (const pid of playerIds) {
+    const calInput = document.getElementById(`am-cal-${pid}`);
+    const calificacion = calInput ? parseFloat(calInput.value) || 6.5 : 6.5;
+    const st = _adminStats[pid] || {};
+    const m2 = {
+      goles: st.goles || 0,
+      asistencias: st.asistencias || 0,
+      pases: st.tirosAlArco || 0,
+      recuperaciones: st.recuperaciones || 0,
+      calificacion,
+      mvp: pid === mvpId,
+    };
+    statsMap[pid] = m2;
+
+    const p = profiles[pid];
+    if (!p) continue;
+
+    const deltas = computeMatchDeltas(p, m2);
+    checkAchievements(p, m2);
+
+    p.ovr = deltas.ovrAfter;
+    p.xp = deltas.xpAfter;
+    p.lp = (p.lp || 0) + deltas.lpGain;
+    p.goals = (p.goals || 0) + m2.goles;
+    p.assists = (p.assists || 0) + m2.asistencias;
+    p.matches = (p.matches || 0) + 1;
+    if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+    p.lastUpdate = new Date().toISOString();
+    p.history = p.history || [];
+    p.history.push({
+      date: match.fecha,
+      cancha: match.cancha || match.zona,
+      calificacion,
+      goles: m2.goles,
+      asistencias: m2.asistencias,
+      mvp: m2.mvp,
+      ovrDelta: deltas.ovrDelta,
+      xpGain: deltas.xpGain,
+    });
+
+    profiles[pid] = p;
+    await pushProfileToCloud(p);
+  }
+
+  match.finalizado = true;
+  match.resultado = { golesLocal, golesVisitante };
+  match.stats = statsMap;
+  match.mvpId = mvpId;
+  match.notes = notes;
+
+  saveOpenMatches();
+  pushMatchToCloud(match);
+  saveProfiles();
+
+  // Clear admin stats cache
+  playerIds.forEach(pid => { delete _adminStats[pid]; });
+
+  closeAdminMatch();
+  renderAll();
+  alert('✅ Estadísticas enviadas y cartas actualizadas.');
+}
+
+/* ===== ADMIN PLAYER EDITOR ===== */
+
+function openAdminPlayer(pid) {
+  if (!isAdmin()) return;
+  const p = profiles[pid];
+  if (!p) return;
+
+  const modal = document.getElementById('admin-player-modal');
+  if (!modal) return;
+
+  const ph = p.physical || {};
+  document.getElementById('ap-content').innerHTML = `
+    <div class="ap-header">
+      <div class="ap-title">EDITAR JUGADOR</div>
+      <div class="ap-name">${p.nickname || p.name}</div>
+      <button class="am-close-btn" onclick="closeAdminPlayer()">✕</button>
+    </div>
+    <div class="ap-form">
+      <label class="ap-label">FOTO (URL)</label>
+      <input class="ap-input" id="ap-photo" type="text" value="${p.photo || ''}" placeholder="https://...">
+      <label class="ap-label">PESO (kg)</label>
+      <input class="ap-input" id="ap-weight" type="number" value="${ph.weight || ''}" placeholder="70">
+      <label class="ap-label">ALTURA (cm)</label>
+      <input class="ap-input" id="ap-height" type="number" value="${ph.height || ''}" placeholder="175">
+      <label class="ap-label">EDAD</label>
+      <input class="ap-input" id="ap-age" type="number" value="${ph.age || ''}" placeholder="25">
+      <label class="ap-label">PIE DOMINANTE</label>
+      <div class="ap-foot-row">
+        <button class="ap-foot-btn ${ph.foot === 'DERECHO' ? 'on' : ''}" onclick="selectFoot('DERECHO')">DERECHO</button>
+        <button class="ap-foot-btn ${ph.foot === 'IZQUIERDO' ? 'on' : ''}" onclick="selectFoot('IZQUIERDO')">IZQUIERDO</button>
+        <button class="ap-foot-btn ${ph.foot === 'AMBOS' ? 'on' : ''}" onclick="selectFoot('AMBOS')">AMBOS</button>
+      </div>
+      <label class="ap-label">ES ADMIN</label>
+      <label class="ap-check-label"><input type="checkbox" id="ap-is-admin" ${p.isAdmin ? 'checked' : ''}> Admin del sistema</label>
+    </div>
+    <button class="am-finalize-btn" onclick="saveAdminPlayer('${pid}')">💾 GUARDAR</button>
+  `;
+  modal.classList.add('open');
+}
+
+function closeAdminPlayer() {
+  const modal = document.getElementById('admin-player-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function selectFoot(foot) {
+  document.querySelectorAll('.ap-foot-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.ap-foot-btn').forEach(b => { if (b.textContent === foot) b.classList.add('on'); });
+}
+
+async function saveAdminPlayer(pid) {
+  if (!isAdmin()) return;
+  const p = profiles[pid];
+  if (!p) return;
+
+  const photo = document.getElementById('ap-photo').value.trim() || null;
+  const weight = parseFloat(document.getElementById('ap-weight').value) || null;
+  const height = parseFloat(document.getElementById('ap-height').value) || null;
+  const age = parseInt(document.getElementById('ap-age').value) || null;
+  const footBtn = document.querySelector('.ap-foot-btn.on');
+  const foot = footBtn ? footBtn.textContent : null;
+  const isAdminCheck = document.getElementById('ap-is-admin');
+  const newIsAdmin = isAdminCheck ? isAdminCheck.checked : p.isAdmin;
+
+  p.photo = photo;
+  p.physical = { weight, height, age, foot };
+  p.isAdmin = newIsAdmin;
+  profiles[pid] = p;
+
+  saveProfiles();
+  await pushProfileToCloud(p);
+  closeAdminPlayer();
+  renderAll();
+  alert('✅ Jugador actualizado.');
+}
