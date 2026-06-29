@@ -2730,6 +2730,14 @@ function renderBuscarPartido() {
   renderMiParticipacionTimeline();
   const form = document.getElementById('bp-form');
   if (form && form.style.display !== 'none') renderBpWizard();
+  // Hero stats
+  const openMatches = loadOpenMatches();
+  const activeCount = Object.values(openMatches).filter(m => m.status !== 'archivado').length;
+  const playerCount = Object.keys(profiles).length;
+  const elP = document.getElementById('bph-stat-partidos');
+  const elJ = document.getElementById('bph-stat-jugadores');
+  if (elP) elP.textContent = activeCount || '0';
+  if (elJ) elJ.textContent = playerCount || '0';
 }
 
 function renderMiParticipacionTimeline() {
@@ -4249,11 +4257,11 @@ initApp();
 
 /* ===== TORNEOS ===== */
 
-const ADMIN_NICKNAMES = ['BRECO', 'Breco'];
-const ADMIN_NAMES = ['Miguel Breci'];
-
 function isAdmin() {
-  return state && (ADMIN_NICKNAMES.includes(state.nickname) || ADMIN_NAMES.includes(state.name));
+  if (!state) return false;
+  const nick = (state.nickname || '').toUpperCase();
+  const name = (state.name || '').toLowerCase();
+  return nick === 'BRECO' || name === 'miguel breci';
 }
 
 function loadTournaments() {
