@@ -1982,9 +1982,10 @@ function renderBpWizard() {
         <textarea class="auth-input" id="bpw-libre-obs" rows="3" placeholder="Ej: Llevar peto azul, parqueadero disponible, trae agua..." maxlength="300" oninput="bpWizard.canchaLibreObs=this.value;renderBpSummary()">${bpWizard.canchaLibreObs}</textarea>
       </div>`;
   } else if (bpWizardStep === 5) {
+    const todayISO = new Date().toISOString().split('T')[0];
     bodyEl.innerHTML = `
       <div class="auth-label">PASO 5 · SELECCIONA LA FECHA</div>
-      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
+      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" min="${todayISO}" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
   } else if (bpWizardStep === 6) {
     if (bpWizard.canchaLibre) {
       bodyEl.innerHTML = `
@@ -2101,7 +2102,7 @@ function bpAddInvitado(profileId) {
   document.getElementById('bp-invite-search').value = '';
   document.getElementById('bp-invite-suggest').innerHTML = '';
   document.getElementById('bp-invite-suggest').classList.remove('open');
-  renderBpWizard();
+  renderBpStep7Partial();
 }
 
 function bpSetInvitadoPos(idx, pos) {
@@ -2111,7 +2112,40 @@ function bpSetInvitadoPos(idx, pos) {
 
 function bpRemoveInvitado(idx) {
   bpWizard.invitados.splice(idx, 1);
-  renderBpWizard();
+  renderBpStep7Partial();
+}
+
+function renderBpStep7Partial() {
+  const totalJug = getTotalJugadores();
+  const maxFaltan = getMaxFaltan();
+  const yaConfirmados = 1 + bpWizard.invitados.length;
+  const cuposRestantes = totalJug - yaConfirmados;
+  const rowEl = document.querySelector('.bpw-cupos-row');
+  const legendEl = document.querySelector('.bpw-cupos-legend');
+  const chipsEl = document.getElementById('bp-invite-chips');
+  if (rowEl) {
+    rowEl.innerHTML = Array.from({length: totalJug}, (_, i) => {
+      const cls = i === 0 ? 'me' : i < yaConfirmados ? 'confirmed' : 'empty';
+      return `<div class="bpw-cupo-dot ${cls}" title="${i === 0 ? 'Tú (organizador)' : i < yaConfirmados ? bpWizard.invitados[i-1]?.name || 'Confirmado' : 'Cupo libre'}"></div>`;
+    }).join('');
+  }
+  if (legendEl) {
+    legendEl.innerHTML = `
+      <span><span class="bpw-cupo-dot me" style="display:inline-block"></span> Tú</span>
+      <span><span class="bpw-cupo-dot confirmed" style="display:inline-block"></span> Confirmados (${yaConfirmados})</span>
+      <span><span class="bpw-cupo-dot empty" style="display:inline-block"></span> Faltan (${cuposRestantes})</span>`;
+  }
+  if (chipsEl) {
+    chipsEl.innerHTML = bpWizard.invitados.map((inv, i) => `
+      <span class="bp-invite-chip">
+        ${inv.name}
+        <select onchange="bpSetInvitadoPos(${i}, this.value)">
+          ${['DEL','MED','DEF','POR'].map(p => `<option value="${p}" ${inv.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
+        </select>
+        <span class="bp-invite-chip-x" onclick="bpRemoveInvitado(${i})">✕</span>
+      </span>`).join('');
+  }
+  renderBpSummary();
 }
 
 function bpFaltanTotalChecked() {
@@ -2191,8 +2225,21 @@ function bpWizardNext() {
   if (bpWizardStep === 2 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
   if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
   if (bpWizardStep === 4 && !bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
-  if (bpWizardStep === 5 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
-  if (bpWizardStep === 6 && !bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
+  if (bpWizardStep === 5) {
+    if (!bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
+    const today = new Date().toISOString().split('T')[0];
+    if (bpWizard.fechaISO < today) { errorEl.textContent = 'No puedes crear un partido en una fecha que ya pasó.'; return; }
+  }
+  if (bpWizardStep === 6) {
+    if (!bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
+    const today = new Date().toISOString().split('T')[0];
+    if (bpWizard.fechaISO === today) {
+      const now = new Date();
+      const [h, m] = bpWizard.horaLibre.split(':').map(Number);
+      const matchTime = new Date(); matchTime.setHours(h, m, 0, 0);
+      if (matchTime <= now) { errorEl.textContent = 'La hora ya pasó. Selecciona una hora futura.'; return; }
+    }
+  }
   if (bpWizardStep < 7) { bpWizardStep++; renderBpWizard(); return; }
   submitMatchRequest();
 }
