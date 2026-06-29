@@ -1218,6 +1218,94 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-kick-btn{background:var(--bg3);border:1px solid rgba(255,80,80,0.35);color:#ff8a8a;width:100%;margin-top:8px;position:relative;z-index:2}
 .team-kick-btn:hover{box-shadow:0 0 16px rgba(255,80,80,0.25)}
 
+/* ===== TEAM CINEMA — Perfil de club AAA ===== */
+.team-cinema{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:0}
+
+/* Banner */
+.team-cinema-banner{position:relative;display:flex;align-items:center;gap:20px;padding:32px 28px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,rgba(0,0,0,0.7),rgba(0,0,0,0.4)),radial-gradient(circle at 0% 50%,var(--team-color,#00ff88) -60%,transparent 60%);border:0.5px solid rgba(255,255,255,0.1);border-bottom:none;overflow:hidden;flex-wrap:wrap;gap:16px}
+.team-cinema-banner-glow{position:absolute;top:-40px;left:-40px;width:260px;height:260px;background:radial-gradient(circle,var(--team-color,rgba(0,255,136,0.4)),transparent 65%);filter:blur(50px);pointer-events:none;opacity:.5}
+.team-cinema-escudo{width:88px;height:88px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,0.2);box-shadow:0 0 30px -6px var(--team-color,rgba(0,255,136,0.6));cursor:zoom-in;flex-shrink:0;position:relative;z-index:1}
+.team-cinema-escudo-ph{width:88px;height:88px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:24px;font-weight:900;color:#020510;flex-shrink:0;position:relative;z-index:1}
+.team-cinema-info{flex:1;min-width:200px;position:relative;z-index:1}
+.team-cinema-name{font-family:var(--ft);font-size:clamp(18px,3vw,28px);font-weight:900;color:var(--w);letter-spacing:1px;line-height:1.1;margin-bottom:6px}
+.team-cinema-city{font-size:12px;color:var(--td);margin-bottom:10px}
+.team-cinema-meta{display:flex;gap:8px;flex-wrap:wrap}
+.team-cinema-tag{font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);color:var(--tm)}
+.team-cinema-tag.ovr{border-color:rgba(0,255,136,0.4);color:var(--g)}
+.team-cinema-tag.gold{border-color:rgba(201,168,76,0.5);color:var(--gold)}
+.team-cinema-tag.cap{border-color:rgba(255,215,0,0.4);color:#ffd700}
+.team-cinema-actions{display:flex;flex-direction:column;gap:7px;flex-shrink:0;position:relative;z-index:1}
+.team-cinema-btn{font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:8px 14px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.18);color:var(--tm);border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.team-cinema-btn:hover{border-color:rgba(0,255,136,0.5);color:var(--g)}
+.team-cinema-btn.open{border-color:rgba(0,255,136,0.5);color:var(--g)}
+.team-cinema-btn.danger{border-color:rgba(255,80,80,0.35);color:#ff8a8a}
+.team-cinema-btn.danger:hover{box-shadow:0 0 12px rgba(255,80,80,0.25)}
+
+/* Progress bar */
+.team-progress-wrap{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-top:none;border-bottom:none;padding:14px 28px;display:flex;flex-direction:column;gap:6px}
+.team-progress-label{display:flex;justify-content:space-between;align-items:center;font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--td)}
+.team-complete-badge{color:var(--g);font-size:9px;letter-spacing:1px;text-shadow:0 0 10px rgba(0,255,136,0.6);animation:completePulse 2s ease-in-out infinite}
+@keyframes completePulse{0%,100%{opacity:1}50%{opacity:.6}}
+.team-progress-track{height:4px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden}
+.team-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--g),#00cc6e);transition:width .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(0,255,136,0.5)}
+.team-progress-fill.complete{background:linear-gradient(90deg,#ffd700,#ffaa00);box-shadow:0 0 12px rgba(255,215,0,0.6)}
+
+/* Pitch section */
+.team-pitch-section{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:20px 28px}
+.team-pitch-label{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:14px}
+.team-pitch{position:relative;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#0a2e0a,#0d3d0d,#0a2e0a);border:0.5px solid rgba(255,255,255,0.1);min-height:280px;display:flex;align-items:center;justify-content:center}
+.team-pitch-bg{position:absolute;inset:0;pointer-events:none}
+.pitch-line{position:absolute;border:1px solid rgba(255,255,255,0.12)}
+.pitch-center-line{left:0;right:0;top:50%;height:0}
+.pitch-center-circle{width:80px;height:80px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);background:transparent}
+.pitch-penalty-top{left:25%;right:25%;top:8px;height:50px;background:transparent;border-radius:2px}
+.pitch-penalty-bot{left:25%;right:25%;bottom:8px;height:50px;background:transparent;border-radius:2px}
+.team-pitch-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:10px;padding:16px;width:100%}
+
+/* Player cards on pitch */
+.team-fc-slot{position:relative;border-radius:8px;padding:10px 8px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .2s,box-shadow .2s;min-height:110px}
+.team-fc-slot.empty{background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);cursor:default;justify-content:center}
+.team-fc-slot.filled{background:linear-gradient(160deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03));border:0.5px solid rgba(255,255,255,0.15)}
+.team-fc-slot.filled:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.team-fc-slot.filled.card-gold{border-color:rgba(255,215,0,0.4);box-shadow:0 0 14px -4px rgba(255,215,0,0.3)}
+.team-fc-slot.filled.card-silver{border-color:rgba(180,180,200,0.4);box-shadow:0 0 14px -4px rgba(180,180,200,0.3)}
+.team-fc-slot.filled.card-bronze{border-color:rgba(180,100,50,0.4);box-shadow:0 0 14px -4px rgba(180,100,50,0.2)}
+.team-fc-slot.captain{border-color:rgba(255,215,0,0.5)!important;box-shadow:0 0 20px -4px rgba(255,215,0,0.4)!important}
+.team-fc-crown{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:14px;filter:drop-shadow(0 0 6px rgba(255,215,0,0.8))}
+.team-fc-sub-tag{position:absolute;top:4px;right:4px;font-family:var(--ft);font-size:6px;letter-spacing:1px;background:rgba(255,255,255,0.15);color:var(--tm);padding:2px 5px;border-radius:3px}
+.team-fc-plus{font-size:20px;color:rgba(255,255,255,0.25);margin-bottom:4px}
+.team-fc-empty-lbl{font-family:var(--ft);font-size:7px;letter-spacing:1px;color:rgba(255,255,255,0.25)}
+.team-fc-photo-wrap{width:44px;height:44px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;background:var(--bg3)}
+.team-fc-photo{width:100%;height:100%;object-fit:cover}
+.team-fc-av{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:12px;color:var(--w)}
+.team-fc-ovr{font-family:var(--ft);font-size:15px;font-weight:900;color:var(--w);line-height:1;margin-top:2px}
+.team-fc-name{font-family:var(--ft);font-size:8px;letter-spacing:0.5px;color:rgba(255,255,255,0.9);max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-fc-posLabel{font-family:var(--ft);font-size:7px;letter-spacing:1px;color:var(--g);margin-top:1px}
+.team-fc-pos-select{font-size:8px;padding:3px 4px;margin-top:3px;background:rgba(0,0,0,0.5);border:0.5px solid rgba(255,255,255,0.15);color:var(--w);border-radius:3px;width:100%}
+.team-fc-kick{position:absolute;top:4px;left:4px;background:rgba(255,80,80,0.2);border:0.5px solid rgba(255,80,80,0.4);color:#ff8a8a;width:16px;height:16px;border-radius:50%;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .2s}
+.team-fc-slot:hover .team-fc-kick{opacity:1}
+
+/* Suplentes */
+.team-bench-section{background:rgba(255,255,255,0.01);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:18px 28px}
+.team-bench-label{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:14px}
+.team-bench-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.team-bench-grid .team-fc-slot{background:rgba(255,255,255,0.03);min-height:90px}
+.team-bench-grid .team-fc-slot.filled{background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))}
+
+/* Panel de gestión del capitán */
+.team-mgmt-section{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:16px 28px}
+.team-mgmt-title{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:12px}
+.team-invite-input-main{width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.15);color:var(--w);font-size:13px;padding:12px 16px;border-radius:7px;outline:none;transition:border-color .2s;box-sizing:border-box}
+.team-invite-input-main:focus{border-color:rgba(0,255,136,0.4)}
+.team-invite-input-main::placeholder{color:rgba(255,255,255,0.3)}
+
+@media(max-width:680px){
+  .team-cinema-banner{padding:20px 16px}
+  .team-pitch-section,.team-bench-section,.team-mgmt-section,.team-progress-wrap{padding:14px 16px}
+  .team-pitch-grid{grid-template-columns:repeat(2,1fr)}
+  .team-bench-grid{grid-template-columns:repeat(2,1fr)}
+}
+
 /* ===== Recuadros neón de jugadores en el equipo ===== */
 .team-slot-neon{
   background:radial-gradient(circle at 50% -10%,rgba(255,255,255,0.04),transparent 60%),var(--bg3);

@@ -2996,7 +2996,7 @@ function sendTeamInvite(teamId, playerId) {
   const team = teams[teamId];
   const player = profiles[playerId];
   if (!team || !player) return;
-  if (team.memberIds.length >= 6) { alert('Tu equipo ya tiene los 6 cupos llenos.'); return; }
+  if (team.memberIds.length >= 8) { alert('Tu equipo ya tiene los 8 cupos llenos (6 titulares + 2 suplentes).'); return; }
   const exists = teamInvites.find(i => i.teamId === teamId && i.toId === playerId && i.status === 'pendiente');
   if (exists) { pushTeamInviteToCloud(exists); alert('Ya le habías enviado una invitación a este jugador. La reenviamos por si no había llegado.'); return; }
   const invite = {
@@ -3587,106 +3587,163 @@ function renderTeamProfile(teamId) {
   if (!el) return;
   const team = teams[teamId];
   if (!team) { el.innerHTML = `<div class="rk-empty">No se pudo cargar este equipo.</div>`; return; }
+
   const ovr = getTeamOVR(team);
   const { record, dg } = getTeamRecord(team);
   const captain = profiles[team.captainId];
   const isCaptain = state && state.id === team.captainId;
   const slotPositions = team.slotPositions || [];
-  const positionSelect = (i, current) => `
-    <select class="auth-input team-slot-pos-select" onchange="setSlotPosition('${team.id}',${i},this.value)">
-      <option value="" ${!current ? 'selected' : ''}>POSICIÓN...</option>
-      ${POSITIONS.map(pos => `<option value="${pos}" ${current === pos ? 'selected' : ''}>${pos}</option>`).join('')}
-    </select>`;
-  const slots = Array.from({ length: 6 }, (_, i) => {
+  const totalFilled = team.memberIds.filter(Boolean).length;
+  const isComplete = totalFilled >= 8;
+  const pct = Math.round((totalFilled / 8) * 100);
+
+  const posSelect = (i, cur) => isCaptain ? `
+    <select class="team-fc-pos-select" onchange="setSlotPosition('${team.id}',${i},this.value)">
+      <option value="" ${!cur ? 'selected' : ''}>POS</option>
+      ${POSITIONS.map(p => `<option value="${p}" ${cur === p ? 'selected' : ''}>${p}</option>`).join('')}
+    </select>` : '';
+
+  const buildCard = (i, isSub) => {
     const memberId = team.memberIds[i];
     const pos = slotPositions[i] || '';
     if (!memberId) {
-      return isCaptain
-        ? `<div class="team-slot empty">
-            ${positionSelect(i, pos)}
-            <input class="auth-input team-invite-input" id="team-invite-search" placeholder="Buscar jugador para invitar..." autocomplete="off" oninput="searchPlayersToInvite(this.value,'${team.id}')" onblur="setTimeout(()=>document.getElementById('team-invite-suggest').classList.remove('open'),150)">
-            <div class="pl-suggest" id="team-invite-suggest"></div>
-          </div>`
-        : `<div class="team-slot empty">${pos ? `<div class="team-slot-tag">${pos}</div>` : ''}<span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
+      return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}">
+        <div class="team-fc-plus">+</div>
+        <div class="team-fc-empty-lbl">${isSub ? 'SUPLENTE' : (pos || 'CUPO LIBRE')}</div>
+        ${posSelect(i, pos)}
+      </div>`;
     }
     const p = profiles[memberId];
-    if (!p) return `<div class="team-slot empty"><span class="team-slot-empty-txt">CUPO LIBRE</span></div>`;
+    if (!p) return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}"><div class="team-fc-plus">+</div><div class="team-fc-empty-lbl">CUPO LIBRE</div></div>`;
     const isCap = memberId === team.captainId;
-    const neonIdx = i % 6;
-    return `
-      <div class="team-slot team-slot-neon neon-${neonIdx} ${isCap ? 'captain' : ''}">
-        <div class="team-slot-smoke"></div>
-        <div class="team-slot-photo-wrap" onclick="openPlayerView('${p.id}')" title="Ver ficha de ${p.nickname || p.name}">
-          ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
-        </div>
-        <div class="team-slot-name">${p.nickname || p.name}</div>
-        <div class="team-slot-ovr">OVR ${p.ovr}</div>
-        ${isCaptain ? positionSelect(i, pos) : (pos ? `<div class="team-slot-tag">${pos}</div>` : '')}
-        ${isCap ? '<div class="team-slot-captain-badge">CAPITÁN</div>' : ''}
-        ${isCaptain && !isCap ? `<button class="mm-invite-btn team-kick-btn" onclick="openKickModal('${team.id}','${p.id}')">ECHAR DEL EQUIPO</button>` : ''}
-      </div>`;
-  }).join('');
-  const requests = isCaptain && team.joinRequests.length
-    ? `<div class="sec-hdr"><div class="sec-eyebrow">SOLICITUDES PARA UNIRSE</div></div>
-       <div class="team-requests">
-        ${team.joinRequests.map(pid => {
-          const p = profiles[pid];
-          if (!p) return '';
-          return `<div class="notif-invite">
-            <div class="notif-invite-txt">🙋 <strong>${p.nickname || p.name}</strong> · OVR ${p.ovr} · ${p.position}</div>
-            <div class="notif-invite-actions">
-              <button class="notif-accept" onclick="respondJoinRequest('${team.id}','${pid}',true)">ACEPTAR</button>
-              <button class="notif-reject" onclick="respondJoinRequest('${team.id}','${pid}',false)">RECHAZAR</button>
-            </div>
-          </div>`;
-        }).join('')}
-       </div>`
-    : '';
+    const ovrNum = Number(p.ovr) || 50;
+    const cardColor = ovrNum >= 85 ? 'gold' : ovrNum >= 75 ? 'silver' : 'bronze';
+    return `<div class="team-fc-slot filled ${isSub ? 'sub' : ''} ${isCap ? 'captain' : ''} card-${cardColor}" onclick="openPlayerView('${p.id}')">
+      ${isCap ? '<div class="team-fc-crown">👑</div>' : ''}
+      ${isSub ? '<div class="team-fc-sub-tag">SUP</div>' : ''}
+      <div class="team-fc-photo-wrap">
+        ${p.photo ? `<img class="team-fc-photo" src="${p.photo}">` : `<div class="team-fc-av">${p.name.split(' ').map(s=>s[0]).join('').slice(0,2)}</div>`}
+      </div>
+      <div class="team-fc-ovr">${p.ovr}</div>
+      <div class="team-fc-name">${(p.nickname || p.name).split(' ')[0].toUpperCase()}</div>
+      <div class="team-fc-posLabel">${pos || p.position}</div>
+      ${posSelect(i, pos)}
+      ${isCaptain && !isCap ? `<button class="team-fc-kick" onclick="event.stopPropagation();openKickModal('${team.id}','${p.id}')">✕</button>` : ''}
+    </div>`;
+  };
+
+  const titulares = Array.from({length: 6}, (_, i) => buildCard(i, false)).join('');
+  const suplentes = Array.from({length: 2}, (_, i) => buildCard(6 + i, true)).join('');
+
+  const requests = isCaptain && team.joinRequests.length ? `
+    <div class="team-mgmt-section">
+      <div class="team-mgmt-title">SOLICITUDES PARA UNIRSE</div>
+      ${team.joinRequests.map(pid => {
+        const p = profiles[pid]; if (!p) return '';
+        return `<div class="notif-invite">
+          <div class="notif-invite-txt">🙋 <strong>${p.nickname || p.name}</strong> · OVR ${p.ovr} · ${p.position}</div>
+          <div class="notif-invite-actions">
+            <button class="notif-accept" onclick="respondJoinRequest('${team.id}','${pid}',true)">ACEPTAR</button>
+            <button class="notif-reject" onclick="respondJoinRequest('${team.id}','${pid}',false)">RECHAZAR</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
   const leaveRequests = team.leaveRequests || [];
-  const leaveRequestsSection = isCaptain && leaveRequests.length
-    ? `<div class="sec-hdr"><div class="sec-eyebrow">SOLICITUDES PARA SALIR DEL EQUIPO</div></div>
-       <div class="team-requests">
-        ${leaveRequests.map(pid => {
-          const p = profiles[pid];
-          if (!p) return '';
-          return `<div class="notif-invite">
-            <div class="notif-invite-txt">🚪 <strong>${p.nickname || p.name}</strong> quiere salir del equipo.</div>
-            <div class="notif-invite-actions">
-              <button class="notif-accept" onclick="respondLeaveRequest('${team.id}','${pid}',true)">ACEPTAR</button>
-              <button class="notif-reject" onclick="respondLeaveRequest('${team.id}','${pid}',false)">RECHAZAR</button>
-            </div>
-          </div>`;
-        }).join('')}
-       </div>`
-    : '';
+  const leaveReqSection = isCaptain && leaveRequests.length ? `
+    <div class="team-mgmt-section">
+      <div class="team-mgmt-title">SOLICITUDES PARA SALIR</div>
+      ${leaveRequests.map(pid => {
+        const p = profiles[pid]; if (!p) return '';
+        return `<div class="notif-invite">
+          <div class="notif-invite-txt">🚪 <strong>${p.nickname || p.name}</strong> quiere salir del equipo.</div>
+          <div class="notif-invite-actions">
+            <button class="notif-accept" onclick="respondLeaveRequest('${team.id}','${pid}',true)">ACEPTAR</button>
+            <button class="notif-reject" onclick="respondLeaveRequest('${team.id}','${pid}',false)">RECHAZAR</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
   const isNonCaptainMember = state && !isCaptain && team.memberIds.includes(state.id);
   const alreadyRequestedLeave = state && leaveRequests.includes(state.id);
-  const leaveBtn = isNonCaptainMember
-    ? `<button class="mm-invite-btn team-leave-btn" onclick="requestLeaveTeam()" ${alreadyRequestedLeave ? 'disabled' : ''}>${alreadyRequestedLeave ? 'SOLICITUD DE SALIDA ENVIADA' : 'SOLICITAR SALIR DEL EQUIPO'}</button>`
-    : '';
+
   el.innerHTML = `
-    <div class="team-card">
-      <div class="team-card-head">
-        ${team.photo ? `<img class="team-escudo escudo-clickable" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
-        <div>
-          <div class="team-card-name">${team.name}</div>
-          <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>
-          <div class="pi-tags">
-            <div class="pi-tag g">OVR ${ovr}</div>
-            <div class="pi-tag gold">RÉCORD ${record}</div>
-            <div class="pi-tag g">DIF. GOLES ${dg >= 0 ? '+' : ''}${dg}</div>
-          </div>
-          <div class="team-card-captain">Capitán: ${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</div>
+    <div class="team-cinema">
+      <!-- BANNER CINEMATOGRÁFICO -->
+      <div class="team-cinema-banner" style="--team-color:${team.color || '#00ff88'}">
+        <div class="team-cinema-banner-glow"></div>
+        <div class="team-cinema-escudo-wrap">
+          ${team.photo
+            ? `<img class="team-cinema-escudo" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')">`
+            : `<div class="team-cinema-escudo team-cinema-escudo-ph" style="background:${team.color}">${team.name.slice(0,2).toUpperCase()}</div>`}
         </div>
-        ${isCaptain ? `<button class="mm-invite-btn team-edit-btn" onclick="openEditTeamModal('${team.id}')">✎ EDITAR EQUIPO</button>` : ''}
+        <div class="team-cinema-info">
+          <div class="team-cinema-name">${team.name.toUpperCase()}</div>
+          <div class="team-cinema-city">📍 ${team.city || 'SIN CIUDAD'}${team.desc ? ' · ' + team.desc : ''}</div>
+          <div class="team-cinema-meta">
+            <span class="team-cinema-tag ovr">⭐ OVR ${ovr}</span>
+            <span class="team-cinema-tag gold">🏆 ${record}</span>
+            <span class="team-cinema-tag">${dg >= 0 ? '+' : ''}${dg} DG</span>
+            ${captain ? `<span class="team-cinema-tag cap">👑 ${captain.nickname || captain.name}</span>` : ''}
+          </div>
+        </div>
+        <div class="team-cinema-actions">
+          ${isCaptain ? `<button class="team-cinema-btn" onclick="openEditTeamModal('${team.id}')">✎ EDITAR</button>` : ''}
+          ${isCaptain ? `<button class="team-cinema-btn ${team.openForPlayers ? 'open' : ''}" onclick="toggleOpenForPlayers('${team.id}')">${team.openForPlayers ? '🔓 ABIERTO' : '🔒 CERRADO'}</button>` : ''}
+          ${isNonCaptainMember ? `<button class="team-cinema-btn danger" onclick="requestLeaveTeam()" ${alreadyRequestedLeave ? 'disabled' : ''}>${alreadyRequestedLeave ? 'SALIDA SOLICITADA' : 'SALIR DEL EQUIPO'}</button>` : ''}
+        </div>
       </div>
-      ${isCaptain ? `<button class="mm-invite-btn" onclick="toggleOpenForPlayers('${team.id}')">${team.openForPlayers ? '✓ ABIERTO A SOLICITUDES' : 'CERRADO A SOLICITUDES — ABRIR'}</button>` : ''}
-      ${leaveBtn}
-      <div class="team-slots">${slots}</div>
-    </div>
-    ${requests}
-    ${leaveRequestsSection}
-  `;
+
+      <!-- BARRA DE PROGRESO DE PLANTILLA -->
+      <div class="team-progress-wrap">
+        <div class="team-progress-label">
+          <span>PLANTILLA ${totalFilled}/8</span>
+          ${isComplete ? '<span class="team-complete-badge">✓ PLANTILLA COMPLETA · APTO PARA TORNEOS</span>' : ''}
+        </div>
+        <div class="team-progress-track">
+          <div class="team-progress-fill ${isComplete ? 'complete' : ''}" style="width:${pct}%"></div>
+        </div>
+      </div>
+
+      <!-- FORMACIÓN EN CANCHA -->
+      <div class="team-pitch-section">
+        <div class="team-pitch-label">TITULARES</div>
+        <div class="team-pitch">
+          <div class="team-pitch-bg">
+            <div class="pitch-line pitch-center-circle"></div>
+            <div class="pitch-line pitch-center-line"></div>
+            <div class="pitch-line pitch-penalty-top"></div>
+            <div class="pitch-line pitch-penalty-bot"></div>
+          </div>
+          <div class="team-pitch-grid">
+            ${titulares}
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPLENTES -->
+      <div class="team-bench-section">
+        <div class="team-bench-label">SUPLENTES</div>
+        <div class="team-bench-grid">${suplentes}</div>
+      </div>
+
+      <!-- PANEL DEL CAPITÁN: INVITAR -->
+      ${isCaptain && !isComplete ? `
+      <div class="team-mgmt-section">
+        <div class="team-mgmt-title">INVITAR JUGADOR</div>
+        <div style="position:relative">
+          <input class="team-invite-input-main" id="team-invite-search" placeholder="🔍 Buscar por nombre o apodo..." autocomplete="off"
+            oninput="searchPlayersToInvite(this.value,'${team.id}')"
+            onblur="setTimeout(()=>{const s=document.getElementById('team-invite-suggest');if(s)s.classList.remove('open')},150)">
+          <div class="pl-suggest" id="team-invite-suggest"></div>
+        </div>
+      </div>` : ''}
+
+      ${requests}
+      ${leaveReqSection}
+    </div>`;
 }
 
 function closeTeamSuggestions() {
@@ -3725,7 +3782,7 @@ function renderTeamSearch(query) {
     <div class="pl-card" onclick="openTeamView('${t.id}')">
       ${t.photo ? `<img class="pl-card-av team-card-av-img" src="${t.photo}">` : `<div class="pl-card-av" style="background:${t.color}">${t.name.slice(0, 2)}</div>`}
       <div class="pl-card-name">${t.name}</div>
-      <div class="pl-card-sub">${t.city || 'SIN CIUDAD'} · ${t.memberIds.length}/6 JUGADORES</div>
+      <div class="pl-card-sub">${t.city || 'SIN CIUDAD'} · ${t.memberIds.length}/8 JUGADORES</div>
       <div class="pl-card-tags"><span class="pi-tag g">OVR ${ovr}</span><span class="pi-tag gold">${record}</span></div>
     </div>`;
   }).join('');
