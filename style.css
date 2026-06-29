@@ -1698,9 +1698,12 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
    LANDING NARRATIVA — NUEVAS SECCIONES
    ============================================================ */
 
-/* Hero extras */
-.ld-pain-hook{font-size:clamp(13px,1.6vw,17px);color:rgba(210,220,255,0.65);font-weight:300;line-height:1.7;max-width:520px;margin:0 auto 28px;font-style:italic;border-left:2px solid rgba(255,0,170,0.5);padding-left:16px;text-align:left}
-.ld-hero-note{font-size:11px;color:rgba(210,220,255,0.38);letter-spacing:1.5px;margin-top:-20px;font-family:var(--ft)}
+/* Pain hook section */
+.ld-pain-section{background:#010206;padding:72px 24px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ld-pain-wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.ld-pain-line{font-size:clamp(15px,2vw,20px);color:rgba(210,220,255,0.6);font-weight:300;font-style:italic;line-height:1.5}
+.ld-pain-line.f{color:rgba(255,0,170,0.7)}
+.ld-pain-answer{font-family:var(--ft);font-size:clamp(14px,1.8vw,18px);color:var(--g);letter-spacing:1.5px;margin-top:12px;text-shadow:0 0 20px rgba(0,255,136,0.4)}
 
 /* Sección Imagina */
 .ld-imagine-section{padding:100px 24px 80px}
