@@ -3051,6 +3051,77 @@ function searchPlayersToInvite(query, teamId) {
   el.classList.add('open');
 }
 
+function openSlotInvite(teamId, slotIndex) {
+  const team = teams[teamId];
+  if (!team || team.captainId !== state.id) return;
+  const isSub = slotIndex >= 6;
+  const label = isSub ? `SUPLENTE ${slotIndex - 5}` : `TITULAR ${slotIndex + 1}`;
+  const existing = document.getElementById('slot-invite-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'slot-invite-modal';
+  modal.className = 'slot-invite-overlay';
+  modal.innerHTML = `
+    <div class="slot-invite-card">
+      <div class="slot-invite-title">INVITAR A <span class="slot-invite-pos">${label}</span></div>
+      <input class="tn-input" id="slot-invite-input" autocomplete="off" placeholder="Buscar por nombre o apodo..." oninput="searchSlotInvite(this.value,'${teamId}',${slotIndex})">
+      <div id="slot-invite-results" class="slot-invite-results"></div>
+      <button class="tn-btn-cancel" style="margin-top:12px" onclick="closeSlotInvite()">CANCELAR</button>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) closeSlotInvite(); });
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('slot-invite-input')?.focus(), 50);
+}
+
+function closeSlotInvite() {
+  const m = document.getElementById('slot-invite-modal');
+  if (m) m.remove();
+}
+
+function searchSlotInvite(query, teamId, slotIndex) {
+  const el = document.getElementById('slot-invite-results');
+  if (!el) return;
+  const q = (query || '').trim().toLowerCase();
+  if (!q) { el.innerHTML = ''; return; }
+  const team = teams[teamId];
+  const list = Object.values(profiles)
+    .filter(p => !team.memberIds.includes(p.id) && p.id !== team.captainId)
+    .filter(p => p.name.toLowerCase().includes(q) || (p.nickname || '').toLowerCase().includes(q))
+    .slice(0, 6);
+  if (!list.length) { el.innerHTML = `<div class="slot-invite-item">Sin resultados.</div>`; return; }
+  el.innerHTML = list.map(p => {
+    const rank = getRank(p.xp);
+    return `<div class="slot-invite-item" onclick="sendTeamInviteToSlot('${teamId}','${p.id}',${slotIndex})">
+      <span>${p.nickname || p.name} <span class="s-sub">OVR ${p.ovr} · ${rank.name}</span></span>
+      <span class="notif-accept" style="padding:6px 12px;font-size:10px">INVITAR</span>
+    </div>`;
+  }).join('');
+}
+
+function sendTeamInviteToSlot(teamId, playerId, slotIndex) {
+  const team = teams[teamId];
+  const player = profiles[playerId];
+  if (!team || !player) return;
+  if (team.memberIds[slotIndex] && team.memberIds[slotIndex] !== null) { alert('Este cupo ya está ocupado.'); return; }
+  const exists = teamInvites.find(i => i.teamId === teamId && i.toId === playerId && i.status === 'pendiente');
+  if (exists) { pushTeamInviteToCloud(exists); closeSlotInvite(); alert('Ya le habías enviado una invitación. La reenviamos.'); return; }
+  const isSub = slotIndex >= 6;
+  const posLabel = isSub ? `suplente ${slotIndex - 5}` : `titular ${slotIndex + 1}`;
+  const invite = {
+    id: 'tinv_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    teamId, teamName: team.name, fromCaptainId: state.id, toId: playerId, status: 'pendiente', slotIndex,
+  };
+  teamInvites.push(invite);
+  saveTeamInvites();
+  pushTeamInviteToCloud(invite);
+  player.notifications.push({ icon: '🛡️', text: `${team.name} te invitó a unirte como ${posLabel}. Capitán: ${state.nickname || state.name}.`, time: 'AHORA' });
+  profiles[playerId] = player;
+  saveProfiles();
+  pushProfileToCloud(player);
+  closeSlotInvite();
+  renderTeamsModule();
+}
+
 function sendTeamInvite(teamId, playerId) {
   const team = teams[teamId];
   const player = profiles[playerId];
@@ -3090,8 +3161,18 @@ async function respondTeamInvite(inviteId, accept) {
     const { data, error } = await sb.from('teams').select('*').eq('id', invite.teamId).single();
     if (!error && data) { team = rowToTeam(data); teams[invite.teamId] = team; saveTeams(); }
   }
-  if (accept && team && !team.memberIds.includes(state.id) && team.memberIds.length < 6) {
-    team.memberIds.push(state.id);
+  if (accept && team && !team.memberIds.includes(state.id)) {
+    if (invite.slotIndex !== undefined && invite.slotIndex !== null) {
+      while (team.memberIds.length <= invite.slotIndex) team.memberIds.push(null);
+      if (team.memberIds[invite.slotIndex] && team.memberIds[invite.slotIndex] !== null) {
+        // slot taken, append to next available
+        team.memberIds.push(state.id);
+      } else {
+        team.memberIds[invite.slotIndex] = state.id;
+      }
+    } else if (team.memberIds.length < 8) {
+      team.memberIds.push(state.id);
+    }
     if (!team.joinLog) team.joinLog = [];
     team.joinLog.push({ name: state.nickname || state.name, time: Date.now() });
     saveTeams();
@@ -3666,9 +3747,16 @@ function renderTeamProfile(teamId) {
     const memberId = team.memberIds[i];
     const pos = slotPositions[i] || '';
     if (!memberId) {
-      return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}">
+      if (!isCaptain) {
+        return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}">
+          <div class="team-fc-plus">+</div>
+          <div class="team-fc-empty-lbl">${isSub ? 'SUPLENTE' : (pos || 'CUPO LIBRE')}</div>
+          ${posSelect(i, pos)}
+        </div>`;
+      }
+      return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}" onclick="openSlotInvite('${team.id}',${i})" style="cursor:pointer">
         <div class="team-fc-plus">+</div>
-        <div class="team-fc-empty-lbl">${isSub ? 'SUPLENTE' : (pos || 'CUPO LIBRE')}</div>
+        <div class="team-fc-empty-lbl">${isSub ? 'INVITAR SUPLENTE' : 'INVITAR AQUÍ'}</div>
         ${posSelect(i, pos)}
       </div>`;
     }
