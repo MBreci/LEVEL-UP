@@ -1365,12 +1365,54 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-fc-kick{position:absolute;top:4px;left:4px;background:rgba(255,80,80,0.2);border:0.5px solid rgba(255,80,80,0.4);color:#ff8a8a;width:16px;height:16px;border-radius:50%;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .2s}
 .team-fc-slot:hover .team-fc-kick{opacity:1}
 
-/* Suplentes */
-.team-bench-section{background:rgba(255,255,255,0.01);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:18px 28px}
-.team-bench-label{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:14px}
-.team-bench-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.team-bench-grid .team-fc-slot{background:rgba(255,255,255,0.03);min-height:90px}
-.team-bench-grid .team-fc-slot.filled{background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))}
+/* Suplentes — banca de estadio */
+.team-bench-section{
+  position:relative;overflow:hidden;
+  border:0.5px solid rgba(255,255,255,0.08);border-top:none;
+  padding:18px 28px 24px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 18px,
+      rgba(255,255,255,0.025) 18px,
+      rgba(255,255,255,0.025) 19px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 28px,
+      rgba(255,255,255,0.018) 28px,
+      rgba(255,255,255,0.018) 29px
+    ),
+    linear-gradient(180deg, #0d1a2e 0%, #091220 60%, #060d18 100%);
+}
+.team-bench-section::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 50% 110%, rgba(0,120,255,0.07) 0%, transparent 70%);
+}
+.team-bench-label{
+  position:relative;z-index:1;
+  font-family:var(--ft);font-size:9px;letter-spacing:2px;
+  color:#4a6a9a;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.team-bench-label::before{
+  content:'';display:inline-block;width:10px;height:2px;
+  background:rgba(80,140,220,0.5);border-radius:2px;
+}
+.team-bench-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.team-bench-grid .team-fc-slot{
+  background:linear-gradient(160deg,rgba(20,40,80,0.6),rgba(10,20,45,0.4));
+  border:1px dashed rgba(80,140,220,0.2)!important;
+  min-height:90px;
+}
+.team-bench-grid .team-fc-slot.empty .team-fc-plus{color:rgba(80,140,220,0.35)}
+.team-bench-grid .team-fc-slot.empty .team-fc-empty-lbl{color:rgba(80,140,220,0.35)}
+.team-bench-grid .team-fc-slot.filled{
+  background:linear-gradient(160deg,rgba(20,50,100,0.5),rgba(10,25,55,0.3));
+  border:0.5px solid rgba(80,140,220,0.3)!important;
+}
 
 /* Panel de gestión del capitán */
 .team-mgmt-section{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:16px 28px}
