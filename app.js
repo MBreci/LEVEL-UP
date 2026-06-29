@@ -41,6 +41,7 @@ const FUNCTIONAL_MODULES = [
   { id: 'jugadores', label: 'JUGADORES' },
   { id: 'ranking', label: 'RANKING' },
   { id: 'partidos', label: 'PARTIDOS' },
+  { id: 'torneos', label: 'TORNEOS' },
   { id: 'temporada', label: 'TEMPORADA BETA' },
 ];
 
@@ -225,6 +226,7 @@ const PAGE_HREFS = {
   jugadores: 'jugadores.html',
   ranking: 'ranking.html',
   partidos: 'buscar-partido.html',
+  torneos: 'torneos.html',
   temporada: 'temporada-piloto.html',
 };
 
@@ -806,6 +808,7 @@ function renderAll() {
   renderDashboard();
   renderWelcomeHome();
   renderSaldoPage();
+  renderTorneos();
 }
 
 const HW_ACTIONS = [
@@ -4099,6 +4102,300 @@ function initApp() {
 }
 
 initApp();
+
+/* ===== TORNEOS ===== */
+
+const ADMIN_NICKNAMES = ['Breco'];
+const ADMIN_NAMES = ['Miguel Breci'];
+
+function isAdmin() {
+  return state && (ADMIN_NICKNAMES.includes(state.nickname) || ADMIN_NAMES.includes(state.name));
+}
+
+function loadTournaments() {
+  try { return JSON.parse(localStorage.getItem('levelup_tournaments') || '{}'); } catch(e) { return {}; }
+}
+
+function saveTournaments(t) {
+  localStorage.setItem('levelup_tournaments', JSON.stringify(t));
+}
+
+function toggleTorneoForm() {
+  const wrap = document.getElementById('tn-form-wrap');
+  const lbl = document.getElementById('tn-create-btn-lbl');
+  if (!wrap) return;
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  if (lbl) lbl.textContent = open ? '+ CREAR TORNEO' : '✕ CANCELAR';
+  if (!open) {
+    const sel = document.getElementById('tn-cancha');
+    if (sel && sel.options.length <= 1) {
+      CANCHAS_REGISTRADAS.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        sel.appendChild(o);
+      });
+    }
+  }
+}
+
+function crearTorneo() {
+  if (!isAdmin()) return;
+  const nombre = (document.getElementById('tn-nombre').value || '').trim();
+  const fecha = document.getElementById('tn-fecha').value;
+  const horaInicio = document.getElementById('tn-hora-inicio').value;
+  const horaFin = document.getElementById('tn-hora-fin').value;
+  const cancha = document.getElementById('tn-cancha').value;
+  const valor = parseInt(document.getElementById('tn-valor').value) || 0;
+  const premio = (document.getElementById('tn-premio').value || '').trim();
+  const obs = (document.getElementById('tn-obs').value || '').trim();
+  const errEl = document.getElementById('tn-form-error');
+
+  if (!nombre) { errEl.textContent = 'El nombre del torneo es obligatorio.'; return; }
+  if (!fecha) { errEl.textContent = 'La fecha es obligatoria.'; return; }
+  if (!horaInicio) { errEl.textContent = 'La hora de inicio es obligatoria.'; return; }
+  if (!cancha) { errEl.textContent = 'Selecciona una cancha.'; return; }
+  if (!premio) { errEl.textContent = 'El premio es obligatorio.'; return; }
+  errEl.textContent = '';
+
+  const tournaments = loadTournaments();
+  const id = 'tn_' + Date.now();
+  tournaments[id] = {
+    id, nombre, fecha, horaInicio, horaFin, cancha, valorInscripcion: valor, premio, obs,
+    createdBy: state.id, status: 'abierto', teams: [], createdAt: Date.now()
+  };
+  saveTournaments(tournaments);
+  toggleTorneoForm();
+  renderTorneos();
+}
+
+function renderTorneos() {
+  const adminBar = document.getElementById('tn-admin-bar');
+  const listEl = document.getElementById('tn-list');
+  if (!listEl) return;
+
+  if (adminBar) adminBar.style.display = isAdmin() ? 'block' : 'none';
+
+  const tournaments = loadTournaments();
+  const list = Object.values(tournaments).sort((a, b) => b.createdAt - a.createdAt);
+
+  if (!list.length) {
+    listEl.innerHTML = `
+      <div class="tn-empty">
+        <div class="tn-empty-icon">🏆</div>
+        <div class="tn-empty-title">No hay torneos activos</div>
+        <div class="tn-empty-sub">Pronto se publicará el próximo torneo. Asegúrate de tener tu equipo completo.</div>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = list.map(t => renderTorneoCard(t)).join('');
+}
+
+function renderTorneoCard(t) {
+  const teams = loadTournaments()[t.id]?.teams || [];
+  const myTeam = state ? getMyTeam() : null;
+  const isInscribed = myTeam && teams.some(e => e.teamId === myTeam.id);
+  const isCaptain = myTeam && state && myTeam.captainId === state.id;
+  const isComplete = myTeam && myTeam.memberIds.length >= 8;
+  const statusLabel = { abierto: 'INSCRIPCIONES ABIERTAS', en_curso: 'EN CURSO', finalizado: 'FINALIZADO' }[t.status] || t.status;
+  const statusClass = { abierto: 'tn-status-open', en_curso: 'tn-status-live', finalizado: 'tn-status-done' }[t.status] || '';
+
+  const teamRows = teams.map(e => {
+    const team = Object.values(loadTeams()).find(tm => tm.id === e.teamId);
+    if (!team) return '';
+    const titulares = team.memberIds.slice(0, 6).map(id => profiles[id]).filter(Boolean);
+    const suplentes = team.memberIds.slice(6, 8).map(id => profiles[id]).filter(Boolean);
+    return `
+      <div class="tn-inscribed-team">
+        <div class="tn-it-header">
+          <div class="tn-it-escudo" style="background:${team.color || '#00ff88'}22;border-color:${team.color || '#00ff88'}44">
+            ${team.photo ? `<img src="${team.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span style="font-size:18px">⚽</span>`}
+          </div>
+          <div>
+            <div class="tn-it-name">${team.name}</div>
+            <div class="tn-it-city">${team.city || ''}</div>
+          </div>
+          <div class="tn-it-badge">INSCRITO</div>
+        </div>
+        <div class="tn-it-squad">
+          <div class="tn-it-squad-label">TITULARES</div>
+          <div class="tn-it-players">${titulares.map(p => `<span class="tn-it-player">${p.nickname || p.name}</span>`).join('')}</div>
+          ${suplentes.length ? `<div class="tn-it-squad-label" style="margin-top:6px">SUPLENTES</div><div class="tn-it-players">${suplentes.map(p => `<span class="tn-it-player suplente">${p.nickname || p.name}</span>`).join('')}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  let ctaHtml = '';
+  if (t.status === 'abierto' && state) {
+    if (isInscribed) {
+      ctaHtml = `<div class="tn-inscribed-badge">✓ TU EQUIPO ESTÁ INSCRITO</div>`;
+    } else if (!myTeam) {
+      ctaHtml = `<div class="tn-cta-note">Necesitas un equipo para inscribirte. <a href="equipos.html#crear" style="color:var(--g)">Crear equipo →</a></div>`;
+    } else if (!isCaptain) {
+      ctaHtml = `<div class="tn-cta-note">Solo el capitán puede inscribir el equipo.</div>`;
+    } else if (!isComplete) {
+      ctaHtml = `<div class="tn-cta-note">Tu equipo necesita 8 jugadores (6 titulares + 2 suplentes) para inscribirse. <a href="equipos.html#crear" style="color:var(--g)">Completar equipo →</a></div>`;
+    } else {
+      ctaHtml = `<button class="tn-inscribir-btn" onclick="abrirPagoInscripcion('${t.id}')">INSCRIBIR MI EQUIPO — $${Number(t.valorInscripcion).toLocaleString('es-CO')}</button>`;
+    }
+  }
+
+  return `
+    <div class="tn-card">
+      <div class="tn-card-header">
+        <div>
+          <div class="tn-card-status ${statusClass}">${statusLabel}</div>
+          <div class="tn-card-name">${t.nombre}</div>
+          <div class="tn-card-meta">
+            <span>📅 ${t.fecha ? new Date(t.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}</span>
+            <span>🕐 ${t.horaInicio}${t.horaFin ? ' – ' + t.horaFin : ''}</span>
+            <span>📍 ${t.cancha}</span>
+          </div>
+        </div>
+        <div class="tn-card-prize">
+          <div class="tn-card-prize-label">PREMIO</div>
+          <div class="tn-card-prize-val">${t.premio}</div>
+        </div>
+      </div>
+      ${t.obs ? `<div class="tn-card-obs">${t.obs}</div>` : ''}
+      <div class="tn-card-footer">
+        <div class="tn-teams-count">${teams.length} equipo${teams.length !== 1 ? 's' : ''} inscrito${teams.length !== 1 ? 's' : ''}</div>
+        ${ctaHtml}
+      </div>
+      ${teams.length ? `<div class="tn-inscribed-list"><div class="tn-inscribed-title">EQUIPOS INSCRITOS</div>${teamRows}</div>` : ''}
+      ${isAdmin() ? `<div class="tn-admin-actions">
+        <button class="tn-admin-btn" onclick="cambiarStatusTorneo('${t.id}','en_curso')">▶ EN CURSO</button>
+        <button class="tn-admin-btn" onclick="cambiarStatusTorneo('${t.id}','finalizado')">✓ FINALIZADO</button>
+        <button class="tn-admin-btn danger" onclick="eliminarTorneo('${t.id}')">✕ ELIMINAR</button>
+      </div>` : ''}
+    </div>`;
+}
+
+function abrirPagoInscripcion(torneoId) {
+  const tournaments = loadTournaments();
+  const t = tournaments[torneoId];
+  if (!t || !state) return;
+  const myTeam = getMyTeam();
+  if (!myTeam) return;
+
+  const saldo = state.saldo || 0;
+  const valor = t.valorInscripcion || 0;
+  const puedeConSaldo = saldo >= valor;
+
+  document.getElementById('tn-pay-title').textContent = `INSCRIBIR: ${myTeam.name}`;
+  document.getElementById('tn-pay-body').innerHTML = `
+    <div class="tn-pay-torneo">${t.nombre}</div>
+    <div class="tn-pay-detalle">
+      <span>📅 ${t.fecha}</span>
+      <span>📍 ${t.cancha}</span>
+    </div>
+    <div class="tn-pay-monto">VALOR DE INSCRIPCIÓN<br><strong>$${Number(valor).toLocaleString('es-CO')} COP</strong></div>
+    <div class="tn-pay-methods">
+      <button class="tn-pay-btn saldo ${puedeConSaldo ? '' : 'disabled'}" onclick="${puedeConSaldo ? `pagarInscripcionConSaldo('${torneoId}')` : 'void(0)'}">
+        <span class="tn-pay-btn-icon">💳</span>
+        <span>PAGAR CON SALDO<br><small>Disponible: $${saldo.toLocaleString('es-CO')}</small></span>
+        ${!puedeConSaldo ? '<span class="tn-pay-insuf">SALDO INSUFICIENTE</span>' : ''}
+      </button>
+      <button class="tn-pay-btn wompi" onclick="pagarInscripcionWompi('${torneoId}')">
+        <span class="tn-pay-btn-icon">🏦</span>
+        <span>PAGAR CON WOMPI<br><small>Tarjeta, PSE, Nequi</small></span>
+      </button>
+    </div>
+  `;
+  document.getElementById('tn-pay-modal').style.display = 'flex';
+}
+
+function closeTnPayModal() {
+  document.getElementById('tn-pay-modal').style.display = 'none';
+}
+
+function pagarInscripcionConSaldo(torneoId) {
+  if (!state) return;
+  const tournaments = loadTournaments();
+  const t = tournaments[torneoId];
+  if (!t) return;
+  const myTeam = getMyTeam();
+  if (!myTeam) return;
+  const valor = t.valorInscripcion || 0;
+  if ((state.saldo || 0) < valor) { alert('Saldo insuficiente.'); return; }
+
+  state.saldo = Math.round(((state.saldo || 0) - valor) * 100) / 100;
+  profiles[state.id] = state;
+  saveProfiles();
+  pushProfileToCloud(state);
+
+  t.teams.push({ teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'saldo' });
+  saveTournaments(tournaments);
+  closeTnPayModal();
+  renderWalletPill();
+  renderTorneos();
+  alert(`✅ ¡${myTeam.name} inscrito al torneo! Saldo descontado: $${valor.toLocaleString('es-CO')}`);
+}
+
+async function pagarInscripcionWompi(torneoId) {
+  if (!state) return;
+  const tournaments = loadTournaments();
+  const t = tournaments[torneoId];
+  if (!t) return;
+  const myTeam = getMyTeam();
+  if (!myTeam) return;
+
+  const valor = t.valorInscripcion || 0;
+  if (valor <= 0) {
+    pagarInscripcionConSaldo(torneoId);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/wallet-init-recharge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ profileId: state.id, amount: valor, meta: { torneoId, teamId: myTeam.id } })
+    });
+    const data = await res.json();
+    if (!data.reference) { alert('Error iniciando el pago. Intenta de nuevo.'); return; }
+
+    const widget = new WidgetCheckout({
+      currency: data.currency,
+      amountInCents: data.amountInCents,
+      reference: data.reference,
+      publicKey: data.publicKey,
+      signature: { integrity: data.signature },
+      redirectUrl: location.href,
+    });
+    widget.open(result => {
+      const tx = result.transaction;
+      if (tx && tx.status === 'APPROVED') {
+        t.teams.push({ teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'wompi', wompiRef: data.reference });
+        saveTournaments(tournaments);
+        closeTnPayModal();
+        renderTorneos();
+        alert(`✅ ¡${myTeam.name} inscrito al torneo!`);
+      }
+    });
+  } catch(e) {
+    alert('Error conectando con el sistema de pagos. Intenta de nuevo.');
+  }
+}
+
+function cambiarStatusTorneo(torneoId, newStatus) {
+  if (!isAdmin()) return;
+  const tournaments = loadTournaments();
+  if (!tournaments[torneoId]) return;
+  tournaments[torneoId].status = newStatus;
+  saveTournaments(tournaments);
+  renderTorneos();
+}
+
+function eliminarTorneo(torneoId) {
+  if (!isAdmin()) return;
+  if (!confirm('¿Seguro que quieres eliminar este torneo? Esta acción no se puede deshacer.')) return;
+  const tournaments = loadTournaments();
+  delete tournaments[torneoId];
+  saveTournaments(tournaments);
+  renderTorneos();
+}
 
 /* ===== AUDIO ===== */
 

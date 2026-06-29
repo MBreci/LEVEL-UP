@@ -1797,3 +1797,102 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 
 @keyframes breatheG{0%{opacity:0.6;transform:translate(-50%,-50%) scale(0.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}
 @keyframes breatheF{0%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0.6;transform:translate(-50%,-50%) scale(0.9)}}
+
+/* ============================================================
+   TORNEOS
+   ============================================================ */
+
+.torneos-banner .page-banner-bg{background:linear-gradient(135deg,#010206 0%,#0a0518 50%,#010206 100%)}
+.torneos-banner .page-banner-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 15% 80%,rgba(255,170,0,0.18),transparent 60%),radial-gradient(ellipse 50% 60% at 85% 20%,rgba(255,0,170,0.15),transparent 55%)}
+
+.tn-wrap{max-width:900px;margin:0 auto;padding:0 20px}
+
+/* Admin bar */
+.tn-create-btn{font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:2px;padding:13px 28px;background:transparent;color:var(--g);border:1.5px solid var(--g);cursor:pointer;transition:all .2s;box-shadow:0 0 16px rgba(0,255,136,0.2)}
+.tn-create-btn:hover{background:rgba(0,255,136,0.08);box-shadow:0 0 28px rgba(0,255,136,0.4)}
+
+/* Formulario */
+.tn-form-wrap{margin-bottom:36px}
+.tn-form-card{border:1px solid rgba(255,170,0,0.2);background:linear-gradient(145deg,rgba(255,170,0,0.04),rgba(255,255,255,0.01));border-radius:12px;padding:32px;box-shadow:0 0 40px -10px rgba(255,170,0,0.15)}
+.tn-form-title{font-family:var(--ft);font-size:14px;font-weight:900;letter-spacing:3px;color:rgba(255,170,0,0.9);margin-bottom:28px;text-shadow:0 0 20px rgba(255,170,0,0.4)}
+.tn-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.tn-field{display:flex;flex-direction:column;gap:6px}
+.tn-field.full{grid-column:1/-1}
+.tn-label{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(210,220,255,0.5)}
+.tn-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--w);padding:10px 14px;font-size:13px;font-family:var(--body);border-radius:6px;transition:border-color .2s;outline:none}
+.tn-input:focus{border-color:rgba(255,170,0,0.5);box-shadow:0 0 0 2px rgba(255,170,0,0.08)}
+.tn-input option{background:#0a0a18;color:var(--w)}
+.tn-textarea{min-height:80px;resize:vertical}
+.tn-form-error{color:var(--f);font-size:12px;min-height:16px;margin-bottom:8px}
+.tn-form-actions{display:flex;gap:12px;justify-content:flex-end}
+.tn-btn-cancel{font-family:var(--ft);font-size:10px;letter-spacing:1.5px;padding:11px 22px;background:transparent;color:rgba(210,220,255,0.5);border:1px solid rgba(255,255,255,0.1);cursor:pointer;border-radius:4px;transition:all .2s}
+.tn-btn-cancel:hover{border-color:rgba(255,255,255,0.3);color:var(--w)}
+.tn-btn-save{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:2px;padding:11px 26px;background:rgba(255,170,0,0.12);color:rgba(255,170,0,0.95);border:1.5px solid rgba(255,170,0,0.5);cursor:pointer;border-radius:4px;transition:all .2s}
+.tn-btn-save:hover{background:rgba(255,170,0,0.2);box-shadow:0 0 20px rgba(255,170,0,0.3)}
+
+/* Cards de torneo */
+.tn-card{border:1px solid rgba(255,170,0,0.15);background:linear-gradient(145deg,rgba(255,170,0,0.03),rgba(255,255,255,0.01));border-radius:14px;margin-bottom:28px;overflow:hidden;box-shadow:0 4px 32px -8px rgba(0,0,0,0.5)}
+.tn-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:28px 28px 0}
+.tn-card-status{font-family:var(--ft);font-size:8px;letter-spacing:2px;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.tn-status-open{background:rgba(0,255,136,0.12);color:var(--g);border:1px solid rgba(0,255,136,0.3)}
+.tn-status-live{background:rgba(255,170,0,0.12);color:rgba(255,170,0,0.95);border:1px solid rgba(255,170,0,0.3)}
+.tn-status-done{background:rgba(255,255,255,0.05);color:rgba(210,220,255,0.4);border:1px solid rgba(255,255,255,0.08)}
+.tn-card-name{font-family:var(--ft);font-size:clamp(16px,2.5vw,24px);font-weight:900;color:var(--w);margin-bottom:10px}
+.tn-card-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:rgba(210,220,255,0.55)}
+.tn-card-prize{text-align:right;flex-shrink:0}
+.tn-card-prize-label{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,170,0,0.6);margin-bottom:4px}
+.tn-card-prize-val{font-family:var(--ft);font-size:13px;font-weight:700;color:rgba(255,170,0,0.95);text-shadow:0 0 14px rgba(255,170,0,0.4);max-width:200px;text-align:right}
+.tn-card-obs{margin:16px 28px 0;font-size:12px;color:rgba(210,220,255,0.45);font-style:italic;line-height:1.6;padding:12px;border-left:2px solid rgba(255,255,255,0.08)}
+.tn-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 28px 24px}
+.tn-teams-count{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,220,255,0.4)}
+.tn-inscribir-btn{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:1.5px;padding:12px 22px;background:rgba(0,255,136,0.1);color:var(--g);border:1.5px solid rgba(0,255,136,0.4);cursor:pointer;border-radius:4px;transition:all .2s}
+.tn-inscribir-btn:hover{background:rgba(0,255,136,0.18);box-shadow:0 0 20px rgba(0,255,136,0.3)}
+.tn-inscribed-badge{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--g);padding:8px 16px;border:1px solid rgba(0,255,136,0.3);border-radius:20px;background:rgba(0,255,136,0.08)}
+.tn-cta-note{font-size:12px;color:rgba(210,220,255,0.5);line-height:1.5}
+
+/* Equipos inscritos */
+.tn-inscribed-list{border-top:1px solid rgba(255,255,255,0.05);padding:20px 28px}
+.tn-inscribed-title{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:rgba(210,220,255,0.35);margin-bottom:14px}
+.tn-inscribed-team{border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px;margin-bottom:10px;background:rgba(255,255,255,0.02)}
+.tn-it-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tn-it-escudo{width:36px;height:36px;border-radius:50%;border:1.5px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tn-it-name{font-family:var(--ft);font-size:12px;font-weight:700;color:var(--w)}
+.tn-it-city{font-size:11px;color:rgba(210,220,255,0.4)}
+.tn-it-badge{margin-left:auto;font-family:var(--ft);font-size:8px;letter-spacing:1.5px;color:var(--g);padding:3px 8px;border:1px solid rgba(0,255,136,0.3);border-radius:10px}
+.tn-it-squad-label{font-family:var(--ft);font-size:8px;letter-spacing:1.5px;color:rgba(210,220,255,0.35);margin-bottom:4px}
+.tn-it-players{display:flex;flex-wrap:wrap;gap:6px}
+.tn-it-player{font-size:11px;color:rgba(210,220,255,0.7);background:rgba(255,255,255,0.05);padding:3px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.06)}
+.tn-it-player.suplente{color:rgba(210,220,255,0.45);border-style:dashed}
+
+/* Admin actions */
+.tn-admin-actions{display:flex;gap:8px;padding:12px 28px;border-top:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.01)}
+.tn-admin-btn{font-family:var(--ft);font-size:8px;letter-spacing:1.5px;padding:7px 14px;background:transparent;color:rgba(210,220,255,0.5);border:1px solid rgba(255,255,255,0.1);cursor:pointer;border-radius:4px;transition:all .2s}
+.tn-admin-btn:hover{border-color:rgba(255,255,255,0.3);color:var(--w)}
+.tn-admin-btn.danger{color:rgba(255,60,60,0.7);border-color:rgba(255,60,60,0.2)}
+.tn-admin-btn.danger:hover{border-color:rgba(255,60,60,0.5);color:rgba(255,60,60,1)}
+
+/* Empty state */
+.tn-empty{text-align:center;padding:80px 20px}
+.tn-empty-icon{font-size:48px;margin-bottom:16px;opacity:0.4}
+.tn-empty-title{font-family:var(--ft);font-size:16px;color:rgba(210,220,255,0.5);margin-bottom:8px}
+.tn-empty-sub{font-size:13px;color:rgba(210,220,255,0.3);max-width:400px;margin:0 auto;line-height:1.6}
+
+/* Modal pago inscripción */
+.tn-pay-card{background:linear-gradient(145deg,#050812,#030610);border:1px solid rgba(255,170,0,0.25);border-radius:16px;padding:32px;max-width:440px;width:90%;box-shadow:0 0 60px -10px rgba(255,170,0,0.2)}
+.tn-pay-title{font-family:var(--ft);font-size:13px;font-weight:900;letter-spacing:2px;color:rgba(255,170,0,0.9);margin-bottom:20px;text-align:center}
+.tn-pay-torneo{font-family:var(--ft);font-size:15px;color:var(--w);text-align:center;margin-bottom:8px;font-weight:700}
+.tn-pay-detalle{display:flex;justify-content:center;gap:16px;font-size:12px;color:rgba(210,220,255,0.5);margin-bottom:20px}
+.tn-pay-monto{text-align:center;padding:16px;border:1px solid rgba(255,170,0,0.2);border-radius:8px;background:rgba(255,170,0,0.04);margin-bottom:24px;font-family:var(--ft);font-size:10px;letter-spacing:1.5px;color:rgba(255,170,0,0.7)}
+.tn-pay-monto strong{display:block;font-size:24px;color:rgba(255,170,0,0.95);margin-top:4px;text-shadow:0 0 20px rgba(255,170,0,0.4)}
+.tn-pay-methods{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.tn-pay-btn{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:8px;cursor:pointer;transition:all .2s;border:1.5px solid;font-family:var(--body);font-size:13px;text-align:left;position:relative}
+.tn-pay-btn.saldo{background:rgba(0,255,136,0.06);color:var(--w);border-color:rgba(0,255,136,0.3)}
+.tn-pay-btn.saldo:hover:not(.disabled){background:rgba(0,255,136,0.12);box-shadow:0 0 20px rgba(0,255,136,0.2)}
+.tn-pay-btn.wompi{background:rgba(255,0,170,0.06);color:var(--w);border-color:rgba(255,0,170,0.3)}
+.tn-pay-btn.wompi:hover{background:rgba(255,0,170,0.12);box-shadow:0 0 20px rgba(255,0,170,0.2)}
+.tn-pay-btn.disabled{opacity:0.45;cursor:not-allowed}
+.tn-pay-btn-icon{font-size:22px;flex-shrink:0}
+.tn-pay-btn small{display:block;font-size:11px;color:rgba(210,220,255,0.45);margin-top:2px}
+.tn-pay-insuf{position:absolute;right:12px;font-family:var(--ft);font-size:7px;letter-spacing:1px;color:rgba(255,60,60,0.7);border:1px solid rgba(255,60,60,0.3);padding:2px 6px;border-radius:4px}
+
+@media(max-width:600px){.tn-form-grid{grid-template-columns:1fr}.tn-card-header{flex-direction:column}.tn-card-prize{text-align:left}}

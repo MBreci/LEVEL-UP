@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TORNEOS · LEVEL UP</title>
+<script>
+(function(){
+  try {
+    var id = localStorage.getItem('levelup_current_profile');
+    var profiles = JSON.parse(localStorage.getItem('levelup_profiles') || '{}');
+    if (!id || !profiles[id]) location.replace('index.html');
+  } catch(e) { location.replace('index.html'); }
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1782701670">
+</head>
+<body>
+
+<header>
+  <div class="nav-top">
+    <a href="dashboard.html"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <nav class="nav-modules" id="nav-modules"></nav>
+    <div class="nav-right">
+      <div class="account-wrap">
+        <button class="account-btn" id="account-btn" onclick="toggleAccountDropdown()">
+          <span id="account-label">...</span>
+          <span class="account-chevron">▾</span>
+        </button>
+        <div class="account-dropdown" id="account-dropdown">
+          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN<span class="dropdown-item-sub">Edita tu perfil</span></a>
+          <a class="dropdown-item danger" href="#" onclick="logout();return false;">CERRAR SESIÓN</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BANNER CINEMATOGRÁFICO -->
+<section class="page-banner torneos-banner">
+  <div class="page-banner-bg"></div>
+  <div class="page-banner-smoke"></div>
+  <div class="page-banner-content">
+    <div class="page-banner-eyebrow">COMPETENCIA OFICIAL</div>
+    <div class="page-banner-title">TORNEOS</div>
+    <div class="page-banner-desc">La competencia que va más allá del partido semanal. Equipos completos, enfrentamientos directos y un campeón que se lleva todo.</div>
+  </div>
+</section>
+
+<!-- CONTENIDO PRINCIPAL -->
+<section id="torneos" style="padding:40px 0 80px">
+  <div class="tn-wrap">
+
+    <!-- BOTÓN CREAR (solo admin) -->
+    <div id="tn-admin-bar" style="display:none;margin-bottom:32px">
+      <button class="tn-create-btn" onclick="toggleTorneoForm()">
+        <span id="tn-create-btn-lbl">+ CREAR TORNEO</span>
+      </button>
+    </div>
+
+    <!-- FORMULARIO DE CREACIÓN (admin) -->
+    <div class="tn-form-wrap" id="tn-form-wrap" style="display:none">
+      <div class="tn-form-card">
+        <div class="tn-form-title">NUEVO TORNEO</div>
+        <div class="tn-form-grid">
+          <div class="tn-field full">
+            <label class="tn-label">NOMBRE DEL TORNEO</label>
+            <input class="tn-input" id="tn-nombre" autocomplete="off" placeholder="Ej: Copa Level Up — Julio 2026" maxlength="60">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">FECHA</label>
+            <input class="tn-input" id="tn-fecha" type="date">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">HORA DE INICIO</label>
+            <input class="tn-input" id="tn-hora-inicio" type="time">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">HORA DE FIN (aprox.)</label>
+            <input class="tn-input" id="tn-hora-fin" type="time">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">CANCHA</label>
+            <select class="tn-input" id="tn-cancha">
+              <option value="">Selecciona una cancha...</option>
+            </select>
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">VALOR DE INSCRIPCIÓN (COP)</label>
+            <input class="tn-input" id="tn-valor" type="number" min="0" placeholder="Ej: 50000">
+          </div>
+          <div class="tn-field full">
+            <label class="tn-label">PREMIO</label>
+            <input class="tn-input" id="tn-premio" autocomplete="off" placeholder="Ej: $500.000 + Trofeo + Carta Especial" maxlength="120">
+          </div>
+          <div class="tn-field full">
+            <label class="tn-label">OBSERVACIONES</label>
+            <textarea class="tn-input tn-textarea" id="tn-obs" placeholder="Reglas adicionales, formato del torneo, dress code, etc." maxlength="400"></textarea>
+          </div>
+        </div>
+        <div class="tn-form-error" id="tn-form-error"></div>
+        <div class="tn-form-actions">
+          <button class="tn-btn-cancel" onclick="toggleTorneoForm()">CANCELAR</button>
+          <button class="tn-btn-save" onclick="crearTorneo()">PUBLICAR TORNEO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA DE TORNEOS -->
+    <div id="tn-list"></div>
+
+  </div>
+</section>
+
+<!-- MODAL INSCRIPCIÓN / PAGO -->
+<div class="modal-overlay" id="tn-pay-modal" style="display:none">
+  <div class="tn-pay-card">
+    <div class="tn-pay-title" id="tn-pay-title">INSCRIBIR EQUIPO</div>
+    <div class="tn-pay-body" id="tn-pay-body"></div>
+    <button class="auth-cancel" onclick="closeTnPayModal()">CANCELAR</button>
+  </div>
+</div>
+
+<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+  <span class="a-dot"></span>
+  <span id="audio-lbl">LET'S ROLL</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js?v=1782701670"></script>
+</body>
+</html>
