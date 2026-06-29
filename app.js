@@ -3834,7 +3834,10 @@ function submitFinalizeMatch() {
 
 function isTeamMatchPast(m) {
   if (m.estado === 'finalizado') return true;
-  const dateStr = m.fechaISO || m.fecha;
+  const raw = m.fechaISO || m.fecha || '';
+  // extract YYYY-MM-DD from whatever format is stored
+  const isoMatch = raw.match(/(\d{4}-\d{2}-\d{2})/);
+  const dateStr = isoMatch ? isoMatch[1] : null;
   if (dateStr && m.hora) {
     return new Date(`${dateStr}T${m.hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
   }
