@@ -807,6 +807,7 @@ function renderAll() {
   renderBuscarPartido();
   renderTeamsModule();
   renderTicker();
+  renderHeroFloats();
   updateProfileBtn();
   renderDashboard();
   renderWelcomeHome();
@@ -893,6 +894,54 @@ window.addEventListener('resize', () => {
   clearTimeout(_flowResizeTimer);
   _flowResizeTimer = setTimeout(renderFlowSnake, 180);
 });
+
+function renderHeroFloats() {
+  if (!document.getElementById('hero-float-left')) return;
+  const allProfiles = Object.values(profiles);
+  // Left panel: top player by OVR
+  const topPlayer = allProfiles.sort((a, b) => (b.ovr || 0) - (a.ovr || 0))[0];
+  if (topPlayer) {
+    const ovrEl = document.getElementById('hf-top-ovr');
+    const nameEl = document.getElementById('hf-top-name');
+    const rankEl = document.getElementById('hf-top-rank');
+    if (ovrEl) ovrEl.textContent = topPlayer.ovr || '—';
+    if (nameEl) nameEl.textContent = (topPlayer.nickname || topPlayer.name || '—').toUpperCase().slice(0, 12);
+    if (rankEl) rankEl.textContent = (topPlayer.rank || 'ROOKIE').toUpperCase();
+  }
+  // Left scroll: recent top players
+  const leftScroll = document.getElementById('hf-left-scroll');
+  if (leftScroll) {
+    const items = allProfiles.slice(0, 6).map(p =>
+      `<div class="hf-scroll-item">⚽ ${(p.nickname || p.name).slice(0,10)} · OVR ${p.ovr || '?'}</div>`
+    );
+    if (items.length) {
+      const doubled = [...items, ...items].join('');
+      leftScroll.innerHTML = doubled;
+    }
+  }
+  // Right panel: live stats
+  const jugEl = document.getElementById('hf-jugadores-n');
+  const partEl = document.getElementById('hf-partidos-n');
+  const golesEl = document.getElementById('hf-goles-n');
+  if (jugEl) jugEl.textContent = allProfiles.length || '0';
+  const activeMatches = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado');
+  if (partEl) partEl.textContent = activeMatches.length || '0';
+  const totalGoles = allProfiles.reduce((acc, p) => acc + (p.goles || 0), 0);
+  if (golesEl) golesEl.textContent = totalGoles || '0';
+  // Right scroll: active match snippets
+  const rightScroll = document.getElementById('hf-right-scroll');
+  if (rightScroll) {
+    const matchItems = activeMatches.slice(0, 5).map(m =>
+      `<div class="hf-scroll-item">🔍 Fútbol ${m.formato} · ${m.zona || 'Bogotá'}</div>`
+    );
+    const baseItems = matchItems.length ? matchItems : [
+      `<div class="hf-scroll-item">🏙️ BOGOTÁ · 2026</div>`,
+      `<div class="hf-scroll-item">⭐ TEMPORADA BETA</div>`,
+      `<div class="hf-scroll-item">⚽ FÚTBOL AMATEUR</div>`,
+    ];
+    rightScroll.innerHTML = [...baseItems, ...baseItems].join('');
+  }
+}
 
 function renderWelcomeHome() {
   if (!document.getElementById('hw-action-grid')) return;
