@@ -3834,10 +3834,13 @@ function submitFinalizeMatch() {
 
 function isTeamMatchPast(m) {
   if (m.estado === 'finalizado') return true;
-  if (m.fechaISO && m.hora) {
-    return new Date(`${m.fechaISO}T${m.hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
+  const dateStr = m.fechaISO || m.fecha;
+  if (dateStr && m.hora) {
+    return new Date(`${dateStr}T${m.hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
   }
-  // fallback: if created more than 3 days ago and still programado, consider past
+  if (dateStr) {
+    return new Date(dateStr + 'T23:59:00') < new Date();
+  }
   return !!(m.createdAt && Date.now() - m.createdAt > 3 * 24 * 60 * 60 * 1000);
 }
 
