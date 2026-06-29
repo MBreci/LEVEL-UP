@@ -3929,7 +3929,7 @@ function renderTeamProfile(teamId) {
   const pct = Math.round((totalFilled / 8) * 100);
 
   const posSelect = (i, cur) => isCaptain ? `
-    <select class="team-fc-pos-select" onchange="setSlotPosition('${team.id}',${i},this.value)">
+    <select class="team-fc-pos-select" onclick="event.stopPropagation()" onchange="setSlotPosition('${team.id}',${i},this.value)">
       <option value="" ${!cur ? 'selected' : ''}>POS</option>
       ${POSITIONS.map(p => `<option value="${p}" ${cur === p ? 'selected' : ''}>${p}</option>`).join('')}
     </select>` : '';
@@ -3945,9 +3945,9 @@ function renderTeamProfile(teamId) {
           ${posSelect(i, pos)}
         </div>`;
       }
-      return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}" onclick="openSlotInvite('${team.id}',${i})" style="cursor:pointer">
-        <div class="team-fc-plus">+</div>
-        <div class="team-fc-empty-lbl">${isSub ? 'INVITAR SUPLENTE' : 'INVITAR AQUÍ'}</div>
+      return `<div class="team-fc-slot empty ${isSub ? 'sub' : ''}">
+        <div class="team-fc-plus" onclick="openSlotInvite('${team.id}',${i})" style="cursor:pointer">+</div>
+        <div class="team-fc-empty-lbl" onclick="openSlotInvite('${team.id}',${i})" style="cursor:pointer">${isSub ? 'INVITAR SUPLENTE' : 'INVITAR AQUÍ'}</div>
         ${posSelect(i, pos)}
       </div>`;
     }
@@ -3956,14 +3956,14 @@ function renderTeamProfile(teamId) {
     const isCap = memberId === team.captainId;
     const ovrNum = Number(p.ovr) || 50;
     const cardColor = ovrNum >= 85 ? 'gold' : ovrNum >= 75 ? 'silver' : 'bronze';
-    return `<div class="team-fc-slot filled ${isSub ? 'sub' : ''} ${isCap ? 'captain' : ''} card-${cardColor}" onclick="openPlayerView('${p.id}')">
+    return `<div class="team-fc-slot filled ${isSub ? 'sub' : ''} ${isCap ? 'captain' : ''} card-${cardColor}">
       ${isCap ? '<div class="team-fc-crown">👑</div>' : ''}
       ${isSub ? '<div class="team-fc-sub-tag">SUP</div>' : ''}
-      <div class="team-fc-photo-wrap">
+      <div class="team-fc-photo-wrap" onclick="openPlayerView('${p.id}')" style="cursor:pointer">
         ${p.photo ? `<img class="team-fc-photo" src="${p.photo}">` : `<div class="team-fc-av">${p.name.split(' ').map(s=>s[0]).join('').slice(0,2)}</div>`}
       </div>
-      <div class="team-fc-ovr">${p.ovr}</div>
-      <div class="team-fc-name">${(p.nickname || p.name).split(' ')[0].toUpperCase()}</div>
+      <div class="team-fc-ovr" onclick="openPlayerView('${p.id}')" style="cursor:pointer">${p.ovr}</div>
+      <div class="team-fc-name" onclick="openPlayerView('${p.id}')" style="cursor:pointer">${(p.nickname || p.name).split(' ')[0].toUpperCase()}</div>
       <div class="team-fc-posLabel">${pos || p.position}</div>
       ${posSelect(i, pos)}
       ${isCaptain && !isCap ? `<button class="team-fc-kick" onclick="event.stopPropagation();openKickModal('${team.id}','${p.id}')">✕</button>` : ''}
