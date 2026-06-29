@@ -18,13 +18,12 @@
 </head>
 <body>
 
-<!-- NAV (SOLO INVITADO) -->
+<!-- NAV -->
 <header>
   <div class="nav-top">
     <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
     <nav class="nav-modules">
       <a class="nm-item nm-item-link on" href="#inicio">INICIO</a>
-      <a class="nm-item nm-item-link" href="#como-funciona">CÓMO FUNCIONA</a>
     </nav>
     <div class="nav-right">
       <button class="btn-g" onclick="openAuth(false)">INICIAR SESIÓN</button>
@@ -45,84 +44,193 @@
     <span class="hf-corner tl"></span><span class="hf-corner tr"></span>
     <span class="hf-corner bl"></span><span class="hf-corner br"></span>
   </div>
-  <div class="hero-float hf-left" id="hero-float-ovr"></div>
-  <div class="hero-float hf-right" id="hero-float-rank"></div>
   <div class="hero-content">
     <div class="h-season">TEMPORADA BETA &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
-    <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
-    <div class="h-title">
-      <span class="t1">JUEGA.</span>
-      <span class="t2">COMPITE.</span>
-      <span class="t3">ASCIENDE.</span>
+    <div class="ld-pain-hook">
+      ¿Cansado de cancelar partidos porque siempre falta alguien?<br>
+      ¿Juegas semanas enteras sin que nadie recuerde lo que hiciste?
     </div>
-    <div class="h-desc">Transforma cada partido en una carrera deportiva digital.</div>
+    <div class="h-title">
+      <span class="t1">EXISTE UNA</span>
+      <span class="t2">FORMA DIFERENTE</span>
+      <span class="t3">DE VIVIRLO.</span>
+    </div>
+    <div class="h-desc">Todavía no te podemos decir todo lo que hay aquí dentro.<br>Pero sí podemos decirte que cambia todo.</div>
     <div class="h-btns">
-      <button class="hb1" onclick="openAuth(true)">CREAR PERFIL</button>
+      <button class="hb1" onclick="openAuth(true)">CREAR PERFIL — ES GRATIS</button>
       <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
     </div>
-    <div class="h-stats" id="hero-stats"></div>
+    <div class="ld-hero-note">Sin costo. Sin tarjeta. Solo tu nombre y tu posición.</div>
   </div>
 </section>
 
-<!-- CÓMO FUNCIONA -->
-<section id="como-funciona" class="sec-cine">
+<!-- SECCIÓN 2: IMAGINA UN LUGAR DONDE -->
+<section class="sec-cine ld-imagine-section">
   <div class="sec-cine-bg"></div>
   <div class="sec-cine-scrim"></div>
   <div class="sec-cine-smoke"></div>
-  <div class="sec-hdr">
-    <div class="sec-eyebrow center"><span class="ar">▶</span> CÓMO FUNCIONA <span class="ar">◀</span></div>
-    <div class="sec-title">DE LA CANCHA A TU PERFIL</div>
-    <div class="sec-desc">Cuatro pasos simples convierten tu desempeño en cancha en una progresión deportiva digital que puedes seguir partido a partido.</div>
+  <div class="sec-hdr" style="text-align:center;max-width:680px;margin:0 auto 56px;position:relative;z-index:2">
+    <div class="sec-eyebrow center"><span class="ar">▶</span> UNA IDEA <span class="ar">◀</span></div>
+    <div class="sec-title" style="font-size:clamp(28px,4.5vw,52px);line-height:1.1">Imagina un lugar donde...</div>
   </div>
-  <div class="how-grid">
-    <div class="how-step g"><div class="how-n">1</div><div class="how-icon"><div class="how-floor"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/><path d="M12 3v4M3.5 9l3.5 1M20.5 9l-3.5 1M7 20l1.5-4.5M17 20l-1.5-4.5"/></svg></div><div class="how-l">JUEGA</div><div class="how-sub">Disputa tus partidos en cancha y nuestro equipo registra tu rendimiento.</div></div>
-    <div class="how-arrow">»</div>
-    <div class="how-step f"><div class="how-n">2</div><div class="how-icon"><div class="how-floor"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/><path d="M3 9h18M3 15h18" stroke-dasharray="2 2"/></svg></div><div class="how-l">SÉ EVALUADO</div><div class="how-sub">Nuestro sistema analiza tu desempeño.</div></div>
-    <div class="how-arrow">»</div>
-    <div class="how-step g"><div class="how-n">3</div><div class="how-icon"><div class="how-floor"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/></svg></div><div class="how-l">MEJORA TU OVR</div><div class="how-sub">Aumenta tu nivel y hazte más fuerte.</div></div>
-    <div class="how-arrow">»</div>
-    <div class="how-step f"><div class="how-n">4</div><div class="how-icon"><div class="how-floor"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/><path d="M12 13v3M9 21h6M9 19h6v2"/></svg></div><div class="how-l">ESCALA POSICIONES</div><div class="how-sub">Sube en el ranking y conviértete en leyenda.</div></div>
+  <div class="ld-imagine-grid">
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">⚡</div>
+      <div class="ld-ic-text">Nunca vuelves a cancelar un partido porque faltó gente.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">🎯</div>
+      <div class="ld-ic-text">Cada partido que juegas tiene importancia más allá del marcador.</div>
+    </div>
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">🤝</div>
+      <div class="ld-ic-text">Conoces futbolistas cerca de ti que buscan exactamente lo mismo que tú.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">📈</div>
+      <div class="ld-ic-text">Tu rendimiento queda registrado. Y mejora partido a partido.</div>
+    </div>
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">🏆</div>
+      <div class="ld-ic-text">Tu equipo construye una reputación. Y el barrio empieza a saberlo.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">📖</div>
+      <div class="ld-ic-text">Tienes una historia deportiva. Una que no desaparece al final del partido.</div>
+    </div>
+  </div>
+  <div class="ld-imagine-cta" style="position:relative;z-index:2">
+    <button class="hb1" onclick="openAuth(true)">QUIERO ENTRAR</button>
   </div>
 </section>
 
-<!-- VISTA PREVIA DE CARTA -->
-<section id="preview-carta">
-  <div class="sec-hdr">
-    <div class="sec-eyebrow">VISTA PREVIA · FICHA DEL JUGADOR</div>
-  </div>
-  <div class="card-section">
-    <div class="fifa rk-elite epic">
-      <div class="fc-shine"></div>
-      <div class="fc-sparks"></div>
-      <span class="fc-corner tl"></span>
-      <span class="fc-corner tr"></span>
-      <span class="fc-corner bl"></span>
-      <span class="fc-corner br"></span>
-      <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
-      <div class="fc-head">
-        <div><div class="fc-ovr">88</div><div class="fc-pos">DEL</div></div>
-        <div class="fc-rank">ELITE</div>
-      </div>
-      <div class="fc-player"><div class="fc-spotlight"></div><div class="fc-photo-placeholder"><span class="fc-photo-icon">📷</span><span class="fc-photo-text">EJEMPLO DE FICHA</span></div></div>
-      <div class="fc-namebar"><div class="fc-name">JUGADOR EJEMPLO <span class="fc-nick">"CRACK"</span></div></div>
-      <div class="fc-attrs">
-        <div class="fca"><div class="fca-v">88</div><div class="fca-l">PAC</div></div>
-        <div class="fca"><div class="fca-v">85</div><div class="fca-l">SHO</div></div>
-        <div class="fca"><div class="fca-v">80</div><div class="fca-l">PAS</div></div>
-        <div class="fca"><div class="fca-v">86</div><div class="fca-l">DRI</div></div>
-        <div class="fca"><div class="fca-v">70</div><div class="fca-l">DEF</div></div>
-        <div class="fca"><div class="fca-v">82</div><div class="fca-l">FIS</div></div>
-      </div>
-      <div class="fc-foot"><div class="fc-team">EQUIPO EJEMPLO</div></div>
+<!-- SECCIÓN 3: POR QUÉ EXISTE LEVEL UP -->
+<section class="ld-manifesto-section">
+  <div class="ld-manifesto-glow"></div>
+  <div class="ld-manifesto-wrap">
+    <div class="sec-eyebrow center" style="margin-bottom:24px"><span class="ar">▶</span> EL ORIGEN <span class="ar">◀</span></div>
+    <div class="ld-manifesto-title">¿Por qué existe LEVEL UP?</div>
+    <div class="ld-manifesto-body">
+      <p>Durante años el fútbol amateur ha sido exactamente igual.</p>
+      <p>Los partidos se organizan por WhatsApp. Siempre falta alguien. El partido termina y desaparece. Nadie recuerda quién jugó mejor. No existe historia. No existe reputación. No existe una carrera deportiva.</p>
+      <p class="ld-manifesto-highlight">LEVEL UP nació para cambiar eso.</p>
+      <p>No somos una aplicación para organizar partidos.<br>Somos una carrera deportiva para futbolistas amateurs.</p>
     </div>
   </div>
-  <div class="photo-process">
-    <img class="photo-process-img" src="assets/card-generator.png" alt="Cómo se genera tu ficha de jugador">
-    <div class="photo-process-text">
-      <div class="photo-process-tag">CÓMO FUNCIONA TU FICHA</div>
-      <div class="photo-process-title">De tu partido a tu carta digital</div>
-      <p>El equipo de LEVEL UP captura el mejor momento de tu partido en la cancha y lo convierte en tu ficha oficial: con tu OVR, tu posición, tus atributos y tu equipo. Así nace tu identidad deportiva digital.</p>
+</section>
+
+<!-- SECCIÓN 4: ¿QUÉ PASARÍA SI -->
+<section class="sec-cine ld-questions-section">
+  <div class="sec-cine-bg"></div>
+  <div class="sec-cine-scrim" style="background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(255,0,170,0.12),transparent 70%),linear-gradient(180deg,rgba(2,4,10,0.9) 0%,rgba(2,4,10,0.6) 50%,rgba(2,4,10,0.9) 100%)"></div>
+  <div class="ld-questions-wrap">
+    <div class="sec-eyebrow center" style="margin-bottom:24px;position:relative;z-index:2"><span class="ar">▶</span> PIÉNSALO UN MOMENTO <span class="ar">◀</span></div>
+    <div class="ld-questions-title">¿Qué pasaría si...</div>
+    <div class="ld-questions-list">
+      <div class="ld-q-item">¿Qué pasaría si cada partido contara?</div>
+      <div class="ld-q-item ld-q-f">¿Qué pasaría si tu rendimiento realmente quedara registrado?</div>
+      <div class="ld-q-item">¿Qué pasaría si otros equipos pudieran descubrirte?</div>
+      <div class="ld-q-item ld-q-f">¿Qué pasaría si cada victoria construyera tu historia?</div>
+      <div class="ld-q-item">¿Qué pasaría si tu equipo pudiera convertirse en el Rey del Barrio?</div>
     </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 5: TU IDENTIDAD DEPORTIVA -->
+<section id="preview-carta" class="ld-carta-section">
+  <div class="ld-carta-glow"></div>
+  <div class="sec-hdr" style="text-align:center;margin-bottom:0;position:relative;z-index:2">
+    <div class="sec-eyebrow center"><span class="ar">▶</span> TU IDENTIDAD <span class="ar">◀</span></div>
+    <div class="ld-carta-title">Tu identidad deportiva<br>todavía no existe.</div>
+    <div class="ld-carta-subtitle">Pero puede empezar hoy.</div>
+  </div>
+  <div class="card-section" style="position:relative;z-index:2">
+    <div class="ld-carta-blur-wrap">
+      <div class="fifa rk-elite epic ld-carta-preview">
+        <div class="fc-shine"></div>
+        <div class="fc-sparks"></div>
+        <span class="fc-corner tl"></span>
+        <span class="fc-corner tr"></span>
+        <span class="fc-corner bl"></span>
+        <span class="fc-corner br"></span>
+        <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
+        <div class="fc-head">
+          <div><div class="fc-ovr">??</div><div class="fc-pos">???</div></div>
+          <div class="fc-rank">????</div>
+        </div>
+        <div class="fc-player"><div class="fc-spotlight"></div><div class="fc-photo-placeholder"><span class="fc-photo-icon">?</span><span class="fc-photo-text">TU FICHA</span></div></div>
+        <div class="fc-namebar"><div class="fc-name">TÚ <span class="fc-nick">"?"</span></div></div>
+        <div class="fc-attrs">
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">PAC</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">SHO</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">PAS</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">DRI</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">DEF</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">FIS</div></div>
+        </div>
+        <div class="fc-foot"><div class="fc-team">SIN EQUIPO AÚN</div></div>
+      </div>
+      <div class="ld-carta-overlay">
+        <div class="ld-carta-overlay-text">Crea tu perfil gratis<br>para descubrir cómo<br>comienza tu carrera.</div>
+        <button class="hb1" onclick="openAuth(true)">COMENZAR AHORA</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 6: TEASER - ESTO ES SOLO EL COMIENZO -->
+<section class="sec-cine ld-teaser-section">
+  <div class="sec-cine-bg"></div>
+  <div class="sec-cine-scrim"></div>
+  <div class="sec-cine-smoke"></div>
+  <div class="ld-teaser-wrap">
+    <div class="sec-eyebrow center" style="margin-bottom:24px;position:relative;z-index:2"><span class="ar">▶</span> DETRÁS DEL PERFIL <span class="ar">◀</span></div>
+    <div class="ld-teaser-title">Esto es solo el comienzo.</div>
+    <div class="ld-teaser-note">Hay mucho más esperándote dentro. No te lo vamos a contar todo aquí.</div>
+    <div class="ld-teaser-grid">
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">CARRERA DEPORTIVA</div>
+        <div class="ld-tc-hint">Algo que evoluciona con cada partido que juegas.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">EQUIPOS</div>
+        <div class="ld-tc-hint">Construye algo más grande que tú solo.</div>
+      </div>
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">RANGOS</div>
+        <div class="ld-tc-hint">Hay ocho niveles. La mayoría nunca llega al último.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">TORNEOS</div>
+        <div class="ld-tc-hint">Próximamente. Lo que venga después de los partidos normales.</div>
+      </div>
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">REY DEL BARRIO</div>
+        <div class="ld-tc-hint">El título que todos quieren. Solo uno puede tenerlo.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">Y MÁS...</div>
+        <div class="ld-tc-hint">Logros. Desafíos. Mercado. Cosas que no te podemos contar aquí.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN FINAL: CTA PODEROSO -->
+<section class="ld-final-section">
+  <div class="ld-final-glow-g"></div>
+  <div class="ld-final-glow-f"></div>
+  <div class="ld-final-wrap">
+    <div class="ld-final-pre">Hoy solo vienes buscando con quién jugar.</div>
+    <div class="ld-final-title">Todavía no sabes que estás<br>a punto de comenzar<br><span class="ld-final-highlight">tu carrera deportiva.</span></div>
+    <button class="ld-final-btn" onclick="openAuth(true)">CREAR PERFIL GRATIS</button>
+    <div class="ld-final-sub">Descubre todo lo que LEVEL UP tiene preparado para ti.</div>
   </div>
 </section>
 
