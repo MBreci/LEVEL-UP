@@ -1805,8 +1805,19 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
    TORNEOS
    ============================================================ */
 
-.torneos-banner .page-banner-bg{background:linear-gradient(135deg,#010206 0%,#0a0518 50%,#010206 100%)}
-.torneos-banner .page-banner-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 15% 80%,rgba(255,170,0,0.18),transparent 60%),radial-gradient(ellipse 50% 60% at 85% 20%,rgba(255,0,170,0.15),transparent 55%)}
+/* Torneos hero */
+.tn-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:30px;background:linear-gradient(160deg,rgba(255,170,0,0.07) 0%,rgba(2,4,16,0) 55%),linear-gradient(180deg,rgba(20,12,0,0.95),rgba(2,4,16,1));border-bottom:1px solid rgba(255,170,0,0.15);margin:100px 0 0;padding:52px 64px 56px;overflow:hidden}
+@media(max-width:900px){.tn-hero{margin:90px 0 0;padding:40px 24px 44px;flex-direction:column;text-align:center}}
+.tn-hero-glow{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none}
+.tn-hero-glow-gold{width:320px;height:320px;background:rgba(255,170,0,0.18);top:-100px;left:-60px;animation:bpHeroDrift 9s ease-in-out infinite alternate}
+.tn-hero-glow-mag{width:260px;height:260px;background:rgba(255,0,170,0.14);bottom:-100px;right:40px;animation:bpHeroDrift 11s ease-in-out infinite alternate-reverse}
+.tn-hero-content{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;max-width:560px}
+.tn-hero-eyebrow{font-family:var(--ft);font-size:9px;letter-spacing:4px;color:rgba(255,170,0,0.85);text-shadow:0 0 10px rgba(255,170,0,0.4)}
+.tn-hero-title{font-family:var(--ft);font-weight:900;font-size:clamp(28px,4vw,48px);letter-spacing:1px;color:var(--w);line-height:1.1;background:linear-gradient(90deg,#fff,rgba(255,170,0,0.9));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.tn-hero-desc{font-size:14px;line-height:1.6;color:var(--tm);max-width:460px}
+.tn-hero-art{position:relative;z-index:1;width:160px;height:160px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tn-hero-orb{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,170,0,0.3),rgba(255,0,170,0.2) 55%,transparent 75%);box-shadow:0 0 60px rgba(255,170,0,0.25),0 0 90px rgba(255,0,170,0.15);animation:bpOrbPulse 4s ease-in-out infinite}
+.tn-hero-trophy{position:relative;z-index:1;font-size:70px;filter:drop-shadow(0 0 20px rgba(255,170,0,0.55));animation:bpBallFloat 4s ease-in-out infinite}
 
 .tn-wrap{margin:0 64px;padding:0}
 @media(max-width:900px){.tn-wrap{margin:0 20px}}
