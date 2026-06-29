@@ -4063,6 +4063,8 @@ function renderTeamProfile(teamId) {
 
       <!-- SUPLENTES -->
       <div class="team-bench-section">
+        <div class="team-bench-seats-back">${Array(10).fill('<div class="team-bench-seat-back"></div>').join('')}</div>
+        <div class="team-bench-seats">${Array(10).fill('<div class="team-bench-seat"></div>').join('')}</div>
         <div class="team-bench-label">SUPLENTES</div>
         <div class="team-bench-grid">${suplentes}</div>
       </div>
