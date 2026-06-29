@@ -143,7 +143,7 @@ async function syncProfilesFromCloud() {
       });
       state.team = row.team || 'SIN EQUIPO';
       state.saldo = row.saldo || 0;
-      state.isAdmin = row.is_admin || false;
+      state.isAdmin = row.is_admin === true;
       profiles[state.id] = state;
     }
   });
@@ -1632,11 +1632,13 @@ function normalizeId(text) {
   return text.trim().toUpperCase();
 }
 
-async function findProfileByIdentifier(identifier) {
+async function findProfileByIdentifier(identifier, forceCloud = false) {
   const id = normalizeId(identifier);
-  const local = Object.values(profiles).find(p => p.name === id || p.nickname === id);
-  if (local) return local;
-  if (!sb) return null;
+  if (!forceCloud) {
+    const local = Object.values(profiles).find(p => p.name === id || p.nickname === id);
+    if (local) return local;
+  }
+  if (!sb) return Object.values(profiles).find(p => p.name === id || p.nickname === id) || null;
   const { data: byName } = await sb.from('profiles').select('*').eq('name', id).limit(1);
   if (byName && byName.length) return rowToProfile(byName[0]);
   const { data: byNick } = await sb.from('profiles').select('*').eq('nickname', id).limit(1);
@@ -1657,7 +1659,7 @@ async function submitLogin() {
   btn.disabled = true;
   btn.textContent = 'VERIFICANDO...';
   try {
-    const profile = await findProfileByIdentifier(identifier);
+    const profile = await findProfileByIdentifier(identifier, true);
     const hash = await hashPassword(password);
     if (!profile || hash !== profile.passwordHash) {
       errorEl.textContent = 'Nombre/apodo o contraseña incorrectos.';
