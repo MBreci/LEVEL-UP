@@ -85,7 +85,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 function profileToRow(p) {
   return {
     id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
-    photo: p.photo, password_hash: p.passwordHash, ovr: p.ovr, xp: p.xp, lp: p.lp,
+    photo: p.photo, password_hash: p.passwordHash, email: p.email || null, ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
@@ -97,7 +97,7 @@ function profileToRow(p) {
 function rowToProfile(r) {
   return {
     id: r.id, name: r.name, nickname: r.nickname, position: r.position, team: r.team,
-    photo: r.photo, passwordHash: r.password_hash, ovr: r.ovr, xp: r.xp, lp: r.lp,
+    photo: r.photo, passwordHash: r.password_hash, email: r.email || null, ovr: r.ovr, xp: r.xp, lp: r.lp,
     lastUpdate: r.last_update, matches: r.matches || 0, goals: r.goals || 0, assists: r.assists || 0, mvps: r.mvps || 0,
     attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     history: r.history || [], notifications: r.notifications || [],
@@ -151,7 +151,7 @@ function isPasswordMediumStrength(password) {
   return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
-function makeProfile({ name, position, team, nickname, passwordHash }) {
+function makeProfile({ name, position, team, nickname, passwordHash, email }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
@@ -160,6 +160,7 @@ function makeProfile({ name, position, team, nickname, passwordHash }) {
     team: team || 'SIN EQUIPO',
     photo: null,
     passwordHash,
+    email: email ? email.toLowerCase().trim() : null,
     ovr: 60,
     xp: 0,
     lp: 0,
@@ -1642,31 +1643,32 @@ function backToLogin() {
 
 async function submitResetPassword() {
   const identifier = document.getElementById('reset-id').value;
+  const email = document.getElementById('reset-email').value.trim().toLowerCase();
   const password = document.getElementById('reset-password').value;
   const passwordConfirm = document.getElementById('reset-password-confirm').value;
   const errorEl = document.getElementById('reset-error');
   const btn = document.getElementById('reset-submit');
-  if (!identifier.trim()) {
-    errorEl.textContent = 'Escribe el nombre o apodo de tu cuenta.';
-    return;
-  }
+  if (!identifier.trim()) { errorEl.textContent = 'Escribe el nombre o apodo de tu cuenta.'; return; }
+  if (!email) { errorEl.textContent = 'Escribe el correo con el que te registraste.'; return; }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
   }
-  if (password !== passwordConfirm) {
-    errorEl.textContent = 'Las contraseñas no coinciden.';
-    return;
-  }
+  if (password !== passwordConfirm) { errorEl.textContent = 'Las contraseñas no coinciden.'; return; }
   errorEl.textContent = '';
   btn.disabled = true;
-  btn.textContent = 'ACTUALIZANDO...';
+  btn.textContent = 'VERIFICANDO...';
   try {
     const profile = await findProfileByIdentifier(identifier);
     if (!profile) {
       errorEl.textContent = 'No encontramos ninguna cuenta con ese nombre o apodo.';
       return;
     }
+    if (!profile.email || profile.email.toLowerCase() !== email) {
+      errorEl.textContent = 'El correo no coincide con el registrado en esta cuenta.';
+      return;
+    }
+    btn.textContent = 'ACTUALIZANDO...';
     profile.passwordHash = await hashPassword(password);
     profiles[profile.id] = profile;
     saveProfiles();
@@ -1700,26 +1702,25 @@ async function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const nickname = document.getElementById('auth-nickname').value.trim();
   const position = document.getElementById('auth-position').value;
+  const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const passwordConfirm = document.getElementById('auth-password-confirm').value;
   const consent = document.getElementById('auth-consent');
   const errorEl = document.getElementById('auth-error');
-  if (!name) {
-    errorEl.textContent = 'Escribe tu nombre para crear tu carta.';
-    return;
-  }
+  if (!name) { errorEl.textContent = 'Escribe tu nombre para crear tu carta.'; return; }
   if (containsProfanity(name) || containsProfanity(nickname)) {
     errorEl.textContent = 'Tu nombre o apodo contiene lenguaje ofensivo. Por favor elige otro.';
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Escribe un correo electrónico válido. Lo necesitarás para recuperar tu cuenta.';
     return;
   }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
   }
-  if (password !== passwordConfirm) {
-    errorEl.textContent = 'Las contraseñas no coinciden.';
-    return;
-  }
+  if (password !== passwordConfirm) { errorEl.textContent = 'Las contraseñas no coinciden.'; return; }
   if (!consent.checked) {
     errorEl.textContent = 'Debes aceptar la Política de Tratamiento de Datos Personales y de Imagen para crear tu cuenta.';
     return;
@@ -1729,9 +1730,17 @@ async function submitNewProfile() {
     errorEl.textContent = 'Ya existe una cuenta con ese nombre o apodo. Inicia sesión o elige otro.';
     return;
   }
+  // Check if email already in use
+  if (sb) {
+    const { data: emailCheck } = await sb.from('profiles').select('id').eq('email', email.toLowerCase()).limit(1);
+    if (emailCheck && emailCheck.length) {
+      errorEl.textContent = 'Ese correo ya está registrado. Inicia sesión o usa otro correo.';
+      return;
+    }
+  }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
-  const profile = makeProfile({ name, position, nickname, passwordHash });
+  const profile = makeProfile({ name, position, nickname, passwordHash, email });
   profiles[profile.id] = profile;
   saveProfiles();
   pushProfileToCloud(profile);
@@ -2272,7 +2281,12 @@ function bpWizardNext() {
   if (bpWizardStep === 1 && !bpWizard.modalidad) { errorEl.textContent = 'Selecciona la modalidad del partido.'; return; }
   if (bpWizardStep === 2 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
   if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
-  if (bpWizardStep === 4 && !bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
+  if (bpWizardStep === 4) {
+    if (!bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
+    if (containsProfanity(bpWizard.canchaLibreNombre) || containsProfanity(bpWizard.canchaLibreObs)) {
+      errorEl.textContent = 'El contenido contiene lenguaje inapropiado. Por favor revísalo.'; return;
+    }
+  }
   if (bpWizardStep === 5) {
     if (!bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
     const today = new Date().toISOString().split('T')[0];

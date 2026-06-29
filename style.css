@@ -184,11 +184,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 @keyframes hfScroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .hf-scroll-item{font-family:var(--fb);font-size:8px;color:var(--tm);white-space:nowrap;text-align:center;line-height:16px}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@media(max-width:1200px){.hero-float{display:none}}
+@media(max-width:960px){.hero-float{display:none}}
 .hf-n2{font-family:var(--ft);font-weight:700;font-size:13px;color:var(--w);margin-top:4px;letter-spacing:1px}
 .hf-l{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--td);margin-top:3px}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@media(max-width:1100px){.hero-float{display:none}}
+/* removed duplicate — see 960px rule above */
 
 /* SECTIONS */
 section{padding:64px;border-bottom:var(--b1)}
@@ -2053,3 +2053,83 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 /* Nav — highlight Rey del Barrio */
 .nm-item[href="equipos.html#rey"]{color:rgba(255,0,170,0.8)!important}
 .nm-item[href="equipos.html#rey"]:hover,.nm-item[href="equipos.html#rey"].on{color:var(--f)!important;text-shadow:0 0 14px rgba(255,0,170,0.5)}
+
+/* ============================================================
+   OPTIMIZACIÓN MÓVIL — LANZAMIENTO BETA
+   ============================================================ */
+
+/* Nota de email en registro */
+.auth-note{font-size:10px;color:var(--td);line-height:1.5;margin:-6px 0 8px;padding:0 2px}
+
+/* Auth modal: scroll en pantallas pequeñas */
+.auth-card{max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* Hero landing — móvil */
+@media(max-width:680px){
+  .hero{min-height:100svh;padding-top:80px}
+  .hero-content{padding:40px 20px 24px}
+  .h-title .t1,.h-title .t2,.h-title .t3{font-size:clamp(36px,11vw,58px)}
+  .h-desc{font-size:13px;margin-bottom:24px}
+  .h-btns{flex-direction:column;align-items:stretch;gap:10px}
+  .hb1,.hb2{padding:14px 20px;text-align:center}
+  .h-stats{flex-wrap:wrap}
+  .h-stat{padding:10px 14px;flex:1 1 45%}
+  .hero-glow-core,.hero-particles{display:none}
+  .hero-frame{inset:10px}
+}
+
+/* Dashboard — móvil */
+@media(max-width:600px){
+  .hw-hero{height:auto;min-height:60vh;padding:100px 0 60px}
+  .hw-hero-content{padding:0 20px}
+  .hw-hero-title{font-size:clamp(28px,8vw,48px)}
+  .hw-hero-sub{font-size:13px}
+  .hw-cta-main,.hw-cta-sec{padding:14px 20px;font-size:11px;width:100%}
+  .hw-hero-cta-row{flex-direction:column}
+  .hw-pillars{grid-template-columns:1fr}
+  .hw-action-grid{grid-template-columns:1fr}
+  .hw-checklist{grid-template-columns:1fr 1fr}
+  .hw-soon-grid{grid-template-columns:repeat(2,1fr)}
+  .hw-rank-track{gap:10px}
+  .hw-rank-card{flex:0 0 180px}
+}
+
+/* Match wizard — móvil */
+@media(max-width:600px){
+  .bpw-wrap{padding:16px}
+  .bpw-layout{gap:16px}
+  .bpw-card{padding:20px 16px}
+  .bpw-steps{gap:4px;flex-wrap:wrap;justify-content:center}
+  .bpw-step-l{display:none}
+  .bpw-cat-grid,.bpw-surf-grid{grid-template-columns:repeat(2,1fr)}
+  .bpw-modal-grid{grid-template-columns:1fr}
+  .bp-pos-grid{grid-template-columns:1fr 1fr}
+}
+
+/* Equipos/Carta — móvil */
+@media(max-width:600px){
+  .team-slots{grid-template-columns:repeat(2,1fr);gap:8px}
+  .pi{padding:24px 16px}
+  .pi-stats{grid-template-columns:repeat(2,1fr)}
+  .card-section{gap:24px}
+}
+
+/* Torneos — móvil */
+@media(max-width:600px){
+  .tn-hero-title{font-size:clamp(36px,10vw,56px)}
+  .tn-wrap{margin:0 16px}
+  .tn-card{padding:20px 16px}
+}
+
+/* Buscar partido — móvil */
+@media(max-width:600px){
+  .bp-hero{padding:80px 20px 44px;margin-top:60px}
+  .bp-hero-title{font-size:clamp(36px,10vw,56px)}
+  .bp-ethos,.bp-create-hero,.bp-search-section,.bp-tabs,.bp-panel{margin-left:16px;margin-right:16px}
+}
+
+/* Fix: evitar overflow horizontal global en móvil */
+@media(max-width:680px){
+  body,html{overflow-x:hidden}
+  section,.sec-cine,.ld-imagine-section,.ld-manifesto-section,.ld-carta-section,.ld-teaser-section,.ld-final-section{overflow-x:hidden}
+}
