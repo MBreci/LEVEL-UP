@@ -1581,11 +1581,33 @@ function closeRevealSequence() {
 
 /* ===== AUTH / PERFILES ===== */
 
+function toggleSQDropdown() {
+  const dd = document.getElementById('sq-dropdown');
+  const opts = document.getElementById('sq-options');
+  const isOpen = dd.classList.toggle('open');
+  if (isOpen) {
+    const rect = dd.getBoundingClientRect();
+    opts.style.top = (rect.bottom + 4) + 'px';
+    opts.style.left = rect.left + 'px';
+    opts.style.width = rect.width + 'px';
+  }
+}
+
 function selectSQ(el, value) {
+  event.stopPropagation();
   document.querySelectorAll('.sq-opt').forEach(o => o.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('auth-sq').value = value;
+  const sel = document.getElementById('sq-selected');
+  sel.textContent = value;
+  sel.classList.add('chosen');
+  document.getElementById('sq-dropdown').classList.remove('open');
 }
+
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('sq-dropdown');
+  if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+});
 
 function switchAuthTab(tab) {
   document.getElementById('tab-new').classList.toggle('on', tab === 'new');
