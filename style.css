@@ -1934,3 +1934,21 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 .bp-search-section-sub{font-size:12px;color:rgba(210,220,255,0.35)}
 
 @media(max-width:640px){.bp-create-hero{flex-direction:column;padding:32px 24px;text-align:center}.bp-create-hero-deco{display:none}.bp-create-hero-sub{max-width:100%}}
+
+/* ============================================================
+   WIZARD — SELECCIÓN DE CANCHA LIBRE / REGISTRADA
+   ============================================================ */
+.bpw-cancha-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.bpw-cancha-tab{border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:10px;padding:20px 16px;cursor:pointer;transition:all .2s;text-align:center}
+.bpw-cancha-tab:hover{border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.04)}
+.bpw-cancha-tab.on{border-color:var(--g);background:rgba(0,255,136,0.07);box-shadow:0 0 20px -6px rgba(0,255,136,0.3)}
+.bpw-cancha-tab-icon{font-size:28px;margin-bottom:10px}
+.bpw-cancha-tab-title{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--w);margin-bottom:6px}
+.bpw-cancha-tab.on .bpw-cancha-tab-title{color:var(--g)}
+.bpw-cancha-tab-sub{font-size:11px;color:rgba(210,220,255,0.4);line-height:1.4}
+.bpw-libre-fields{display:flex;flex-direction:column;gap:4px;animation:fadeInUp .25s ease}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Nav — highlight Rey del Barrio */
+.nm-item[href="equipos.html#rey"]{color:rgba(255,0,170,0.8)!important}
+.nm-item[href="equipos.html#rey"]:hover,.nm-item[href="equipos.html#rey"].on{color:var(--f)!important;text-shadow:0 0 14px rgba(255,0,170,0.5)}

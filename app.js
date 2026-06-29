@@ -38,10 +38,11 @@ function rankSlug(rank) { return rank && rank.slug ? rank.slug : 'canterano'; }
 
 const FUNCTIONAL_MODULES = [
   { id: 'ficha', label: 'MI FICHA' },
-  { id: 'jugadores', label: 'JUGADORES' },
-  { id: 'ranking', label: 'RANKING' },
   { id: 'partidos', label: 'PARTIDOS' },
+  { id: 'equipos', label: 'EQUIPOS' },
+  { id: 'reydelbarrio', label: 'REY DEL BARRIO' },
   { id: 'torneos', label: 'TORNEOS' },
+  { id: 'ranking', label: 'RANKING' },
   { id: 'temporada', label: 'TEMPORADA BETA' },
 ];
 
@@ -226,6 +227,8 @@ const PAGE_HREFS = {
   jugadores: 'jugadores.html',
   ranking: 'ranking.html',
   partidos: 'buscar-partido.html',
+  equipos: 'equipos.html',
+  reydelbarrio: 'equipos.html#rey',
   torneos: 'torneos.html',
   temporada: 'temporada-piloto.html',
 };
@@ -1880,7 +1883,7 @@ const MODALIDADES = [
   { id: 'rey', label: 'REY DEL BARRIO', icon: '👑', desc: 'Reta a otro equipo. Se gestiona desde EQUIPOS.' },
   { id: 'oficial', label: 'PARTIDO OFICIAL', icon: '🏆', desc: 'Próximamente: partidos arbitrados de LEVEL UP.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null, invitados: [] };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: null, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
 
 function getMaxFaltan() {
   return bpWizard.categoria ? Math.max(1, parseInt(bpWizard.categoria, 10) - 1) : 10;
@@ -1893,7 +1896,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, fechaISO: null, horaValue: null, invitados: [] };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: null, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -1956,49 +1959,77 @@ function renderBpWizard() {
   } else if (bpWizardStep === 4) {
     const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
     bodyEl.innerHTML = `
-      <div class="auth-label">PASO 4 · SELECCIONA LA ARENA</div>
-      <div class="bpw-arena-grid">
-        ${ARENAS.map(a => `
-          <div class="bpw-arena-tile ${bpWizard.arenaId === a.id ? 'on' : ''}" onclick="bpSelectArena('${a.id}')" style="background-image:url('${a.photos[0]}')">
-            <div class="bpw-arena-overlay">
-              <div class="bpw-arena-name">${a.name}</div>
-              <div class="bpw-arena-addr">📍 ${a.address}</div>
-              <div class="bpw-arena-rating">⭐ ${a.rating || '4.8'} · ${getArenaMatchesPlayed(a.id)} PARTIDOS JUGADOS</div>
-            </div>
-          </div>`).join('')}
+      <div class="auth-label">PASO 4 · ¿DÓNDE VAN A JUGAR?</div>
+      <div class="bpw-cancha-tabs">
+        <div class="bpw-cancha-tab ${bpWizard.canchaLibre === false ? 'on' : ''}" onclick="bpSetCanchaLibre(false)">
+          <div class="bpw-cancha-tab-icon">🏟️</div>
+          <div class="bpw-cancha-tab-title">CANCHA REGISTRADA</div>
+          <div class="bpw-cancha-tab-sub">Arenas afiliadas a LEVEL UP con horarios disponibles</div>
+        </div>
+        <div class="bpw-cancha-tab ${bpWizard.canchaLibre === true ? 'on' : ''}" onclick="bpSetCanchaLibre(true)">
+          <div class="bpw-cancha-tab-icon">📍</div>
+          <div class="bpw-cancha-tab-title">CUALQUIER CANCHA</div>
+          <div class="bpw-cancha-tab-sub">Escribe el nombre y la dirección de donde quieres jugar</div>
+        </div>
       </div>
-      ${arena ? `
-        <div class="arena-card">
-          <div class="arena-card-badge">${arena.badge}</div>
-          <div class="arena-card-gallery">
-            ${arena.photos.map(p => `<div class="arena-photo" style="background-image:url('${p}')"></div>`).join('')}
-          </div>
-          <div class="arena-card-name">${arena.name}</div>
-          <div class="arena-card-addr">📍 ${arena.address}</div>
-          <div class="arena-card-desc">${arena.description}</div>
-          <div class="arena-card-features">
-            ${arena.features.map(f => `<div class="arena-feature">✅ ${f}</div>`).join('')}
-          </div>
-          <a class="arena-card-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(arena.address)}" target="_blank">VER CÓMO LLEGAR →</a>
+      ${bpWizard.canchaLibre === false ? `
+        <div class="bpw-arena-grid">
+          ${ARENAS.map(a => `
+            <div class="bpw-arena-tile ${bpWizard.arenaId === a.id ? 'on' : ''}" onclick="bpSelectArena('${a.id}')" style="background-image:url('${a.photos[0]}')">
+              <div class="bpw-arena-overlay">
+                <div class="bpw-arena-name">${a.name}</div>
+                <div class="bpw-arena-addr">📍 ${a.address}</div>
+                <div class="bpw-arena-rating">⭐ ${a.rating || '4.8'} · ${getArenaMatchesPlayed(a.id)} PARTIDOS JUGADOS</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        ${arena ? `
+          <div class="arena-card">
+            <div class="arena-card-badge">${arena.badge}</div>
+            <div class="arena-card-gallery">
+              ${arena.photos.map(p => `<div class="arena-photo" style="background-image:url('${p}')"></div>`).join('')}
+            </div>
+            <div class="arena-card-name">${arena.name}</div>
+            <div class="arena-card-addr">📍 ${arena.address}</div>
+            <div class="arena-card-desc">${arena.description}</div>
+            <div class="arena-card-features">
+              ${arena.features.map(f => `<div class="arena-feature">✅ ${f}</div>`).join('')}
+            </div>
+            <a class="arena-card-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(arena.address)}" target="_blank">VER CÓMO LLEGAR →</a>
+          </div>` : ''}` : ''}
+      ${bpWizard.canchaLibre === true ? `
+        <div class="bpw-libre-fields">
+          <div class="auth-label">NOMBRE DE LA CANCHA</div>
+          <input class="auth-input" id="bpw-libre-nombre" placeholder="Ej: Cancha El Campín" autocomplete="off" value="${bpWizard.canchaLibreNombre}" oninput="bpWizard.canchaLibreNombre=this.value;renderBpSummary()">
+          <div class="auth-label">DIRECCIÓN</div>
+          <input class="auth-input" id="bpw-libre-dir" placeholder="Ej: Cra 30 # 57-12" autocomplete="off" value="${bpWizard.canchaLibreDireccion}" oninput="bpWizard.canchaLibreDireccion=this.value;renderBpSummary()">
+          <div class="auth-label">BARRIO / ZONA</div>
+          <input class="auth-input" id="bpw-libre-barrio" placeholder="Ej: Chapinero, Suba, Kennedy..." autocomplete="off" value="${bpWizard.canchaLibreBarrio}" oninput="bpWizard.canchaLibreBarrio=this.value;renderBpSummary()">
         </div>` : ''}`;
   } else if (bpWizardStep === 5) {
     bodyEl.innerHTML = `
       <div class="auth-label">PASO 5 · SELECCIONA LA FECHA</div>
       <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
   } else if (bpWizardStep === 6) {
-    const slots = bpWizard.arenaId && bpWizard.fechaISO ? getArenaAvailableSlots(bpWizard.arenaId, bpWizard.fechaISO) : [];
-    bodyEl.innerHTML = `
-      <div class="auth-label">PASO 6 · SELECCIONA EL HORARIO</div>
-      <div class="bpw-hora-grid">
-        ${slots.length ? slots.map(s => {
-          const restantes = (ARENAS.find(a => a.id === bpWizard.arenaId).maxSimultaneos) - s.ocupados;
-          const cls = !s.disponible ? 'full' : restantes <= 1 ? 'last' : 'open';
-          return `<div class="bpw-hora-tile ${cls} ${bpWizard.horaValue === s.hora ? 'on' : ''}" onclick="${s.disponible ? `bpSelectHora('${s.hora}')` : ''}">
-            <div class="bpw-hora-label">${s.label}</div>
-            <div class="bpw-hora-tag">${!s.disponible ? 'COMPLETO' : restantes <= 1 ? 'ÚLTIMO CUPO' : 'DISPONIBLE'}</div>
-          </div>`;
-        }).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
-      </div>`;
+    if (bpWizard.canchaLibre) {
+      bodyEl.innerHTML = `
+        <div class="auth-label">PASO 6 · ¿A QUÉ HORA EMPIEZA?</div>
+        <input class="auth-input" type="time" id="bpw-hora-libre" value="${bpWizard.horaLibre || ''}" onchange="bpWizard.horaLibre=this.value;renderBpSummary()">`;
+    } else {
+      const slots = bpWizard.arenaId && bpWizard.fechaISO ? getArenaAvailableSlots(bpWizard.arenaId, bpWizard.fechaISO) : [];
+      bodyEl.innerHTML = `
+        <div class="auth-label">PASO 6 · SELECCIONA EL HORARIO</div>
+        <div class="bpw-hora-grid">
+          ${slots.length ? slots.map(s => {
+            const restantes = (ARENAS.find(a => a.id === bpWizard.arenaId).maxSimultaneos) - s.ocupados;
+            const cls = !s.disponible ? 'full' : restantes <= 1 ? 'last' : 'open';
+            return `<div class="bpw-hora-tile ${cls} ${bpWizard.horaValue === s.hora ? 'on' : ''}" onclick="${s.disponible ? `bpSelectHora('${s.hora}')` : ''}">
+              <div class="bpw-hora-label">${s.label}</div>
+              <div class="bpw-hora-tag">${!s.disponible ? 'COMPLETO' : restantes <= 1 ? 'ÚLTIMO CUPO' : 'DISPONIBLE'}</div>
+            </div>`;
+          }).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
+        </div>`;
+    }
   } else if (bpWizardStep === 7) {
     const maxFaltan = getMaxFaltan();
     bodyEl.innerHTML = `
@@ -2150,6 +2181,12 @@ function renderBpSummary() {
   `;
 }
 
+function bpSetCanchaLibre(isLibre) {
+  bpWizard.canchaLibre = isLibre;
+  if (isLibre) { bpWizard.arenaId = null; }
+  else { bpWizard.canchaLibreNombre = ''; bpWizard.canchaLibreDireccion = ''; bpWizard.canchaLibreBarrio = ''; }
+  renderBpWizard();
+}
 function bpSelectModalidad(id) {
   if (id === 'rey') { openWip('Rey del Barrio'); return; }
   if (id === 'oficial') { openWip('Partido Oficial'); return; }
@@ -2173,28 +2210,45 @@ function bpWizardNext() {
   if (bpWizardStep === 1 && !bpWizard.modalidad) { errorEl.textContent = 'Selecciona la modalidad del partido.'; return; }
   if (bpWizardStep === 2 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
   if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
-  if (bpWizardStep === 4 && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena.'; return; }
+  if (bpWizardStep === 4) {
+    if (bpWizard.canchaLibre === null) { errorEl.textContent = 'Selecciona dónde van a jugar.'; return; }
+    if (bpWizard.canchaLibre === false && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena registrada.'; return; }
+    if (bpWizard.canchaLibre === true && !bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
+  }
   if (bpWizardStep === 5 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
-  if (bpWizardStep === 6 && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
+  if (bpWizardStep === 6 && !bpWizard.canchaLibre && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
+  if (bpWizardStep === 6 && bpWizard.canchaLibre && !bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
   if (bpWizardStep < 7) { bpWizardStep++; renderBpWizard(); return; }
   submitMatchRequest();
 }
 
 function submitMatchRequest() {
   if (!state) { openAuth(true); return; }
-  const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
   const errorEl = document.getElementById('bp-error');
-  if (!arena || !bpWizard.categoria || !bpWizard.fechaISO || !bpWizard.horaValue) {
+  const arena = bpWizard.canchaLibre ? null : ARENAS.find(a => a.id === bpWizard.arenaId);
+
+  if (!bpWizard.categoria || !bpWizard.fechaISO) {
     errorEl.textContent = 'Completa todos los pasos antes de publicar.';
     return;
   }
-  const slots = getArenaAvailableSlots(arena.id, bpWizard.fechaISO);
-  const chosenSlot = slots.find(s => s.hora === bpWizard.horaValue);
-  if (!chosenSlot || !chosenSlot.disponible) {
-    errorEl.textContent = 'Ese horario ya no está disponible. Selecciona otro.';
-    bpWizardStep = 6;
-    renderBpWizard();
+  if (!bpWizard.canchaLibre && (!arena || !bpWizard.horaValue)) {
+    errorEl.textContent = 'Completa todos los pasos antes de publicar.';
     return;
+  }
+  if (bpWizard.canchaLibre && (!bpWizard.canchaLibreNombre.trim() || !bpWizard.horaLibre)) {
+    errorEl.textContent = 'Completa el nombre de la cancha y la hora.';
+    return;
+  }
+
+  if (!bpWizard.canchaLibre) {
+    const slots = getArenaAvailableSlots(arena.id, bpWizard.fechaISO);
+    const chosenSlot = slots.find(s => s.hora === bpWizard.horaValue);
+    if (!chosenSlot || !chosenSlot.disponible) {
+      errorEl.textContent = 'Ese horario ya no está disponible. Selecciona otro.';
+      bpWizardStep = 6;
+      renderBpWizard();
+      return;
+    }
   }
   const precio = document.getElementById('bp-precio').value.trim();
   const ovrMin = document.getElementById('bp-ovr-min').value.trim();
@@ -2229,20 +2283,22 @@ function submitMatchRequest() {
     return;
   }
   errorEl.textContent = '';
-  const fecha = formatFechaPartido(bpWizard.fechaISO, formatHoraLabel(bpWizard.horaValue));
+  const horaLabel = bpWizard.canchaLibre ? bpWizard.horaLibre : formatHoraLabel(bpWizard.horaValue);
+  const fecha = formatFechaPartido(bpWizard.fechaISO, horaLabel);
   openMatches.unshift({
     id: 'm_' + Date.now(),
     creatorId: state.id,
     creatorName: state.nickname || state.name,
-    zona: arena.city,
-    cancha: arena.name,
-    direccion: arena.address,
-    arenaId: arena.id,
+    zona: bpWizard.canchaLibre ? (bpWizard.canchaLibreBarrio || 'Bogotá') : arena.city,
+    cancha: bpWizard.canchaLibre ? bpWizard.canchaLibreNombre : arena.name,
+    direccion: bpWizard.canchaLibre ? bpWizard.canchaLibreDireccion : arena.address,
+    arenaId: bpWizard.canchaLibre ? null : arena.id,
+    canchaLibre: bpWizard.canchaLibre || false,
     formato: bpWizard.categoria,
-    superficie: bpWizard.superficie,
+    superficie: bpWizard.canchaLibre ? null : bpWizard.superficie,
     fecha,
     fechaISO: bpWizard.fechaISO,
-    horaValue: bpWizard.horaValue,
+    horaValue: bpWizard.canchaLibre ? bpWizard.horaLibre : bpWizard.horaValue,
     precio: precio || null,
     ovrMin: ovrMin ? parseInt(ovrMin, 10) : null,
     abierto,
