@@ -1756,6 +1756,12 @@ function getTeamMatches(teamId, estado) {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
+function isMatchExpired(m) {
+  if (m.estado !== 'programado') return false;
+  const dt = new Date(m.fecha + (m.hora ? 'T' + m.hora : 'T23:59'));
+  return dt < new Date();
+}
+
 function switchEquiposTab(tab) {
   ['crear', 'rey', 'programados'].forEach(t => {
     document.getElementById('eq-tab-' + t).classList.toggle('on', t === tab);
@@ -2048,29 +2054,38 @@ function renderTeamMatchesPanel() {
   if (!state) { el.innerHTML = guestPrompt('Inicia sesión para ver tus partidos programados.'); return; }
   const myTeam = getMyTeam();
   if (!myTeam) { el.innerHTML = `<div class="rk-empty">Aún no tienes equipo. Crea uno en "CREAR EQUIPO / MI EQUIPO".</div>`; return; }
-  const programados = getTeamMatches(myTeam.id, 'programado');
+  const todosProgr = getTeamMatches(myTeam.id, 'programado');
+  const programados = todosProgr.filter(m => !isMatchExpired(m));
+  const vencidos = todosProgr.filter(m => isMatchExpired(m));
   const finalizados = getTeamMatches(myTeam.id, 'finalizado');
   const isCaptain = myTeam.captainId === state.id;
-  const row = (m, finalized) => {
+  const row = (m, finalized, expired) => {
     const rivalId = m.teamAId === myTeam.id ? m.teamBId : m.teamAId;
     const rival = teams[rivalId];
-    const canFinalize = !finalized && isCaptain && m.teamAId === myTeam.id;
+    const canFinalize = !finalized && !expired && isCaptain && m.teamAId === myTeam.id;
+    const statusLabel = finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB
+      : finalized ? '—' : expired ? 'SIN JUGAR' : 'PROGRAMADO';
     return `
-      <div class="team-hist-row">
+      <div class="team-hist-row${expired ? ' expired' : ''}">
         <span>${m.fecha} ${m.hora || ''} · ${m.cancha}</span>
         <span>VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
-        <span>${finalized && m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : (finalized ? '—' : 'PROGRAMADO')}</span>
+        <span>${statusLabel}</span>
         ${canFinalize ? `<button class="mm-invite-btn" onclick="finalizeTeamMatch('${m.id}')">FINALIZAR PARTIDO</button>` : ''}
       </div>`;
   };
   el.innerHTML = `
     <div class="sec-hdr"><div class="sec-eyebrow">PARTIDOS PROGRAMADOS</div></div>
     <div class="team-hist-list">
-      ${programados.length ? programados.map(m => row(m, false)).join('') : `<div class="rk-empty">No tienes partidos programados.</div>`}
+      ${programados.length ? programados.map(m => row(m, false, false)).join('') : `<div class="rk-empty">No tienes partidos programados próximos.</div>`}
     </div>
+    ${vencidos.length ? `
+    <div class="sec-hdr"><div class="sec-eyebrow">SIN JUGAR (FECHA VENCIDA)</div></div>
+    <div class="team-hist-list">
+      ${vencidos.map(m => row(m, false, true)).join('')}
+    </div>` : ''}
     <div class="sec-hdr"><div class="sec-eyebrow">HISTORIAL</div></div>
     <div class="team-hist-list">
-      ${finalizados.length ? finalizados.map(m => row(m, true)).join('') : `<div class="rk-empty">Aún no has finalizado partidos de equipo.</div>`}
+      ${finalizados.length ? finalizados.map(m => row(m, true, false)).join('') : `<div class="rk-empty">Aún no has finalizado partidos de equipo.</div>`}
     </div>
   `;
 }
@@ -2226,7 +2241,22 @@ function renderAdminPartidos() {
         <button class="auth-submit adm-match-btn" onclick="adminOpenLiveMatch('${m.id}')">${actionLabel}</button>
       </div>`;
   };
-  el.innerHTML = `<div class="adm-match-grid">${teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt).map(card).join('')}</div>`;
+  const sorted = teamMatches.slice().sort((a, b) => b.createdAt - a.createdAt);
+  const activos = sorted.filter(m => ['en_curso', 'procesando'].includes(m.estado));
+  const proximos = sorted.filter(m => m.estado === 'programado' && !isMatchExpired(m));
+  const vencidos = sorted.filter(m => m.estado === 'programado' && isMatchExpired(m));
+  const finalizados = sorted.filter(m => m.estado === 'finalizado');
+
+  const section = (title, items, dimmed) => items.length ? `
+    <div class="adm-match-section-title${dimmed ? ' dimmed' : ''}">${title}</div>
+    <div class="adm-match-grid">${items.map(card).join('')}</div>` : '';
+
+  el.innerHTML =
+    section('EN CURSO', activos) +
+    section('PRÓXIMOS', proximos) +
+    section('SIN JUGAR — FECHA VENCIDA', vencidos, true) +
+    section('FINALIZADOS', finalizados, true) ||
+    `<div class="rk-empty">Todavía no hay partidos de equipos creados.</div>`;
 }
 
 function toggleAdminCreateMatch() {

@@ -910,3 +910,7 @@ footer{padding:48px 64px;border-top:var(--b1)}
 
 /* ===== ADMIN · CREAR PARTIDO MANUALMENTE ===== */
 .adm-create-card{background:rgba(10,14,20,.85);border:var(--b1);border-radius:10px;padding:24px;max-width:420px;margin-bottom:28px}
+.adm-match-section-title{font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--tm);margin:24px 0 10px;text-transform:uppercase}
+.adm-match-section-title.dimmed{opacity:.5}
+.team-hist-row.expired{opacity:.5}
+.team-hist-row.expired span:nth-child(3){color:var(--tm)}
