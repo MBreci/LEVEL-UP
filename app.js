@@ -5111,6 +5111,7 @@ function openAdminPlayer(pid) {
   if (!modal) return;
 
   const ph = p.physical || {};
+  const currentPhoto = p.photo || '';
   document.getElementById('ap-content').innerHTML = `
     <div class="ap-header">
       <div class="ap-title">EDITAR JUGADOR</div>
@@ -5118,8 +5119,14 @@ function openAdminPlayer(pid) {
       <button class="am-close-btn" onclick="closeAdminPlayer()">✕</button>
     </div>
     <div class="ap-form">
-      <label class="ap-label">FOTO (URL)</label>
-      <input class="ap-input" id="ap-photo" type="text" value="${p.photo || ''}" placeholder="https://...">
+      <label class="ap-label">FOTO</label>
+      <div class="ap-photo-wrap">
+        ${currentPhoto ? `<img class="ap-photo-preview" id="ap-photo-preview" src="${currentPhoto}" alt="">` : `<div class="ap-photo-preview ap-photo-empty" id="ap-photo-preview">👤</div>`}
+        <label class="ap-photo-btn" for="ap-photo-file">📷 SELECCIONAR FOTO</label>
+        <input type="file" id="ap-photo-file" accept="image/*" style="display:none" onchange="previewAdminPhoto(this,'${pid}')">
+        <div class="ap-photo-status" id="ap-photo-status">${currentPhoto ? '✔ Foto cargada' : 'Sin foto'}</div>
+      </div>
+      <input type="hidden" id="ap-photo" value="${currentPhoto}">
       <label class="ap-label">PESO (kg)</label>
       <input class="ap-input" id="ap-weight" type="number" value="${ph.weight || ''}" placeholder="70">
       <label class="ap-label">ALTURA (cm)</label>
@@ -5148,6 +5155,27 @@ function closeAdminPlayer() {
 function selectFoot(foot) {
   document.querySelectorAll('.ap-foot-btn').forEach(b => b.classList.remove('on'));
   document.querySelectorAll('.ap-foot-btn').forEach(b => { if (b.textContent === foot) b.classList.add('on'); });
+}
+
+async function previewAdminPhoto(input, pid) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('ap-photo-status');
+  const preview = document.getElementById('ap-photo-preview');
+  status.textContent = 'Subiendo foto...';
+
+  if (!sb) { status.textContent = '✗ Sin conexión a Supabase'; return; }
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `players/${pid}.${ext}`;
+  const { error } = await sb.storage.from('player-photos').upload(path, file, { upsert: true });
+  if (error) { status.textContent = '✗ Error: ' + error.message; return; }
+
+  const { data: urlData } = sb.storage.from('player-photos').getPublicUrl(path);
+  const url = urlData.publicUrl + '?t=' + Date.now();
+  document.getElementById('ap-photo').value = url;
+  if (preview) { preview.src = url; preview.className = 'ap-photo-preview'; }
+  status.textContent = '✔ Foto subida';
 }
 
 async function saveAdminPlayer(pid) {
