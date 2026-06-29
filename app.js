@@ -1884,8 +1884,12 @@ const MODALIDADES = [
 ];
 let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
 
+function getTotalJugadores() {
+  // fútbol N = N por equipo × 2 equipos
+  return bpWizard.categoria ? parseInt(bpWizard.categoria, 10) * 2 : 22;
+}
 function getMaxFaltan() {
-  return bpWizard.categoria ? Math.max(1, parseInt(bpWizard.categoria, 10) - 1) : 10;
+  return getTotalJugadores() - 1; // organizador ya ocupa 1 cupo
 }
 
 function openMatchForm() {
@@ -2002,18 +2006,27 @@ function renderBpWizard() {
         </div>`;
     }
   } else if (bpWizardStep === 7) {
+    const totalJug = getTotalJugadores();
     const maxFaltan = getMaxFaltan();
+    const yaConfirmados = 1 + bpWizard.invitados.length;
+    const cuposRestantes = totalJug - yaConfirmados;
     bodyEl.innerHTML = `
-      <div class="auth-label">PRECIO POR JUGADOR (OPCIONAL)</div>
-      <input class="auth-input" type="number" min="0" id="bp-precio" oninput="renderBpSummary()" placeholder="Ej: 10000">
-      <div class="auth-label">OVR MÍNIMO RECOMENDADO (OPCIONAL)</div>
-      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60">
-      <label class="auth-consent">
-        <input type="checkbox" id="bp-abierto" ${bpWizard.modalidad !== 'privado' ? 'checked' : ''} onchange="renderBpSummary()">
-        <span>Partido abierto: los jugadores entran automáticamente al unirse. Desmárcalo si quieres aprobar cada solicitud.</span>
-      </label>
+      <div class="bpw-cupos-visual">
+        <div class="bpw-cupos-title">CUPOS DEL PARTIDO</div>
+        <div class="bpw-cupos-row">
+          ${Array.from({length: totalJug}, (_, i) => {
+            const cls = i === 0 ? 'me' : i < yaConfirmados ? 'confirmed' : 'empty';
+            return `<div class="bpw-cupo-dot ${cls}" title="${i === 0 ? 'Tú (organizador)' : i < yaConfirmados ? bpWizard.invitados[i-1]?.name || 'Confirmado' : 'Cupo libre'}"></div>`;
+          }).join('')}
+        </div>
+        <div class="bpw-cupos-legend">
+          <span><span class="bpw-cupo-dot me" style="display:inline-block"></span> Tú</span>
+          <span><span class="bpw-cupo-dot confirmed" style="display:inline-block"></span> Confirmados (${yaConfirmados})</span>
+          <span><span class="bpw-cupo-dot empty" style="display:inline-block"></span> Faltan (${cuposRestantes})</span>
+        </div>
+      </div>
 
-      <div class="auth-label">INVITAR JUGADORES YA CONFIRMADOS</div>
+      <div class="auth-label">INVITAR JUGADORES YA CONFIRMADOS <span style="color:var(--td);font-weight:300">· Opcional</span></div>
       <div style="position:relative">
         <input class="auth-input" id="bp-invite-search" placeholder="Busca por nombre o apodo" oninput="bpSearchInvitados(this.value)" autocomplete="off">
         <div class="pl-suggest" id="bp-invite-suggest"></div>
@@ -2029,16 +2042,20 @@ function renderBpWizard() {
           </span>`).join('')}
       </div>
 
-      <div class="bpw-team-need-header">
-        <div class="bpw-team-need-title">¿CUÁNTA GENTE NECESITAS?</div>
-        <div class="bpw-team-need-sub">Para fútbol ${bpWizard.categoria || '—'} puedes traer hasta <strong>${maxFaltan}</strong> jugador${maxFaltan === 1 ? '' : 'es'} adicional${maxFaltan === 1 ? '' : 'es'} (además de ti). Marca los roles que te faltan y cuántos de cada uno.</div>
-      </div>
+      <div class="auth-label">POSICIONES QUE FALTAN <span style="color:var(--td);font-weight:300">· Marca las que necesitas</span></div>
       <div class="bp-pos-grid" id="bp-pos-grid">
         <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> <span class="bp-pos-role">⚽ DEL</span><span class="bp-pos-role-name">Delantero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
         <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> <span class="bp-pos-role">🔄 MED</span><span class="bp-pos-role-name">Mediocampista</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
         <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> <span class="bp-pos-role">🛡️ DEF</span><span class="bp-pos-role-name">Defensa</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
         <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> <span class="bp-pos-role">🧤 POR</span><span class="bp-pos-role-name">Portero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-      </div>`;
+      </div>
+
+      <label class="auth-consent">
+        <input type="checkbox" id="bp-abierto" ${bpWizard.modalidad !== 'privado' ? 'checked' : ''} onchange="renderBpSummary()">
+        <span>Partido abierto: los jugadores pueden unirse directamente. Desmárcalo para aprobar cada solicitud.</span>
+      </label>
+      <div class="auth-label" style="margin-top:12px">OVR MÍNIMO <span style="color:var(--td);font-weight:300">· Opcional</span></div>
+      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60 — deja vacío para todos los niveles">`;
   }
   renderBpSummary();
 }
@@ -2111,11 +2128,8 @@ function bpFaltanTotalChecked() {
 function renderBpSummary() {
   const el = document.getElementById('bpw-summary');
   if (!el) return;
-  const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
-  const horaLabel = bpWizard.horaValue ? formatHoraLabel(bpWizard.horaValue) : null;
-  const fechaLabel = bpWizard.fechaISO ? formatFechaPartido(bpWizard.fechaISO, horaLabel || '') : null;
+  const horaLabel = bpWizard.horaLibre || null;
   const precioEl = document.getElementById('bp-precio');
-  const abiertoEl = document.getElementById('bp-abierto');
   const necesitaRows = bpWizardStep === 7
     ? Array.from(document.querySelectorAll('#bp-pos-grid .bp-pos-chip')).map(chip => {
         const cb = chip.querySelector('input[type=checkbox]');
@@ -2127,31 +2141,23 @@ function renderBpSummary() {
   const totalFaltan = necesitaRows.filter(r => r.checked).reduce((s, r) => s + r.cupos, 0);
   const totalAdicionales = totalFaltan + bpWizard.invitados.length;
   const sobrepasado = bpWizardStep === 7 && totalAdicionales > maxFaltan;
-  const ready = arena && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaValue && necesitaRows.some(r => r.checked) && !sobrepasado;
+  const ready = bpWizard.canchaLibreNombre && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && necesitaRows.some(r => r.checked) && !sobrepasado;
   if (sobrepasado) {
     const errorEl = document.getElementById('bp-error');
-    if (errorEl) errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores, pero fútbol ${bpWizard.categoria} solo permite ${maxFaltan} adicionales (sin contarte a ti).`;
+    if (errorEl) errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores pero el partido de fútbol ${bpWizard.categoria} tiene ${getTotalJugadores()} cupos en total. Solo puedes pedir ${maxFaltan} adicionales.`;
   }
   el.innerHTML = `
     <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
     <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
-    <div class="bpw-summary-row"><span>ARENA</span><strong>${arena ? arena.name : '—'}</strong></div>
+    <div class="bpw-summary-row"><span>CANCHA</span><strong>${bpWizard.canchaLibreNombre || '—'}</strong></div>
     <div class="bpw-summary-row"><span>FÚTBOL</span><strong>${bpWizard.categoria ? 'FÚTBOL ' + bpWizard.categoria : '—'}</strong></div>
     <div class="bpw-summary-row"><span>FECHA</span><strong>${bpWizard.fechaISO || '—'}</strong></div>
     <div class="bpw-summary-row"><span>HORA</span><strong>${horaLabel || '—'}</strong></div>
-    <div class="bpw-summary-row"><span>COSTO</span><strong>${precioEl && precioEl.value ? '$' + precioEl.value : 'GRATIS'}</strong></div>
+    <div class="bpw-summary-row"><span>VALOR/PERSONA</span><strong>${bpWizard.canchaLibreValor ? '$' + parseInt(bpWizard.canchaLibreValor).toLocaleString('es-CO') : 'GRATIS'}</strong></div>
     <div class="bpw-summary-row"><span>CAPITÁN</span><strong>${state ? (state.nickname || state.name) : '—'}</strong></div>
-    ${bpWizard.invitados.length ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${bpWizard.invitados.map(i => i.name).join(', ')}</strong></div>` : ''}
-    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CUPOS ADICIONALES</span><strong class="${sobrepasado ? 'over' : ''}">${totalAdicionales}/${maxFaltan}</strong></div>` : ''}
+    ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
+    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>FALTAN</span><strong class="${sobrepasado ? 'over' : ''}">${totalAdicionales} de ${maxFaltan} cupos abiertos</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
-    ${necesitaRows.length ? `
-      <div class="bpw-summary-cupos">
-        ${necesitaRows.filter(r => r.checked).map(r => `
-          <div class="bpw-summary-cupo">
-            <div class="bpw-summary-cupo-label"><span>${r.pos}</span><span>0/${r.cupos}</span></div>
-            <div class="bpw-cupos-bar"><div class="bpw-cupos-fill" style="width:0%"></div></div>
-          </div>`).join('')}
-      </div>` : ''}
   `;
 }
 
