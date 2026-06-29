@@ -3853,8 +3853,9 @@ function getTeamMatches(teamId, estado) {
 
 function switchEquiposTab(tab) {
   ['crear', 'rey', 'programados'].forEach(t => {
-    document.getElementById('eq-tab-' + t).classList.toggle('on', t === tab);
-    document.getElementById('eq-panel-' + t).style.display = t === tab ? 'block' : 'none';
+    const tabEl = document.getElementById('eq-tab-' + t);
+    if (tabEl) tabEl.classList.toggle('on', t === tab);
+    document.getElementById('eq-panel-' + t).style.display = t === tab ? (t === 'rey' ? 'grid' : 'block') : 'none';
   });
   if (tab === 'rey') renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
   if (tab === 'programados') renderTeamMatchesPanel();
@@ -3880,8 +3881,9 @@ function renderTeamsModule() {
   renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
   renderTeamMatchesPanel();
 
-  if (location.hash === '#rey') switchEquiposTab('rey');
+  if (location.hash === '#crear') switchEquiposTab('crear');
   else if (location.hash === '#programados') switchEquiposTab('programados');
+  else switchEquiposTab('rey');
 }
 
 async function previewTeamPhoto(input) {
@@ -4414,8 +4416,9 @@ function initApp() {
     if (form) form.style.display = 'block';
   }
 
-  if (document.getElementById('eq-tab-rey') && (location.hash === '#rey' || location.hash === '#programados')) {
-    switchEquiposTab(location.hash.slice(1));
+  if (document.getElementById('eq-tab-rey')) {
+    const h = location.hash.slice(1);
+    switchEquiposTab(h === 'crear' || h === 'programados' ? h : 'rey');
   }
 
   if (state) {

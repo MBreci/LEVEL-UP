@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Equipos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782762079">
+<link rel="stylesheet" href="style.css?v=1782763152">
 </head>
 <body>
 
@@ -46,20 +46,19 @@
 </div>
 
 <div class="page-banner">
-  <div class="page-banner-eyebrow">EQUIPOS</div>
-  <div class="page-banner-title">EQUIPOS · REY DEL BARRIO</div>
-  <div class="page-banner-desc">Crea tu equipo, invita jugadores, reta a otros equipos del barrio y revisa tus partidos programados.</div>
+  <div class="page-banner-eyebrow">MODO COMPETITIVO</div>
+  <div class="page-banner-title">👑 REY DEL BARRIO</div>
+  <div class="page-banner-desc">Reta a otros equipos en canchas certificadas. Cada partido registra tu desempeño y actualiza tu ficha.</div>
 </div>
 
 <section id="equipos">
   <div class="eq-tabs">
-    <div class="eq-tab on" id="eq-tab-crear" onclick="switchEquiposTab('crear')">CREAR EQUIPO / MI EQUIPO</div>
-    <div class="eq-tab" id="eq-tab-rey" onclick="switchEquiposTab('rey')">REY DEL BARRIO</div>
+    <div class="eq-tab on" id="eq-tab-rey" onclick="switchEquiposTab('rey')">REY DEL BARRIO</div>
     <div class="eq-tab" id="eq-tab-programados" onclick="switchEquiposTab('programados')">PARTIDOS PROGRAMADOS</div>
   </div>
 
-  <!-- PANEL: CREAR / MI EQUIPO -->
-  <div id="eq-panel-crear" class="eq-panel">
+  <!-- PANEL: CREAR / MI EQUIPO (oculto, accesible por hash) -->
+  <div id="eq-panel-crear" class="eq-panel" style="display:none">
     <div id="team-create-panel" class="eq-create-wrap">
       <div class="sec-hdr">
         <div class="sec-eyebrow">CREAR EQUIPO</div>
@@ -84,31 +83,32 @@
   </div>
 
   <!-- PANEL: REY DEL BARRIO -->
-  <div id="eq-panel-rey" class="eq-panel" style="display:none">
+  <div id="eq-panel-rey" class="eq-panel rdb-layout">
 
-    <!-- BANNER INFORMATIVO -->
-    <div class="rdb-banner">
-      <div class="rdb-banner-glow"></div>
-      <div class="rdb-banner-content">
+    <!-- COLUMNA IZQUIERDA: búsqueda + equipos -->
+    <div class="rdb-main">
+      <div class="pl-search-wrap" style="max-width:100%;padding:0 0 0 0">
+        <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" oninput="renderTeamSearch(this.value)" onfocus="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
+        <div class="pl-suggest" id="team-suggest"></div>
+      </div>
+      <div class="pl-grid rdb-grid" id="team-grid"></div>
+    </div>
+
+    <!-- COLUMNA DERECHA: banner informativo -->
+    <aside class="rdb-sidebar">
+      <div class="rdb-banner rdb-banner-side">
+        <div class="rdb-banner-glow"></div>
         <div class="rdb-banner-crown">👑</div>
-        <div class="rdb-banner-body">
-          <div class="rdb-banner-title">MODO COMPETITIVO OFICIAL</div>
-          <div class="rdb-banner-text">Rey del Barrio no es un partido libre. Aquí se miden los jugadores en canchas certificadas por LEVEL UP. Cada partido registra tu desempeño real y actualiza tu ficha: OVR, estadísticas y rango.</div>
-          <div class="rdb-banner-pills">
-            <div class="rdb-pill rdb-pill-on">📍 Canchas certificadas LEVEL UP</div>
-            <div class="rdb-pill rdb-pill-on">📊 Toma de medidas en cancha</div>
-            <div class="rdb-pill rdb-pill-on">🃏 Actualiza tu ficha de jugador</div>
-            <div class="rdb-pill rdb-pill-off">≠ No es modo partido libre</div>
-          </div>
+        <div class="rdb-banner-title" style="margin-top:10px">MODO COMPETITIVO OFICIAL</div>
+        <div class="rdb-banner-text">Rey del Barrio no es un partido libre. Aquí se miden los jugadores en canchas certificadas por LEVEL UP. Cada partido registra tu desempeño real y actualiza tu ficha.</div>
+        <div class="rdb-banner-pills" style="flex-direction:column;gap:6px;margin-top:14px">
+          <div class="rdb-pill rdb-pill-on">📍 Canchas certificadas LEVEL UP</div>
+          <div class="rdb-pill rdb-pill-on">📊 Toma de medidas en cancha</div>
+          <div class="rdb-pill rdb-pill-on">🃏 Actualiza tu ficha de jugador</div>
+          <div class="rdb-pill rdb-pill-off">≠ No es modo partido libre</div>
         </div>
       </div>
-    </div>
-
-    <div class="pl-search-wrap">
-      <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" oninput="renderTeamSearch(this.value)" onfocus="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
-      <div class="pl-suggest" id="team-suggest"></div>
-    </div>
-    <div class="pl-grid" id="team-grid"></div>
+    </aside>
   </div>
 
   <!-- PANEL: PARTIDOS PROGRAMADOS -->
@@ -305,6 +305,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782762079"></script>
+<script src="app.js?v=1782763152"></script>
 </body>
 </html>
