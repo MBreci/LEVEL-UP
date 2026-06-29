@@ -4795,7 +4795,10 @@ let adminMatchId = null;
 function openAdminPanel() {
   if (!isAdmin()) return;
   const modal = document.getElementById('admin-panel-modal');
-  if (!modal) return;
+  if (!modal) {
+    location.href = 'dashboard.html#dashboard';
+    return;
+  }
   renderAdminPanel();
   modal.classList.add('open');
 }
