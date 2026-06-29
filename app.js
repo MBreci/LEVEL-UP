@@ -1834,6 +1834,7 @@ const ARENAS = [
 const CATEGORIAS_CANCHA = [
   { id: '5', label: 'FÚTBOL 5', icon: '⚽' },
   { id: '6', label: 'FÚTBOL 6', icon: '⚽' },
+  { id: '7', label: 'FÚTBOL 7', icon: '⚽' },
   { id: '8', label: 'FÚTBOL 8', icon: '⚽' },
   { id: '11', label: 'FÚTBOL 11', icon: '⚽' },
 ];
@@ -1880,10 +1881,8 @@ const BPW_STEPS = ['MODALIDAD', 'CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA', 'H
 const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
-  { id: 'rey', label: 'REY DEL BARRIO', icon: '👑', desc: 'Reta a otro equipo. Se gestiona desde EQUIPOS.' },
-  { id: 'oficial', label: 'PARTIDO OFICIAL', icon: '🏆', desc: 'Próximamente: partidos arbitrados de LEVEL UP.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: null, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
 
 function getMaxFaltan() {
   return bpWizard.categoria ? Math.max(1, parseInt(bpWizard.categoria, 10) - 1) : 10;
@@ -1896,7 +1895,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: null, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -1957,62 +1956,27 @@ function renderBpWizard() {
           </div>`).join('')}
       </div>`;
   } else if (bpWizardStep === 4) {
-    const arena = ARENAS.find(a => a.id === bpWizard.arenaId);
     bodyEl.innerHTML = `
       <div class="auth-label">PASO 4 · ¿DÓNDE VAN A JUGAR?</div>
-      <div class="bpw-cancha-tabs">
-        <div class="bpw-cancha-tab ${bpWizard.canchaLibre === false ? 'on' : ''}" onclick="bpSetCanchaLibre(false)">
-          <div class="bpw-cancha-tab-icon">🏟️</div>
-          <div class="bpw-cancha-tab-title">CANCHA REGISTRADA</div>
-          <div class="bpw-cancha-tab-sub">Arenas afiliadas a LEVEL UP con horarios disponibles</div>
-        </div>
-        <div class="bpw-cancha-tab ${bpWizard.canchaLibre === true ? 'on' : ''}" onclick="bpSetCanchaLibre(true)">
-          <div class="bpw-cancha-tab-icon">📍</div>
-          <div class="bpw-cancha-tab-title">CUALQUIER CANCHA</div>
-          <div class="bpw-cancha-tab-sub">Escribe el nombre y la dirección de donde quieres jugar</div>
-        </div>
-      </div>
-      ${bpWizard.canchaLibre === false ? `
-        <div class="bpw-arena-grid">
-          ${ARENAS.map(a => `
-            <div class="bpw-arena-tile ${bpWizard.arenaId === a.id ? 'on' : ''}" onclick="bpSelectArena('${a.id}')" style="background-image:url('${a.photos[0]}')">
-              <div class="bpw-arena-overlay">
-                <div class="bpw-arena-name">${a.name}</div>
-                <div class="bpw-arena-addr">📍 ${a.address}</div>
-                <div class="bpw-arena-rating">⭐ ${a.rating || '4.8'} · ${getArenaMatchesPlayed(a.id)} PARTIDOS JUGADOS</div>
-              </div>
-            </div>`).join('')}
-        </div>
-        ${arena ? `
-          <div class="arena-card">
-            <div class="arena-card-badge">${arena.badge}</div>
-            <div class="arena-card-gallery">
-              ${arena.photos.map(p => `<div class="arena-photo" style="background-image:url('${p}')"></div>`).join('')}
-            </div>
-            <div class="arena-card-name">${arena.name}</div>
-            <div class="arena-card-addr">📍 ${arena.address}</div>
-            <div class="arena-card-desc">${arena.description}</div>
-            <div class="arena-card-features">
-              ${arena.features.map(f => `<div class="arena-feature">✅ ${f}</div>`).join('')}
-            </div>
-            <a class="arena-card-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(arena.address)}" target="_blank">VER CÓMO LLEGAR →</a>
-          </div>` : ''}` : ''}
-      ${bpWizard.canchaLibre === true ? `
-        <div class="bpw-libre-fields">
-          <div class="bpw-libre-notice">
-            <span class="bpw-libre-notice-icon">⚠️</span>
-            <div class="bpw-libre-notice-text">
-              <strong>Modo libre — cancha por tu cuenta</strong><br>
-              En partidos de modo libre, la reserva y el pago de la cancha son responsabilidad del organizador. Te recomendamos separar el espacio antes de publicar el partido. LEVEL UP no gestiona pagos para canchas en este modo.
-            </div>
+      <div class="bpw-libre-fields">
+        <div class="bpw-libre-notice">
+          <span class="bpw-libre-notice-icon">⚠️</span>
+          <div class="bpw-libre-notice-text">
+            <strong>Separa la cancha antes de publicar</strong><br>
+            La reserva y el pago de la cancha son responsabilidad del organizador. LEVEL UP no gestiona pagos para partidos en modo libre.
           </div>
-          <div class="auth-label">NOMBRE DE LA CANCHA</div>
-          <input class="auth-input" id="bpw-libre-nombre" placeholder="Ej: Cancha El Campín" autocomplete="off" value="${bpWizard.canchaLibreNombre}" oninput="bpWizard.canchaLibreNombre=this.value;renderBpSummary()">
-          <div class="auth-label">DIRECCIÓN</div>
-          <input class="auth-input" id="bpw-libre-dir" placeholder="Ej: Cra 30 # 57-12" autocomplete="off" value="${bpWizard.canchaLibreDireccion}" oninput="bpWizard.canchaLibreDireccion=this.value;renderBpSummary()">
-          <div class="auth-label">BARRIO / ZONA</div>
-          <input class="auth-input" id="bpw-libre-barrio" placeholder="Ej: Chapinero, Suba, Kennedy..." autocomplete="off" value="${bpWizard.canchaLibreBarrio}" oninput="bpWizard.canchaLibreBarrio=this.value;renderBpSummary()">
-        </div>` : ''}`;
+        </div>
+        <div class="auth-label">NOMBRE DE LA CANCHA</div>
+        <input class="auth-input" id="bpw-libre-nombre" placeholder="Ej: Cancha El Campín" autocomplete="off" value="${bpWizard.canchaLibreNombre}" oninput="bpWizard.canchaLibreNombre=this.value;renderBpSummary()">
+        <div class="auth-label">DIRECCIÓN</div>
+        <input class="auth-input" id="bpw-libre-dir" placeholder="Ej: Cra 30 # 57-12" autocomplete="off" value="${bpWizard.canchaLibreDireccion}" oninput="bpWizard.canchaLibreDireccion=this.value;renderBpSummary()">
+        <div class="auth-label">BARRIO / ZONA</div>
+        <input class="auth-input" id="bpw-libre-barrio" placeholder="Ej: Chapinero, Suba, Kennedy..." autocomplete="off" value="${bpWizard.canchaLibreBarrio}" oninput="bpWizard.canchaLibreBarrio=this.value;renderBpSummary()">
+        <div class="auth-label">VALOR POR PERSONA (COP) <span style="color:var(--td);font-weight:300">· Opcional</span></div>
+        <input class="auth-input" type="number" min="0" id="bpw-libre-valor" placeholder="Ej: 15000" value="${bpWizard.canchaLibreValor}" oninput="bpWizard.canchaLibreValor=this.value;renderBpSummary()">
+        <div class="auth-label">OBSERVACIONES <span style="color:var(--td);font-weight:300">· Opcional</span></div>
+        <textarea class="auth-input" id="bpw-libre-obs" rows="3" placeholder="Ej: Llevar peto azul, parqueadero disponible, trae agua..." maxlength="300" oninput="bpWizard.canchaLibreObs=this.value;renderBpSummary()">${bpWizard.canchaLibreObs}</textarea>
+      </div>`;
   } else if (bpWizardStep === 5) {
     bodyEl.innerHTML = `
       <div class="auth-label">PASO 5 · SELECCIONA LA FECHA</div>
@@ -2065,12 +2029,15 @@ function renderBpWizard() {
           </span>`).join('')}
       </div>
 
-      <div class="auth-label">POSICIONES QUE FALTAN <span style="color:var(--td);font-weight:300">· Máximo ${maxFaltan} jugador${maxFaltan === 1 ? '' : 'es'} adicional${maxFaltan === 1 ? '' : 'es'} para fútbol ${bpWizard.categoria || '—'}</span></div>
+      <div class="bpw-team-need-header">
+        <div class="bpw-team-need-title">¿CUÁNTA GENTE NECESITAS?</div>
+        <div class="bpw-team-need-sub">Para fútbol ${bpWizard.categoria || '—'} puedes traer hasta <strong>${maxFaltan}</strong> jugador${maxFaltan === 1 ? '' : 'es'} adicional${maxFaltan === 1 ? '' : 'es'} (además de ti). Marca los roles que te faltan y cuántos de cada uno.</div>
+      </div>
       <div class="bp-pos-grid" id="bp-pos-grid">
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> DEL</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> MED</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> DEF</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> POR</label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> <span class="bp-pos-role">⚽ DEL</span><span class="bp-pos-role-name">Delantero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> <span class="bp-pos-role">🔄 MED</span><span class="bp-pos-role-name">Mediocampista</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> <span class="bp-pos-role">🛡️ DEF</span><span class="bp-pos-role-name">Defensa</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
+        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> <span class="bp-pos-role">🧤 POR</span><span class="bp-pos-role-name">Portero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
       </div>`;
   }
   renderBpSummary();
@@ -2217,14 +2184,9 @@ function bpWizardNext() {
   if (bpWizardStep === 1 && !bpWizard.modalidad) { errorEl.textContent = 'Selecciona la modalidad del partido.'; return; }
   if (bpWizardStep === 2 && !bpWizard.categoria) { errorEl.textContent = 'Selecciona el tipo de cancha.'; return; }
   if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
-  if (bpWizardStep === 4) {
-    if (bpWizard.canchaLibre === null) { errorEl.textContent = 'Selecciona dónde van a jugar.'; return; }
-    if (bpWizard.canchaLibre === false && !bpWizard.arenaId) { errorEl.textContent = 'Selecciona una arena registrada.'; return; }
-    if (bpWizard.canchaLibre === true && !bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
-  }
+  if (bpWizardStep === 4 && !bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
   if (bpWizardStep === 5 && !bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
-  if (bpWizardStep === 6 && !bpWizard.canchaLibre && !bpWizard.horaValue) { errorEl.textContent = 'Selecciona un horario disponible.'; return; }
-  if (bpWizardStep === 6 && bpWizard.canchaLibre && !bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
+  if (bpWizardStep === 6 && !bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
   if (bpWizardStep < 7) { bpWizardStep++; renderBpWizard(); return; }
   submitMatchRequest();
 }
@@ -2300,9 +2262,11 @@ function submitMatchRequest() {
     cancha: bpWizard.canchaLibre ? bpWizard.canchaLibreNombre : arena.name,
     direccion: bpWizard.canchaLibre ? bpWizard.canchaLibreDireccion : arena.address,
     arenaId: bpWizard.canchaLibre ? null : arena.id,
-    canchaLibre: bpWizard.canchaLibre || false,
+    canchaLibre: true,
     formato: bpWizard.categoria,
-    superficie: bpWizard.canchaLibre ? null : bpWizard.superficie,
+    superficie: bpWizard.superficie,
+    valorPorPersona: bpWizard.canchaLibreValor ? parseInt(bpWizard.canchaLibreValor, 10) : null,
+    observaciones: bpWizard.canchaLibreObs || null,
     fecha,
     fechaISO: bpWizard.fechaISO,
     horaValue: bpWizard.canchaLibre ? bpWizard.horaLibre : bpWizard.horaValue,
