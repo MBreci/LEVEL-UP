@@ -143,6 +143,7 @@ async function syncProfilesFromCloud() {
       });
       state.team = row.team || 'SIN EQUIPO';
       state.saldo = row.saldo || 0;
+      state.isAdmin = row.is_admin || false;
       profiles[state.id] = state;
     }
   });
@@ -1813,7 +1814,7 @@ async function submitNewProfile() {
   renderAll();
 }
 
-function editNickname() {
+async function editNickname() {
   const current = state.nickname || '';
   const value = prompt('¿Cuál es tu apodo?', current);
   if (value === null) return;
@@ -1822,8 +1823,18 @@ function editNickname() {
     alert('Ese apodo contiene lenguaje ofensivo. Por favor elige otro.');
     return;
   }
-  state.nickname = trimmed.toUpperCase();
+  const newNick = trimmed.toUpperCase();
+  if (newNick && newNick !== state.nickname) {
+    const taken = await findProfileByIdentifier(newNick);
+    if (taken && taken.id !== state.id) {
+      alert('Ese apodo ya está en uso. Elige otro.');
+      return;
+    }
+  }
+  state.nickname = newNick;
+  profiles[state.id] = state;
   saveState();
+  pushProfileToCloud(state);
   renderAll();
 }
 
