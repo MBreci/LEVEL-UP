@@ -1999,6 +1999,13 @@ function renderBpWizard() {
           </div>` : ''}` : ''}
       ${bpWizard.canchaLibre === true ? `
         <div class="bpw-libre-fields">
+          <div class="bpw-libre-notice">
+            <span class="bpw-libre-notice-icon">⚠️</span>
+            <div class="bpw-libre-notice-text">
+              <strong>Modo libre — cancha por tu cuenta</strong><br>
+              En partidos de modo libre, la reserva y el pago de la cancha son responsabilidad del organizador. Te recomendamos separar el espacio antes de publicar el partido. LEVEL UP no gestiona pagos para canchas en este modo.
+            </div>
+          </div>
           <div class="auth-label">NOMBRE DE LA CANCHA</div>
           <input class="auth-input" id="bpw-libre-nombre" placeholder="Ej: Cancha El Campín" autocomplete="off" value="${bpWizard.canchaLibreNombre}" oninput="bpWizard.canchaLibreNombre=this.value;renderBpSummary()">
           <div class="auth-label">DIRECCIÓN</div>
