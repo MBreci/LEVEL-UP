@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782757111">
+<link rel="stylesheet" href="style.css?v=1782757776">
 </head>
 <body>
 
@@ -280,9 +280,18 @@
         <option value="DEF">DEF — Defensa</option>
         <option value="POR">POR — Portero</option>
       </select>
-      <div class="auth-label">CORREO ELECTRÓNICO</div>
-      <input class="auth-input" type="email" id="auth-email" autocomplete="email" placeholder="Ej: tucorreo@gmail.com" maxlength="80">
-      <div class="auth-note">Lo necesitarás para recuperar tu cuenta. No se muestra públicamente.</div>
+      <div class="auth-label">PREGUNTA DE SEGURIDAD</div>
+      <select class="auth-input" id="auth-sq">
+        <option value="">Elige una pregunta...</option>
+        <option value="¿Cuál es el nombre de tu mascota?">¿Cuál es el nombre de tu mascota?</option>
+        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+        <option value="¿Cuál es el nombre de tu colegio?">¿Cuál es el nombre de tu colegio?</option>
+        <option value="¿Cuál es el nombre de tu mejor amigo de infancia?">¿Cuál es el nombre de tu mejor amigo de infancia?</option>
+        <option value="¿Cuál es el equipo de fútbol de tu corazón?">¿Cuál es el equipo de fútbol de tu corazón?</option>
+        <option value="¿Cuál es el nombre de tu mamá?">¿Cuál es el nombre de tu mamá?</option>
+      </select>
+      <div class="auth-label">RESPUESTA <span class="auth-note-inline">· Recuérdala bien, la necesitarás si olvidas tu contraseña</span></div>
+      <input class="auth-input" id="auth-sa" autocomplete="off" placeholder="Tu respuesta (no distingue mayúsculas)" maxlength="60">
       <div class="auth-label">CONTRASEÑA</div>
       <input class="auth-input" type="password" id="auth-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
       <div class="auth-label">CONFIRMAR CONTRASEÑA</div>
@@ -307,13 +316,15 @@
 
     <div id="auth-reset" style="display:none">
       <div class="auth-label">NOMBRE O APODO</div>
-      <input class="auth-input" id="reset-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
-      <div class="auth-label">CORREO ELECTRÓNICO REGISTRADO</div>
-      <input class="auth-input" type="email" id="reset-email" autocomplete="email" placeholder="El correo con el que te registraste" maxlength="80">
-      <div class="auth-label">NUEVA CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="reset-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
-      <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="reset-password-confirm" autocomplete="new-password" placeholder="Repite tu nueva contraseña" maxlength="40">
+      <input class="auth-input" id="reset-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24" oninput="loadResetQuestion()">
+      <div id="reset-sq-wrap" style="display:none">
+        <div class="auth-label" id="reset-sq-label" style="color:var(--g);margin-top:8px"></div>
+        <input class="auth-input" id="reset-sa" autocomplete="off" placeholder="Tu respuesta" maxlength="60">
+        <div class="auth-label">NUEVA CONTRASEÑA</div>
+        <input class="auth-input" type="password" id="reset-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+        <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+        <input class="auth-input" type="password" id="reset-password-confirm" autocomplete="new-password" placeholder="Repite tu nueva contraseña" maxlength="40">
+      </div>
       <div class="auth-error" id="reset-error"></div>
       <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
       <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
@@ -330,6 +341,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782757111"></script>
+<script src="app.js?v=1782757776"></script>
 </body>
 </html>

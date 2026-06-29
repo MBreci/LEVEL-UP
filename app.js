@@ -85,7 +85,10 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 function profileToRow(p) {
   return {
     id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
-    photo: p.photo, password_hash: p.passwordHash, email: p.email || null, ovr: p.ovr, xp: p.xp, lp: p.lp,
+    photo: p.photo, password_hash: p.passwordHash,
+    security_question: p.securityQuestion || null,
+    security_answer_hash: p.securityAnswerHash || null,
+    ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
@@ -97,7 +100,10 @@ function profileToRow(p) {
 function rowToProfile(r) {
   return {
     id: r.id, name: r.name, nickname: r.nickname, position: r.position, team: r.team,
-    photo: r.photo, passwordHash: r.password_hash, email: r.email || null, ovr: r.ovr, xp: r.xp, lp: r.lp,
+    photo: r.photo, passwordHash: r.password_hash,
+    securityQuestion: r.security_question || null,
+    securityAnswerHash: r.security_answer_hash || null,
+    ovr: r.ovr, xp: r.xp, lp: r.lp,
     lastUpdate: r.last_update, matches: r.matches || 0, goals: r.goals || 0, assists: r.assists || 0, mvps: r.mvps || 0,
     attrs: r.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 },
     history: r.history || [], notifications: r.notifications || [],
@@ -151,7 +157,7 @@ function isPasswordMediumStrength(password) {
   return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
-function makeProfile({ name, position, team, nickname, passwordHash, email }) {
+function makeProfile({ name, position, team, nickname, passwordHash, securityQuestion, securityAnswerHash }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
@@ -160,7 +166,8 @@ function makeProfile({ name, position, team, nickname, passwordHash, email }) {
     team: team || 'SIN EQUIPO',
     photo: null,
     passwordHash,
-    email: email ? email.toLowerCase().trim() : null,
+    securityQuestion: securityQuestion || null,
+    securityAnswerHash: securityAnswerHash || null,
     ovr: 60,
     xp: 0,
     lp: 0,
@@ -1641,15 +1648,32 @@ function backToLogin() {
   document.getElementById('auth-existing').style.display = 'block';
 }
 
+let _resetProfile = null;
+
+async function loadResetQuestion() {
+  const identifier = document.getElementById('reset-id').value.trim();
+  const wrap = document.getElementById('reset-sq-wrap');
+  const label = document.getElementById('reset-sq-label');
+  if (identifier.length < 2) { wrap.style.display = 'none'; _resetProfile = null; return; }
+  const profile = await findProfileByIdentifier(identifier);
+  _resetProfile = profile;
+  if (profile && profile.securityQuestion) {
+    label.textContent = profile.securityQuestion;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
 async function submitResetPassword() {
   const identifier = document.getElementById('reset-id').value;
-  const email = document.getElementById('reset-email').value.trim().toLowerCase();
+  const securityAnswer = (document.getElementById('reset-sa')?.value || '').trim().toLowerCase();
   const password = document.getElementById('reset-password').value;
   const passwordConfirm = document.getElementById('reset-password-confirm').value;
   const errorEl = document.getElementById('reset-error');
   const btn = document.getElementById('reset-submit');
   if (!identifier.trim()) { errorEl.textContent = 'Escribe el nombre o apodo de tu cuenta.'; return; }
-  if (!email) { errorEl.textContent = 'Escribe el correo con el que te registraste.'; return; }
+  if (!securityAnswer) { errorEl.textContent = 'Escribe tu respuesta de seguridad.'; return; }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
@@ -1659,13 +1683,18 @@ async function submitResetPassword() {
   btn.disabled = true;
   btn.textContent = 'VERIFICANDO...';
   try {
-    const profile = await findProfileByIdentifier(identifier);
+    const profile = _resetProfile || await findProfileByIdentifier(identifier);
     if (!profile) {
       errorEl.textContent = 'No encontramos ninguna cuenta con ese nombre o apodo.';
       return;
     }
-    if (!profile.email || profile.email.toLowerCase() !== email) {
-      errorEl.textContent = 'El correo no coincide con el registrado en esta cuenta.';
+    if (!profile.securityAnswerHash) {
+      errorEl.textContent = 'Esta cuenta no tiene pregunta de seguridad configurada. Contacta al soporte.';
+      return;
+    }
+    const answerHash = await hashPassword(securityAnswer);
+    if (answerHash !== profile.securityAnswerHash) {
+      errorEl.textContent = 'La respuesta no es correcta. Inténtalo de nuevo.';
       return;
     }
     btn.textContent = 'ACTUALIZANDO...';
@@ -1674,8 +1703,12 @@ async function submitResetPassword() {
     saveProfiles();
     pushProfileToCloud(profile);
     document.getElementById('reset-id').value = '';
+    document.getElementById('reset-sa').value = '';
     document.getElementById('reset-password').value = '';
     document.getElementById('reset-password-confirm').value = '';
+    const wrap = document.getElementById('reset-sq-wrap');
+    if (wrap) wrap.style.display = 'none';
+    _resetProfile = null;
     backToLogin();
     document.getElementById('login-id').value = identifier.trim();
     document.getElementById('login-error').textContent = '';
@@ -1702,7 +1735,8 @@ async function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const nickname = document.getElementById('auth-nickname').value.trim();
   const position = document.getElementById('auth-position').value;
-  const email = document.getElementById('auth-email').value.trim();
+  const securityQuestion = document.getElementById('auth-sq').value;
+  const securityAnswer = document.getElementById('auth-sa').value.trim().toLowerCase();
   const password = document.getElementById('auth-password').value;
   const passwordConfirm = document.getElementById('auth-password-confirm').value;
   const consent = document.getElementById('auth-consent');
@@ -1712,10 +1746,8 @@ async function submitNewProfile() {
     errorEl.textContent = 'Tu nombre o apodo contiene lenguaje ofensivo. Por favor elige otro.';
     return;
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errorEl.textContent = 'Escribe un correo electrónico válido. Lo necesitarás para recuperar tu cuenta.';
-    return;
-  }
+  if (!securityQuestion) { errorEl.textContent = 'Elige una pregunta de seguridad.'; return; }
+  if (!securityAnswer) { errorEl.textContent = 'Escribe tu respuesta de seguridad.'; return; }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
@@ -1730,17 +1762,10 @@ async function submitNewProfile() {
     errorEl.textContent = 'Ya existe una cuenta con ese nombre o apodo. Inicia sesión o elige otro.';
     return;
   }
-  // Check if email already in use
-  if (sb) {
-    const { data: emailCheck } = await sb.from('profiles').select('id').eq('email', email.toLowerCase()).limit(1);
-    if (emailCheck && emailCheck.length) {
-      errorEl.textContent = 'Ese correo ya está registrado. Inicia sesión o usa otro correo.';
-      return;
-    }
-  }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
-  const profile = makeProfile({ name, position, nickname, passwordHash, email });
+  const securityAnswerHash = await hashPassword(securityAnswer);
+  const profile = makeProfile({ name, position, nickname, passwordHash, securityQuestion, securityAnswerHash });
   profiles[profile.id] = profile;
   saveProfiles();
   pushProfileToCloud(profile);
