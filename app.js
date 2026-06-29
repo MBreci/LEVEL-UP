@@ -3930,7 +3930,7 @@ function renderTeamProfile(teamId) {
 
   const posSelect = (i, cur) => isCaptain ? `
     <select class="team-fc-pos-select" onclick="event.stopPropagation()" onchange="setSlotPosition('${team.id}',${i},this.value)">
-      <option value="" ${!cur ? 'selected' : ''}>POS</option>
+      <option value="" ${!cur ? 'selected' : ''}>ROL</option>
       ${POSITIONS.map(p => `<option value="${p}" ${cur === p ? 'selected' : ''}>${p}</option>`).join('')}
     </select>` : '';
 
