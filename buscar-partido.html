@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Buscar Partido · LEVEL UP</title>
+<title>Partidos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=1782701670">
 </head>
@@ -45,14 +45,14 @@
   <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
 </div>
 
+<!-- HERO PARTIDOS -->
 <div class="bp-hero">
   <div class="bp-hero-glow bp-hero-glow-g"></div>
   <div class="bp-hero-glow bp-hero-glow-p"></div>
   <div class="bp-hero-content">
-    <div class="page-banner-eyebrow">ENCUENTRA TU PARTIDO</div>
-    <div class="bp-hero-title">ORGANIZA TU PRÓXIMO PARTIDO</div>
-    <div class="bp-hero-desc">Crea un partido, invita jugadores, reserva una cancha y comienza a competir.</div>
-    <button class="bp-hero-cta" onclick="openMatchForm()">+ PUBLICAR PARTIDO</button>
+    <div class="page-banner-eyebrow">MODO LIBRE · PARA TODOS</div>
+    <div class="bp-hero-title">PARTIDOS</div>
+    <div class="bp-hero-desc">Encuentra jugadores, crea tu partido y juega hoy. Sin restricciones. Cualquier cancha. Cualquier formato.</div>
   </div>
   <div class="bp-hero-art">
     <div class="bp-hero-orb"></div>
@@ -60,20 +60,38 @@
   </div>
 </div>
 
-<!-- BUSCAR PARTIDO -->
 <section id="buscar-partido">
-  <div class="bp-conduct-panel">
-    <div class="bp-conduct-icon">⚠️</div>
-    <div class="bp-conduct-text">
-      <strong>La puntualidad y el compromiso hacen parte del rendimiento deportivo dentro de LEVEL UP.</strong>
-      Si confirmas asistencia a un partido y no te presentas sin cancelar dentro del tiempo permitido, la plataforma aplicará consecuencias progresivas: reducción leve de confiabilidad, LP y prioridad en invitaciones, además de una advertencia en tu historial. Nunca se destruye tu progreso por una sola inasistencia, pero la reincidencia puede llevar a suspensiones temporales para crear partidos, retar equipos o inscribirte.
+
+  <!-- 1. MENSAJE DE PUNTUALIDAD -->
+  <div class="bp-ethos">
+    <div class="bp-ethos-icon">⚡</div>
+    <div class="bp-ethos-body">
+      <div class="bp-ethos-title">COMPROMISO Y PUNTUALIDAD</div>
+      <div class="bp-ethos-text">La puntualidad y el compromiso hacen parte del rendimiento deportivo dentro de LEVEL UP. Si confirmas asistencia y no te presentas sin cancelar a tiempo, la plataforma aplicará consecuencias progresivas: reducción de confiabilidad, prioridad en invitaciones y advertencia en tu historial. La reincidencia puede llevar a suspensiones temporales.</div>
     </div>
   </div>
 
-  <div class="sec-hdr">
-    <div class="sec-eyebrow">CREAR PARTIDO</div>
-    <div class="sec-link" onclick="openMatchForm()">+ PUBLICAR BÚSQUEDA</div>
+  <!-- 2. BOTÓN GIGANTE CREAR PARTIDO -->
+  <div class="bp-create-hero">
+    <div class="bp-create-hero-glow"></div>
+    <div class="bp-create-hero-content">
+      <div class="bp-create-hero-label">¿TE FALTAN JUGADORES?</div>
+      <div class="bp-create-hero-title">Publica tu partido<br>y completa tu equipo</div>
+      <div class="bp-create-hero-sub">Escoge cancha, fecha, hora y formato. En minutos aparecen jugadores interesados.</div>
+      <button class="bp-create-hero-btn" onclick="openMatchForm()">
+        <span class="bp-create-hero-btn-icon">+</span>
+        CREAR MI PARTIDO
+      </button>
+    </div>
+    <div class="bp-create-hero-deco">
+      <div class="bp-create-deco-ring ring1"></div>
+      <div class="bp-create-deco-ring ring2"></div>
+      <div class="bp-create-deco-ring ring3"></div>
+      <div class="bp-create-deco-ball">⚽</div>
+    </div>
   </div>
+
+  <!-- FORMULARIO CREAR PARTIDO (oculto hasta click) -->
   <div class="bp-form bp-wizard" id="bp-form" style="display:none">
     <div class="bpw-layout">
       <div class="bpw-main">
@@ -89,101 +107,100 @@
     </div>
   </div>
 
-  <div id="bp-timeline" class="bp-timeline-wrap"></div>
-
-  <div id="invitar">
-    <div class="sec-hdr">
-      <div class="sec-eyebrow">MIS PARTIDOS · INVITAR JUGADORES</div>
-    </div>
-    <div class="my-matches" id="my-matches"></div>
-  </div>
-
-  <!-- PANEL PREMIUM DE BÚSQUEDA -->
-  <div class="bps-wrap">
-    <!-- Chips rápidos -->
-    <div class="bps-chips">
-      <button class="bps-chip" onclick="applyBpQuickChip('hoy')">🔥 Hoy</button>
-      <button class="bps-chip" onclick="applyBpQuickChip('noche')">🌙 Esta noche</button>
-      <button class="bps-chip" onclick="applyBpQuickChip('f5')">⚽ Fútbol 5</button>
-      <button class="bps-chip" onclick="applyBpQuickChip('f7')">⚽ Fútbol 7</button>
-      <button class="bps-chip" onclick="applyBpQuickChip('f11')">⚽ Fútbol 11</button>
-      <button class="bps-chip" onclick="applyBpQuickChip('cupos')">🟢 Con cupos</button>
-      <button class="bps-chip" onclick="resetBpFilters()">✕ Limpiar</button>
+  <!-- 3. MOTOR DE BÚSQUEDA -->
+  <div class="bp-search-section">
+    <div class="bp-search-section-hdr">
+      <div class="bp-search-section-title">BUSCAR PARTIDOS</div>
+      <div class="bp-search-section-sub">Filtra por zona, cancha, fecha o formato</div>
     </div>
 
-    <!-- Panel principal glassmorphism -->
-    <div class="bps-panel">
-      <div class="bps-panel-glow"></div>
-      <div class="bps-main-row">
-        <div class="bps-field">
-          <span class="bps-icon">📍</span>
-          <select class="bps-input" id="bp-filter-zona" onchange="applyBpFiltersFromUI()">
-            <option value="">Ciudad / Barrio</option>
-            <option>Chapinero</option>
-            <option>Usaquén</option>
-            <option>Suba</option>
-            <option>Engativá</option>
-            <option>Kennedy</option>
-            <option>Teusaquillo</option>
-            <option>Fontibón</option>
-            <option>Ciudad Bolívar</option>
-            <option>Bosa</option>
-            <option>Santa Fe</option>
-          </select>
-        </div>
-        <div class="bps-divider"></div>
-        <div class="bps-field">
-          <span class="bps-icon">⚽</span>
-          <input class="bps-input" id="bp-filter-cancha" autocomplete="off" placeholder="Cancha" oninput="applyBpFiltersFromUI()">
-        </div>
-        <div class="bps-divider"></div>
-        <div class="bps-field">
-          <span class="bps-icon">📅</span>
-          <input class="bps-input" type="date" id="bp-filter-fecha" onchange="applyBpFiltersFromUI()">
-        </div>
-        <div class="bps-divider"></div>
-        <div class="bps-field">
-          <span class="bps-icon">🥅</span>
-          <select class="bps-input" id="bp-filter-formato" onchange="applyBpFiltersFromUI()">
-            <option value="">Tipo de fútbol</option>
-            <option value="5">Fútbol 5</option>
-            <option value="6">Fútbol 6</option>
-            <option value="7">Fútbol 7</option>
-            <option value="8">Fútbol 8</option>
-            <option value="11">Fútbol 11</option>
-          </select>
-        </div>
-        <button class="bps-search-btn" onclick="applyBpFiltersFromUI()">BUSCAR PARTIDOS</button>
+    <div class="bps-wrap">
+      <!-- Chips rápidos -->
+      <div class="bps-chips">
+        <button class="bps-chip" onclick="applyBpQuickChip('hoy')">🔥 Hoy</button>
+        <button class="bps-chip" onclick="applyBpQuickChip('noche')">🌙 Esta noche</button>
+        <button class="bps-chip" onclick="applyBpQuickChip('f5')">⚽ Fútbol 5</button>
+        <button class="bps-chip" onclick="applyBpQuickChip('f7')">⚽ Fútbol 7</button>
+        <button class="bps-chip" onclick="applyBpQuickChip('f11')">⚽ Fútbol 11</button>
+        <button class="bps-chip" onclick="applyBpQuickChip('cupos')">🟢 Con cupos</button>
+        <button class="bps-chip" onclick="resetBpFilters()">✕ Limpiar</button>
       </div>
 
-      <!-- Filtros avanzados colapsables -->
-      <button class="bps-adv-toggle" onclick="toggleBpAdvanced()" id="bps-adv-toggle">▼ Filtros avanzados</button>
-      <div class="bps-adv-panel" id="bps-adv-panel">
-        <div class="bps-adv-grid">
-          <div class="bps-adv-field">
-            <label class="bps-adv-label">⭐ OVR máximo</label>
-            <input class="bps-adv-input" type="number" id="bp-filter-ovr" placeholder="Ej: 75" oninput="applyBpFiltersFromUI()">
+      <!-- Panel glassmorphism -->
+      <div class="bps-panel">
+        <div class="bps-panel-glow"></div>
+        <div class="bps-main-row">
+          <div class="bps-field">
+            <span class="bps-icon">📍</span>
+            <select class="bps-input" id="bp-filter-zona" onchange="applyBpFiltersFromUI()">
+              <option value="">Ciudad / Barrio</option>
+              <option>Chapinero</option>
+              <option>Usaquén</option>
+              <option>Suba</option>
+              <option>Engativá</option>
+              <option>Kennedy</option>
+              <option>Teusaquillo</option>
+              <option>Fontibón</option>
+              <option>Ciudad Bolívar</option>
+              <option>Bosa</option>
+              <option>Santa Fe</option>
+            </select>
           </div>
-          <div class="bps-adv-field">
-            <label class="bps-adv-label">💵 Precio máximo</label>
-            <input class="bps-adv-input" type="number" id="bp-filter-precio" placeholder="Ej: 30000" oninput="applyBpFiltersFromUI()">
+          <div class="bps-divider"></div>
+          <div class="bps-field">
+            <span class="bps-icon">⚽</span>
+            <input class="bps-input" id="bp-filter-cancha" autocomplete="off" placeholder="Cancha" oninput="applyBpFiltersFromUI()">
           </div>
-          <label class="bps-adv-check">
-            <input type="checkbox" id="bp-filter-cupos" onchange="applyBpFiltersFromUI()">
-            <span>🟢 Solo con cupos disponibles</span>
-          </label>
-          <label class="bps-adv-check">
-            <input type="checkbox" id="bp-filter-abiertos" onchange="applyBpFiltersFromUI()">
-            <span>🔓 Solo partidos abiertos</span>
-          </label>
+          <div class="bps-divider"></div>
+          <div class="bps-field">
+            <span class="bps-icon">📅</span>
+            <input class="bps-input" type="date" id="bp-filter-fecha" onchange="applyBpFiltersFromUI()">
+          </div>
+          <div class="bps-divider"></div>
+          <div class="bps-field">
+            <span class="bps-icon">🥅</span>
+            <select class="bps-input" id="bp-filter-formato" onchange="applyBpFiltersFromUI()">
+              <option value="">Tipo de fútbol</option>
+              <option value="5">Fútbol 5</option>
+              <option value="6">Fútbol 6</option>
+              <option value="7">Fútbol 7</option>
+              <option value="8">Fútbol 8</option>
+              <option value="11">Fútbol 11</option>
+            </select>
+          </div>
+          <button class="bps-search-btn" onclick="applyBpFiltersFromUI()">BUSCAR</button>
+        </div>
+
+        <button class="bps-adv-toggle" onclick="toggleBpAdvanced()" id="bps-adv-toggle">▼ Filtros avanzados</button>
+        <div class="bps-adv-panel" id="bps-adv-panel">
+          <div class="bps-adv-grid">
+            <div class="bps-adv-field">
+              <label class="bps-adv-label">⭐ OVR máximo</label>
+              <input class="bps-adv-input" type="number" id="bp-filter-ovr" placeholder="Ej: 75" oninput="applyBpFiltersFromUI()">
+            </div>
+            <div class="bps-adv-field">
+              <label class="bps-adv-label">💵 Precio máximo</label>
+              <input class="bps-adv-input" type="number" id="bp-filter-precio" placeholder="Ej: 30000" oninput="applyBpFiltersFromUI()">
+            </div>
+            <label class="bps-adv-check">
+              <input type="checkbox" id="bp-filter-cupos" onchange="applyBpFiltersFromUI()">
+              <span>🟢 Solo con cupos disponibles</span>
+            </label>
+            <label class="bps-adv-check">
+              <input type="checkbox" id="bp-filter-abiertos" onchange="applyBpFiltersFromUI()">
+              <span>🔓 Solo partidos abiertos</span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- 4. PARTIDOS PROGRAMADOS Y PARTICIPACIÓN -->
   <div class="bp-tabs">
     <div class="bp-tab on" data-tab="proximos" onclick="switchBpTab('proximos')">PRÓXIMOS PARTIDOS</div>
     <div class="bp-tab" data-tab="mia" onclick="switchBpTab('mia')">MI PARTICIPACIÓN</div>
+    <div class="bp-tab" data-tab="programados" onclick="switchBpTab('programados')">MIS PARTIDOS</div>
   </div>
 
   <div class="bp-panel" id="bp-panel-proximos" style="display:block">
@@ -192,54 +209,42 @@
   <div class="bp-panel" id="bp-panel-mia" style="display:none">
     <div class="bp-list-grid" id="bp-list-mia"></div>
   </div>
+  <div class="bp-panel" id="bp-panel-programados" style="display:none">
+    <div id="bp-timeline" class="bp-timeline-wrap"></div>
+    <div id="invitar">
+      <div class="my-matches" id="my-matches"></div>
+    </div>
+  </div>
+
 </section>
 
-<!-- MODAL UNIRSE A PARTIDO -->
+<!-- MODALES -->
 <div class="modal-overlay" id="join-modal">
   <div class="invite-card" id="join-modal-content"></div>
 </div>
-
-<!-- MODAL VER PARTICIPANTES -->
 <div class="modal-overlay" id="participants-modal">
   <div class="invite-card" id="participants-content"></div>
 </div>
-
-<footer>
-  <div class="ft-top">
-    <div>
-      <img class="ft-logo-img" src="assets/logo.png" alt="LEVEL UP">
-      <div class="ft-desc">La plataforma deportiva donde cada partido cambia tu carrera. Construido en Bogotá, Colombia.</div>
-    </div>
-  </div>
-  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
-</footer>
-
-<!-- MODAL INVITAR JUGADORES -->
 <div class="modal-overlay" id="invite-modal">
   <div class="invite-card" id="invite-content"></div>
 </div>
-
-<!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
   <div class="wip-card">
     <div class="tape tape-top"></div>
     <div class="wip-icon">🚧</div>
     <div class="wip-title" id="wip-modal-title">MÓDULO</div>
     <div class="wip-sub">TRABAJO EN PROGRESO</div>
-    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
+    <div class="wip-text">Esta sección llegará pronto a LEVEL UP.</div>
     <button class="wip-close" onclick="closeWip()">CERRAR</button>
     <div class="tape tape-bottom"></div>
   </div>
 </div>
-
-<!-- MODAL REGISTRO / INICIO DE SESIÓN -->
 <div class="modal-overlay" id="auth-modal">
   <div class="auth-card">
     <div class="auth-tabs">
       <div class="auth-tab on" id="tab-new" onclick="switchAuthTab('new')">CREAR CUENTA</div>
       <div class="auth-tab" id="tab-existing" onclick="switchAuthTab('existing')">INICIAR SESIÓN</div>
     </div>
-
     <div id="auth-new">
       <div class="auth-photo-note">📷 Tu foto de jugador no se sube aquí: el equipo de LEVEL UP te la toma en tu primer partido en la cancha y la sube a tu carta.</div>
       <div class="auth-label">NOMBRE</div>
@@ -264,7 +269,6 @@
       <div class="auth-error" id="auth-error"></div>
       <button class="auth-submit" onclick="submitNewProfile()">CREAR MI CARTA</button>
     </div>
-
     <div id="auth-existing" style="display:none">
       <div class="auth-label">NOMBRE O APODO</div>
       <input class="auth-input" id="login-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
@@ -274,7 +278,6 @@
       <button class="auth-submit" id="login-submit" onclick="submitLogin()">INICIAR SESIÓN</button>
       <div class="auth-forgot"><a href="javascript:void(0)" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></div>
     </div>
-
     <div id="auth-reset" style="display:none">
       <div class="auth-label">NOMBRE O APODO</div>
       <input class="auth-input" id="reset-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
@@ -286,10 +289,19 @@
       <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
       <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
     </div>
-
     <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">CANCELAR</button>
   </div>
 </div>
+
+<footer>
+  <div class="ft-top">
+    <div>
+      <img class="ft-logo-img" src="assets/logo.png" alt="LEVEL UP">
+      <div class="ft-desc">La plataforma deportiva donde cada partido cambia tu carrera. Construido en Bogotá, Colombia.</div>
+    </div>
+  </div>
+  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
+</footer>
 
 <audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
 <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
