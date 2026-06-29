@@ -1840,8 +1840,8 @@ const CATEGORIAS_CANCHA = [
 
 const SUPERFICIES = [
   { id: 'SINTÉTICA', label: 'SINTÉTICA', disponible: true },
-  { id: 'NATURAL', label: 'NATURAL', disponible: false },
-  { id: 'CEMENTO', label: 'CEMENTO', disponible: false },
+  { id: 'NATURAL', label: 'NATURAL', disponible: true },
+  { id: 'CEMENTO', label: 'CEMENTO', disponible: true },
 ];
 
 function formatHoraLabel(hora24) {
