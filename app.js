@@ -4249,7 +4249,7 @@ initApp();
 
 /* ===== TORNEOS ===== */
 
-const ADMIN_NICKNAMES = ['Breco'];
+const ADMIN_NICKNAMES = ['BRECO', 'Breco'];
 const ADMIN_NAMES = ['Miguel Breci'];
 
 function isAdmin() {

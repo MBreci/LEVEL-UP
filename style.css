@@ -162,8 +162,8 @@ section{padding:64px;border-bottom:var(--b1)}
 .sec-link:hover{color:var(--w);border-color:rgba(255,255,255,0.25)}
 
 /* BUSCAR PARTIDO */
-.bp-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:30px;background:linear-gradient(135deg,var(--bg3),var(--bg2));border:0.5px solid rgba(0,255,136,0.18);border-radius:14px;margin:140px 64px 0;padding:40px 44px;overflow:hidden}
-@media(max-width:900px){.bp-hero{margin:120px 20px 0}}
+.bp-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:30px;background:linear-gradient(160deg,rgba(0,255,136,0.06) 0%,rgba(2,4,16,0) 55%),linear-gradient(180deg,rgba(0,20,10,0.95),rgba(2,4,16,1));border-bottom:1px solid rgba(0,255,136,0.12);margin:100px 0 0;padding:52px 64px 56px;overflow:hidden}
+@media(max-width:900px){.bp-hero{margin:90px 0 0;padding:40px 24px 44px}}
 .bp-hero-glow{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
 .bp-hero-glow-g{width:300px;height:300px;background:rgba(0,255,136,0.22);top:-100px;left:-60px;animation:bpHeroDrift 8s ease-in-out infinite alternate}
 .bp-hero-glow-p{width:280px;height:280px;background:rgba(162,107,255,0.22);bottom:-120px;right:0;animation:bpHeroDrift 9s ease-in-out infinite alternate-reverse}
@@ -368,7 +368,10 @@ section{padding:64px;border-bottom:var(--b1)}
 .bp-urgency-badge.fire{background:rgba(255,80,0,0.18);border:0.5px solid rgba(255,80,0,0.4);color:#ff6030}
 .bp-urgency-badge.green{background:rgba(0,255,136,0.12);border:0.5px solid rgba(0,255,136,0.35);color:var(--g)}
 
-.bp-tabs{display:flex;border-bottom:var(--b1);margin-bottom:28px}
+.bp-tabs{display:flex;border-bottom:var(--b1);margin:0 64px 28px}
+@media(max-width:900px){.bp-tabs{margin:0 20px 20px}}
+.bp-panel{padding:0 64px 40px}
+@media(max-width:900px){.bp-panel{padding:0 20px 32px}}
 .bp-tab{flex:1;text-align:center;padding:14px 10px;font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--td);cursor:pointer;border-bottom:1.5px solid transparent;transition:color .2s,border-color .2s}
 .bp-tab.on{color:var(--g);border-bottom-color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.4)}
 .bp-tab:hover{color:var(--w)}
@@ -1805,7 +1808,8 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 .torneos-banner .page-banner-bg{background:linear-gradient(135deg,#010206 0%,#0a0518 50%,#010206 100%)}
 .torneos-banner .page-banner-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 15% 80%,rgba(255,170,0,0.18),transparent 60%),radial-gradient(ellipse 50% 60% at 85% 20%,rgba(255,0,170,0.15),transparent 55%)}
 
-.tn-wrap{max-width:900px;margin:0 auto;padding:0 20px}
+.tn-wrap{margin:0 64px;padding:0}
+@media(max-width:900px){.tn-wrap{margin:0 20px}}
 
 /* Admin bar */
 .tn-create-btn{font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:2px;padding:13px 28px;background:transparent;color:var(--g);border:1.5px solid var(--g);cursor:pointer;transition:all .2s;box-shadow:0 0 16px rgba(0,255,136,0.2)}
@@ -1909,14 +1913,16 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
    ============================================================ */
 
 /* 1. Ethos / Puntualidad */
-.bp-ethos{display:flex;gap:20px;align-items:flex-start;max-width:900px;margin:32px auto;padding:24px 28px;border:1px solid rgba(255,170,0,0.2);border-radius:12px;background:linear-gradient(135deg,rgba(255,170,0,0.04),rgba(255,255,255,0.01));position:relative;overflow:hidden}
+.bp-ethos{display:flex;gap:20px;align-items:flex-start;margin:32px 64px;padding:24px 28px;border:1px solid rgba(255,170,0,0.2);border-radius:12px;background:linear-gradient(135deg,rgba(255,170,0,0.04),rgba(255,255,255,0.01));position:relative;overflow:hidden}
+@media(max-width:900px){.bp-ethos{margin:24px 20px}}
 .bp-ethos::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,rgba(255,170,0,0.8),rgba(255,170,0,0.2))}
 .bp-ethos-icon{font-size:26px;flex-shrink:0;margin-top:2px;filter:drop-shadow(0 0 8px rgba(255,170,0,0.6))}
 .bp-ethos-title{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:rgba(255,170,0,0.85);margin-bottom:8px}
 .bp-ethos-text{font-size:12px;color:rgba(210,220,255,0.55);line-height:1.7;font-weight:300}
 
 /* 2. Crear Partido Hero */
-.bp-create-hero{position:relative;max-width:900px;margin:0 auto 16px;border:1px solid rgba(0,255,136,0.18);border-radius:16px;background:linear-gradient(135deg,rgba(0,255,136,0.05),rgba(0,255,136,0.01));overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:48px 52px;gap:32px}
+.bp-create-hero{position:relative;margin:0 64px 16px;border:1px solid rgba(0,255,136,0.18);border-radius:16px;background:linear-gradient(135deg,rgba(0,255,136,0.05),rgba(0,255,136,0.01));overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:48px 52px;gap:32px}
+@media(max-width:900px){.bp-create-hero{margin:0 20px 16px}}
 .bp-create-hero-glow{position:absolute;top:-60px;left:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,136,0.15),transparent 70%);pointer-events:none}
 .bp-create-hero-content{position:relative;z-index:2}
 .bp-create-hero-label{font-family:var(--ft);font-size:9px;letter-spacing:3px;color:rgba(0,255,136,0.6);margin-bottom:12px}
@@ -1935,7 +1941,8 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 @keyframes floatBall{0%,100%{transform:translate(-50%,-50%) translateY(0)}50%{transform:translate(-50%,-50%) translateY(-8px)}}
 
 /* 3. Search section header */
-.bp-search-section{max-width:900px;margin:0 auto;padding:0 0 8px}
+.bp-search-section{margin:0 64px;padding:0 0 8px}
+@media(max-width:900px){.bp-search-section{margin:0 20px}}
 .bp-search-section-hdr{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding:0 4px}
 .bp-search-section-title{font-family:var(--ft);font-size:12px;font-weight:900;letter-spacing:2px;color:var(--w)}
 .bp-search-section-sub{font-size:12px;color:rgba(210,220,255,0.35)}
