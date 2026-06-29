@@ -76,9 +76,7 @@ const sb = (typeof window !== 'undefined' && window.supabase)
   : null;
 
 /* ===== SALDO LEVEL UP (Wompi) ===== */
-// Llave pública de Wompi: no es secreta, puede vivir en el frontend.
-// Reemplázala por la llave real de tu cuenta de Wompi cuando la tengas.
-const WOMPI_PUBLIC_KEY = 'pub_test_REEMPLAZAR_CON_TU_LLAVE_PUBLICA';
+const WOMPI_PUBLIC_KEY = 'pub_test_D86AzWqACaLWxvWwZGWkkxt2gn7zSLbu';
 const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1');
 const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
