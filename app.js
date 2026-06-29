@@ -4954,7 +4954,8 @@ function renderAdminPanel() {
           <div class="adm-match-meta">${m.fecha}${m.hora ? ' · '+m.hora : ''} · ${m.cancha}</div>
         </div>
         <span class="adm-badge ${badgeCls}">${badge}</span>
-        ${past && !done ? `<button class="adm-edit-btn" onclick="closeAdminPanel();openFinalizeMatchModal('${m.id}')">REGISTRAR</button>` : ''}
+        ${past && !done ? `<button class="adm-edit-btn" onclick="closeAdminPanel();openAdminTeamMatch('${m.id}')">REGISTRAR</button>` : ''}
+        ${done ? `<button class="adm-edit-btn adm-edit-btn-gray" onclick="closeAdminPanel();openAdminTeamMatch('${m.id}')">VER</button>` : ''}
       </div>`;
   }).join('') : '<div class="adm-empty">No hay partidos de equipo aún.</div>';
 
@@ -5307,4 +5308,254 @@ async function saveAdminPlayer(pid) {
   closeAdminPlayer();
   renderAll();
   alert('✅ Jugador actualizado.');
+}
+
+/* ===== ADMIN TEAM MATCH REGISTRATION ===== */
+
+function openAdminTeamMatch(matchId) {
+  if (!isAdmin()) return;
+  const match = teamMatches.find(m => m.id === matchId);
+  if (!match) return;
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  if (!teamA || !teamB) return;
+
+  const done = match.estado === 'finalizado' && match.resultado;
+  const colA = teamA.color || '#00ff88';
+  const colB = teamB.color || '#00aaff';
+
+  function playerRows(team, side) {
+    return team.memberIds.map(id => {
+      const p = profiles[id];
+      if (!p) return '';
+      const st = (done && match.stats && match.stats[id]) || {};
+      const isMvp = done && match.mvpId === id;
+      return `
+      <tr data-pid="${id}" data-side="${side}">
+        <td class="atm-name-cell">
+          ${p.photo ? `<img src="${p.photo}" class="atm-avatar">` : `<div class="atm-avatar atm-av-ph">${(p.nickname||p.name).slice(0,2)}</div>`}
+          <span>${p.nickname || p.name}<br><small class="atm-pos">${p.position} · OVR ${p.ovr}</small></span>
+        </td>
+        <td><input class="atm-inp" type="number" min="0" max="20" value="${st.goles||0}" ${done?'disabled':''}></td>
+        <td><input class="atm-inp" type="number" min="0" max="20" value="${st.asistencias||0}" ${done?'disabled':''}></td>
+        <td><input class="atm-inp" type="number" min="0" max="20" value="${st.recuperaciones||0}" ${done?'disabled':''}></td>
+        <td><input class="atm-inp atm-inp-cal" type="number" min="1" max="10" step="0.5" value="${st.calificacion||6.5}" ${done?'disabled':''}></td>
+        <td><label class="atm-mvp-lbl"><input type="radio" name="atm-mvp" value="${id}" ${isMvp?'checked':''} ${done?'disabled':''}> MVP</label></td>
+      </tr>`;
+    }).join('');
+  }
+
+  const modal = document.getElementById('admin-team-match-modal');
+  if (!modal) return;
+
+  const golesA = done ? match.resultado.golesA : 0;
+  const golesB = done ? match.resultado.golesB : 0;
+
+  document.getElementById('atm-content').innerHTML = `
+    <div class="atm-header">
+      <div class="atm-title">⚽ REGISTRAR PARTIDO REY DEL BARRIO</div>
+      <button class="am-close-btn" onclick="closeAdminTeamMatch()">✕</button>
+    </div>
+    <div class="atm-meta">${match.cancha} · ${match.fecha}${match.hora?' · '+match.hora:''}</div>
+
+    <div class="atm-scoreboard">
+      <div class="atm-score-side" style="color:${colA}">
+        <div class="atm-score-name">${teamA.name}</div>
+        <input class="atm-score-inp" id="atm-goles-a" type="number" min="0" value="${golesA}" style="border-color:${colA}40" ${done?'disabled':''}>
+      </div>
+      <div class="atm-score-vs">VS</div>
+      <div class="atm-score-side" style="color:${colB}">
+        <input class="atm-score-inp" id="atm-goles-b" type="number" min="0" value="${golesB}" style="border-color:${colB}40" ${done?'disabled':''}>
+        <div class="atm-score-name">${teamB.name}</div>
+      </div>
+    </div>
+
+    <div class="atm-teams-grid">
+      <div class="atm-team-col">
+        <div class="atm-team-hdr" style="color:${colA};border-color:${colA}40">${teamA.name}</div>
+        <table class="atm-table">
+          <thead><tr><th>JUGADOR</th><th>⚽</th><th>🎯</th><th>🛡</th><th>CALIF</th><th></th></tr></thead>
+          <tbody id="atm-tbody-a">${playerRows(teamA,'a')}</tbody>
+        </table>
+      </div>
+      <div class="atm-team-col">
+        <div class="atm-team-hdr" style="color:${colB};border-color:${colB}40">${teamB.name}</div>
+        <table class="atm-table">
+          <thead><tr><th>JUGADOR</th><th>⚽</th><th>🎯</th><th>🛡</th><th>CALIF</th><th></th></tr></thead>
+          <tbody id="atm-tbody-b">${playerRows(teamB,'b')}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="atm-notes-wrap">
+      <label class="ap-label">NOTAS DEL PARTIDO</label>
+      <textarea class="am-notes" id="atm-notes" rows="2" placeholder="Observaciones, incidencias..."${done?' disabled':''}>${match.notes||''}</textarea>
+    </div>
+
+    ${done
+      ? `<div class="atm-done-banner">✅ Partido ya registrado — ${teamA.name} ${golesA} · ${golesB} ${teamB.name}</div>`
+      : `<button class="am-finalize-btn" onclick="submitAdminTeamMatch('${matchId}')">✅ CONFIRMAR RESULTADO Y ACTUALIZAR ESTADÍSTICAS</button>`
+    }
+    <input type="hidden" id="atm-match-id" value="${matchId}">
+  `;
+  modal.classList.add('open');
+}
+
+function closeAdminTeamMatch() {
+  const modal = document.getElementById('admin-team-match-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function submitAdminTeamMatch(matchId) {
+  if (!isAdmin()) return;
+  const match = teamMatches.find(m => m.id === matchId);
+  if (!match) return;
+  if (match.estado === 'finalizado') { alert('Este partido ya fue registrado.'); return; }
+
+  const teamA = teams[match.teamAId];
+  const teamB = teams[match.teamBId];
+  if (!teamA || !teamB) return;
+
+  const golesA = parseInt(document.getElementById('atm-goles-a').value, 10) || 0;
+  const golesB = parseInt(document.getElementById('atm-goles-b').value, 10) || 0;
+  const notes = (document.getElementById('atm-notes').value || '').trim();
+  const mvpId = (document.querySelector('input[name="atm-mvp"]:checked') || {}).value || null;
+
+  // Confirm
+  const label = golesA > golesB
+    ? `${teamA.name} gana ${golesA}-${golesB} a ${teamB.name}`
+    : golesA < golesB
+    ? `${teamB.name} gana ${golesB}-${golesA} a ${teamA.name}`
+    : `Empate ${golesA}-${golesB} entre ${teamA.name} y ${teamB.name}`;
+  if (!confirm(`¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`)) return;
+
+  const btn = document.querySelector('.am-finalize-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Procesando...'; }
+
+  // Update team records
+  teamA.goalsFor = (teamA.goalsFor || 0) + golesA;
+  teamA.goalsAgainst = (teamA.goalsAgainst || 0) + golesB;
+  teamB.goalsFor = (teamB.goalsFor || 0) + golesB;
+  teamB.goalsAgainst = (teamB.goalsAgainst || 0) + golesA;
+  if (golesA > golesB)      { teamA.wins = (teamA.wins||0)+1;   teamB.losses = (teamB.losses||0)+1; }
+  else if (golesA < golesB) { teamB.wins = (teamB.wins||0)+1;   teamA.losses = (teamA.losses||0)+1; }
+  else                       { teamA.draws = (teamA.draws||0)+1; teamB.draws = (teamB.draws||0)+1; }
+
+  const resultLabel = golesA > golesB
+    ? `${teamA.name} venció a ${teamB.name} ${golesA}-${golesB}`
+    : golesA < golesB
+    ? `${teamB.name} venció a ${teamA.name} ${golesB}-${golesA}`
+    : `${teamA.name} empató con ${teamB.name} ${golesA}-${golesB}`;
+
+  const statsMap = {};
+  const headlines = [];
+
+  // Process all players from both teams
+  function processTeamPlayers(team, tbodyId) {
+    const rows = document.querySelectorAll(`#${tbodyId} tr[data-pid]`);
+    rows.forEach(row => {
+      const pid = row.dataset.pid;
+      const p = profiles[pid];
+      if (!p) return;
+      const inputs = row.querySelectorAll('.atm-inp');
+      const m2 = {
+        goles: parseInt(inputs[0].value, 10) || 0,
+        asistencias: parseInt(inputs[1].value, 10) || 0,
+        recuperaciones: parseInt(inputs[2].value, 10) || 0,
+        calificacion: parseFloat(inputs[3].value) || 6.5,
+        mvp: pid === mvpId,
+        pases: 0,
+      };
+      statsMap[pid] = m2;
+
+      const d = computeMatchDeltas(p, m2);
+      const newAchievements = checkAchievements(p, m2);
+
+      p.ovr = d.ovrAfter;
+      p.xp = d.xpAfter;
+      p.lp = (p.lp || 0) + d.lpGain;
+      p.matches = (p.matches || 0) + 1;
+      p.goals = (p.goals || 0) + m2.goles;
+      p.assists = (p.assists || 0) + m2.asistencias;
+      if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+      if (d.attrsGain) d.attrsGain.forEach(k => { if (p.attrs && p.attrs[k] !== undefined) p.attrs[k] = Math.min(99, p.attrs[k] + 1); });
+      p.lastUpdate = new Date().toISOString();
+      p.history = p.history || [];
+      p.history.push({
+        date: match.fecha,
+        cancha: match.cancha,
+        result: resultLabel,
+        goles: m2.goles,
+        asistencias: m2.asistencias,
+        recuperaciones: m2.recuperaciones,
+        calificacion: m2.calificacion,
+        mvp: m2.mvp,
+        ovrDelta: d.ovrDelta,
+        xpGain: d.xpGain,
+        lpGain: d.lpGain,
+      });
+
+      const rankChanged = d.rankBefore && d.rankAfter && d.rankBefore.name !== d.rankAfter.name;
+      p.pendingReveal = {
+        matchId: match.id,
+        resultLabel,
+        teamName: team.name,
+        rivalName: team.id === match.teamAId ? teamB.name : teamA.name,
+        ovrBefore: d.ovrBefore,
+        ovrAfter: d.ovrAfter,
+        xpGain: d.xpGain,
+        lpGain: d.lpGain,
+        rankBefore: d.rankBefore ? d.rankBefore.name : null,
+        rankAfter: d.rankAfter ? d.rankAfter.name : null,
+        rankChanged,
+        rankAfterSlug: d.rankAfter ? d.rankAfter.slug : null,
+        rankAfterEmoji: d.rankAfter ? d.rankAfter.emoji : null,
+        isMvp: m2.mvp,
+        achievementsNew: newAchievements,
+        attrsGain: d.attrsGain || [],
+        stats: m2,
+      };
+
+      profiles[pid] = p;
+      pushProfileToCloud(p);
+
+      const name = p.nickname || p.name;
+      if (d.ovrAfter > d.ovrBefore) headlines.push(`${name} evolucionó su carta a OVR ${d.ovrAfter}.`);
+      if (rankChanged) headlines.push(`${name} ascendió al rango ${d.rankAfter.name}.`);
+      if (m2.mvp) headlines.push(`${name} fue el MVP del partido.`);
+    });
+  }
+
+  processTeamPlayers(teamA, 'atm-tbody-a');
+  processTeamPlayers(teamB, 'atm-tbody-b');
+
+  // Save match
+  match.estado = 'finalizado';
+  match.resultado = { golesA, golesB };
+  match.stats = statsMap;
+  match.mvpId = mvpId;
+  match.notes = notes;
+
+  // Notifications to all players
+  const audience = new Set([...teamA.memberIds, ...teamB.memberIds]);
+  audience.forEach(id => {
+    const member = profiles[id];
+    if (!member) return;
+    member.notifications = member.notifications || [];
+    member.notifications.push({ icon: '⚽', text: resultLabel + '.', time: 'AHORA' });
+    headlines.forEach(h => member.notifications.push({ icon: '📈', text: h, time: 'AHORA' }));
+    profiles[id] = member;
+  });
+
+  saveProfiles();
+  saveTeamMatches();
+  saveTeams();
+  await pushTeamMatchToCloud(match);
+  await pushTeamToCloud(teamA);
+  await pushTeamToCloud(teamB);
+
+  closeAdminTeamMatch();
+  renderAll();
+  checkPendingReveal();
+  alert(`✅ Resultado registrado.\n\n${resultLabel}\n\nOVR y estadísticas de ${audience.size} jugadores actualizados.`);
 }
