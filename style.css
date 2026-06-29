@@ -1048,7 +1048,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .auth-empty{color:var(--td);font-size:13px;padding:16px 0;font-weight:300;text-align:center}
 
 footer{padding:48px 64px;border-top:var(--b1)}
-.ft-logo-img{height:38px;margin-bottom:14px;display:block}
+.ft-logo-img{height:64px;margin-bottom:14px;display:block}
 .ft-desc{font-size:12px;color:var(--td);max-width:340px;line-height:1.7;font-weight:300}
 .ft-bottom{margin-top:32px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.18)}
 .ft-bottom a{color:rgba(255,255,255,0.32);text-decoration:underline}
