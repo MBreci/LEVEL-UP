@@ -2731,8 +2731,7 @@ function renderBuscarPartido() {
   const form = document.getElementById('bp-form');
   if (form && form.style.display !== 'none') renderBpWizard();
   // Hero stats
-  const openMatches = loadOpenMatches();
-  const activeCount = Object.values(openMatches).filter(m => m.status !== 'archivado').length;
+  const activeCount = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado').length;
   const playerCount = Object.keys(profiles).length;
   const elP = document.getElementById('bph-stat-partidos');
   const elJ = document.getElementById('bph-stat-jugadores');
