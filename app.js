@@ -291,7 +291,6 @@ function renderHero() {
     el.innerHTML = `
       <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES</div></div>
       <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS</div></div>
-      <div class="h-stat"><div class="h-stat-n">${stats.goles}</div><div class="h-stat-l">GOLES</div></div>
       <div class="h-stat"><div class="h-stat-n">${stats.mvps}</div><div class="h-stat-l">MVP OTORGADOS</div></div>
     `;
   }
