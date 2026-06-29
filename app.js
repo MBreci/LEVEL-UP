@@ -2927,8 +2927,7 @@ async function syncTeamMatchesFromCloud() {
 }
 
 const CANCHAS_REGISTRADAS = [
-  'Arena 170', 'Polideportivo Kennedy', 'Cancha Sintética Suba', 'Coliseo Teusaquillo',
-  'Cancha Bosa Central', 'Estadio Barrio Olaya', 'Cancha El Tunal', 'Polideportivo Fontibón',
+  'Arena 170',
 ];
 
 function getTeamOVR(team) {
