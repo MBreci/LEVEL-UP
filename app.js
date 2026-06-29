@@ -4793,12 +4793,69 @@ let adminMatchTimerSeconds = 0;
 let adminMatchId = null;
 
 function openAdminPanel() {
-  // For now, navigate to buscar-partido to manage matches
-  if (document.getElementById('bp-list-proximos')) {
-    alert('Panel de admin: usa los botones ⚙ ADMINISTRAR en cada partido.');
-  } else {
-    location.href = 'buscar-partido.html';
-  }
+  if (!isAdmin()) return;
+  const modal = document.getElementById('admin-panel-modal');
+  if (!modal) return;
+  renderAdminPanel();
+  modal.classList.add('open');
+}
+
+function closeAdminPanel() {
+  const modal = document.getElementById('admin-panel-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function renderAdminPanel() {
+  const content = document.getElementById('admin-panel-content');
+  if (!content) return;
+
+  // Jugadores
+  const allPlayers = Object.values(profiles).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const playersHtml = allPlayers.map(p => {
+    const ph = p.physical || {};
+    const hasPhoto = !!p.photo;
+    const hasMedidas = ph.weight && ph.height;
+    const status = hasPhoto && hasMedidas ? '✅' : '⚠️';
+    return `
+      <div class="adm-player-row">
+        <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
+        <div class="adm-player-info">
+          <div class="adm-player-name">${p.nickname || p.name}</div>
+          <div class="adm-player-meta">${ph.height ? ph.height+'cm' : '—'} · ${ph.weight ? ph.weight+'kg' : '—'} · ${ph.foot || '—'}</div>
+        </div>
+        <span class="adm-status">${status}</span>
+        <button class="adm-edit-btn" onclick="closeAdminPanel();openAdminPlayer('${p.id}')">EDITAR</button>
+      </div>`;
+  }).join('');
+
+  // Partidos Rey del Barrio
+  const rbMatches = teamMatches
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 20);
+  const matchesHtml = rbMatches.length ? rbMatches.map(m => {
+    const teamA = teams[m.teamAId];
+    const teamB = teams[m.teamBId];
+    const past = isTeamMatchPast(m);
+    const done = m.estado === 'finalizado' && m.resultado;
+    const badge = done ? `${m.resultado.golesA}-${m.resultado.golesB}` : (past ? 'SIN REGISTRAR' : 'PROGRAMADO');
+    const badgeCls = done ? 'adm-badge-done' : (past ? 'adm-badge-old' : 'adm-badge-prog');
+    return `
+      <div class="adm-match-row">
+        <div class="adm-match-info">
+          <div class="adm-match-teams">${teamA ? teamA.name : '?'} vs ${teamB ? teamB.name : '?'}</div>
+          <div class="adm-match-meta">${m.fecha}${m.hora ? ' · '+m.hora : ''} · ${m.cancha}</div>
+        </div>
+        <span class="adm-badge ${badgeCls}">${badge}</span>
+        ${past && !done ? `<button class="adm-edit-btn" onclick="closeAdminPanel();openFinalizeMatchModal('${m.id}')">REGISTRAR</button>` : ''}
+      </div>`;
+  }).join('') : '<div class="adm-empty">No hay partidos de equipo aún.</div>';
+
+  content.innerHTML = `
+    <div class="adm-section-title">JUGADORES <span class="adm-count">${allPlayers.length}</span></div>
+    <div class="adm-player-list">${playersHtml}</div>
+    <div class="adm-section-title" style="margin-top:28px">PARTIDOS REY DEL BARRIO</div>
+    <div class="adm-match-list">${matchesHtml}</div>
+  `;
 }
 
 function openAdminMatch(matchId) {
