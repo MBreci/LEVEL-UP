@@ -2338,8 +2338,34 @@ function applyBpFiltersFromUI() {
 
 function resetBpFilters() {
   bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false };
-  const form = document.getElementById('bp-filters-form');
-  if (form) form.reset();
+  ['bp-filter-zona','bp-filter-formato'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['bp-filter-cancha','bp-filter-fecha','bp-filter-ovr','bp-filter-precio'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['bp-filter-cupos','bp-filter-abiertos'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+  document.querySelectorAll('.bps-chip').forEach(c => c.classList.remove('on'));
+  renderProximosPartidos();
+}
+
+function toggleBpAdvanced() {
+  const panel = document.getElementById('bps-adv-panel');
+  const btn = document.getElementById('bps-adv-toggle');
+  if (!panel) return;
+  const open = panel.classList.toggle('open');
+  if (btn) btn.textContent = open ? '▲ Filtros avanzados' : '▼ Filtros avanzados';
+}
+
+function applyBpQuickChip(key) {
+  resetBpFilters();
+  const today = new Date().toISOString().split('T')[0];
+  if (key === 'hoy') { bpFilters.fecha = today; const el = document.getElementById('bp-filter-fecha'); if (el) el.value = today; }
+  if (key === 'noche') { bpFilters.fecha = today; const el = document.getElementById('bp-filter-fecha'); if (el) el.value = today; }
+  if (key === 'f5') { bpFilters.formato = '5'; const el = document.getElementById('bp-filter-formato'); if (el) el.value = '5'; }
+  if (key === 'f7') { bpFilters.formato = '7'; const el = document.getElementById('bp-filter-formato'); if (el) el.value = '7'; }
+  if (key === 'f11') { bpFilters.formato = '11'; const el = document.getElementById('bp-filter-formato'); if (el) el.value = '11'; }
+  if (key === 'cupos') { bpFilters.cupos = true; const el = document.getElementById('bp-filter-cupos'); if (el) el.checked = true; }
+  document.querySelectorAll('.bps-chip').forEach(c => c.classList.remove('on'));
+  const map = { hoy: 0, noche: 1, f5: 2, f7: 3, f11: 4, cupos: 5 };
+  const chips = document.querySelectorAll('.bps-chip');
+  if (map[key] !== undefined && chips[map[key]]) chips[map[key]].classList.add('on');
   renderProximosPartidos();
 }
 
@@ -2366,28 +2392,51 @@ function buildMatchCard(m, mode) {
   const total = getTotalCupos(m);
   const unidos = getTotalUnidos(m);
   const faltan = Math.max(0, total - unidos);
+  const pct = total ? Math.round(unidos / total * 100) : 0;
   const isCreator = !!state && m.creatorId === state.id;
   const isSaved = savedMatchIds.includes(m.id);
   const requests = isCreator ? (m.joinRequests || []) : [];
+
+  // Badges de urgencia
+  let urgencyBadge = '';
+  if (faltan > 0 && faltan <= 2) urgencyBadge = `<div class="bp-urgency-badge fire">🔥 SOLO FALTAN ${faltan}</div>`;
+  else if (pct >= 75 && faltan > 0) urgencyBadge = `<div class="bp-urgency-badge green">🟢 CASI COMPLETO</div>`;
+
+  // Hora formateada
+  const hora = m.horaValue ? formatHoraLabel(m.horaValue) : '';
+
   return `
     <div class="bp-card bp-card-premium ${info.cls}">
       <div class="bp-card-glow"></div>
-      <div class="bp-card-top">
-        <div class="bp-card-cancha">${m.cancha || 'CANCHA POR CONFIRMAR'}</div>
-        <div class="bp-estado-badge ${info.cls}">${info.label}</div>
+      <div class="bp-card-header">
+        <div class="bp-card-header-left">
+          <div class="bp-card-cancha">${m.cancha || 'CANCHA POR CONFIRMAR'}</div>
+          <div class="bp-card-zona">📍 ${m.zona}${m.direccion ? ' · ' + m.direccion : ''}</div>
+        </div>
+        <div class="bp-card-header-right">
+          <div class="bp-estado-badge ${info.cls}">${info.label}</div>
+          ${urgencyBadge}
+        </div>
       </div>
-      <div class="bp-card-meta-grid">
-        <div class="bp-meta-item">📍 ${m.direccion || 'Sin dirección'}</div>
-        <div class="bp-meta-item">🏙️ ${m.zona}</div>
-        <div class="bp-meta-item">📅 ${m.fecha}</div>
-        <div class="bp-meta-item">⚽ FÚTBOL ${m.formato}</div>
-        <div class="bp-meta-item">🟢 ${m.superficie}</div>
-        <div class="bp-meta-item">👤 ${m.creatorName}</div>
-        <div class="bp-meta-item">💵 ${m.precio ? '$' + m.precio + ' / jugador' : 'GRATIS'}</div>
-        <div class="bp-meta-item">🎯 OVR REC. ${m.ovrMin || 'CUALQUIERA'}</div>
+
+      <div class="bp-card-pills">
+        <span class="bp-pill">📅 ${m.fecha}</span>
+        ${hora ? `<span class="bp-pill">⏰ ${hora}</span>` : ''}
+        <span class="bp-pill">⚽ FÚTBOL ${m.formato}</span>
+        <span class="bp-pill">🟢 ${m.superficie}</span>
+        <span class="bp-pill">💵 ${m.precio ? '$' + Number(m.precio).toLocaleString('es-CO') + '/jug' : 'GRATIS'}</span>
+        <span class="bp-pill">⭐ OVR ${m.ovrMin || 'LIBRE'}</span>
+        <span class="bp-pill">👤 ${m.creatorName}</span>
       </div>
-      <div class="bp-cupos-bar"><div class="bp-cupos-fill" style="width:${total ? Math.round(unidos / total * 100) : 0}%"></div></div>
-      <div class="bp-cupos-label">${unidos}/${total} CUPOS OCUPADOS ${faltan > 0 ? '· FALTAN ' + faltan : ''}</div>
+
+      <div class="bp-cupos-wrap">
+        <div class="bp-cupos-bar"><div class="bp-cupos-fill" style="width:${pct}%"></div></div>
+        <div class="bp-cupos-label">
+          <span>👥 ${unidos}/${total} jugadores</span>
+          ${faltan > 0 ? `<span class="bp-faltan">Faltan ${faltan}</span>` : '<span class="bp-lleno">Completo</span>'}
+        </div>
+      </div>
+
       <div class="bp-needs">
         ${m.necesita.map(n => {
           const full = n.unidos.length >= n.cupos;
@@ -2400,6 +2449,7 @@ function buildMatchCard(m, mode) {
           </div>`;
         }).join('')}
       </div>
+
       ${requests.length ? `
         <div class="bp-requests">
           <div class="bp-requests-title">SOLICITUDES DE INGRESO</div>
@@ -2412,11 +2462,12 @@ function buildMatchCard(m, mode) {
               </div>
             </div>`).join('')}
         </div>` : ''}
+
       <div class="bp-card-actions">
-        <button onclick="openParticipantsModal('${m.id}')">VER PARTICIPANTES</button>
-        <button onclick="shareMatch('${m.id}')">COMPARTIR</button>
+        <button onclick="openParticipantsModal('${m.id}')">👥 PARTICIPANTES</button>
+        <button onclick="shareMatch('${m.id}')">↗ COMPARTIR</button>
         <button class="${isSaved ? 'on' : ''}" onclick="toggleSaveMatch('${m.id}')">${isSaved ? '★ GUARDADO' : '☆ GUARDAR'}</button>
-        <button onclick="openMatchLocation('${m.id}')">VER UBICACIÓN</button>
+        <button onclick="openMatchLocation('${m.id}')">📍 UBICACIÓN</button>
         <button onclick="openWip('Chat del partido')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
         ${isCreator ? buildDeleteMatchButton(m) : ''}

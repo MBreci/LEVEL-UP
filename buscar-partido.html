@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Buscar Partido · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782698537">
+<link rel="stylesheet" href="style.css?v=1782699627">
 </head>
 <body>
 
@@ -98,39 +98,86 @@
     <div class="my-matches" id="my-matches"></div>
   </div>
 
-  <div class="bp-filters-bar">
-    <div class="sec-hdr">
-      <div class="sec-eyebrow">BUSCAR PARTIDOS</div>
-      <div class="sec-link" onclick="resetBpFilters()">LIMPIAR FILTROS</div>
+  <!-- PANEL PREMIUM DE BÚSQUEDA -->
+  <div class="bps-wrap">
+    <!-- Chips rápidos -->
+    <div class="bps-chips">
+      <button class="bps-chip" onclick="applyBpQuickChip('hoy')">🔥 Hoy</button>
+      <button class="bps-chip" onclick="applyBpQuickChip('noche')">🌙 Esta noche</button>
+      <button class="bps-chip" onclick="applyBpQuickChip('f5')">⚽ Fútbol 5</button>
+      <button class="bps-chip" onclick="applyBpQuickChip('f7')">⚽ Fútbol 7</button>
+      <button class="bps-chip" onclick="applyBpQuickChip('f11')">⚽ Fútbol 11</button>
+      <button class="bps-chip" onclick="applyBpQuickChip('cupos')">🟢 Con cupos</button>
+      <button class="bps-chip" onclick="resetBpFilters()">✕ Limpiar</button>
     </div>
-    <div class="bp-filters-grid" id="bp-filters-form">
-      <select class="auth-input" id="bp-filter-zona" onchange="applyBpFiltersFromUI()">
-        <option value="">CIUDAD / BARRIO</option>
-        <option>Chapinero</option>
-        <option>Usaquén</option>
-        <option>Suba</option>
-        <option>Engativá</option>
-        <option>Kennedy</option>
-        <option>Teusaquillo</option>
-        <option>Fontibón</option>
-        <option>Ciudad Bolívar</option>
-        <option>Bosa</option>
-        <option>Santa Fe</option>
-      </select>
-      <input class="auth-input" id="bp-filter-cancha" autocomplete="off" placeholder="Cancha" oninput="applyBpFiltersFromUI()">
-      <input class="auth-input" type="date" id="bp-filter-fecha" onchange="applyBpFiltersFromUI()">
-      <select class="auth-input" id="bp-filter-formato" onchange="applyBpFiltersFromUI()">
-        <option value="">TIPO DE FÚTBOL</option>
-        <option value="5">FÚTBOL 5</option>
-        <option value="6">FÚTBOL 6</option>
-        <option value="7">FÚTBOL 7</option>
-        <option value="8">FÚTBOL 8</option>
-        <option value="11">FÚTBOL 11</option>
-      </select>
-      <input class="auth-input" type="number" id="bp-filter-ovr" placeholder="OVR máximo recomendado" oninput="applyBpFiltersFromUI()">
-      <input class="auth-input" type="number" id="bp-filter-precio" placeholder="Precio máximo" oninput="applyBpFiltersFromUI()">
-      <label class="auth-consent bp-filter-check"><input type="checkbox" id="bp-filter-cupos" onchange="applyBpFiltersFromUI()"><span>Con cupos disponibles</span></label>
-      <label class="auth-consent bp-filter-check"><input type="checkbox" id="bp-filter-abiertos" onchange="applyBpFiltersFromUI()"><span>Solo partidos abiertos</span></label>
+
+    <!-- Panel principal glassmorphism -->
+    <div class="bps-panel">
+      <div class="bps-panel-glow"></div>
+      <div class="bps-main-row">
+        <div class="bps-field">
+          <span class="bps-icon">📍</span>
+          <select class="bps-input" id="bp-filter-zona" onchange="applyBpFiltersFromUI()">
+            <option value="">Ciudad / Barrio</option>
+            <option>Chapinero</option>
+            <option>Usaquén</option>
+            <option>Suba</option>
+            <option>Engativá</option>
+            <option>Kennedy</option>
+            <option>Teusaquillo</option>
+            <option>Fontibón</option>
+            <option>Ciudad Bolívar</option>
+            <option>Bosa</option>
+            <option>Santa Fe</option>
+          </select>
+        </div>
+        <div class="bps-divider"></div>
+        <div class="bps-field">
+          <span class="bps-icon">⚽</span>
+          <input class="bps-input" id="bp-filter-cancha" autocomplete="off" placeholder="Cancha" oninput="applyBpFiltersFromUI()">
+        </div>
+        <div class="bps-divider"></div>
+        <div class="bps-field">
+          <span class="bps-icon">📅</span>
+          <input class="bps-input" type="date" id="bp-filter-fecha" onchange="applyBpFiltersFromUI()">
+        </div>
+        <div class="bps-divider"></div>
+        <div class="bps-field">
+          <span class="bps-icon">🥅</span>
+          <select class="bps-input" id="bp-filter-formato" onchange="applyBpFiltersFromUI()">
+            <option value="">Tipo de fútbol</option>
+            <option value="5">Fútbol 5</option>
+            <option value="6">Fútbol 6</option>
+            <option value="7">Fútbol 7</option>
+            <option value="8">Fútbol 8</option>
+            <option value="11">Fútbol 11</option>
+          </select>
+        </div>
+        <button class="bps-search-btn" onclick="applyBpFiltersFromUI()">BUSCAR PARTIDOS</button>
+      </div>
+
+      <!-- Filtros avanzados colapsables -->
+      <button class="bps-adv-toggle" onclick="toggleBpAdvanced()" id="bps-adv-toggle">▼ Filtros avanzados</button>
+      <div class="bps-adv-panel" id="bps-adv-panel">
+        <div class="bps-adv-grid">
+          <div class="bps-adv-field">
+            <label class="bps-adv-label">⭐ OVR máximo</label>
+            <input class="bps-adv-input" type="number" id="bp-filter-ovr" placeholder="Ej: 75" oninput="applyBpFiltersFromUI()">
+          </div>
+          <div class="bps-adv-field">
+            <label class="bps-adv-label">💵 Precio máximo</label>
+            <input class="bps-adv-input" type="number" id="bp-filter-precio" placeholder="Ej: 30000" oninput="applyBpFiltersFromUI()">
+          </div>
+          <label class="bps-adv-check">
+            <input type="checkbox" id="bp-filter-cupos" onchange="applyBpFiltersFromUI()">
+            <span>🟢 Solo con cupos disponibles</span>
+          </label>
+          <label class="bps-adv-check">
+            <input type="checkbox" id="bp-filter-abiertos" onchange="applyBpFiltersFromUI()">
+            <span>🔓 Solo partidos abiertos</span>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -251,6 +298,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782698537"></script>
+<script src="app.js?v=1782699627"></script>
 </body>
 </html>
