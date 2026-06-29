@@ -1967,7 +1967,7 @@ function renderBpWizard() {
           <span class="bpw-libre-notice-icon">⚠️</span>
           <div class="bpw-libre-notice-text">
             <strong>Separa la cancha antes de publicar</strong><br>
-            La reserva y el pago de la cancha son responsabilidad del organizador. LEVEL UP no gestiona pagos para partidos en modo libre.
+            La reserva y el pago de la cancha son responsabilidad del organizador. Cuadra con todos los integrantes del equipo al llegar a la cancha y antes del partido para que cada uno pague el valor individual correspondiente. LEVEL UP no gestiona pagos para partidos en modo libre.
           </div>
         </div>
         <div class="auth-label">NOMBRE DE LA CANCHA</div>
