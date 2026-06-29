@@ -2648,6 +2648,137 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
   padding: 20px 0;
 }
 
+/* ── TEAM VIEW MODAL ── */
+.tv-card { width: min(560px, 96vw); }
+.tv-hero {
+  position: relative;
+  border-radius: 14px 14px 0 0;
+  padding: 20px 20px 0;
+  overflow: hidden;
+}
+.tv-hero-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.tv-hero-inner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.tv-shield-img {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #1e2a3a;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tv-shield-placeholder {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 2px solid #1e2a3a;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px; font-weight: 900;
+  flex-shrink: 0;
+}
+.tv-hero-info { flex: 1; min-width: 0; }
+.tv-team-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px; font-weight: 900;
+  color: #fff; letter-spacing: .06em;
+}
+.tv-team-city { font-size: 12px; color: var(--td,#7a8b9a); margin-top: 4px; }
+.tv-captain { font-size: 12px; color: var(--td,#7a8b9a); margin-top: 6px; }
+.tv-captain strong { color: #fff; }
+.tv-stats-bar {
+  display: flex;
+  border-top: 1px solid #1e2a3a;
+  padding: 12px 0;
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.tv-stat { flex: 1; text-align: center; }
+.tv-stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px; font-weight: 800; color: #fff;
+}
+.tv-stat-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px; letter-spacing: .08em;
+  color: var(--td,#7a8b9a); margin-top: 2px;
+}
+.tv-stat-div { width: 1px; background: #1e2a3a; margin: 4px 0; }
+.tv-section-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: .14em; color: var(--td,#7a8b9a);
+  padding: 14px 20px 8px;
+  border-top: 1px solid #1e2a3a;
+}
+.tv-roster {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+.tv-player {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 10px 6px; border-radius: 10px;
+  background: var(--bg3,#070c12);
+  border: 1px solid #1e2a3a;
+  cursor: pointer; position: relative;
+  transition: border-color .2s, transform .15s;
+}
+.tv-player:hover { transform: translateY(-2px); border-color: #ffffff30; }
+.tv-player-cap { border-color: #ffffff30; }
+.tv-player-empty { opacity: .25; cursor: default; }
+.tv-player-empty:hover { transform: none; }
+.tv-player-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #111820; border: 2px solid #1e2a3a;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-size: 12px;
+  font-weight: 700; color: #fff; overflow: hidden;
+}
+.tv-player-av-empty { color: #333; font-size: 18px; }
+.tv-player-name {
+  font-family: 'Orbitron', sans-serif; font-size: 8px;
+  font-weight: 700; color: #fff; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 100%;
+}
+.tv-player-pos { font-size: 9px; color: var(--td,#7a8b9a); }
+.tv-player-ovr { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; color: #fff; }
+.tv-cap-badge {
+  position: absolute; top: 4px; right: 4px;
+  font-family: 'Orbitron', sans-serif; font-size: 7px;
+  font-weight: 900; padding: 2px 5px; border-radius: 4px;
+}
+.tv-matches { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 6px; }
+.tv-match-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3,#070c12); border: 1px solid #1e2a3a;
+  border-radius: 8px; padding: 8px 12px;
+}
+.tv-match-rival { flex: 1; font-size: 12px; color: #fff; font-weight: 600; }
+.tv-match-score { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #fff; }
+.tv-match-outcome { font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: .06em; }
+.tv-match-w { color: var(--g,#00ff88); }
+.tv-match-l { color: #ff4455; }
+.tv-match-d { color: var(--td,#7a8b9a); }
+.tv-challenge-btn {
+  display: block; width: calc(100% - 40px); margin: 0 20px 20px;
+  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 900;
+  letter-spacing: .1em; padding: 14px; border-radius: 10px;
+  border: none; cursor: pointer; color: #fff;
+  transition: opacity .2s, transform .15s;
+}
+.tv-challenge-btn:hover { opacity: .85; transform: translateY(-1px); }
+
 /* ── TEAM CARDS (Rey del Barrio grid) ── */
 .tc-card {
   position: relative;

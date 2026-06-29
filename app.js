@@ -3099,7 +3099,8 @@ function getTeamOVR(team) {
 }
 
 function getTeamRecord(team) {
-  return { record: `${team.wins}-${team.draws}-${team.losses}`, dg: team.goalsFor - team.goalsAgainst };
+  const wins = team.wins || 0, draws = team.draws || 0, losses = team.losses || 0;
+  return { record: `${wins}-${draws}-${losses}`, wins, draws, losses, dg: (team.goalsFor || 0) - (team.goalsAgainst || 0) };
 }
 
 function getMyTeam() {
@@ -4165,7 +4166,7 @@ function openTeamView(teamId) {
     return;
   }
   const ovr = getTeamOVR(team);
-  const { record, dg } = getTeamRecord(team);
+  const { record, wins, draws, losses, dg } = getTeamRecord(team);
   const captain = profiles[team.captainId];
   const members = team.memberIds.map(id => profiles[id]).filter(Boolean);
   const recentMatches = teamMatches.filter(m => (m.teamAId === teamId || m.teamBId === teamId) && m.estado === 'finalizado')
@@ -4173,42 +4174,104 @@ function openTeamView(teamId) {
   const isMine = !!(getMyTeam() && getMyTeam().id === teamId);
   const alreadyMember = state && team.memberIds.includes(state.id);
   const alreadyRequested = state && team.joinRequests.includes(state.id);
+  const col = team.color || '#00ff88';
+  const colA = col + '22';
+  const colG = col + '44';
+
   content.innerHTML = `
-    <div class="team-card">
-      <div class="team-card-head">
-        ${team.photo ? `<img class="team-escudo escudo-clickable" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')">` : `<div class="team-escudo team-escudo-placeholder" style="background:${team.color}">${team.name.slice(0, 2)}</div>`}
-        <div>
-          <div class="team-card-name">${team.name}</div>
-          <div class="team-card-sub">${team.city || 'SIN CIUDAD'} ${team.desc ? '· ' + team.desc : ''}</div>
-          <div class="pi-tags">
-            <div class="pi-tag g">OVR ${ovr}</div>
-            <div class="pi-tag gold">RÉCORD ${record}</div>
-            <div class="pi-tag g">DIF. GOLES ${dg >= 0 ? '+' : ''}${dg}</div>
+    <div class="tv-card">
+      <!-- CABECERA CON COLOR DEL EQUIPO -->
+      <div class="tv-hero" style="background:linear-gradient(160deg,${colA} 0%,transparent 70%)">
+        <div class="tv-hero-bar" style="background:${col};box-shadow:0 0 24px ${colG}"></div>
+        <div class="tv-hero-inner">
+          <div class="tv-shield-wrap">
+            ${team.photo
+              ? `<img class="tv-shield-img escudo-clickable" src="${team.photo}" onclick="openEscudoLightbox('${team.photo}')" style="border-color:${col}66">`
+              : `<div class="tv-shield-placeholder" style="background:${colA};border-color:${col}66;color:${col}">${team.name.slice(0,2).toUpperCase()}</div>`
+            }
           </div>
-          <div class="team-card-captain">Capitán: ${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</div>
+          <div class="tv-hero-info">
+            <div class="tv-team-name">${team.name}</div>
+            <div class="tv-team-city">${team.city || 'SIN CIUDAD'}${team.desc ? ' · ' + team.desc : ''}</div>
+            <div class="tv-captain">👑 Capitán: <strong>${captain ? (captain.nickname || captain.name) : 'DESCONOCIDO'}</strong></div>
+          </div>
+        </div>
+        <!-- STATS BAR -->
+        <div class="tv-stats-bar">
+          <div class="tv-stat">
+            <div class="tv-stat-val" style="color:${col}">${ovr}</div>
+            <div class="tv-stat-lbl">OVR</div>
+          </div>
+          <div class="tv-stat-div"></div>
+          <div class="tv-stat">
+            <div class="tv-stat-val">${wins}</div>
+            <div class="tv-stat-lbl">VICTORIAS</div>
+          </div>
+          <div class="tv-stat-div"></div>
+          <div class="tv-stat">
+            <div class="tv-stat-val">${draws}</div>
+            <div class="tv-stat-lbl">EMPATES</div>
+          </div>
+          <div class="tv-stat-div"></div>
+          <div class="tv-stat">
+            <div class="tv-stat-val">${losses}</div>
+            <div class="tv-stat-lbl">DERROTAS</div>
+          </div>
+          <div class="tv-stat-div"></div>
+          <div class="tv-stat">
+            <div class="tv-stat-val">${dg >= 0 ? '+' : ''}${dg}</div>
+            <div class="tv-stat-lbl">DIF. GOLES</div>
+          </div>
         </div>
       </div>
-      <div class="team-slots">
-        ${members.map(p => `
-          <div class="team-slot ${p.id === team.captainId ? 'captain' : ''}">
-            ${p.photo ? `<img class="team-slot-photo" src="${p.photo}">` : `<div class="team-slot-av">${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>`}
-            <div class="team-slot-name">${p.nickname || p.name}</div>
-            <div class="team-slot-ovr">OVR ${p.ovr}</div>
-            ${p.id === team.captainId ? '<div class="team-slot-tag">CAPITÁN</div>' : ''}
+
+      <!-- JUGADORES -->
+      <div class="tv-section-label">PLANTILLA · ${members.length}/8</div>
+      <div class="tv-roster">
+        ${members.map(p => {
+          const rank = getRank(p.xp);
+          const isCap = p.id === team.captainId;
+          return `
+          <div class="tv-player ${isCap ? 'tv-player-cap' : ''}" onclick="closeTeamView();openPlayerView('${p.id}')">
+            <div class="tv-player-av" style="${isCap ? 'border-color:' + col : ''}">
+              ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<span>${p.name.split(' ').map(s=>s[0]).join('').slice(0,2)}</span>`}
+            </div>
+            <div class="tv-player-name">${p.nickname || p.name}</div>
+            <div class="tv-player-pos">${p.position}</div>
+            <div class="tv-player-ovr" style="${isCap ? 'color:' + col : ''}">OVR ${p.ovr}</div>
+            ${isCap ? `<div class="tv-cap-badge" style="background:${col};color:#000">CAP</div>` : ''}
+          </div>`;
+        }).join('')}
+        ${Array(Math.max(0, 8 - members.length)).fill(0).map(() => `
+          <div class="tv-player tv-player-empty">
+            <div class="tv-player-av tv-player-av-empty">+</div>
+            <div class="tv-player-name" style="color:#333">LIBRE</div>
           </div>`).join('')}
       </div>
+
       ${recentMatches.length ? `
-        <div class="sec-hdr"><div class="sec-eyebrow">PARTIDOS RECIENTES</div></div>
-        <div class="team-hist-list">
-          ${recentMatches.map(m => `
-            <div class="team-hist-row">
-              <span>${m.fecha} ${m.hora || ''}</span>
-              <span>${m.resultado ? m.resultado.golesA + '-' + m.resultado.golesB : '—'}</span>
-            </div>`).join('')}
+        <div class="tv-section-label">PARTIDOS RECIENTES</div>
+        <div class="tv-matches">
+          ${recentMatches.map(m => {
+            const rival = teams[m.teamAId === teamId ? m.teamBId : m.teamAId];
+            const res = m.resultado;
+            let outcome = '—';
+            if (res) {
+              const myGoals = m.teamAId === teamId ? res.golesA : res.golesB;
+              const theirGoals = m.teamAId === teamId ? res.golesB : res.golesA;
+              outcome = myGoals > theirGoals ? '✔ VICTORIA' : myGoals < theirGoals ? '✘ DERROTA' : '— EMPATE';
+            }
+            const outcomeClass = outcome.startsWith('✔') ? 'tv-match-w' : outcome.startsWith('✘') ? 'tv-match-l' : 'tv-match-d';
+            return `
+            <div class="tv-match-row">
+              <div class="tv-match-rival">vs ${rival ? rival.name : 'RIVAL'}</div>
+              <div class="tv-match-score">${res ? res.golesA + ' - ' + res.golesB : '—'}</div>
+              <div class="tv-match-outcome ${outcomeClass}">${outcome}</div>
+            </div>`;
+          }).join('')}
         </div>` : ''}
-      ${isMine ? '' : state
-        ? `<button class="auth-submit" onclick="closeTeamView();openChallengeModal('${team.id}')">RETAR EQUIPO</button>`
-        : ''}
+
+      ${!isMine && state ? `<button class="tv-challenge-btn" style="background:linear-gradient(135deg,${col},${col}cc);box-shadow:0 0 20px ${colG}" onclick="closeTeamView();openChallengeModal('${team.id}')">⚔ RETAR A ${team.name.toUpperCase()}</button>` : ''}
       ${!isMine && !alreadyMember && !getMyTeam() && team.openForPlayers
         ? `<button class="mm-invite-btn" onclick="requestJoinTeam('${team.id}')" ${alreadyRequested ? 'disabled' : ''}>${alreadyRequested ? 'SOLICITUD ENVIADA' : '+ SOLICITAR UNIRME'}</button>`
         : ''}
