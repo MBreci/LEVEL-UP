@@ -964,7 +964,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .rk-goat .rk-emblem,.rk-leyenda .rk-emblem{color:#fff}
 
 /* BUSCADOR DE JUGADORES */
-.pl-search-wrap{max-width:1100px;margin:0 auto 24px;padding:0 24px;position:relative}
+.pl-search-wrap{max-width:1300px;margin:0 auto 24px;padding:0 32px;position:relative}
 .pl-search-input{width:100%;background:var(--bg2);border:var(--b1);color:var(--w);font-family:'Inter',sans-serif;font-size:14px;padding:14px 18px;border-radius:6px;outline:none}
 .pl-search-input:focus{border-color:rgba(0,245,140,0.4)}
 .pl-suggest{position:absolute;top:calc(100% + 6px);left:24px;right:24px;background:var(--bg2);border:var(--b1);border-radius:6px;overflow:hidden;z-index:50;display:none;box-shadow:0 12px 30px rgba(0,0,0,0.4)}
@@ -972,7 +972,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .pl-suggest-item{padding:10px 18px;font-size:13px;color:var(--w);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pl-suggest-item:hover{background:rgba(0,245,140,0.08)}
 .pl-suggest-item .s-sub{color:var(--td);font-size:11px;font-weight:300}
-.pl-grid{max-width:1100px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.pl-grid{max-width:1300px;margin:0 auto;padding:0 32px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .pl-card{position:relative;background:var(--bg2);border:var(--b1);border-top:2px solid var(--rc);border-radius:8px;padding:20px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;overflow:hidden}
 .pl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:42px;background:linear-gradient(180deg,var(--rcglow),transparent);opacity:.4;pointer-events:none}
 .pl-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -12px var(--rcglow)}
@@ -1248,7 +1248,7 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .eq-tab{flex:1;text-align:center;padding:14px 10px;font-family:var(--ft);font-size:10px;letter-spacing:2px;color:var(--td);cursor:pointer;border-bottom:1.5px solid transparent;transition:color .2s,border-color .2s}
 .eq-tab.on{color:var(--g);border-bottom-color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.4)}
 .eq-tab:hover{color:var(--w)}
-.eq-panel{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+.eq-panel{max-width:1300px;margin:0 auto;padding:0 32px 60px}
 
 .eq-create-wrap{max-width:480px;margin:0 auto}
 
@@ -2648,31 +2648,10 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
   padding: 20px 0;
 }
 
-/* ── REY DEL BARRIO LAYOUT DOS COLUMNAS ── */
-.rdb-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 24px;
-  align-items: start;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
-}
-.rdb-main { min-width: 0; }
-.rdb-grid {
-  max-width: 100% !important;
-  padding: 16px 0 0 !important;
-  margin: 0 !important;
-}
-.rdb-sidebar { position: sticky; top: 80px; }
-.rdb-banner-side {
-  margin-bottom: 0 !important;
-  padding: 20px !important;
-}
-.rdb-banner-side .rdb-banner-crown { font-size: 28px; }
-@media(max-width:760px) {
-  .rdb-layout { grid-template-columns: 1fr; }
-  .rdb-sidebar { position: static; }
+/* ── REY DEL BARRIO PANEL ── */
+.eq-panel-rey-wrap {
+  max-width: 1300px !important;
+  padding: 0 32px 60px !important;
 }
 
 /* ── REY DEL BARRIO BANNER ── */
@@ -2683,7 +2662,7 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 28px;
-  padding: 24px 24px 24px 24px;
+  padding: 24px 32px;
 }
 .rdb-banner-glow {
   position: absolute;

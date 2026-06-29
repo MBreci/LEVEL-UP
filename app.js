@@ -39,7 +39,6 @@ function rankSlug(rank) { return rank && rank.slug ? rank.slug : 'canterano'; }
 const FUNCTIONAL_MODULES = [
   { id: 'ficha', label: 'MI FICHA' },
   { id: 'partidos', label: 'PARTIDOS' },
-  { id: 'equipos', label: 'EQUIPOS' },
   { id: 'reydelbarrio', label: 'REY DEL BARRIO' },
   { id: 'torneos', label: 'TORNEOS' },
   { id: 'ranking', label: 'RANKING' },
@@ -3855,7 +3854,7 @@ function switchEquiposTab(tab) {
   ['crear', 'rey', 'programados'].forEach(t => {
     const tabEl = document.getElementById('eq-tab-' + t);
     if (tabEl) tabEl.classList.toggle('on', t === tab);
-    document.getElementById('eq-panel-' + t).style.display = t === tab ? (t === 'rey' ? 'grid' : 'block') : 'none';
+    document.getElementById('eq-panel-' + t).style.display = t === tab ? 'block' : 'none';
   });
   if (tab === 'rey') renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
   if (tab === 'programados') renderTeamMatchesPanel();
