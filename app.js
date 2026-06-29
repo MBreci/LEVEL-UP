@@ -4108,13 +4108,47 @@ function renderTeamSearch(query) {
   }
   el.innerHTML = list.map(t => {
     const ovr = getTeamOVR(t);
-    const { record } = getTeamRecord(t);
+    const { record, wins, losses, draws } = getTeamRecord(t);
+    const col = t.color || '#00ff88';
+    const colAlpha = col + '22';
+    const colGlow = col + '55';
     return `
-    <div class="pl-card" onclick="openTeamView('${t.id}')">
-      ${t.photo ? `<img class="pl-card-av team-card-av-img" src="${t.photo}">` : `<div class="pl-card-av" style="background:${t.color}">${t.name.slice(0, 2)}</div>`}
-      <div class="pl-card-name">${t.name}</div>
-      <div class="pl-card-sub">${t.city || 'SIN CIUDAD'} · ${t.memberIds.length}/8 JUGADORES</div>
-      <div class="pl-card-tags"><span class="pi-tag g">OVR ${ovr}</span><span class="pi-tag gold">${record}</span></div>
+    <div class="tc-card" onclick="openTeamView('${t.id}')" style="--tc:#${col.replace('#','')}; --tc-a:${colAlpha}; --tc-g:${colGlow}; border-color:${col}33">
+      <div class="tc-top" style="background:linear-gradient(160deg,${colAlpha} 0%,transparent 60%)">
+        <div class="tc-accent" style="background:${col};box-shadow:0 0 18px ${colGlow}"></div>
+        <div class="tc-shield">
+          ${t.photo
+            ? `<img src="${t.photo}" class="tc-shield-img" style="border-color:${col}55">`
+            : `<div class="tc-shield-placeholder" style="background:${colAlpha};border-color:${col}55;color:${col}">${t.name.slice(0,2).toUpperCase()}</div>`
+          }
+        </div>
+        <div class="tc-info">
+          <div class="tc-name">${t.name}</div>
+          <div class="tc-city">${t.city || 'SIN CIUDAD'}</div>
+          <div class="tc-members"><span class="tc-dot" style="background:${col}"></span>${t.memberIds.length}/8 JUGADORES</div>
+        </div>
+      </div>
+      <div class="tc-bottom">
+        <div class="tc-stat">
+          <div class="tc-stat-val" style="color:${col}">${ovr}</div>
+          <div class="tc-stat-lbl">OVR</div>
+        </div>
+        <div class="tc-divider"></div>
+        <div class="tc-stat">
+          <div class="tc-stat-val">${wins}</div>
+          <div class="tc-stat-lbl">VICTORIAS</div>
+        </div>
+        <div class="tc-divider"></div>
+        <div class="tc-stat">
+          <div class="tc-stat-val">${draws}</div>
+          <div class="tc-stat-lbl">EMPATES</div>
+        </div>
+        <div class="tc-divider"></div>
+        <div class="tc-stat">
+          <div class="tc-stat-val">${losses}</div>
+          <div class="tc-stat-lbl">DERROTAS</div>
+        </div>
+      </div>
     </div>`;
   }).join('');
   renderTeamSuggestions(query);

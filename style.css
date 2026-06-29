@@ -2648,6 +2648,118 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
   padding: 20px 0;
 }
 
+/* ── TEAM CARDS (Rey del Barrio grid) ── */
+.tc-card {
+  position: relative;
+  background: var(--bg2, #0a1018);
+  border: 1px solid #1e2a3a;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.tc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -8px var(--tc-g, rgba(0,255,136,.3));
+  border-color: var(--tc, #00ff88) !important;
+}
+.tc-top {
+  padding: 18px 16px 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  position: relative;
+}
+.tc-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.tc-shield {
+  flex-shrink: 0;
+}
+.tc-shield-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #1e2a3a;
+  display: block;
+}
+.tc-shield-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #1e2a3a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+}
+.tc-info { flex: 1; min-width: 0; }
+.tc-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tc-city {
+  font-size: 11px;
+  color: var(--td, #7a8b9a);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tc-members {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--td, #7a8b9a);
+  margin-top: 5px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .06em;
+}
+.tc-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tc-bottom {
+  display: flex;
+  border-top: 1px solid #1e2a3a;
+  padding: 10px 0;
+}
+.tc-stat {
+  flex: 1;
+  text-align: center;
+}
+.tc-stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.tc-stat-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: .08em;
+  color: var(--td, #7a8b9a);
+  margin-top: 2px;
+}
+.tc-divider {
+  width: 1px;
+  background: #1e2a3a;
+  margin: 4px 0;
+}
+
 /* ── REY DEL BARRIO PANEL ── */
 .eq-panel-rey-wrap {
   max-width: 1300px !important;
