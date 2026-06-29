@@ -1282,9 +1282,14 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-card-av-img{object-fit:cover}
 
 .team-hist-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
-.team-hist-row{background:var(--bg2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t);font-family:var(--fb)}
-.team-hist-row span:nth-child(2){font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--tm)}
-.team-hist-row span:nth-child(3){font-family:var(--ft);font-weight:700;color:var(--g)}
+.team-hist-row{background:var(--bg2);padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--t);font-family:var(--fb);transition:opacity .2s}
+.team-hist-row.past{opacity:0.5}
+.thr-info{flex:2;min-width:140px;color:var(--td);font-size:11px}
+.thr-rival{flex:1;min-width:100px;font-weight:700;font-family:var(--ft);font-size:11px;letter-spacing:.05em;color:var(--w)}
+.thr-badge{font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.hist-badge-prog{color:var(--g);border:1px solid rgba(0,255,136,0.4)}
+.hist-badge-done{color:var(--w);background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.25)}
+.hist-badge-old{color:var(--td);border:1px solid rgba(255,255,255,0.1)}
 
 .team-leave-btn{background:var(--bg3);border:1px solid rgba(255,80,80,0.35);color:#ff8a8a}
 .team-leave-btn:hover{box-shadow:0 0 16px rgba(255,80,80,0.25)}
