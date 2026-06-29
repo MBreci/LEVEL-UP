@@ -253,20 +253,20 @@ function renderNav() {
 }
 
 function renderWalletPill() {
-  const navRight = document.querySelector('.nav-right');
-  if (!navRight) return;
+  // El saldo ahora aparece dentro del dropdown del perfil, no en el nav.
+  const dropdown = document.getElementById('account-dropdown');
+  if (!dropdown) return;
   let pill = document.getElementById('wallet-pill');
   if (!state) { if (pill) pill.remove(); return; }
   if (!pill) {
     pill = document.createElement('a');
     pill.id = 'wallet-pill';
-    pill.className = 'wallet-pill';
+    pill.className = 'dropdown-item wallet-dropdown-item';
     pill.href = 'saldo.html';
-    pill.title = 'Saldo disponible para utilizar dentro de LEVEL UP.';
-    navRight.insertBefore(pill, navRight.firstChild);
+    dropdown.insertBefore(pill, dropdown.firstChild);
   }
   const saldo = state.saldo || 0;
-  pill.innerHTML = `<span class="wallet-dot"></span> Saldo <strong>$${saldo.toLocaleString('es-CO')}</strong>`;
+  pill.innerHTML = `<span class="wallet-dot"></span> SALDO <strong>$${saldo.toLocaleString('es-CO')}</strong>`;
 }
 
 function getPlatformStats() {
@@ -1015,7 +1015,7 @@ async function renderSaldoPage() {
     <div class="wallet-balance-card">
       <div class="wallet-balance-label">SALDO DISPONIBLE</div>
       <div class="wallet-balance-amount" id="wallet-balance-amount">$${(state.saldo || 0).toLocaleString('es-CO')}</div>
-      <button class="hw-cta-main" onclick="openRecharge()">RECARGAR SALDO</button>
+      <button class="hw-cta-main" disabled style="opacity:0.45;cursor:not-allowed;">DISPONIBLE PRÓXIMAMENTE</button>
     </div>
     <div class="wallet-stats-row">
       <div class="wallet-stat"><div class="wallet-stat-v">$${totalRecargado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL RECARGADO</div></div>
