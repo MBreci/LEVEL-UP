@@ -1581,6 +1581,12 @@ function closeRevealSequence() {
 
 /* ===== AUTH / PERFILES ===== */
 
+function selectSQ(el, value) {
+  document.querySelectorAll('.sq-opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('auth-sq').value = value;
+}
+
 function switchAuthTab(tab) {
   document.getElementById('tab-new').classList.toggle('on', tab === 'new');
   document.getElementById('tab-existing').classList.toggle('on', tab === 'existing');

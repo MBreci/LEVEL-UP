@@ -2061,6 +2061,10 @@ footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;b
 /* Nota de email en registro */
 .auth-note{font-size:10px;color:var(--td);line-height:1.5;margin:-6px 0 8px;padding:0 2px}
 .auth-note-inline{font-size:10px;color:var(--td);font-weight:400;text-transform:none;letter-spacing:0}
+.sq-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.sq-opt{padding:10px 12px;background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-family:var(--fb);font-size:12px;color:var(--td);cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.sq-opt:hover{border-color:rgba(0,255,136,0.4);color:var(--w)}
+.sq-opt.on{border-color:var(--g);color:var(--g);background:rgba(0,255,136,0.08)}
 
 /* Auth modal: scroll en pantallas pequeñas */
 .auth-card{max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}

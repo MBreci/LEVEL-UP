@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782757776">
+<link rel="stylesheet" href="style.css?v=1782758555">
 </head>
 <body>
 
@@ -281,15 +281,15 @@
         <option value="POR">POR — Portero</option>
       </select>
       <div class="auth-label">PREGUNTA DE SEGURIDAD</div>
-      <select class="auth-input" id="auth-sq">
-        <option value="">Elige una pregunta...</option>
-        <option value="¿Cuál es el nombre de tu mascota?">¿Cuál es el nombre de tu mascota?</option>
-        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
-        <option value="¿Cuál es el nombre de tu colegio?">¿Cuál es el nombre de tu colegio?</option>
-        <option value="¿Cuál es el nombre de tu mejor amigo de infancia?">¿Cuál es el nombre de tu mejor amigo de infancia?</option>
-        <option value="¿Cuál es el equipo de fútbol de tu corazón?">¿Cuál es el equipo de fútbol de tu corazón?</option>
-        <option value="¿Cuál es el nombre de tu mamá?">¿Cuál es el nombre de tu mamá?</option>
-      </select>
+      <input type="hidden" id="auth-sq">
+      <div class="sq-list">
+        <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mascota?')">¿Cuál es el nombre de tu mascota?</div>
+        <div class="sq-opt" onclick="selectSQ(this,'¿En qué ciudad naciste?')">¿En qué ciudad naciste?</div>
+        <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu colegio?')">¿Cuál es el nombre de tu colegio?</div>
+        <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mejor amigo de infancia?')">¿Cuál es el nombre de tu mejor amigo de infancia?</div>
+        <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el equipo de fútbol de tu corazón?')">¿Cuál es el equipo de fútbol de tu corazón?</div>
+        <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mamá?')">¿Cuál es el nombre de tu mamá?</div>
+      </div>
       <div class="auth-label">RESPUESTA <span class="auth-note-inline">· Recuérdala bien, la necesitarás si olvidas tu contraseña</span></div>
       <input class="auth-input" id="auth-sa" autocomplete="off" placeholder="Tu respuesta (no distingue mayúsculas)" maxlength="60">
       <div class="auth-label">CONTRASEÑA</div>
@@ -341,6 +341,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782757776"></script>
+<script src="app.js?v=1782758555"></script>
 </body>
 </html>
