@@ -575,8 +575,9 @@ function renderCard() {
       </div>
       <div class="lvl-track"><div class="lvl-fill" style="width:${pct}%"></div></div>
     </div>
-    ${buildCommunityRatingsHTML(state)}
   `;
+  const cardRatings = document.getElementById('card-ratings');
+  if (cardRatings) cardRatings.innerHTML = buildCommunityRatingsHTML(state);
 }
 
 function buildCommunityRatingsHTML(p) {
