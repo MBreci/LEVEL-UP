@@ -946,6 +946,10 @@ section{padding:64px;border-bottom:var(--b1)}
 .hist-ovr.down{color:#ff4444}
 
 /* RANKING */
+.rk-search-wrap{max-width:900px;margin:0 auto 20px;padding:0 24px}
+.rk-search-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:12px 18px;font-family:var(--fb);font-size:13px;color:#fff;outline:none;transition:border-color .2s;box-sizing:border-box}
+.rk-search-input::placeholder{color:rgba(255,255,255,0.3)}
+.rk-search-input:focus{border-color:var(--g);box-shadow:0 0 0 2px rgba(0,255,136,0.08)}
 .rk-panel{background:var(--bg2);border:var(--b1)}
 .rk-empty{padding:48px 24px;text-align:center;color:var(--td);font-size:13px}
 .rk-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:var(--b1);position:relative;transition:background .2s}

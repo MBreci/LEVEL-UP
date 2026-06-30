@@ -637,17 +637,21 @@ function getGeneralRanking() {
   return list.sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name));
 }
 
-function renderRanking() {
+function renderRanking(query) {
   const el = document.getElementById('rk-panel');
   if (!el) return;
-  const list = getGeneralRanking();
+  let list = getGeneralRanking();
+  if (query) {
+    const q = query.toLowerCase();
+    list = list.filter(p => p.name.toLowerCase().includes(q) || p.rank.toLowerCase().includes(q));
+  }
   if (!list.length) {
-    el.innerHTML = `<div class="rk-empty">Todavía no hay jugadores registrados. Cuando alguien cree su perfil, aparecerá aquí.</div>`;
+    el.innerHTML = `<div class="rk-empty">${query ? 'No se encontraron jugadores.' : 'Todavía no hay jugadores registrados. Cuando alguien cree su perfil, aparecerá aquí.'}</div>`;
     return;
   }
   el.innerHTML = list.map((p, i) => `
-    <div class="rk-row rk-${p.slug} ${state && p.id === state.id ? 'me' : ''}">
-      <div class="rk-pos ${i === 0 ? 'gold' : ''}">${i + 1}</div>
+    <div class="rk-row rk-${p.slug} ${state && p.id === state.id ? 'me' : ''}" onclick="openPlayerView('${p.id}')" style="cursor:pointer">
+      <div class="rk-pos ${i === 0 && !query ? 'gold' : ''}">${getGeneralRanking().findIndex(r => r.id === p.id) + 1}</div>
       <div class="rk-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
       <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
       <div class="rk-ovr">${p.ovr}</div>
