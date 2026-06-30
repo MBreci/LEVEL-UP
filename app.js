@@ -5805,6 +5805,10 @@ async function saveAdminPlayer(pid) {
 
 function openAdminTeamMatch(matchId) {
   if (!isAdmin()) return;
+  location.href = 'admin-partido.html?m=' + matchId;
+}
+function openAdminTeamMatch_legacy(matchId) {
+  if (!isAdmin()) return;
   const match = teamMatches.find(m => m.id === matchId);
   if (!match) return;
   const teamA = teams[match.teamAId];

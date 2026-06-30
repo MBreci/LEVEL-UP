@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADMIN PARTIDO · LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--bg2:#0d0d1b;--bg3:#11111f;--bg4:#16162a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --ft:'Orbitron',sans-serif;--sans:'Inter',sans-serif;
+  --g:#00e676;--r:#ff1f44;--y:#ffb300;--b:#00b0ff;
+  --txt:rgba(255,255,255,0.9);--td:rgba(255,255,255,0.45);
+  --pos:#00e676;--neg:#ff1f44;
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:13px;min-height:100vh;display:flex;flex-direction:column}
+button{cursor:pointer;border:none;outline:none;font-family:var(--sans)}
+
+/* TOP BAR */
+.ap-topbar{
+  display:flex;align-items:center;gap:16px;padding:10px 20px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  flex-shrink:0;position:sticky;top:0;z-index:100
+}
+.ap-topbar-logo{font-family:var(--ft);font-size:15px;font-weight:900;letter-spacing:2px;color:#fff;white-space:nowrap}
+.ap-topbar-logo span{color:var(--r)}
+.ap-topbar-arena{display:flex;flex-direction:column;line-height:1.3}
+.ap-topbar-arena-name{font-weight:600;font-size:13px;color:#fff}
+.ap-topbar-arena-loc{font-size:11px;color:var(--td)}
+.ap-topbar-divider{width:1px;height:32px;background:var(--border2)}
+.ap-topbar-dt{display:flex;flex-direction:column;line-height:1.3}
+.ap-topbar-date{font-size:12px;font-weight:600;color:#fff}
+.ap-topbar-time{font-size:11px;color:var(--td)}
+.ap-topbar-status-badge{
+  padding:4px 12px;border-radius:20px;font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:1px;
+  background:rgba(0,230,118,0.12);color:var(--g);border:1px solid rgba(0,230,118,0.3)
+}
+.ap-topbar-id{font-size:11px;color:var(--td)}
+.ap-topbar-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.ap-autosave{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);font-size:11px;color:var(--td)}
+.ap-autosave-dot{width:8px;height:8px;border-radius:50%;background:var(--g);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.ap-settings-btn{width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--td);font-size:16px;display:flex;align-items:center;justify-content:center}
+.ap-back-btn{padding:6px 14px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--td);font-size:11px;font-family:var(--ft);letter-spacing:.5px;transition:all .2s}
+.ap-back-btn:hover{border-color:var(--border2);color:#fff}
+
+/* SCOREBOARD */
+.ap-scoreboard{
+  background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;flex-shrink:0
+}
+.ap-scoreboard-main{display:flex;align-items:center;gap:0;justify-content:space-between;max-width:900px;margin:0 auto 12px}
+.ap-score-team{display:flex;align-items:center;gap:14px;min-width:220px}
+.ap-score-team.right{flex-direction:row-reverse;text-align:right}
+.ap-team-shield{
+  width:52px;height:52px;border-radius:10px;border:2px solid;display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0
+}
+.ap-team-info{}
+.ap-team-name{font-family:var(--ft);font-size:14px;font-weight:900;letter-spacing:1px;color:#fff}
+.ap-team-badge{
+  display:inline-block;margin-top:4px;padding:2px 8px;border-radius:4px;font-family:var(--ft);font-size:8px;font-weight:700;letter-spacing:1.5px
+}
+.ap-team-badge.local{background:rgba(0,230,118,0.15);color:var(--g);border:1px solid rgba(0,230,118,0.3)}
+.ap-team-badge.visitante{background:rgba(255,31,68,0.15);color:var(--r);border:1px solid rgba(255,31,68,0.3)}
+.ap-score-center{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:220px}
+.ap-score-nums{display:flex;align-items:center;gap:20px}
+.ap-score-num{
+  width:70px;height:70px;border-radius:10px;border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ft);font-size:36px;font-weight:900;color:#fff;background:var(--bg3)
+}
+.ap-score-num.local-score{border-color:rgba(0,230,118,0.4)}
+.ap-score-num.visitante-score{border-color:rgba(255,31,68,0.3)}
+.ap-score-live{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--ft);letter-spacing:.5px}
+.ap-live-dot{width:7px;height:7px;border-radius:50%;background:var(--r);animation:pulse-dot 1.2s infinite}
+.ap-timer-big{
+  font-family:var(--ft);font-size:28px;font-weight:900;color:var(--g);letter-spacing:2px;
+  padding:4px 16px;background:var(--bg3);border:1px solid rgba(0,230,118,0.2);border-radius:8px
+}
+.ap-period-lbl{font-size:10px;color:var(--td);letter-spacing:1px;font-family:var(--ft)}
+/* resumen bar */
+.ap-resumen-bar{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:700px;margin:0 auto
+}
+.ap-resumen-stat{
+  display:flex;flex-direction:column;align-items:center;padding:8px 20px;flex:1;
+  border-right:1px solid var(--border)
+}
+.ap-resumen-stat:last-child{border-right:none}
+.ap-resumen-label{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--td);margin-bottom:4px}
+.ap-resumen-val{font-family:var(--ft);font-size:13px;font-weight:700;color:#fff;letter-spacing:1px}
+.ap-resumen-val.goles{color:var(--g)}
+.ap-resumen-val.tarjetas-amarillas{color:var(--y)}
+.ap-resumen-val.tarjetas-rojas{color:var(--r)}
+.ap-resumen-val.posesion{color:var(--b)}
+
+/* TABLE SECTION */
+.ap-table-section{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.ap-table-header{
+  padding:10px 20px;font-family:var(--ft);font-size:10px;letter-spacing:1.5px;
+  color:var(--td);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0
+}
+.ap-table-header .ap-help-badge{
+  width:16px;height:16px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);
+  display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--td);cursor:help
+}
+.ap-table-scroll{overflow:auto;flex:1}
+table.ap-stats-table{
+  width:100%;border-collapse:collapse;table-layout:fixed
+}
+.ap-stats-table th{
+  background:var(--bg2);padding:6px 4px;font-family:var(--ft);font-size:8px;letter-spacing:.8px;
+  color:var(--td);font-weight:700;white-space:nowrap;text-align:center;
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10
+}
+.ap-stats-table th.ap-th-pos{color:var(--pos);border-bottom:2px solid rgba(0,230,118,0.3)}
+.ap-stats-table th.ap-th-neg{color:var(--neg);border-bottom:2px solid rgba(255,31,68,0.3)}
+.ap-stats-table th.ap-th-info{text-align:left}
+.ap-stats-table td{
+  padding:4px 3px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle
+}
+.ap-stats-table tr:hover td{background:rgba(255,255,255,0.025)}
+/* Team separator rows */
+.ap-team-sep-row td{
+  background:var(--bg2);padding:6px 20px;font-family:var(--ft);font-size:9px;letter-spacing:2px;
+  color:var(--td);border-top:2px solid var(--border2);border-bottom:2px solid var(--border2);
+  font-weight:700;text-align:left
+}
+/* Player info cells */
+.ap-num-cell{width:32px;color:var(--td);font-size:12px;text-align:center}
+.ap-player-cell{width:160px;text-align:left;padding-left:8px!important}
+.ap-player-cell-inner{display:flex;align-items:center;gap:8px}
+.ap-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border2);flex-shrink:0}
+.ap-avatar-ph{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-size:9px;font-weight:700;flex-shrink:0;border:1px solid var(--border2)}
+.ap-player-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-player-sub{font-size:10px;color:var(--td);font-family:var(--ft);letter-spacing:.3px}
+.ap-pos-badge{
+  display:inline-block;padding:2px 6px;border-radius:4px;font-family:var(--ft);font-size:8px;font-weight:700;
+  background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);letter-spacing:.5px
+}
+.ap-pos-badge.del{background:rgba(255,100,0,0.15);color:#ff8c00}
+.ap-pos-badge.med{background:rgba(100,200,255,0.15);color:#00b0ff}
+.ap-pos-badge.def{background:rgba(0,200,100,0.15);color:#00e676}
+.ap-pos-badge.por{background:rgba(255,180,0,0.15);color:var(--y)}
+.ap-cond-cell{width:50px}
+.ap-cond{font-family:var(--ft);font-size:11px;font-weight:700;color:var(--g)}
+/* Stat cells */
+.ap-stat-cell{width:68px;min-width:60px}
+.ap-stat-cell.pos-col{border-left:1px solid rgba(0,230,118,0.06)}
+.ap-stat-cell.neg-col{border-left:1px solid rgba(255,31,68,0.08)}
+.ap-stat-cell:first-of-type{border-left:2px solid rgba(0,230,118,0.2)}
+.ap-stat-inner{display:flex;align-items:center;justify-content:center;gap:4px}
+.ap-sm-btn{
+  width:20px;height:20px;border-radius:4px;border:1px solid var(--border2);
+  background:var(--bg3);color:rgba(255,255,255,0.6);font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0
+}
+.ap-sm-btn:hover{background:var(--bg4);color:#fff;border-color:var(--border2)}
+.ap-sm-btn.plus:hover{background:rgba(0,230,118,0.15);color:var(--g);border-color:rgba(0,230,118,0.3)}
+.ap-sm-btn.minus:hover{background:rgba(255,31,68,0.1);color:var(--r);border-color:rgba(255,31,68,0.2)}
+.ap-stat-val{font-family:var(--ft);font-size:13px;font-weight:700;color:#fff;min-width:20px;text-align:center}
+.ap-stat-val.nonzero{color:var(--g)}
+.ap-stat-val.nonzero.neg{color:var(--r)}
+/* Resumen col */
+.ap-resumen-cell{width:100px;min-width:90px;text-align:left;padding-left:8px!important}
+.ap-resumen-mini{font-size:10px;color:var(--td);line-height:1.5}
+.ap-resumen-mini strong{color:rgba(255,255,255,0.8)}
+/* Calificacion col */
+.ap-cal-cell{width:52px}
+.ap-cal-val{font-family:var(--ft);font-size:16px;font-weight:900;text-align:center}
+.ap-cal-val.cal-high{color:var(--g)}
+.ap-cal-val.cal-mid{color:var(--y)}
+.ap-cal-val.cal-low{color:var(--r)}
+
+/* BOTTOM PANELS */
+.ap-bottom{
+  display:grid;grid-template-columns:300px 200px 1fr auto;gap:0;
+  border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0
+}
+.ap-panel{border-right:1px solid var(--border);padding:14px 16px}
+.ap-panel:last-child{border-right:none}
+.ap-panel-title{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:10px}
+/* Events */
+.ap-events-list{max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.ap-event-item{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+.ap-event-min{font-family:var(--ft);font-size:10px;color:var(--g);min-width:28px;flex-shrink:0}
+.ap-event-text{color:rgba(255,255,255,0.8)}
+.ap-event-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Timer panel */
+.ap-timer-display{
+  font-family:var(--ft);font-size:32px;font-weight:900;color:var(--g);text-align:center;
+  letter-spacing:2px;padding:6px 0 8px
+}
+.ap-timer-icon{text-align:center;font-size:16px;margin-bottom:4px;color:var(--td)}
+.ap-timer-btns{display:flex;gap:6px;margin-bottom:8px}
+.ap-addtime-btn{
+  flex:1;padding:5px 0;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);
+  color:rgba(255,255,255,0.7);font-family:var(--ft);font-size:9px;letter-spacing:.5px;
+  transition:all .15s
+}
+.ap-addtime-btn:hover{background:var(--bg4);color:#fff}
+.ap-toggle-btn{
+  width:100%;padding:7px 0;border-radius:6px;border:1px solid var(--border2);
+  background:var(--bg3);color:rgba(255,255,255,0.8);font-family:var(--ft);font-size:10px;letter-spacing:1px;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px
+}
+.ap-toggle-btn:hover{background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.3);color:var(--g)}
+.ap-toggle-btn.running{background:rgba(255,31,68,0.08);border-color:rgba(255,31,68,0.3);color:var(--r)}
+/* Notes panel */
+.ap-notes-ta{
+  width:100%;height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
+  color:rgba(255,255,255,0.8);font-size:12px;font-family:var(--sans);padding:8px 10px;resize:none;
+  outline:none
+}
+.ap-notes-ta:focus{border-color:rgba(0,230,118,0.3)}
+.ap-notes-count{font-size:10px;color:var(--td);text-align:right;margin-top:3px}
+/* Actions panel */
+.ap-panel.ap-actions{display:flex;flex-direction:column;gap:8px;justify-content:center;padding:14px 20px}
+.ap-btn-finalize{
+  padding:12px 20px;border-radius:8px;background:linear-gradient(135deg,#00e676,#00b050);
+  color:#000;font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:1px;
+  display:flex;align-items:center;gap:8px;justify-content:center;transition:all .2s;border:none
+}
+.ap-btn-finalize:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.ap-btn-draft{
+  padding:9px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);
+  color:rgba(255,255,255,0.7);font-family:var(--ft);font-size:10px;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;justify-content:center;transition:all .15s
+}
+.ap-btn-draft:hover{background:var(--bg4);color:#fff}
+.ap-btn-cancel{
+  padding:9px 16px;border-radius:8px;background:rgba(255,31,68,0.06);border:1px solid rgba(255,31,68,0.2);
+  color:rgba(255,80,100,0.9);font-family:var(--ft);font-size:10px;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;justify-content:center;transition:all .15s
+}
+.ap-btn-cancel:hover{background:rgba(255,31,68,0.12);border-color:rgba(255,31,68,0.4)}
+
+/* STATUS BAR */
+.ap-statusbar{
+  display:flex;align-items:center;gap:24px;padding:6px 20px;
+  background:#05050c;border-top:1px solid var(--border);flex-shrink:0;font-size:11px
+}
+.ap-conn{display:flex;align-items:center;gap:6px;color:var(--g)}
+.ap-conn-dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+.ap-admin-lbl{color:var(--td)}
+.ap-admin-lbl strong{color:rgba(255,255,255,0.7)}
+.ap-autosave-lbl{color:var(--td);margin-left:auto;font-style:italic}
+
+/* MVP selector */
+.ap-mvp-btn{
+  width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);
+  color:var(--td);font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center
+}
+.ap-mvp-btn:hover,.ap-mvp-btn.selected{background:rgba(255,180,0,0.15);border-color:rgba(255,180,0,0.4);color:var(--y)}
+
+/* Done state */
+.ap-done-banner{
+  padding:12px 20px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);
+  border-radius:8px;color:var(--g);font-family:var(--ft);font-size:12px;letter-spacing:1px;text-align:center;margin:8px 0
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+
+@media(max-width:1100px){
+  .ap-bottom{grid-template-columns:240px 180px 1fr;grid-template-rows:auto auto}
+  .ap-panel.ap-actions{grid-column:1/-1;flex-direction:row;border-top:1px solid var(--border)}
+}
+@media(max-width:700px){
+  .ap-scoreboard-main{flex-direction:column;gap:12px}
+  .ap-bottom{grid-template-columns:1fr;grid-template-rows:auto}
+  .ap-panel{border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="ap-topbar">
+  <div class="ap-topbar-logo">LEVEL<span>UP</span></div>
+  <div class="ap-topbar-divider"></div>
+  <div class="ap-topbar-arena">
+    <div class="ap-topbar-arena-name" id="ap-cancha-name">—</div>
+    <div class="ap-topbar-arena-loc" id="ap-cancha-loc">Bogotá, Colombia</div>
+  </div>
+  <div class="ap-topbar-divider"></div>
+  <div class="ap-topbar-dt">
+    <div class="ap-topbar-date" id="ap-fecha-display">—</div>
+    <div class="ap-topbar-time" id="ap-hora-display">—</div>
+  </div>
+  <div class="ap-topbar-status-badge" id="ap-match-status">PARTIDO OFICIAL</div>
+  <div class="ap-topbar-id" id="ap-match-id-lbl"></div>
+  <div class="ap-topbar-right">
+    <div class="ap-autosave">
+      <div class="ap-autosave-dot"></div>
+      <span>GUARDADO AUTOMÁTICO</span>
+    </div>
+    <button class="ap-back-btn" onclick="apGoBack()">← VOLVER</button>
+  </div>
+</div>
+
+<!-- SCOREBOARD -->
+<div class="ap-scoreboard">
+  <div class="ap-scoreboard-main">
+    <div class="ap-score-team" id="ap-team-a-info">
+      <div class="ap-team-shield" id="ap-shield-a">🛡</div>
+      <div class="ap-team-info">
+        <div class="ap-team-name" id="ap-name-a">LOCAL</div>
+        <span class="ap-team-badge local">LOCAL</span>
+      </div>
+    </div>
+
+    <div class="ap-score-center">
+      <div class="ap-score-nums">
+        <div class="ap-score-num local-score" id="ap-score-a">0</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="ap-score-live" id="ap-live-indicator">
+            <div class="ap-live-dot"></div>
+            <span>EN VIVO</span>
+          </div>
+          <div class="ap-timer-big" id="ap-timer-big">00:00</div>
+          <div class="ap-period-lbl" id="ap-period-lbl">PRIMER TIEMPO</div>
+        </div>
+        <div class="ap-score-num visitante-score" id="ap-score-b">0</div>
+      </div>
+    </div>
+
+    <div class="ap-score-team right" id="ap-team-b-info">
+      <div class="ap-team-shield" id="ap-shield-b">🛡</div>
+      <div class="ap-team-info" style="text-align:right">
+        <div class="ap-team-name" id="ap-name-b">VISITANTE</div>
+        <span class="ap-team-badge visitante">VISITANTE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen bar -->
+  <div class="ap-resumen-bar">
+    <div class="ap-resumen-stat">
+      <div class="ap-resumen-label">GOLES</div>
+      <div class="ap-resumen-val goles" id="ap-res-goles">0 - 0</div>
+    </div>
+    <div class="ap-resumen-stat">
+      <div class="ap-resumen-label">AMARILLAS</div>
+      <div class="ap-resumen-val tarjetas-amarillas" id="ap-res-amarillas">0 - 0</div>
+    </div>
+    <div class="ap-resumen-stat">
+      <div class="ap-resumen-label">ROJAS</div>
+      <div class="ap-resumen-val tarjetas-rojas" id="ap-res-rojas">0 - 0</div>
+    </div>
+    <div class="ap-resumen-stat">
+      <div class="ap-resumen-label">TIROS AL ARCO</div>
+      <div class="ap-resumen-val" id="ap-res-tiros">0 - 0</div>
+    </div>
+    <div class="ap-resumen-stat">
+      <div class="ap-resumen-label">FALTAS</div>
+      <div class="ap-resumen-val" id="ap-res-faltas">0 - 0</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS TABLE -->
+<div class="ap-table-section">
+  <div class="ap-table-header">
+    ESTADÍSTICAS EN VIVO — REGISTRO MANUAL
+    <span class="ap-help-badge" title="Usa los botones + y − para registrar las acciones de cada jugador. Las calificaciones se calculan automáticamente.">?</span>
+  </div>
+  <div class="ap-table-scroll">
+    <table class="ap-stats-table" id="ap-stats-table">
+      <colgroup>
+        <col style="width:32px"><!-- # -->
+        <col style="width:160px"><!-- jugador -->
+        <col style="width:46px"><!-- pos -->
+        <col style="width:50px"><!-- cond -->
+        <!-- 6 positivas -->
+        <col style="width:68px"><col style="width:68px"><col style="width:72px">
+        <col style="width:72px"><col style="width:78px"><col style="width:82px">
+        <!-- 5 negativas -->
+        <col style="width:72px"><col style="width:72px"><col style="width:78px">
+        <col style="width:68px"><col style="width:52px">
+        <!-- resumen + cal -->
+        <col style="width:100px"><col style="width:52px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th colspan="4" class="ap-th-info"></th>
+          <th colspan="6" class="ap-th-pos" id="ap-pos-header">ACCIONES POSITIVAS</th>
+          <th colspan="5" class="ap-th-neg">ACCIONES NEGATIVAS</th>
+          <th></th><th>CALIF.</th>
+        </tr>
+        <tr class="ap-stat-names-row">
+          <th>#</th>
+          <th class="ap-th-info">JUGADOR</th>
+          <th>POS</th>
+          <th>COND.</th>
+          <th id="ap-hdr-p1">GOL</th>
+          <th id="ap-hdr-p2">ASIST.</th>
+          <th id="ap-hdr-p3">TIRO AL ARCO</th>
+          <th id="ap-hdr-p4">PASE CLAVE</th>
+          <th id="ap-hdr-p5">RECUPERACIÓN</th>
+          <th id="ap-hdr-p6">JUGADA DESTACADA</th>
+          <th class="ap-th-neg-sub">ERROR GRAVE</th>
+          <th class="ap-th-neg-sub">OP. FALLADA</th>
+          <th class="ap-th-neg-sub">FALTA COMETIDA</th>
+          <th class="ap-th-neg-sub">AMARILLA</th>
+          <th class="ap-th-neg-sub">ROJA</th>
+          <th>RESUMEN</th>
+          <th>CALIF.</th>
+        </tr>
+      </thead>
+      <tbody id="ap-tbody-a"></tbody>
+      <tbody id="ap-tbody-sep">
+        <tr class="ap-team-sep-row">
+          <td colspan="17" id="ap-sep-label">— EQUIPO VISITANTE —</td>
+        </tr>
+      </tbody>
+      <tbody id="ap-tbody-b"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BOTTOM PANELS -->
+<div class="ap-bottom">
+  <!-- Events -->
+  <div class="ap-panel">
+    <div class="ap-panel-title">EVENTOS DEL PARTIDO</div>
+    <div class="ap-events-list" id="ap-events-list">
+      <div style="color:var(--td);font-size:11px;font-style:italic">Los eventos aparecerán aquí al registrar acciones...</div>
+    </div>
+  </div>
+
+  <!-- Timer -->
+  <div class="ap-panel">
+    <div class="ap-panel-title">MINUTO ACTUAL</div>
+    <div class="ap-timer-icon">⏱</div>
+    <div class="ap-timer-display" id="ap-timer-display">00:00</div>
+    <div class="ap-timer-btns">
+      <button class="ap-addtime-btn" onclick="apAddTime(1)">+1 MIN</button>
+      <button class="ap-addtime-btn" onclick="apAddTime(5)">+5 MIN</button>
+      <button class="ap-addtime-btn" onclick="apAddTime(10)">+10 MIN</button>
+    </div>
+    <button class="ap-toggle-btn" id="ap-toggle-btn" onclick="apToggleTimer()">
+      <span id="ap-toggle-icon">▶</span>
+      <span id="ap-toggle-lbl">INICIAR / DETENER</span>
+    </button>
+    <div style="margin-top:8px">
+      <select id="ap-period-select" onchange="apChangePeriod()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:rgba(255,255,255,0.7);padding:5px 8px;border-radius:6px;font-family:var(--ft);font-size:9px;letter-spacing:.5px">
+        <option value="1">PRIMER TIEMPO</option>
+        <option value="2">SEGUNDO TIEMPO</option>
+        <option value="et1">TIEMPO EXTRA 1</option>
+        <option value="et2">TIEMPO EXTRA 2</option>
+        <option value="pen">PENALTIS</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="ap-panel">
+    <div class="ap-panel-title">NOTAS DEL PARTIDO</div>
+    <textarea class="ap-notes-ta" id="ap-notes" maxlength="500" placeholder="Escribe notas importantes del partido..." oninput="apUpdateNotesCount()"></textarea>
+    <div class="ap-notes-count"><span id="ap-notes-count">0</span>/500</div>
+  </div>
+
+  <!-- Actions -->
+  <div class="ap-panel ap-actions">
+    <button class="ap-btn-finalize" onclick="apFinalizeMatch()">
+      <span>✅</span>
+      FINALIZAR Y ENVIAR ESTADÍSTICAS
+      <span>↗</span>
+    </button>
+    <button class="ap-btn-draft" onclick="apSaveDraft()">
+      💾 GUARDAR BORRADOR
+    </button>
+    <button class="ap-btn-cancel" onclick="apCancelMatch()">
+      ✕ CANCELAR PARTIDO
+    </button>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="ap-statusbar">
+  <div class="ap-conn">
+    <div class="ap-conn-dot"></div>
+    CONEXIÓN ESTABLE
+  </div>
+  <div class="ap-admin-lbl">👤 ADMIN: <strong id="ap-admin-name">—</strong></div>
+  <div class="ap-autosave-lbl" id="ap-autosave-lbl">Los cambios se guardan automáticamente cada 15 segundos</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js?v=1782798001"></script>
+<script>
+// ====================== ADMIN PARTIDO PAGE ======================
+let _apMatchId = null;
+let _apMatch = null;
+let _apTeamA = null;
+let _apTeamB = null;
+let _apMvpId = null;
+let _apTimer = null;
+let _apTimerSecs = 0;
+let _apTimerRunning = false;
+let _apAutoSaveTimer = null;
+let _apEvents = [];
+const _apStats = {}; // { pid: { stat: value } }
+
+const AP_FIELD_POS_STATS = [
+  { key:'goles',          label:'GOL',              icon:'⚽', shortkey:'G' },
+  { key:'asistencias',    label:'ASIST.',            icon:'🎯', shortkey:'A' },
+  { key:'tirosAlArco',    label:'TIRO AL ARCO',      icon:'🥅', shortkey:'TA' },
+  { key:'pasesClave',     label:'PASE CLAVE',        icon:'⚡', shortkey:'PC' },
+  { key:'recuperaciones', label:'RECUPERACIÓN',      icon:'🛡',  shortkey:'REC' },
+  { key:'jugadasDestacadas',label:'JUGADA DESTACADA',icon:'✨', shortkey:'JD' },
+];
+const AP_POR_POS_STATS = [
+  { key:'atajadas',          label:'ATAJADAS',              icon:'🧤', shortkey:'ATJ' },
+  { key:'atajadasArea',      label:'ATAJ. DENTRO DEL ÁREA', icon:'📐', shortkey:'AA' },
+  { key:'despejes',          label:'DESPEJES',              icon:'👊', shortkey:'DES' },
+  { key:'achiques',          label:'ACHIQUÉS',              icon:'🔒', shortkey:'ACH' },
+  { key:'pasesLargos',       label:'PASES LARGOS',          icon:'📏', shortkey:'PL' },
+  { key:'jugadasIniciadas',  label:'JUGADAS INICIADAS',     icon:'🎯', shortkey:'JI' },
+];
+const AP_NEG_STATS = [
+  { key:'erroresGraves',        label:'ERROR GRAVE',     icon:'❌', shortkey:'EG' },
+  { key:'oportunidadesFalladas',label:'OP. FALLADA',     icon:'😮', shortkey:'OF' },
+  { key:'faltasCometidas',      label:'FALTA COMETIDA',  icon:'🦵', shortkey:'F' },
+  { key:'amarillas',            label:'AMARILLA',        icon:'🟨', shortkey:'AM' },
+  { key:'rojas',                label:'ROJA',            icon:'🟥', shortkey:'R' },
+];
+
+function apGetStat(pid, key) {
+  return (_apStats[pid] && _apStats[pid][key]) || 0;
+}
+function apSetStat(pid, key, val) {
+  if (!_apStats[pid]) _apStats[pid] = {};
+  _apStats[pid][key] = val;
+}
+
+function apCalcRating(pid) {
+  const p = profiles[pid];
+  if (!p) return 6.5;
+  const isPor = p.position === 'POR';
+  const s = _apStats[pid] || {};
+
+  if (isPor) {
+    let r = 6.5;
+    r += (s.atajadas || 0) * 0.15;
+    r += (s.atajadasArea || 0) * 0.2;
+    r += (s.despejes || 0) * 0.05;
+    r += (s.achiques || 0) * 0.1;
+    r += (s.pasesLargos || 0) * 0.02;
+    r += (s.jugadasIniciadas || 0) * 0.08;
+    r -= (s.erroresGraves || 0) * 0.4;
+    r -= (s.oportunidadesFalladas || 0) * 0.15;
+    r -= (s.faltasCometidas || 0) * 0.05;
+    r -= (s.amarillas || 0) * 0.3;
+    r -= (s.rojas || 0) * 1.2;
+    return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
+  } else {
+    let r = 6.0;
+    r += (s.goles || 0) * 0.35;
+    r += (s.asistencias || 0) * 0.2;
+    r += (s.tirosAlArco || 0) * 0.08;
+    r += (s.pasesClave || 0) * 0.1;
+    r += (s.recuperaciones || 0) * 0.02;
+    r += (s.jugadasDestacadas || 0) * 0.2;
+    r -= (s.erroresGraves || 0) * 0.3;
+    r -= (s.oportunidadesFalladas || 0) * 0.1;
+    r -= (s.faltasCometidas || 0) * 0.05;
+    r -= (s.amarillas || 0) * 0.3;
+    r -= (s.rojas || 0) * 1.0;
+    return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
+  }
+}
+
+function apUpdateRatingDisplay(pid) {
+  const r = apCalcRating(pid);
+  const el = document.getElementById('ap-cal-' + pid);
+  if (!el) return;
+  el.textContent = r.toFixed(1);
+  el.className = 'ap-cal-val ' + (r >= 7.5 ? 'cal-high' : r >= 6.0 ? 'cal-mid' : 'cal-low');
+}
+
+function apUpdateResumen(pid) {
+  const el = document.getElementById('ap-res-' + pid);
+  if (!el) return;
+  const p = profiles[pid];
+  if (!p) return;
+  const s = _apStats[pid] || {};
+  const isPor = p.position === 'POR';
+  if (isPor) {
+    el.innerHTML = `<strong>ATJ:</strong>${s.atajadas||0} <strong>ACH:</strong>${s.achiques||0}<br><strong>DES:</strong>${s.despejes||0} <strong>AA:</strong>${s.atajadasArea||0}`;
+  } else {
+    el.innerHTML = `<strong>G:</strong>${s.goles||0} <strong>A:</strong>${s.asistencias||0}<br><strong>TA:</strong>${s.tirosAlArco||0} <strong>REC:</strong>${s.recuperaciones||0}`;
+  }
+}
+
+function apUpdateSummaryBar() {
+  if (!_apTeamA || !_apTeamB) return;
+  function teamSum(team, key) {
+    return (team.memberIds || []).reduce((acc, pid) => acc + apGetStat(pid, key), 0);
+  }
+  const gA = teamSum(_apTeamA, 'goles');
+  const gB = teamSum(_apTeamB, 'goles');
+  const amA = teamSum(_apTeamA, 'amarillas');
+  const amB = teamSum(_apTeamB, 'amarillas');
+  const rA = teamSum(_apTeamA, 'rojas');
+  const rB = teamSum(_apTeamB, 'rojas');
+  const tA = teamSum(_apTeamA, 'tirosAlArco');
+  const tB = teamSum(_apTeamB, 'tirosAlArco');
+  const fA = teamSum(_apTeamA, 'faltasCometidas');
+  const fB = teamSum(_apTeamB, 'faltasCometidas');
+
+  document.getElementById('ap-score-a').textContent = gA;
+  document.getElementById('ap-score-b').textContent = gB;
+  document.getElementById('ap-res-goles').textContent = gA + ' - ' + gB;
+  document.getElementById('ap-res-amarillas').textContent = amA + ' - ' + amB;
+  document.getElementById('ap-res-rojas').textContent = rA + ' - ' + rB;
+  document.getElementById('ap-res-tiros').textContent = tA + ' - ' + tB;
+  document.getElementById('ap-res-faltas').textContent = fA + ' - ' + fB;
+}
+
+function apStatChange(pid, statKey, delta, isNeg) {
+  const cur = apGetStat(pid, statKey);
+  const newVal = Math.max(0, cur + delta);
+  apSetStat(pid, statKey, newVal);
+
+  const el = document.getElementById('ap-s-' + pid + '-' + statKey);
+  if (el) {
+    el.textContent = newVal;
+    el.className = 'ap-stat-val' + (newVal > 0 ? (isNeg ? ' nonzero neg' : ' nonzero') : '');
+  }
+
+  apUpdateRatingDisplay(pid);
+  apUpdateResumen(pid);
+  apUpdateSummaryBar();
+
+  // Log event
+  if (delta > 0) {
+    const p = profiles[pid];
+    const pName = p ? (p.nickname || p.name) : pid;
+    const min = Math.floor(_apTimerSecs / 60);
+    const allStats = [...AP_FIELD_POS_STATS, ...AP_POR_POS_STATS, ...AP_NEG_STATS];
+    const def = allStats.find(d => d.key === statKey);
+    const icon = def ? def.icon : '•';
+    const label = def ? def.label : statKey;
+
+    // Determine team
+    const side = _apTeamA && (_apTeamA.memberIds || []).includes(pid) ? 'A' : 'B';
+    const teamName = side === 'A' ? (_apTeamA ? _apTeamA.name : 'LOCAL') : (_apTeamB ? _apTeamB.name : 'VISITANTE');
+    const dotColor = side === 'A' ? (_apTeamA ? _apTeamA.color || '#00e676' : '#00e676') : (_apTeamB ? _apTeamB.color || '#ff1f44' : '#ff1f44');
+
+    const evt = { min, icon, text: `${pName} (${teamName}) — ${label}`, dotColor };
+    _apEvents.unshift(evt);
+
+    const listEl = document.getElementById('ap-events-list');
+    if (listEl) {
+      if (listEl.querySelector('div[style]')) listEl.innerHTML = '';
+      const div = document.createElement('div');
+      div.className = 'ap-event-item';
+      div.innerHTML = `<span class="ap-event-min">${min}'</span><span class="ap-event-dot" style="background:${dotColor}"></span><span class="ap-event-text">${icon} ${evt.text}</span>`;
+      listEl.prepend(div);
+    }
+  }
+}
+
+function apSetMvp(pid) {
+  _apMvpId = _apMvpId === pid ? null : pid;
+  document.querySelectorAll('.ap-mvp-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.pid === _apMvpId);
+  });
+}
+
+function apToggleTimer() {
+  const btn = document.getElementById('ap-toggle-btn');
+  const icon = document.getElementById('ap-toggle-icon');
+  const lbl = document.getElementById('ap-toggle-lbl');
+  if (_apTimerRunning) {
+    clearInterval(_apTimer);
+    _apTimerRunning = false;
+    if (btn) btn.classList.remove('running');
+    if (icon) icon.textContent = '▶';
+    if (lbl) lbl.textContent = 'INICIAR / DETENER';
+  } else {
+    _apTimer = setInterval(() => {
+      _apTimerSecs++;
+      apUpdateTimerDisplay();
+    }, 1000);
+    _apTimerRunning = true;
+    if (btn) btn.classList.add('running');
+    if (icon) icon.textContent = '⏹';
+    if (lbl) lbl.textContent = 'DETENER';
+  }
+}
+
+function apAddTime(mins) {
+  _apTimerSecs += mins * 60;
+  apUpdateTimerDisplay();
+}
+
+function apUpdateTimerDisplay() {
+  const m = Math.floor(_apTimerSecs / 60);
+  const s = _apTimerSecs % 60;
+  const str = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  const d1 = document.getElementById('ap-timer-big');
+  const d2 = document.getElementById('ap-timer-display');
+  if (d1) d1.textContent = str;
+  if (d2) d2.textContent = str;
+}
+
+function apChangePeriod() {
+  const sel = document.getElementById('ap-period-select');
+  const map = { '1':'PRIMER TIEMPO', '2':'SEGUNDO TIEMPO', 'et1':'TIEMPO EXTRA 1', 'et2':'TIEMPO EXTRA 2', 'pen':'PENALTIS' };
+  const lbl = document.getElementById('ap-period-lbl');
+  if (lbl && sel) lbl.textContent = map[sel.value] || '';
+}
+
+function apUpdateNotesCount() {
+  const ta = document.getElementById('ap-notes');
+  const el = document.getElementById('ap-notes-count');
+  if (ta && el) el.textContent = ta.value.length;
+}
+
+function apSaveDraft() {
+  if (!_apMatchId) return;
+  const draft = { stats: _apStats, mvpId: _apMvpId, timerSecs: _apTimerSecs, events: _apEvents, notes: (document.getElementById('ap-notes') || {}).value || '' };
+  localStorage.setItem('ap_draft_' + _apMatchId, JSON.stringify(draft));
+  const lbl = document.getElementById('ap-autosave-lbl');
+  const now = new Date();
+  if (lbl) lbl.textContent = 'Guardado: ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+}
+
+function apLoadDraft() {
+  if (!_apMatchId) return;
+  try {
+    const raw = localStorage.getItem('ap_draft_' + _apMatchId);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    Object.assign(_apStats, draft.stats || {});
+    _apMvpId = draft.mvpId || null;
+    _apTimerSecs = draft.timerSecs || 0;
+    _apEvents = draft.events || [];
+    if (draft.notes) { const ta = document.getElementById('ap-notes'); if (ta) ta.value = draft.notes; }
+  } catch(e) {}
+}
+
+function apGoBack() {
+  if (_apTimerRunning) clearInterval(_apTimer);
+  history.back();
+}
+
+function apCancelMatch() {
+  if (!confirm('¿Cancelar este partido? Esta acción no se puede deshacer.')) return;
+  if (!_apMatch) return;
+  _apMatch.estado = 'cancelado';
+  saveTeamMatches();
+  if (typeof pushTeamMatchToCloud === 'function') pushTeamMatchToCloud(_apMatch);
+  apGoBack();
+}
+
+async function apFinalizeMatch() {
+  if (!_apMatch || !_apTeamA || !_apTeamB) return;
+  if (_apMatch.estado === 'finalizado') { alert('Este partido ya fue registrado.'); return; }
+
+  const golesA = (_apTeamA.memberIds || []).reduce((s, pid) => s + apGetStat(pid, 'goles'), 0);
+  const golesB = (_apTeamB.memberIds || []).reduce((s, pid) => s + apGetStat(pid, 'goles'), 0);
+
+  const label = golesA > golesB
+    ? `${_apTeamA.name} gana ${golesA}-${golesB} a ${_apTeamB.name}`
+    : golesA < golesB
+    ? `${_apTeamB.name} gana ${golesB}-${golesA} a ${_apTeamA.name}`
+    : `Empate ${golesA}-${golesB}`;
+
+  if (!confirm(`¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`)) return;
+
+  const btn = document.querySelector('.ap-btn-finalize');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Procesando...'; }
+
+  const notes = (document.getElementById('ap-notes') || {}).value || '';
+
+  // Update team records
+  _apTeamA.goalsFor = (_apTeamA.goalsFor || 0) + golesA;
+  _apTeamA.goalsAgainst = (_apTeamA.goalsAgainst || 0) + golesB;
+  _apTeamB.goalsFor = (_apTeamB.goalsFor || 0) + golesB;
+  _apTeamB.goalsAgainst = (_apTeamB.goalsAgainst || 0) + golesA;
+  if (golesA > golesB)      { _apTeamA.wins = (_apTeamA.wins||0)+1; _apTeamB.losses = (_apTeamB.losses||0)+1; }
+  else if (golesA < golesB) { _apTeamB.wins = (_apTeamB.wins||0)+1; _apTeamA.losses = (_apTeamA.losses||0)+1; }
+  else                      { _apTeamA.draws = (_apTeamA.draws||0)+1; _apTeamB.draws = (_apTeamB.draws||0)+1; }
+
+  const resultLabel = golesA > golesB
+    ? `${_apTeamA.name} venció a ${_apTeamB.name} ${golesA}-${golesB}`
+    : golesA < golesB
+    ? `${_apTeamB.name} venció a ${_apTeamA.name} ${golesB}-${golesA}`
+    : `${_apTeamA.name} empató con ${_apTeamB.name} ${golesA}-${golesB}`;
+
+  const statsMap = {};
+  const allPlayerIds = [...(_apTeamA.memberIds || []), ...(_apTeamB.memberIds || [])];
+
+  for (const pid of allPlayerIds) {
+    const p = profiles[pid];
+    if (!p) continue;
+    const s = _apStats[pid] || {};
+    const cal = apCalcRating(pid);
+    const isMvp = pid === _apMvpId;
+    const isPor = p.position === 'POR';
+
+    const m2 = {
+      goles: s.goles || 0,
+      asistencias: s.asistencias || 0,
+      tirosAlArco: s.tirosAlArco || 0,
+      pasesClave: s.pasesClave || 0,
+      recuperaciones: s.recuperaciones || 0,
+      jugadasDestacadas: s.jugadasDestacadas || 0,
+      erroresGraves: s.erroresGraves || 0,
+      oportunidadesFalladas: s.oportunidadesFalladas || 0,
+      faltasCometidas: s.faltasCometidas || 0,
+      amarillas: s.amarillas || 0,
+      rojas: s.rojas || 0,
+      // portero
+      atajadas: s.atajadas || 0,
+      atajadasArea: s.atajadasArea || 0,
+      despejes: s.despejes || 0,
+      achiques: s.achiques || 0,
+      pasesLargos: s.pasesLargos || 0,
+      jugadasIniciadas: s.jugadasIniciadas || 0,
+      calificacion: cal,
+      mvp: isMvp,
+    };
+    statsMap[pid] = m2;
+
+    const d = computeMatchDeltas(p, m2);
+    checkAchievements(p, m2);
+
+    p.ovr = d.ovrAfter;
+    p.xp = d.xpAfter;
+    p.lp = (p.lp || 0) + d.lpGain;
+    p.matches = (p.matches || 0) + 1;
+    p.goals = (p.goals || 0) + m2.goles;
+    p.assists = (p.assists || 0) + m2.asistencias;
+    if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+    if (d.attrsGain) d.attrsGain.forEach(k => { if (p.attrs && p.attrs[k] !== undefined) p.attrs[k] = Math.min(99, p.attrs[k] + 1); });
+    p.lastUpdate = new Date().toISOString();
+    p.history = p.history || [];
+    p.history.push({
+      date: _apMatch.fecha, cancha: _apMatch.cancha, result: resultLabel,
+      goles: m2.goles, asistencias: m2.asistencias, recuperaciones: m2.recuperaciones,
+      calificacion: cal, mvp: isMvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain,
+    });
+
+    const teamObj = (_apTeamA.memberIds||[]).includes(pid) ? _apTeamA : _apTeamB;
+    const rivalName = teamObj.id === _apMatch.teamAId ? _apTeamB.name : _apTeamA.name;
+    p.pendingReveal = {
+      matchId: _apMatch.id, resultLabel, teamName: teamObj.name, rivalName,
+      ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain,
+      rankBefore: d.rankBefore ? d.rankBefore.name : null,
+      rankAfter: d.rankAfter ? d.rankAfter.name : null, rankChanged: !!(d.rankBefore && d.rankAfter && d.rankBefore.name !== d.rankAfter.name),
+    };
+
+    profiles[pid] = p;
+    await pushProfileToCloud(p);
+  }
+
+  _apMatch.estado = 'finalizado';
+  _apMatch.resultado = { golesA, golesB };
+  _apMatch.stats = statsMap;
+  _apMatch.mvpId = _apMvpId;
+  _apMatch.notes = notes;
+
+  // Notify team captains
+  function notifyTeam(winTeam, loseTeam, won) {
+    const cap = winTeam ? profiles[winTeam.captainId] : null;
+    if (cap) {
+      cap.notifications = cap.notifications || [];
+      cap.notifications.push({ icon: won ? '🏆' : '😤', text: resultLabel, time: 'AHORA' });
+      profiles[winTeam.captainId] = cap;
+    }
+  }
+  if (golesA > golesB) { notifyTeam(_apTeamA, _apTeamB, true); notifyTeam(_apTeamB, _apTeamA, false); }
+  else if (golesB > golesA) { notifyTeam(_apTeamB, _apTeamA, true); notifyTeam(_apTeamA, _apTeamB, false); }
+
+  saveTeamMatches();
+  saveProfiles();
+  saveteams_wrapper();
+  if (typeof pushTeamMatchToCloud === 'function') pushTeamMatchToCloud(_apMatch);
+  if (typeof pushTeamToCloud === 'function') { pushTeamToCloud(_apTeamA); pushTeamToCloud(_apTeamB); }
+
+  // Clear draft
+  localStorage.removeItem('ap_draft_' + _apMatchId);
+
+  if (_apTimerRunning) clearInterval(_apTimer);
+  alert('✅ Estadísticas enviadas y cartas actualizadas.');
+  location.href = 'equipos.html#programados';
+}
+
+function saveteams_wrapper() {
+  try { if (typeof saveTeams === 'function') saveTeams(); } catch(e) {}
+}
+
+function apBuildPlayerRow(pid, num, teamColor, done) {
+  const p = profiles[pid];
+  if (!p) return '';
+  const isPor = p.position === 'POR';
+  const posClass = { DEL:'del', MED:'med', DEF:'def', POR:'por' }[p.position] || '';
+  const initials = (p.nickname || p.name).slice(0,2).toUpperCase();
+
+  const avatarHtml = p.photo
+    ? `<img class="ap-avatar" src="${p.photo}" alt="${p.nickname||p.name}">`
+    : `<div class="ap-avatar-ph" style="background:${teamColor}22;border-color:${teamColor}44;color:${teamColor}">${initials}</div>`;
+
+  const posCells = isPor
+    ? AP_POR_POS_STATS.map(d => apStatCell(pid, d.key, false, done)).join('')
+    : AP_FIELD_POS_STATS.map(d => apStatCell(pid, d.key, false, done)).join('');
+
+  const negCells = AP_NEG_STATS.map(d => apStatCell(pid, d.key, true, done)).join('');
+
+  return `
+    <tr data-pid="${pid}" data-por="${isPor?'1':'0'}">
+      <td class="ap-num-cell">${num}</td>
+      <td class="ap-player-cell">
+        <div class="ap-player-cell-inner">
+          ${avatarHtml}
+          <div>
+            <div class="ap-player-name">${p.nickname || p.name}</div>
+            <div class="ap-player-sub">${p.position} · OVR ${p.ovr}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="ap-pos-badge ${posClass}">${p.position}</span></td>
+      <td class="ap-cond-cell"><span class="ap-cond">${p.ovr}%</span></td>
+      ${posCells}
+      ${negCells}
+      <td class="ap-resumen-cell"><div class="ap-resumen-mini" id="ap-res-${pid}">—</div></td>
+      <td class="ap-cal-cell"><div class="ap-cal-val cal-mid" id="ap-cal-${pid}">6.0</div></td>
+    </tr>`;
+}
+
+function apStatCell(pid, key, isNeg, done) {
+  const cls = isNeg ? 'neg-col' : 'pos-col';
+  const val = apGetStat(pid, key);
+  const valCls = 'ap-stat-val' + (val > 0 ? (isNeg ? ' nonzero neg' : ' nonzero') : '');
+  if (done) {
+    return `<td class="ap-stat-cell ${cls}"><div class="ap-stat-inner"><span class="${valCls}" id="ap-s-${pid}-${key}">${val}</span></div></td>`;
+  }
+  return `<td class="ap-stat-cell ${cls}">
+    <div class="ap-stat-inner">
+      <button class="ap-sm-btn minus" onclick="apStatChange('${pid}','${key}',-1,${isNeg})">−</button>
+      <span class="${valCls}" id="ap-s-${pid}-${key}">${val}</span>
+      <button class="ap-sm-btn plus" onclick="apStatChange('${pid}','${key}',1,${isNeg})">+</button>
+    </div>
+  </td>`;
+}
+
+function initAdminPage() {
+  const params = new URLSearchParams(location.search);
+  _apMatchId = params.get('m');
+  if (!_apMatchId) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">ERROR: No se especificó ID de partido.</div>'; return; }
+
+  _apMatch = teamMatches.find(m => m.id === _apMatchId);
+  if (!_apMatch) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">Partido no encontrado. <a href="javascript:history.back()" style="color:#00e676">Volver</a></div>'; return; }
+
+  _apTeamA = teams[_apMatch.teamAId];
+  _apTeamB = teams[_apMatch.teamBId];
+  if (!_apTeamA || !_apTeamB) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">Equipos no encontrados en el sistema. <a href="javascript:history.back()" style="color:#00e676">Volver</a></div>'; return; }
+
+  const done = _apMatch.estado === 'finalizado' && _apMatch.resultado;
+
+  // Load existing stats if finalizado
+  if (done && _apMatch.stats) {
+    Object.entries(_apMatch.stats).forEach(([pid, s]) => { _apStats[pid] = Object.assign({}, s); });
+    _apMvpId = _apMatch.mvpId || null;
+  } else {
+    apLoadDraft();
+  }
+
+  // Header
+  document.getElementById('ap-cancha-name').textContent = _apMatch.cancha || 'Cancha libre';
+  document.getElementById('ap-fecha-display').textContent = _apMatch.fecha || '';
+  document.getElementById('ap-hora-display').textContent = _apMatch.hora || '';
+  document.getElementById('ap-match-id-lbl').textContent = 'ID: ' + _apMatchId.replace('tm_','').slice(-6).toUpperCase();
+  if (done) {
+    document.getElementById('ap-match-status').textContent = 'PARTIDO FINALIZADO';
+    document.getElementById('ap-match-status').style.background = 'rgba(255,180,0,0.12)';
+    document.getElementById('ap-match-status').style.color = '#ffb300';
+    document.getElementById('ap-match-status').style.borderColor = 'rgba(255,180,0,0.3)';
+  }
+  if (state) document.getElementById('ap-admin-name').textContent = state.nickname || state.name;
+
+  // Team shields
+  const colA = _apTeamA.color || '#00e676';
+  const colB = _apTeamB.color || '#ff1f44';
+  document.getElementById('ap-shield-a').style.borderColor = colA + '66';
+  document.getElementById('ap-shield-a').style.background = colA + '11';
+  document.getElementById('ap-shield-a').style.color = colA;
+  document.getElementById('ap-shield-a').textContent = _apTeamA.photo ? '' : '🛡';
+  if (_apTeamA.photo) document.getElementById('ap-shield-a').innerHTML = `<img src="${_apTeamA.photo}" style="width:100%;height:100%;border-radius:8px;object-fit:cover">`;
+
+  document.getElementById('ap-shield-b').style.borderColor = colB + '66';
+  document.getElementById('ap-shield-b').style.background = colB + '11';
+  document.getElementById('ap-shield-b').style.color = colB;
+  if (_apTeamB.photo) document.getElementById('ap-shield-b').innerHTML = `<img src="${_apTeamB.photo}" style="width:100%;height:100%;border-radius:8px;object-fit:cover">`;
+
+  document.getElementById('ap-name-a').textContent = _apTeamA.name;
+  document.getElementById('ap-name-b').textContent = _apTeamB.name;
+  document.getElementById('ap-sep-label').textContent = '— ' + _apTeamB.name.toUpperCase() + ' (VISITANTE) —';
+
+  // Build player rows
+  const tbodyA = document.getElementById('ap-tbody-a');
+  const tbodyB = document.getElementById('ap-tbody-b');
+  let rowNum = 1;
+  tbodyA.innerHTML = (_apTeamA.memberIds || []).map(pid => apBuildPlayerRow(pid, rowNum++, colA, done)).join('');
+  rowNum = 6;
+  tbodyB.innerHTML = (_apTeamB.memberIds || []).map(pid => apBuildPlayerRow(pid, rowNum++, colB, done)).join('');
+
+  // Refresh all displays from loaded stats
+  const allIds = [...(_apTeamA.memberIds || []), ...(_apTeamB.memberIds || [])];
+  allIds.forEach(pid => { apUpdateRatingDisplay(pid); apUpdateResumen(pid); });
+
+  apUpdateSummaryBar();
+  apUpdateTimerDisplay();
+
+  if (done) {
+    const scoreA = _apMatch.resultado.golesA || 0;
+    const scoreB = _apMatch.resultado.golesB || 0;
+    document.getElementById('ap-score-a').textContent = scoreA;
+    document.getElementById('ap-score-b').textContent = scoreB;
+    document.getElementById('ap-res-goles').textContent = scoreA + ' - ' + scoreB;
+    if (_apMatch.notes) { const ta = document.getElementById('ap-notes'); if (ta) { ta.value = _apMatch.notes; ta.disabled = true; } }
+    document.querySelector('.ap-btn-finalize').disabled = true;
+    document.querySelector('.ap-btn-finalize').style.opacity = '.5';
+    document.getElementById('ap-live-indicator').innerHTML = '<span style="color:var(--y)">✅ FINALIZADO</span>';
+  }
+
+  if (!done) {
+    _apAutoSaveTimer = setInterval(apSaveDraft, 15000);
+  }
+}
+
+// Wait for app.js to finish its sync then init
+document.addEventListener('DOMContentLoaded', () => {
+  // app.js initApp() runs synchronously at start — data is in localStorage
+  // Wait a tick so initApp() completes
+  setTimeout(() => {
+    try { initAdminPage(); } catch(e) { console.error('initAdminPage error:', e); }
+  }, 100);
+});
+</script>
+</body>
+</html>
