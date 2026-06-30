@@ -2539,7 +2539,7 @@ function submitMatchRequest() {
       return;
     }
   }
-  const precio = document.getElementById('bp-precio').value.trim();
+  const precio = (document.getElementById('bp-precio') || {}).value?.trim() || '';
   const ovrMin = document.getElementById('bp-ovr-min').value.trim();
   const abierto = document.getElementById('bp-abierto').checked;
   const cuposAb = bpWizard.cuposAbiertos || 0;
