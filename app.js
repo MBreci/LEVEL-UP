@@ -575,7 +575,39 @@ function renderCard() {
       </div>
       <div class="lvl-track"><div class="lvl-fill" style="width:${pct}%"></div></div>
     </div>
+    ${buildCommunityRatingsHTML(state)}
   `;
+}
+
+function buildCommunityRatingsHTML(p) {
+  const cr = p.communityRatings || {};
+  const cats = [
+    { key: 'puntualidad', label: 'PUNTUALIDAD' },
+    { key: 'tecnica', label: 'TÉCNICA' },
+    { key: 'comportamiento', label: 'COMPORTAMIENTO' },
+    { key: 'nivel', label: 'NIVEL' },
+  ];
+  const totalVotes = cr.puntualidad ? cr.puntualidad.count : 0;
+  const stars = val => {
+    const full = Math.round(val);
+    return '★'.repeat(full) + '☆'.repeat(5 - full);
+  };
+  return `
+    <div class="cr-section">
+      <div class="cr-title">CALIFICACIONES DE LA COMUNIDAD${totalVotes > 0 ? `<span class="cr-count"> · ${totalVotes} valoraciones</span>` : ''}</div>
+      ${totalVotes === 0 ? `<div class="cr-empty">Aún no tienes valoraciones de compañeros.</div>` :
+        cats.map(c => {
+          const d = cr[c.key] || { sum: 0, count: 0 };
+          const avg = d.count > 0 ? (d.sum / d.count) : 0;
+          return `
+          <div class="cr-row">
+            <div class="cr-label">${c.label}</div>
+            <div class="cr-stars ${avg >= 4 ? 'high' : avg >= 3 ? 'mid' : 'low'}">${stars(avg)}</div>
+            <div class="cr-val">${avg.toFixed(1)}</div>
+          </div>`;
+        }).join('')
+      }
+    </div>`;
 }
 
 function renderHistory() {
@@ -689,12 +721,79 @@ function openPlayerView(id) {
   }
   try {
     const { className, html } = buildCardHTML(p);
-    content.innerHTML = `<div class="${className}">${html}</div>`;
+    const canRate = state && state.id !== id && playerSharedMatch(state.id, id);
+    content.innerHTML = `
+      <div class="${className}">${html}</div>
+      ${buildCommunityRatingsHTML(p)}
+      ${canRate ? `<button class="btn-g" style="width:100%;margin-top:12px" onclick="openRateModal('${id}')">⭐ CALIFICAR A ${(p.nickname||p.name).toUpperCase()}</button>` : ''}
+    `;
   } catch (e) {
     console.error('Error mostrando ficha de jugador:', e);
     content.innerHTML = `<div class="rk-empty">No se pudo cargar la ficha de este jugador.</div>`;
   }
   modal.classList.add('open');
+}
+
+function playerSharedMatch(myId, otherId) {
+  if (state && state.ratedPlayers && state.ratedPlayers[otherId]) return false;
+  const myMatches = Object.values(matches || {}).filter(m =>
+    m.finalizado && m.players && m.players.includes(myId) && m.players.includes(otherId)
+  );
+  return myMatches.length > 0;
+}
+
+let _rateTargetId = null;
+function openRateModal(targetId) {
+  _rateTargetId = targetId;
+  const p = profiles[targetId];
+  document.getElementById('rate-player-name').textContent = p ? (p.nickname || p.name) : '';
+  ['puntualidad','tecnica','comportamiento','nivel'].forEach(k => {
+    document.querySelectorAll(`.rate-star[data-cat="${k}"]`).forEach(s => s.classList.remove('on'));
+  });
+  document.getElementById('rate-error').textContent = '';
+  document.getElementById('rate-modal').classList.add('open');
+}
+function closeRateModal() {
+  document.getElementById('rate-modal').classList.remove('open');
+  _rateTargetId = null;
+}
+function setRateStar(cat, val) {
+  document.querySelectorAll(`.rate-star[data-cat="${cat}"]`).forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.val) <= val);
+  });
+}
+function getRateVal(cat) {
+  let val = 0;
+  document.querySelectorAll(`.rate-star[data-cat="${cat}"].on`).forEach(s => {
+    val = Math.max(val, parseInt(s.dataset.val));
+  });
+  return val;
+}
+function submitRating() {
+  const errEl = document.getElementById('rate-error');
+  const cats = ['puntualidad','tecnica','comportamiento','nivel'];
+  const vals = {};
+  for (const k of cats) {
+    vals[k] = getRateVal(k);
+    if (!vals[k]) { errEl.textContent = 'Califica todos los criterios antes de enviar.'; return; }
+  }
+  const target = profiles[_rateTargetId];
+  if (!target) return;
+  target.communityRatings = target.communityRatings || {};
+  cats.forEach(k => {
+    target.communityRatings[k] = target.communityRatings[k] || { sum: 0, count: 0 };
+    target.communityRatings[k].sum += vals[k];
+    target.communityRatings[k].count += 1;
+  });
+  // Marcar que ya calificó a este jugador para no repetir
+  state.ratedPlayers = state.ratedPlayers || {};
+  state.ratedPlayers[_rateTargetId] = Date.now();
+  saveProfiles();
+  pushProfileToCloud(target);
+  pushProfileToCloud(state);
+  closeRateModal();
+  closePlayerView();
+  alert(`✅ Calificación enviada a ${target.nickname || target.name}.`);
 }
 
 function closePlayerView() {

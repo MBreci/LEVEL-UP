@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Equipos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782786119">
+<link rel="stylesheet" href="style.css?v=1782787466">
 </head>
 <body>
 
@@ -255,6 +255,20 @@
   </div>
 </div>
 
+<!-- MODAL CALIFICACIÓN -->
+<div class="modal-overlay" id="rate-modal">
+  <div class="auth-card" style="max-width:380px">
+    <div class="auth-label">CALIFICAR A <span id="rate-player-name"></span></div>
+    <div class="rate-cat"><div class="rate-cat-label">PUNTUALIDAD</div><div class="rate-stars-row"><span class="rate-star" data-cat="puntualidad" data-val="1" onclick="setRateStar('puntualidad',1)">★</span><span class="rate-star" data-cat="puntualidad" data-val="2" onclick="setRateStar('puntualidad',2)">★</span><span class="rate-star" data-cat="puntualidad" data-val="3" onclick="setRateStar('puntualidad',3)">★</span><span class="rate-star" data-cat="puntualidad" data-val="4" onclick="setRateStar('puntualidad',4)">★</span><span class="rate-star" data-cat="puntualidad" data-val="5" onclick="setRateStar('puntualidad',5)">★</span></div></div>
+    <div class="rate-cat"><div class="rate-cat-label">TÉCNICA</div><div class="rate-stars-row"><span class="rate-star" data-cat="tecnica" data-val="1" onclick="setRateStar('tecnica',1)">★</span><span class="rate-star" data-cat="tecnica" data-val="2" onclick="setRateStar('tecnica',2)">★</span><span class="rate-star" data-cat="tecnica" data-val="3" onclick="setRateStar('tecnica',3)">★</span><span class="rate-star" data-cat="tecnica" data-val="4" onclick="setRateStar('tecnica',4)">★</span><span class="rate-star" data-cat="tecnica" data-val="5" onclick="setRateStar('tecnica',5)">★</span></div></div>
+    <div class="rate-cat"><div class="rate-cat-label">COMPORTAMIENTO</div><div class="rate-stars-row"><span class="rate-star" data-cat="comportamiento" data-val="1" onclick="setRateStar('comportamiento',1)">★</span><span class="rate-star" data-cat="comportamiento" data-val="2" onclick="setRateStar('comportamiento',2)">★</span><span class="rate-star" data-cat="comportamiento" data-val="3" onclick="setRateStar('comportamiento',3)">★</span><span class="rate-star" data-cat="comportamiento" data-val="4" onclick="setRateStar('comportamiento',4)">★</span><span class="rate-star" data-cat="comportamiento" data-val="5" onclick="setRateStar('comportamiento',5)">★</span></div></div>
+    <div class="rate-cat"><div class="rate-cat-label">NIVEL</div><div class="rate-stars-row"><span class="rate-star" data-cat="nivel" data-val="1" onclick="setRateStar('nivel',1)">★</span><span class="rate-star" data-cat="nivel" data-val="2" onclick="setRateStar('nivel',2)">★</span><span class="rate-star" data-cat="nivel" data-val="3" onclick="setRateStar('nivel',3)">★</span><span class="rate-star" data-cat="nivel" data-val="4" onclick="setRateStar('nivel',4)">★</span><span class="rate-star" data-cat="nivel" data-val="5" onclick="setRateStar('nivel',5)">★</span></div></div>
+    <div class="auth-error" id="rate-error"></div>
+    <button class="auth-submit" onclick="submitRating()">ENVIAR CALIFICACIÓN</button>
+    <button class="auth-cancel" onclick="closeRateModal()">CANCELAR</button>
+  </div>
+</div>
+
 <!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
   <div class="wip-card">
@@ -371,6 +385,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782786119"></script>
+<script src="app.js?v=1782787466"></script>
 </body>
 </html>
