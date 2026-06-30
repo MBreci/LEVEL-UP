@@ -200,7 +200,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .sec-link:hover{color:var(--w);border-color:rgba(255,255,255,0.25)}
 
 /* BUSCAR PARTIDO */
-.bp-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:40px;margin:100px 0 0;padding:76px 64px 84px;overflow:hidden;min-height:340px}
+.bp-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:40px;margin:100px 0 0;padding:48px 64px 56px;overflow:hidden;min-height:auto}
 @media(max-width:900px){.bp-hero{margin:90px 0 0;padding:52px 24px 60px;flex-direction:column;text-align:center;min-height:auto}}
 .bp-hero-bg-layer{position:absolute;inset:0;z-index:0;background:linear-gradient(165deg,rgba(6,6,10,0.99) 0%,rgba(4,4,12,1) 45%,rgba(4,2,16,1) 100%)}
 .bp-hero-bg-layer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 75% 90% at -5% 50%,rgba(255,180,0,0.07),transparent 60%),radial-gradient(ellipse 50% 60% at 105% 100%,rgba(255,255,255,0.02),transparent 60%)}
