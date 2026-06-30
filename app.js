@@ -3814,6 +3814,19 @@ function respondChallenge(challengeId, accept) {
     saveProfiles();
     pushProfileToCloud(captain);
   }
+  // Notificar al admin cuando se acepta un reto Rey del Barrio
+  if (accept && fromTeam && toTeam) {
+    const ADMIN_ID = 'p_1782315021662_284';
+    const admin = profiles[ADMIN_ID];
+    if (admin && state.id !== ADMIN_ID) {
+      const betTxt = betAmount > 0 ? ` · Apuesta: ${betAmount.toLocaleString('es-CO')} 🪙 por equipo` : ' · Sin apuesta';
+      const details = `${fromTeam.name} vs ${toTeam.name} — ${challenge.fecha} ${challenge.hora} — ${challenge.cancha}${challenge.costo ? ' · $' + Number(challenge.costo).toLocaleString('es-CO') : ''}${betTxt}`;
+      admin.notifications = admin.notifications || [];
+      admin.notifications.push({ icon: '⚔️', text: `RETO ACEPTADO: ${details}`, time: 'AHORA' });
+      saveProfiles();
+      pushProfileToCloud(admin);
+    }
+  }
   renderAll();
 }
 
