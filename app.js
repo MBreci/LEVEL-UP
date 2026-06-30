@@ -743,14 +743,15 @@ async function openPlayerView(id) {
     `;
   } catch (e) {
     console.error('Error mostrando ficha de jugador:', e);
-    content.innerHTML = `<div class="rk-empty">Error: ${e.message}</div>`;
+    content.innerHTML = `<div class="rk-empty">No se pudo cargar la ficha de este jugador.</div>`;
   }
   modal.classList.add('open');
 }
 
 function playerSharedMatch(myId, otherId) {
   if (state && state.ratedPlayers && state.ratedPlayers[otherId]) return false;
-  const myMatches = Object.values(matches || {}).filter(m =>
+  const allMatches = typeof openMatches !== 'undefined' ? openMatches : [];
+  const myMatches = allMatches.filter(m =>
     m.finalizado && m.players && m.players.includes(myId) && m.players.includes(otherId)
   );
   return myMatches.length > 0;
