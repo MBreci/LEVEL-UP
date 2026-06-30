@@ -3673,7 +3673,6 @@ function respondChallenge(challengeId, accept) {
   if (accept && betAmount > 0) {
     // Verificar saldo del capitán retado
     if ((state.saldo || 0) < betAmount) {
-      alert(`Saldo insuficiente para aceptar la apuesta de ${betAmount.toLocaleString('es-CO')} 🪙.\nRecarga coins y vuelve a intentarlo.`);
       return;
     }
     // Bloquear coins del retado
@@ -3744,7 +3743,15 @@ function closeCounterofferModal() {
   _counterofferId = null;
 }
 function acceptCounteroffer() {
-  if (_counterofferId) respondChallenge(_counterofferId, true);
+  if (!_counterofferId) return;
+  const c = challenges.find(x => x.id === _counterofferId);
+  const bet = c ? (c.betAmount || 0) : 0;
+  if (bet > 0 && (state.saldo || 0) < bet) {
+    document.getElementById('counteroffer-error').textContent =
+      `Necesitas ${bet.toLocaleString('es-CO')} 🪙 para aceptar esta apuesta. Tu saldo disponible: ${(state.saldo||0).toLocaleString('es-CO')} 🪙`;
+    return;
+  }
+  respondChallenge(_counterofferId, true);
   closeCounterofferModal();
 }
 function rejectFromCounteroffer() {
