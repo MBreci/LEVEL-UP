@@ -743,7 +743,7 @@ async function openPlayerView(id) {
     `;
   } catch (e) {
     console.error('Error mostrando ficha de jugador:', e);
-    content.innerHTML = `<div class="rk-empty">No se pudo cargar la ficha de este jugador.</div>`;
+    content.innerHTML = `<div class="rk-empty">Error: ${e.message}</div>`;
   }
   modal.classList.add('open');
 }
