@@ -77,7 +77,7 @@ const sb = (typeof window !== 'undefined' && window.supabase)
   : null;
 
 /* ===== SALDO LEVEL UP (Wompi) ===== */
-const WOMPI_PUBLIC_KEY = 'pub_test_D86AzWqACaLWxvWwZGWkkxt2gn7zSLbu';
+const WOMPI_PUBLIC_KEY = 'pub_prod_A6rdOFjZlPik9VTvs72WQ9gZJSRH9ZNn';
 const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1');
 const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
