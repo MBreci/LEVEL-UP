@@ -3855,17 +3855,36 @@ async function submitTransfer() {
   if ((state.saldo || 0) < amount) { errEl.textContent = 'Saldo insuficiente.'; return; }
   const toProfile = profiles[toId];
   if (!toProfile) { errEl.textContent = 'Jugador no encontrado.'; return; }
-  // Transferir
+  if (!sb) { errEl.textContent = 'Sin conexión a la nube.'; return; }
+
+  errEl.textContent = '';
+  const senderName = state.nickname || state.name;
+  const receiverName = toProfile.nickname || toProfile.name;
+
+  // Débito al emisor
+  const { error: e1 } = await sb.from('wallet_transactions').insert({
+    profile_id: state.id, type: 'transferencia_enviada', amount: -amount, status: 'completado',
+    metadata: { to: toId, to_name: receiverName, note: `Enviaste ${amount.toLocaleString('es-CO')} coins a ${receiverName}` }
+  });
+  if (e1) { errEl.textContent = e1.message || 'Error al procesar la transferencia.'; return; }
+
+  // Crédito al receptor
+  const { error: e2 } = await sb.from('wallet_transactions').insert({
+    profile_id: toId, type: 'transferencia_recibida', amount, status: 'completado',
+    metadata: { from: state.id, from_name: senderName, note: `${senderName} te envió ${amount.toLocaleString('es-CO')} coins` }
+  });
+  if (e2) { errEl.textContent = e2.message || 'Error al acreditar al receptor.'; return; }
+
+  // Actualizar saldo local y notificación
   state.saldo = (state.saldo || 0) - amount;
   toProfile.saldo = (toProfile.saldo || 0) + amount;
   toProfile.notifications = toProfile.notifications || [];
-  toProfile.notifications.push({ icon: '🪙', text: `${state.nickname||state.name} te envió ${amount.toLocaleString('es-CO')} Level Coins.`, time: 'AHORA' });
+  toProfile.notifications.push({ icon: '🪙', text: `${senderName} te envió ${amount.toLocaleString('es-CO')} Level Coins.`, time: 'AHORA' });
   saveProfiles();
-  await pushProfileToCloud(state);
   await pushProfileToCloud(toProfile);
   closeTransferModal();
   renderAll();
-  alert(`✅ ${amount.toLocaleString('es-CO')} 🪙 enviados a ${toProfile.nickname||toProfile.name}.`);
+  alert(`✅ ${amount.toLocaleString('es-CO')} 🪙 enviados a ${receiverName}.`);
 }
 
 const ACHIEVEMENTS_DEF = {
