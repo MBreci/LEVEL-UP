@@ -2485,14 +2485,13 @@ function bpWizardNext() {
   }
   if (bpWizardStep === 5) {
     if (!bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
-    const today = new Date().toISOString().split('T')[0];
-    if (bpWizard.fechaISO < today) { errorEl.textContent = 'No puedes crear un partido en una fecha que ya pasó.'; return; }
+    const now = new Date(); const todayLocal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    if (bpWizard.fechaISO < todayLocal) { errorEl.textContent = 'No puedes crear un partido en una fecha que ya pasó.'; return; }
   }
   if (bpWizardStep === 6) {
     if (!bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
-    const today = new Date().toISOString().split('T')[0];
-    if (bpWizard.fechaISO === today) {
-      const now = new Date();
+    const now = new Date(); const todayLocal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    if (bpWizard.fechaISO === todayLocal) {
       const [h, m] = bpWizard.horaLibre.split(':').map(Number);
       const matchTime = new Date(); matchTime.setHours(h, m, 0, 0);
       if (matchTime <= now) { errorEl.textContent = 'La hora ya pasó. Selecciona una hora futura.'; return; }
