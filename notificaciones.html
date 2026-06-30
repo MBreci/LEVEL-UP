@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Notificaciones · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782786119">
+<link rel="stylesheet" href="style.css?v=1782797254">
 </head>
 <body>
 
@@ -70,18 +70,17 @@
 <!-- MODAL COUNTEROFFER -->
 <div class="modal-overlay" id="counteroffer-modal">
   <div class="auth-card" style="max-width:420px">
-    <div class="auth-label" id="co-title">RETO RECIBIDO</div>
-    <div id="co-details" style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6"></div>
-    <div id="co-bet-info" style="display:none" class="bet-preview" style="margin-bottom:10px"></div>
-    <div id="co-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="auth-label">RETO RECIBIDO</div>
+    <div id="counteroffer-content" style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,0.8);line-height:1.7"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
       <button class="auth-submit" style="flex:1" onclick="acceptCounteroffer()">ACEPTAR</button>
       <button class="btn-g" style="flex:1" onclick="showCounterofferForm()">CONTRAOFERTAR</button>
       <button class="auth-cancel" style="flex:1" onclick="rejectFromCounteroffer()">RECHAZAR</button>
     </div>
-    <div id="co-form" style="display:none;margin-top:12px">
+    <div class="auth-error" id="counteroffer-error"></div>
+    <div id="counteroffer-form" style="display:none;margin-top:12px">
       <div class="auth-label">TU APUESTA</div>
-      <input class="auth-input" type="number" id="co-new-bet" placeholder="Cantidad de coins" min="0">
-      <div class="auth-error" id="co-error"></div>
+      <input class="auth-input" type="number" id="counteroffer-amount" placeholder="Cantidad de coins" min="0">
       <button class="auth-submit" onclick="sendCounteroffer()">ENVIAR CONTRAOFERTA</button>
     </div>
     <button class="auth-cancel" onclick="closeCounterofferModal()" style="margin-top:8px">CERRAR</button>
@@ -183,6 +182,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782786119"></script>
+<script src="app.js?v=1782797254"></script>
 </body>
 </html>

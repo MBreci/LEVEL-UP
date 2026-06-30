@@ -1992,6 +1992,8 @@ function matchToRow(m) {
     id: m.id, creator_id: m.creatorId, creator_name: m.creatorName, zona: m.zona, cancha: m.cancha,
     direccion: m.direccion, arena_id: m.arenaId, formato: m.formato, superficie: m.superficie,
     fecha: m.fecha, fecha_iso: m.fechaISO, hora_value: m.horaValue, precio: m.precio, ovr_min: m.ovrMin,
+    valor_por_persona: m.valorPorPersona, observaciones: m.observaciones,
+    confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
     created_at: m.createdAt,
   };
@@ -2001,6 +2003,8 @@ function rowToMatch(r) {
     id: r.id, creatorId: r.creator_id, creatorName: r.creator_name, zona: r.zona, cancha: r.cancha,
     direccion: r.direccion, arenaId: r.arena_id, formato: r.formato, superficie: r.superficie,
     fecha: r.fecha, fechaISO: r.fecha_iso, horaValue: r.hora_value, precio: r.precio, ovrMin: r.ovr_min,
+    valorPorPersona: r.valor_por_persona, observaciones: r.observaciones,
+    confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
     createdAt: r.created_at,
   };
@@ -2963,9 +2967,71 @@ function toggleSaveMatch(matchId) {
 function shareMatch(matchId) {
   const match = openMatches.find(m => m.id === matchId);
   if (!match) return;
+  const url = `${location.origin}/buscar-partido.html?p=${matchId}`;
   const text = `⚽ Partido FÚTBOL ${match.formato} en ${match.cancha || match.zona} — ${match.fecha}. ¡Únete en LEVEL UP!`;
-  if (navigator.share) navigator.share({ text }).catch(() => {});
-  else if (navigator.clipboard) { navigator.clipboard.writeText(text); alert('Texto del partido copiado al portapapeles.'); }
+  if (navigator.share) {
+    navigator.share({ title: 'LEVEL UP', text, url }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('¡Link copiado al portapapeles!')).catch(() => {});
+  }
+}
+
+function showToast(msg) {
+  let t = document.getElementById('lu-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'lu-toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function openSharedMatch(matchId) {
+  // Try local first
+  let match = openMatches.find(m => m.id === matchId);
+  if (!match && sb) {
+    const { data } = await sb.from('open_matches').select('*').eq('id', matchId).single();
+    if (data) { match = rowToMatch(data); openMatches.push(match); saveOpenMatches(); }
+  }
+  const modal = document.getElementById('shared-match-modal');
+  const content = document.getElementById('shared-match-content');
+  if (!modal || !content) return;
+  if (!match) {
+    content.innerHTML = `<div class="sm-title">PARTIDO NO ENCONTRADO</div><div class="sm-sub">Este partido ya no existe o el link es incorrecto.</div><button class="auth-cancel" onclick="closeSharedMatchModal()">CERRAR</button>`;
+    modal.style.display = 'flex';
+    return;
+  }
+  const valor = match.valorPorPersona || match.precio;
+  const totalCupos = match.necesita.reduce((s, n) => s + n.cupos, 0);
+  const unidos = match.necesita.reduce((s, n) => s + n.unidos.length, 0);
+  const libres = totalCupos - unidos;
+  const prevConf = (match.confirmadosPrev || []).length;
+  content.innerHTML = `
+    <div class="sm-title">⚽ PARTIDO PÚBLICO</div>
+    <div class="sm-sub">${match.cancha || match.zona}</div>
+    <div class="sm-grid">
+      <div class="sm-row"><span>FORMATO</span><strong>FÚTBOL ${match.formato}</strong></div>
+      <div class="sm-row"><span>FECHA</span><strong>${match.fecha}</strong></div>
+      <div class="sm-row"><span>CANCHA</span><strong>${match.cancha || '—'}</strong></div>
+      ${match.direccion ? `<div class="sm-row"><span>DIRECCIÓN</span><strong>${match.direccion}</strong></div>` : ''}
+      <div class="sm-row"><span>SUPERFICIE</span><strong>${match.superficie || '—'}</strong></div>
+      <div class="sm-row"><span>VALOR</span><strong>${valor ? '$' + Number(valor).toLocaleString('es-CO') + ' / jug' : 'GRATIS'}</strong></div>
+      <div class="sm-row"><span>CUPOS ABIERTOS</span><strong>${libres > 0 ? libres + ' disponibles' : 'COMPLETO'}</strong></div>
+      ${prevConf ? `<div class="sm-row"><span>CONFIRMADOS PREV.</span><strong>${prevConf} jugadores</strong></div>` : ''}
+      ${match.ovrMin ? `<div class="sm-row"><span>OVR MÍNIMO</span><strong>${match.ovrMin}</strong></div>` : ''}
+      ${match.observaciones ? `<div class="sm-row full"><span>NOTAS</span><strong>${match.observaciones}</strong></div>` : ''}
+    </div>
+    ${libres > 0
+      ? `<button class="auth-submit" style="margin-top:20px" onclick="closeSharedMatchModal();openJoinModal('${match.id}','ABIERTO')">QUIERO UNIRME</button>`
+      : `<div style="margin-top:16px;color:var(--td);font-size:13px;text-align:center">Este partido ya no tiene cupos disponibles.</div>`
+    }
+    <button class="auth-cancel" onclick="closeSharedMatchModal()">CERRAR</button>
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeSharedMatchModal() {
+  const modal = document.getElementById('shared-match-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function openMatchLocation(matchId) {
@@ -4925,7 +4991,13 @@ function initApp() {
   syncTeamInvitesFromCloud().then(renderAll);
   syncChallengesFromCloud();
   syncTeamMatchesFromCloud();
-  syncOpenMatchesFromCloud().then(renderAll);
+  syncOpenMatchesFromCloud().then(() => {
+    renderAll();
+    const sharedMatchId = new URLSearchParams(location.search).get('p');
+    if (sharedMatchId && document.getElementById('shared-match-modal')) {
+      openSharedMatch(sharedMatchId);
+    }
+  });
   syncMatchInvitesFromCloud().then(renderAll);
   if (state) pushProfileToCloud(state);
 
