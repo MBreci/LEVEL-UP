@@ -2751,7 +2751,7 @@ function buildMatchCard(m, mode) {
         ${hora ? `<span class="bp-pill">⏰ ${hora}</span>` : ''}
         <span class="bp-pill">⚽ FÚTBOL ${m.formato}</span>
         <span class="bp-pill">🟢 ${m.superficie}</span>
-        <span class="bp-pill">💵 ${m.precio ? '$' + Number(m.precio).toLocaleString('es-CO') + '/jug' : 'GRATIS'}</span>
+        <span class="bp-pill">💵 ${(m.valorPorPersona || m.precio) ? '$' + Number(m.valorPorPersona || m.precio).toLocaleString('es-CO') + '/jug' : 'GRATIS'}</span>
         <span class="bp-pill">⭐ OVR ${m.ovrMin || 'LIBRE'}</span>
         <span class="bp-pill">👤 ${m.creatorName}</span>
       </div>
