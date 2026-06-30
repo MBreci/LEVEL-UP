@@ -27,6 +27,7 @@ async function isValidSignature(body: any): Promise<boolean> {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'GET') return new Response('OK', { status: 200 });
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
   let body: any;
