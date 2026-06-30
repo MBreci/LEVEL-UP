@@ -2135,7 +2135,7 @@ const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null };
 
 function getTotalJugadores() {
   // fútbol N = N por equipo × 2 equipos
@@ -2152,7 +2152,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [] };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2262,25 +2262,38 @@ function renderBpWizard() {
   } else if (bpWizardStep === 7) {
     const totalJug = getTotalJugadores();
     const maxFaltan = getMaxFaltan();
-    const yaConfirmados = 1 + bpWizard.invitados.length;
-    const cuposRestantes = totalJug - yaConfirmados;
+    if (bpWizard.cuposAbiertos === null) bpWizard.cuposAbiertos = Math.min(maxFaltan, totalJug - 1 - bpWizard.invitados.length);
+    const cuposAb = bpWizard.cuposAbiertos;
+    const prevConf = 1 + bpWizard.invitados.length;
     bodyEl.innerHTML = `
       <div class="bpw-cupos-visual">
-        <div class="bpw-cupos-title">CUPOS DEL PARTIDO</div>
+        <div class="bpw-cupos-title">DISTRIBUCIÓN DE CUPOS</div>
         <div class="bpw-cupos-row">
           ${Array.from({length: totalJug}, (_, i) => {
-            const cls = i === 0 ? 'me' : i < yaConfirmados ? 'confirmed' : 'empty';
-            return `<div class="bpw-cupo-dot ${cls}" title="${i === 0 ? 'Tú (organizador)' : i < yaConfirmados ? bpWizard.invitados[i-1]?.name || 'Confirmado' : 'Cupo libre'}"></div>`;
+            let cls = 'open'; let title = 'Cupo abierto';
+            if (i === 0) { cls = 'me'; title = 'Tú (organizador)'; }
+            else if (i < prevConf) { cls = 'confirmed'; title = bpWizard.invitados[i-1]?.name || 'Confirmado'; }
+            else if (i < prevConf + cuposAb) { cls = 'searching'; title = 'Cupo abierto al público'; }
+            else { cls = 'unused'; title = 'Sin asignar'; }
+            return `<span class="bpw-cupo-dot ${cls}" title="${title}"></span>`;
           }).join('')}
         </div>
         <div class="bpw-cupos-legend">
-          <span><span class="bpw-cupo-dot me" style="display:inline-block"></span> Tú</span>
-          <span><span class="bpw-cupo-dot confirmed" style="display:inline-block"></span> Confirmados (${yaConfirmados})</span>
-          <span><span class="bpw-cupo-dot empty" style="display:inline-block"></span> Faltan (${cuposRestantes})</span>
+          <span><span class="bpw-cupo-dot me"></span> Tú</span>
+          <span><span class="bpw-cupo-dot confirmed"></span> Confirmados previamente (${prevConf - 1})</span>
+          <span><span class="bpw-cupo-dot searching"></span> Buscando (${cuposAb})</span>
         </div>
       </div>
 
-      <div class="auth-label">INVITAR JUGADORES YA CONFIRMADOS <span style="color:var(--td);font-weight:300">· Opcional</span></div>
+      <div class="auth-label" style="margin-top:20px">CUPOS QUE QUIERES ABRIR AL PÚBLICO</div>
+      <div class="bp-cupos-stepper">
+        <button class="bp-stepper-btn" onclick="bpChangeCupos(-1)">−</button>
+        <div class="bp-stepper-val" id="bp-stepper-val">${cuposAb}</div>
+        <button class="bp-stepper-btn" onclick="bpChangeCupos(1)">+</button>
+        <span class="bp-stepper-hint">de ${maxFaltan} disponibles</span>
+      </div>
+
+      <div class="auth-label" style="margin-top:20px">AMIGOS YA CONFIRMADOS <span style="color:var(--td);font-weight:300">· Opcional — no cuentan como cupos abiertos</span></div>
       <div style="position:relative">
         <input class="auth-input" id="bp-invite-search" placeholder="Busca por nombre o apodo" oninput="bpSearchInvitados(this.value)" autocomplete="off">
         <div class="pl-suggest" id="bp-invite-suggest"></div>
@@ -2289,22 +2302,11 @@ function renderBpWizard() {
         ${bpWizard.invitados.map((inv, i) => `
           <span class="bp-invite-chip">
             ${inv.name}
-            <select onchange="bpSetInvitadoPos(${i}, this.value)">
-              ${['DEL','MED','DEF','POR'].map(p => `<option value="${p}" ${inv.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
-            </select>
             <span class="bp-invite-chip-x" onclick="bpRemoveInvitado(${i})">✕</span>
           </span>`).join('')}
       </div>
 
-      <div class="auth-label">POSICIONES QUE FALTAN <span style="color:var(--td);font-weight:300">· Marca las que necesitas</span></div>
-      <div class="bp-pos-grid" id="bp-pos-grid">
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEL" onchange="renderBpSummary()"> <span class="bp-pos-role">⚽ DEL</span><span class="bp-pos-role-name">Delantero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="MED" onchange="renderBpSummary()"> <span class="bp-pos-role">🔄 MED</span><span class="bp-pos-role-name">Mediocampista</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="DEF" onchange="renderBpSummary()"> <span class="bp-pos-role">🛡️ DEF</span><span class="bp-pos-role-name">Defensa</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-        <div class="bp-pos-chip"><label class="bp-pos-chip-label"><input type="checkbox" value="POR" onchange="renderBpSummary()"> <span class="bp-pos-role">🧤 POR</span><span class="bp-pos-role-name">Portero</span></label><input type="number" min="1" max="${maxFaltan}" value="1" class="bp-pos-n" oninput="bpClampPosInput(this)"></div>
-      </div>
-
-      <label class="auth-consent">
+      <label class="auth-consent" style="margin-top:12px">
         <input type="checkbox" id="bp-abierto" ${bpWizard.modalidad !== 'privado' ? 'checked' : ''} onchange="renderBpSummary()">
         <span>Partido abierto: los jugadores pueden unirse directamente. Desmárcalo para aprobar cada solicitud.</span>
       </label>
@@ -2320,6 +2322,24 @@ function bpClampPosInput(input) {
   if (v > max) v = max;
   if (v < 1) v = 1;
   input.value = v;
+  renderBpSummary();
+}
+function bpChangeCupos(delta) {
+  const totalJug = getTotalJugadores();
+  const prevConf = 1 + bpWizard.invitados.length;
+  const maxOpen = totalJug - prevConf;
+  bpWizard.cuposAbiertos = Math.max(1, Math.min(maxOpen, (bpWizard.cuposAbiertos || 1) + delta));
+  const valEl = document.getElementById('bp-stepper-val');
+  if (valEl) valEl.textContent = bpWizard.cuposAbiertos;
+  // update dots
+  const dots = document.querySelectorAll('.bpw-cupo-dot');
+  dots.forEach((dot, i) => {
+    dot.className = 'bpw-cupo-dot';
+    if (i === 0) dot.classList.add('me');
+    else if (i < prevConf) dot.classList.add('confirmed');
+    else if (i < prevConf + bpWizard.cuposAbiertos) dot.classList.add('searching');
+    else dot.classList.add('unused');
+  });
   renderBpSummary();
 }
 
@@ -2352,10 +2372,11 @@ function bpAddInvitado(profileId) {
     return;
   }
   bpWizard.invitados.push({ profileId, name: p.nickname || p.name, pos: p.position });
+  bpWizard.cuposAbiertos = null; // recalculate on next render
   document.getElementById('bp-invite-search').value = '';
   document.getElementById('bp-invite-suggest').innerHTML = '';
   document.getElementById('bp-invite-suggest').classList.remove('open');
-  renderBpStep7Partial();
+  renderBpWizard();
 }
 
 function bpSetInvitadoPos(idx, pos) {
@@ -2365,7 +2386,8 @@ function bpSetInvitadoPos(idx, pos) {
 
 function bpRemoveInvitado(idx) {
   bpWizard.invitados.splice(idx, 1);
-  renderBpStep7Partial();
+  bpWizard.cuposAbiertos = null; // recalculate on next render
+  renderBpWizard();
 }
 
 function renderBpStep7Partial() {
@@ -2417,22 +2439,9 @@ function renderBpSummary() {
   if (!el) return;
   const horaLabel = bpWizard.horaLibre || null;
   const precioEl = document.getElementById('bp-precio');
-  const necesitaRows = bpWizardStep === 7
-    ? Array.from(document.querySelectorAll('#bp-pos-grid .bp-pos-chip')).map(chip => {
-        const cb = chip.querySelector('input[type=checkbox]');
-        const n = chip.querySelector('.bp-pos-n');
-        return { pos: cb.value, checked: cb.checked, cupos: parseInt(n.value, 10) || 1 };
-      })
-    : [];
-  const maxFaltan = getMaxFaltan();
-  const totalFaltan = necesitaRows.filter(r => r.checked).reduce((s, r) => s + r.cupos, 0);
-  const totalAdicionales = totalFaltan + bpWizard.invitados.length;
-  const sobrepasado = bpWizardStep === 7 && totalAdicionales > maxFaltan;
-  const ready = bpWizard.canchaLibreNombre && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && necesitaRows.some(r => r.checked) && !sobrepasado;
-  if (sobrepasado) {
-    const errorEl = document.getElementById('bp-error');
-    if (errorEl) errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores pero el partido de fútbol ${bpWizard.categoria} tiene ${getTotalJugadores()} cupos en total. Solo puedes pedir ${maxFaltan} adicionales.`;
-  }
+  const cuposAb = bpWizard.cuposAbiertos !== null ? bpWizard.cuposAbiertos : 0;
+  const prevConf = bpWizard.invitados.length;
+  const ready = bpWizard.canchaLibreNombre && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && (bpWizardStep < 7 || cuposAb > 0);
   el.innerHTML = `
     <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
     <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
@@ -2443,7 +2452,8 @@ function renderBpSummary() {
     <div class="bpw-summary-row"><span>VALOR/PERSONA</span><strong>${bpWizard.canchaLibreValor ? '$' + parseInt(bpWizard.canchaLibreValor).toLocaleString('es-CO') : 'GRATIS'}</strong></div>
     <div class="bpw-summary-row"><span>CAPITÁN</span><strong>${state ? (state.nickname || state.name) : '—'}</strong></div>
     ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
-    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>FALTAN</span><strong class="${sobrepasado ? 'over' : ''}">${totalAdicionales} de ${maxFaltan} cupos abiertos</strong></div>` : ''}
+    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
+    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
   `;
 }
@@ -2532,35 +2542,10 @@ function submitMatchRequest() {
   const precio = document.getElementById('bp-precio').value.trim();
   const ovrMin = document.getElementById('bp-ovr-min').value.trim();
   const abierto = document.getElementById('bp-abierto').checked;
-  const maxFaltan = getMaxFaltan();
-  const chips = document.querySelectorAll('#bp-pos-grid .bp-pos-chip');
-  const necesita = [];
-  const getSlot = (pos) => {
-    let slot = necesita.find(n => n.pos === pos);
-    if (!slot) { slot = { pos, cupos: 0, unidos: [] }; necesita.push(slot); }
-    return slot;
-  };
-  chips.forEach(chip => {
-    const checkbox = chip.querySelector('input[type=checkbox]');
-    const n = chip.querySelector('.bp-pos-n');
-    if (checkbox.checked) {
-      getSlot(checkbox.value).cupos += parseInt(n.value, 10) || 1;
-    }
-  });
-  bpWizard.invitados.forEach(inv => {
-    const slot = getSlot(inv.pos);
-    slot.cupos += 1;
-    slot.unidos.push({ profileId: inv.profileId, name: inv.name });
-  });
-  if (necesita.length === 0) {
-    errorEl.textContent = 'Selecciona al menos una posición que te falte o invita a un jugador.';
-    return;
-  }
-  const totalAdicionales = necesita.reduce((s, n) => s + n.cupos, 0);
-  if (totalAdicionales > maxFaltan) {
-    errorEl.textContent = `Estás pidiendo ${totalAdicionales} jugadores, pero fútbol ${bpWizard.categoria} solo permite ${maxFaltan} adicionales (sin contarte a ti).`;
-    return;
-  }
+  const cuposAb = bpWizard.cuposAbiertos || 0;
+  if (cuposAb < 1) { errorEl.textContent = 'Debes abrir al menos 1 cupo al público.'; return; }
+  const necesita = [{ pos: 'ABIERTO', cupos: cuposAb, unidos: [] }];
+  const confirmadosPrev = bpWizard.invitados.map(inv => ({ profileId: inv.profileId, name: inv.name, pos: inv.pos }));
   errorEl.textContent = '';
   const horaLabel = bpWizard.canchaLibre ? bpWizard.horaLibre : formatHoraLabel(bpWizard.horaValue);
   const fecha = formatFechaPartido(bpWizard.fechaISO, horaLabel);
@@ -2584,6 +2569,7 @@ function submitMatchRequest() {
     ovrMin: ovrMin ? parseInt(ovrMin, 10) : null,
     abierto,
     necesita,
+    confirmadosPrev,
     joinRequests: [],
     finalizado: false,
     createdAt: Date.now(),
@@ -2594,7 +2580,8 @@ function submitMatchRequest() {
   bpWizard.invitados.forEach(inv => {
     const player = profiles[inv.profileId];
     if (!player) return;
-    player.notifications.push({ icon: '⚽', text: `${state.nickname || state.name} te confirmó en su partido (${inv.pos}) en ${arena.name} — ${fecha}.`, time: 'AHORA' });
+    const lugar = bpWizard.canchaLibre ? bpWizard.canchaLibreNombre : (arena ? arena.name : 'la cancha');
+    player.notifications.push({ icon: '⚽', text: `${state.nickname || state.name} te confirmó en su partido en ${lugar} — ${fecha}.`, time: 'AHORA' });
     profiles[inv.profileId] = player;
     saveProfiles();
     pushProfileToCloud(player);
@@ -2782,12 +2769,16 @@ function buildMatchCard(m, mode) {
           const full = n.unidos.length >= n.cupos;
           const joined = !!state && n.unidos.some(u => u.profileId === state.id);
           const requested = !!state && (m.joinRequests || []).some(r => r.profileId === state.id);
-          return `<div class="bp-need-chip ${full ? 'full' : ''}">${n.pos} ${n.unidos.length}/${n.cupos}
+          const label = n.pos === 'ABIERTO' ? 'BUSCANDO' : n.pos;
+          return `<div class="bp-need-chip ${full ? 'full' : ''}">
+            <span class="bp-need-label">${label}</span>
+            <span class="bp-need-count">${n.unidos.length}/${n.cupos}</span>
             ${!full && !joined && !isCreator && mode === 'proximos' && !requested ? `<button onclick="openJoinModal('${m.id}','${n.pos}')">UNIRME</button>` : ''}
-            ${joined ? '✓' : ''}
+            ${joined ? '<span style="color:var(--g)">✓ UNIDO</span>' : ''}
             ${requested && !joined ? '<span class="bp-pending-tag">PENDIENTE</span>' : ''}
           </div>`;
         }).join('')}
+        ${(m.confirmadosPrev && m.confirmadosPrev.length) ? `<div class="bp-need-chip confirmed-prev">CONFIRMADOS PREVIAMENTE <span class="bp-need-count">${m.confirmadosPrev.length}</span></div>` : ''}
       </div>
 
       ${requests.length ? `
