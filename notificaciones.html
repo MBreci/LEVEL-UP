@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Notificaciones · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782764263">
+<link rel="stylesheet" href="style.css?v=1782778090">
 </head>
 <body>
 
@@ -65,6 +65,43 @@
   </div>
   <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
 </footer>
+
+<!-- MODAL COUNTEROFFER -->
+<div class="modal-overlay" id="counteroffer-modal">
+  <div class="auth-card" style="max-width:420px">
+    <div class="auth-label" id="co-title">RETO RECIBIDO</div>
+    <div id="co-details" style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6"></div>
+    <div id="co-bet-info" style="display:none" class="bet-preview" style="margin-bottom:10px"></div>
+    <div id="co-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="auth-submit" style="flex:1" onclick="acceptCounteroffer()">ACEPTAR</button>
+      <button class="btn-g" style="flex:1" onclick="showCounterofferForm()">CONTRAOFERTAR</button>
+      <button class="auth-cancel" style="flex:1" onclick="rejectFromCounteroffer()">RECHAZAR</button>
+    </div>
+    <div id="co-form" style="display:none;margin-top:12px">
+      <div class="auth-label">TU APUESTA</div>
+      <input class="auth-input" type="number" id="co-new-bet" placeholder="Cantidad de coins" min="0">
+      <div class="auth-error" id="co-error"></div>
+      <button class="auth-submit" onclick="sendCounteroffer()">ENVIAR CONTRAOFERTA</button>
+    </div>
+    <button class="auth-cancel" onclick="closeCounterofferModal()" style="margin-top:8px">CERRAR</button>
+  </div>
+</div>
+
+<!-- MODAL TRANSFERIR COINS -->
+<div class="modal-overlay" id="transfer-modal">
+  <div class="auth-card" style="max-width:400px">
+    <div class="auth-label">ENVIAR COINS</div>
+    <div class="bet-balance-row"><span>Tu saldo:</span><span class="bet-balance-val" id="transfer-my-balance">0</span></div>
+    <input class="auth-input" id="transfer-search" autocomplete="off" placeholder="Buscar jugador por nombre..." oninput="searchTransferPlayer()">
+    <div id="transfer-player-list" style="max-height:160px;overflow-y:auto;margin-bottom:8px"></div>
+    <input type="hidden" id="transfer-to-id">
+    <div id="transfer-to-name" style="display:none" class="bet-preview"></div>
+    <input class="auth-input" type="number" id="transfer-amount" placeholder="Cantidad de coins" min="1" style="margin-top:8px">
+    <div class="auth-error" id="transfer-error"></div>
+    <button class="auth-submit" onclick="submitTransfer()">ENVIAR</button>
+    <button class="auth-cancel" onclick="closeTransferModal()">CANCELAR</button>
+  </div>
+</div>
 
 <!-- MODAL TRABAJO EN PROGRESO -->
 <div class="modal-overlay" id="wip-modal">
@@ -145,6 +182,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782764263"></script>
+<script src="app.js?v=1782778090"></script>
 </body>
 </html>

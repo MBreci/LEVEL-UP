@@ -750,11 +750,13 @@ function renderNotifications() {
   `).join('');
   const challengeRows = myChallenges.slice().reverse().map(c => {
     const fromTeam = teams[c.fromTeamId];
+    const bet = c.betAmount || 0;
+    const betBadge = bet > 0 ? `<span class="bet-badge">🪙 ${bet.toLocaleString('es-CO')} coins en juego</span>` : '';
     return `
     <div class="notif-invite">
-      <div class="notif-invite-txt">⚔️ <strong>${fromTeam ? fromTeam.name : 'Un equipo'}</strong> te retó a un partido en ${c.cancha} — ${c.fecha} ${c.hora}</div>
+      <div class="notif-invite-txt">⚔️ <strong>${fromTeam ? fromTeam.name : 'Un equipo'}</strong> te retó — ${c.cancha} · ${c.fecha} ${c.hora}${betBadge ? '<br>' + betBadge : ''}</div>
       <div class="notif-invite-actions">
-        <button class="notif-accept" onclick="respondChallenge('${c.id}',true)">ACEPTAR</button>
+        <button class="notif-accept" onclick="openCounterofferModal('${c.id}')">VER RETO</button>
         <button class="notif-reject" onclick="respondChallenge('${c.id}',false)">RECHAZAR</button>
       </div>
     </div>
@@ -1088,6 +1090,7 @@ async function renderSaldoPage() {
       <div class="wallet-balance-label">SALDO DISPONIBLE</div>
       <div class="wallet-balance-amount" id="wallet-balance-amount">$${(state.saldo || 0).toLocaleString('es-CO')}</div>
       <button class="hw-cta-main" disabled style="opacity:0.45;cursor:not-allowed;">DISPONIBLE PRÓXIMAMENTE</button>
+      <button class="btn-g" style="margin-top:10px;width:100%;font-size:10px;" onclick="openTransferModal()">🪙 ENVIAR COINS A UN JUGADOR</button>
     </div>
     <div class="wallet-stats-row">
       <div class="wallet-stat"><div class="wallet-stat-v">$${totalRecargado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL RECARGADO</div></div>
@@ -3609,24 +3612,46 @@ function sendChallenge() {
   if (!fecha || !hora) { errorEl.textContent = 'Escoge fecha y hora para el reto.'; return; }
   if (teamHasMatchAt(myTeam.id, fecha, hora)) { errorEl.textContent = 'Tu equipo ya tiene un partido programado a esa fecha y hora.'; return; }
   if (teamHasMatchAt(toTeamId, fecha, hora)) { errorEl.textContent = 'El equipo rival ya tiene un partido programado a esa fecha y hora.'; return; }
+
+  // Apuesta
+  const betEnabled = document.getElementById('bet-enabled') && document.getElementById('bet-enabled').checked;
+  const betAmount = betEnabled ? (parseInt(document.getElementById('bet-amount').value) || 0) : 0;
+  if (betAmount > 0 && (state.saldo || 0) < betAmount) {
+    errorEl.textContent = `Saldo insuficiente para apostar ${betAmount.toLocaleString('es-CO')} 🪙. Recarga primero.`;
+    return;
+  }
+
   errorEl.textContent = '';
   const challenge = {
     id: 'ch_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     fromTeamId: myTeam.id, toTeamId, cancha, costo, fecha, hora, jugadores, observaciones,
-    status: 'pendiente', createdAt: Date.now(),
+    betAmount, status: 'pendiente', createdAt: Date.now(),
   };
+
+  // Bloquear coins del retador
+  if (betAmount > 0) {
+    state.saldo = (state.saldo || 0) - betAmount;
+    state.lockedCoins = (state.lockedCoins || 0) + betAmount;
+    state.lockedBets = state.lockedBets || {};
+    state.lockedBets[challenge.id] = betAmount;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
+
   challenges.push(challenge);
   saveChallenges();
   pushChallengeToCloud(challenge);
   const toTeam = teams[toTeamId];
   const captain = toTeam && profiles[toTeam.captainId];
   if (captain) {
-    captain.notifications.push({ icon: '⚔️', text: `${myTeam.name} te retó a un partido en ${cancha} — ${fecha} ${hora}.`, time: 'AHORA' });
+    const betTxt = betAmount > 0 ? ` — Apuesta: ${betAmount.toLocaleString('es-CO')} 🪙 por equipo` : '';
+    captain.notifications.push({ icon: '⚔️', text: `${myTeam.name} te retó a un partido en ${cancha} — ${fecha} ${hora}${betTxt}.`, time: 'AHORA' });
     saveProfiles();
     pushProfileToCloud(captain);
   }
   closeChallengeModal();
-  alert('Reto enviado al capitán de ' + (toTeam ? toTeam.name : 'equipo rival') + '.');
+  renderAll();
+  alert('Reto enviado al capitán de ' + (toTeam ? toTeam.name : 'equipo rival') + (betAmount > 0 ? `\n🪙 ${betAmount.toLocaleString('es-CO')} coins bloqueados hasta el resultado.` : '') + '.');
 }
 
 function getMyChallenges() {
@@ -3644,6 +3669,31 @@ function respondChallenge(challengeId, accept) {
     alert('No puedes aceptar este reto: uno de los dos equipos ya tiene un partido programado a esa fecha y hora.');
     return;
   }
+  const betAmount = challenge.betAmount || 0;
+  if (accept && betAmount > 0) {
+    // Verificar saldo del capitán retado
+    if ((state.saldo || 0) < betAmount) {
+      alert(`Saldo insuficiente para aceptar la apuesta de ${betAmount.toLocaleString('es-CO')} 🪙.\nRecarga coins y vuelve a intentarlo.`);
+      return;
+    }
+    // Bloquear coins del retado
+    state.saldo = (state.saldo || 0) - betAmount;
+    state.lockedCoins = (state.lockedCoins || 0) + betAmount;
+    state.lockedBets = state.lockedBets || {};
+    state.lockedBets[challengeId] = betAmount;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
+  if (!accept && betAmount > 0) {
+    // Devolver coins bloqueados al retador
+    const fromCaptain = fromTeam && profiles[fromTeam.captainId];
+    if (fromCaptain && fromCaptain.lockedBets && fromCaptain.lockedBets[challengeId]) {
+      fromCaptain.saldo = (fromCaptain.saldo || 0) + betAmount;
+      fromCaptain.lockedCoins = Math.max(0, (fromCaptain.lockedCoins || 0) - betAmount);
+      delete fromCaptain.lockedBets[challengeId];
+      pushProfileToCloud(fromCaptain);
+    }
+  }
   challenge.status = accept ? 'aceptado' : 'rechazado';
   saveChallenges();
   pushChallengeToCloud(challenge);
@@ -3652,6 +3702,7 @@ function respondChallenge(challengeId, accept) {
       id: 'tm_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
       teamAId: fromTeam.id, teamBId: toTeam.id, cancha: challenge.cancha, costo: challenge.costo,
       fecha: challenge.fecha, hora: challenge.hora, jugadores: challenge.jugadores, observaciones: challenge.observaciones,
+      betAmount, challengeId,
       estado: 'programado', resultado: null, mvpId: null, createdAt: Date.now(),
     };
     teamMatches.push(match);
@@ -3660,11 +3711,154 @@ function respondChallenge(challengeId, accept) {
   }
   const captain = fromTeam && profiles[fromTeam.captainId];
   if (captain) {
-    captain.notifications.push({ icon: accept ? '✅' : '❌', text: `${toTeam ? toTeam.name : 'El equipo rival'} ${accept ? 'aceptó' : 'rechazó'} tu reto.`, time: 'AHORA' });
+    const betTxt = betAmount > 0 ? ` — Apuesta de ${betAmount.toLocaleString('es-CO')} 🪙 ${accept ? 'confirmada' : 'devuelta'}.` : '';
+    captain.notifications.push({ icon: accept ? '✅' : '❌', text: `${toTeam ? toTeam.name : 'El equipo rival'} ${accept ? 'aceptó' : 'rechazó'} tu reto.${betTxt}`, time: 'AHORA' });
     saveProfiles();
     pushProfileToCloud(captain);
   }
   renderAll();
+}
+
+/* Contraoferta */
+let _counterofferId = null;
+function openCounterofferModal(challengeId) {
+  _counterofferId = challengeId;
+  const c = challenges.find(x => x.id === challengeId);
+  if (!c) return;
+  const fromTeam = teams[c.fromTeamId];
+  const bet = c.betAmount || 0;
+  document.getElementById('counteroffer-error').textContent = '';
+  document.getElementById('counteroffer-form').style.display = 'none';
+  document.getElementById('counteroffer-content').innerHTML = `
+    <div class="bet-balance-row" style="margin-bottom:12px">Tu saldo: <strong>${(state.saldo||0).toLocaleString('es-CO')} 🪙</strong></div>
+    <div style="margin-bottom:8px"><strong>${fromTeam ? fromTeam.name : 'Un equipo'}</strong> te retó:</div>
+    <div class="bet-preview" style="margin-bottom:8px">
+      📅 ${c.fecha} · ${c.hora}<br>
+      📍 ${c.cancha}<br>
+      ${bet > 0 ? `🪙 Apuesta: <strong>${bet.toLocaleString('es-CO')} coins</strong> por equipo → ganador se lleva <strong>${(bet*2).toLocaleString('es-CO')}</strong>` : '🤝 Sin apuesta'}
+    </div>`;
+  document.getElementById('counteroffer-modal').classList.add('open');
+}
+function closeCounterofferModal() {
+  document.getElementById('counteroffer-modal').classList.remove('open');
+  _counterofferId = null;
+}
+function acceptCounteroffer() {
+  if (_counterofferId) respondChallenge(_counterofferId, true);
+  closeCounterofferModal();
+}
+function rejectFromCounteroffer() {
+  if (_counterofferId) respondChallenge(_counterofferId, false);
+  closeCounterofferModal();
+}
+function showCounterofferForm() {
+  document.getElementById('counteroffer-form').style.display = 'block';
+  const c = challenges.find(x => x.id === _counterofferId);
+  if (c) document.getElementById('counteroffer-amount').value = c.betAmount || 0;
+}
+function sendCounteroffer() {
+  const c = challenges.find(x => x.id === _counterofferId);
+  if (!c) return;
+  const newBet = parseInt(document.getElementById('counteroffer-amount').value) || 0;
+  if (newBet > 0 && (state.saldo || 0) < newBet) {
+    document.getElementById('counteroffer-error').textContent = 'Saldo insuficiente para esa apuesta.';
+    return;
+  }
+  // Devolver coins al retador original
+  const fromTeam = teams[c.fromTeamId];
+  const fromCap = fromTeam && profiles[fromTeam.captainId];
+  if (fromCap && c.betAmount > 0 && fromCap.lockedBets && fromCap.lockedBets[c.id]) {
+    fromCap.saldo = (fromCap.saldo || 0) + c.betAmount;
+    fromCap.lockedCoins = Math.max(0, (fromCap.lockedCoins || 0) - c.betAmount);
+    delete fromCap.lockedBets[c.id];
+    pushProfileToCloud(fromCap);
+  }
+  // Crear nuevo reto como contraoferta
+  const myTeam = getMyTeam();
+  const counter = {
+    id: 'ch_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    fromTeamId: myTeam.id, toTeamId: c.fromTeamId,
+    cancha: c.cancha, costo: c.costo, fecha: c.fecha, hora: c.hora,
+    jugadores: c.jugadores, observaciones: c.observaciones,
+    betAmount: newBet, status: 'pendiente', createdAt: Date.now(),
+    isCounteroffer: true, originalChallengeId: c.id,
+  };
+  if (newBet > 0) {
+    state.saldo = (state.saldo || 0) - newBet;
+    state.lockedCoins = (state.lockedCoins || 0) + newBet;
+    state.lockedBets = state.lockedBets || {};
+    state.lockedBets[counter.id] = newBet;
+    saveProfiles();
+    pushProfileToCloud(state);
+  }
+  c.status = 'contraofertado';
+  saveChallenges();
+  challenges.push(counter);
+  saveChallenges();
+  pushChallengeToCloud(counter);
+  if (fromCap) {
+    fromCap.notifications.push({ icon: '🔄', text: `${myTeam.name} contraofertó tu reto${newBet > 0 ? ` con apuesta de ${newBet.toLocaleString('es-CO')} 🪙` : ' sin apuesta'}.`, time: 'AHORA' });
+    pushProfileToCloud(fromCap);
+  }
+  closeCounterofferModal();
+  renderAll();
+  alert('Contraoferta enviada.');
+}
+
+/* Transferencia de coins entre jugadores */
+function openTransferModal() {
+  if (!state) { openAuth(true); return; }
+  document.getElementById('transfer-my-balance').textContent = (state.saldo || 0).toLocaleString('es-CO');
+  document.getElementById('transfer-search').value = '';
+  document.getElementById('transfer-player-list').innerHTML = '';
+  document.getElementById('transfer-to-id').value = '';
+  document.getElementById('transfer-to-name').style.display = 'none';
+  document.getElementById('transfer-amount').value = '';
+  document.getElementById('transfer-error').textContent = '';
+  document.getElementById('transfer-modal').classList.add('open');
+}
+function closeTransferModal() {
+  document.getElementById('transfer-modal').classList.remove('open');
+}
+function searchTransferPlayer() {
+  const q = document.getElementById('transfer-search').value.toLowerCase().trim();
+  const list = document.getElementById('transfer-player-list');
+  if (q.length < 2) { list.innerHTML = ''; return; }
+  const results = Object.values(profiles).filter(p => p.id !== state.id && ((p.name||'').toLowerCase().includes(q) || (p.nickname||'').toLowerCase().includes(q))).slice(0, 8);
+  list.innerHTML = results.length ? results.map(p => `
+    <div class="transfer-player-row" onclick="selectTransferPlayer('${p.id}','${(p.nickname||p.name).replace(/'/g,"\\'")}')">
+      ${p.photo ? `<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : `<div style="width:28px;height:28px;border-radius:50%;background:#0d1820;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">${(p.nickname||p.name).slice(0,2)}</div>`}
+      <div><div style="font-size:12px;color:#e8f4ff">${p.nickname||p.name}</div><div style="font-size:10px;color:#4a6a7a">${p.position} · OVR ${p.ovr}</div></div>
+    </div>`).join('') : '<div style="padding:8px;color:#4a6a7a;font-size:12px">Sin resultados</div>';
+}
+function selectTransferPlayer(pid, pname) {
+  document.getElementById('transfer-to-id').value = pid;
+  document.getElementById('transfer-search').value = pname;
+  document.getElementById('transfer-player-list').innerHTML = '';
+  const nameEl = document.getElementById('transfer-to-name');
+  nameEl.style.display = 'block';
+  nameEl.innerHTML = `Enviando a: <strong style="color:#00ff88">${pname}</strong>`;
+}
+async function submitTransfer() {
+  const toId = document.getElementById('transfer-to-id').value;
+  const amount = parseInt(document.getElementById('transfer-amount').value) || 0;
+  const errEl = document.getElementById('transfer-error');
+  if (!toId) { errEl.textContent = 'Selecciona un jugador.'; return; }
+  if (amount <= 0) { errEl.textContent = 'Ingresa una cantidad válida.'; return; }
+  if ((state.saldo || 0) < amount) { errEl.textContent = 'Saldo insuficiente.'; return; }
+  const toProfile = profiles[toId];
+  if (!toProfile) { errEl.textContent = 'Jugador no encontrado.'; return; }
+  // Transferir
+  state.saldo = (state.saldo || 0) - amount;
+  toProfile.saldo = (toProfile.saldo || 0) + amount;
+  toProfile.notifications = toProfile.notifications || [];
+  toProfile.notifications.push({ icon: '🪙', text: `${state.nickname||state.name} te envió ${amount.toLocaleString('es-CO')} Level Coins.`, time: 'AHORA' });
+  saveProfiles();
+  await pushProfileToCloud(state);
+  await pushProfileToCloud(toProfile);
+  closeTransferModal();
+  renderAll();
+  alert(`✅ ${amount.toLocaleString('es-CO')} 🪙 enviados a ${toProfile.nickname||toProfile.name}.`);
 }
 
 const ACHIEVEMENTS_DEF = {
@@ -4346,7 +4540,38 @@ function openChallengeModal(teamId) {
   document.getElementById('challenge-error').textContent = '';
   const canchaSel = document.getElementById('challenge-cancha');
   canchaSel.innerHTML = CANCHAS_REGISTRADAS.map(c => `<option value="${c}">${c}</option>`).join('');
+  // Reset bet section
+  const betEnabled = document.getElementById('bet-enabled');
+  if (betEnabled) { betEnabled.checked = false; document.getElementById('bet-fields').style.display = 'none'; }
+  const betAmt = document.getElementById('bet-amount');
+  if (betAmt) betAmt.value = '';
+  const betBal = document.getElementById('bet-my-balance');
+  if (betBal) betBal.textContent = (state.saldo || 0).toLocaleString('es-CO');
   document.getElementById('challenge-modal').classList.add('open');
+}
+
+function toggleBetSection() {
+  const enabled = document.getElementById('bet-enabled').checked;
+  document.getElementById('bet-fields').style.display = enabled ? 'block' : 'none';
+  if (enabled) updateBetPreview();
+}
+
+function setBetAmount(val) {
+  document.getElementById('bet-amount').value = val;
+  updateBetPreview();
+}
+
+function updateBetPreview() {
+  const amt = parseInt(document.getElementById('bet-amount').value) || 0;
+  const prev = document.getElementById('bet-preview');
+  if (!prev) return;
+  if (amt <= 0) { prev.textContent = ''; return; }
+  const mySaldo = state ? (state.saldo || 0) : 0;
+  const enough = mySaldo >= amt;
+  prev.innerHTML = `
+    <span style="color:${enough ? '#00ff88' : '#ff4444'}">
+      ${enough ? '✅' : '⚠️ Saldo insuficiente —'} Apostando <strong>${amt.toLocaleString('es-CO')} 🪙</strong> · El ganador se lleva <strong>${(amt * 2).toLocaleString('es-CO')} 🪙</strong>
+    </span>`;
 }
 
 function closeChallengeModal() {
@@ -5582,6 +5807,45 @@ async function submitAdminTeamMatch(matchId) {
   match.stats = statsMap;
   match.mvpId = mvpId;
   match.notes = notes;
+
+  // Transferencia automática de apuesta
+  if (match.betAmount > 0) {
+    const winnerTeam = golesA > golesB ? teamA : golesB > golesA ? teamB : null;
+    const loserTeam = golesA > golesB ? teamB : golesB > golesA ? teamA : null;
+    if (winnerTeam && loserTeam) {
+      const winCap = profiles[winnerTeam.captainId];
+      const loseCap = profiles[loserTeam.captainId];
+      const pot = match.betAmount * 2;
+      if (winCap) {
+        winCap.saldo = (winCap.saldo || 0) + pot;
+        winCap.lockedCoins = Math.max(0, (winCap.lockedCoins || 0) - match.betAmount);
+        if (winCap.lockedBets && match.challengeId) delete winCap.lockedBets[match.challengeId];
+        winCap.notifications = winCap.notifications || [];
+        winCap.notifications.push({ icon: '🪙', text: `¡Ganaste la apuesta! +${pot.toLocaleString('es-CO')} Level Coins acreditados.`, time: 'AHORA' });
+        profiles[winCap.id] = winCap;
+      }
+      if (loseCap) {
+        loseCap.lockedCoins = Math.max(0, (loseCap.lockedCoins || 0) - match.betAmount);
+        if (loseCap.lockedBets && match.challengeId) delete loseCap.lockedBets[match.challengeId];
+        loseCap.notifications = loseCap.notifications || [];
+        loseCap.notifications.push({ icon: '🪙', text: `Perdiste la apuesta. ${match.betAmount.toLocaleString('es-CO')} coins transferidos a ${winnerTeam.name}.`, time: 'AHORA' });
+        profiles[loseCap.id] = loseCap;
+      }
+    } else {
+      // Empate: devolver coins a ambos
+      [teamA, teamB].forEach(t => {
+        const cap = profiles[t.captainId];
+        if (cap) {
+          cap.saldo = (cap.saldo || 0) + match.betAmount;
+          cap.lockedCoins = Math.max(0, (cap.lockedCoins || 0) - match.betAmount);
+          if (cap.lockedBets && match.challengeId) delete cap.lockedBets[match.challengeId];
+          cap.notifications = cap.notifications || [];
+          cap.notifications.push({ icon: '🪙', text: `Empate — ${match.betAmount.toLocaleString('es-CO')} coins devueltos a tu cuenta.`, time: 'AHORA' });
+          profiles[cap.id] = cap;
+        }
+      });
+    }
+  }
 
   // Notifications to all players
   const audience = new Set([...teamA.memberIds, ...teamB.memberIds]);

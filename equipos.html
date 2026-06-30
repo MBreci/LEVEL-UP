@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Equipos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782767707">
+<link rel="stylesheet" href="style.css?v=1782778090">
 </head>
 <body>
 
@@ -160,6 +160,34 @@
     <select class="auth-input" id="challenge-cancha"></select>
     <div class="auth-label">COSTO (OPCIONAL)</div>
     <input class="auth-input" id="challenge-costo" placeholder="Ej: $10.000 por jugador" maxlength="30">
+
+    <!-- APUESTA EN LEVEL COINS -->
+    <div class="bet-section">
+      <div class="bet-header">
+        <span class="bet-icon">🪙</span>
+        <div>
+          <div class="bet-title">APUESTA EN LEVEL COINS</div>
+          <div class="bet-sub">El ganador se lleva todo. Los coins se bloquean al aceptar el reto.</div>
+        </div>
+        <label class="bet-toggle-wrap">
+          <input type="checkbox" id="bet-enabled" onchange="toggleBetSection()">
+          <span class="bet-toggle"></span>
+        </label>
+      </div>
+      <div id="bet-fields" style="display:none">
+        <div class="bet-balance-row">Tu saldo: <span class="bet-balance-val" id="bet-my-balance">0</span> 🪙</div>
+        <div class="auth-label" style="margin-top:12px">COINS A APOSTAR (cada equipo)</div>
+        <div class="bet-inp-row">
+          <button class="bet-quick" onclick="setBetAmount(500)">500</button>
+          <button class="bet-quick" onclick="setBetAmount(1000)">1.000</button>
+          <button class="bet-quick" onclick="setBetAmount(2000)">2.000</button>
+          <button class="bet-quick" onclick="setBetAmount(5000)">5.000</button>
+        </div>
+        <input class="auth-input" type="number" id="bet-amount" min="100" step="100" placeholder="Ej: 1000" oninput="updateBetPreview()">
+        <div class="bet-preview" id="bet-preview"></div>
+      </div>
+    </div>
+
     <div class="auth-label">FECHA</div>
     <input class="auth-input" type="date" id="challenge-fecha">
     <div class="auth-label">HORA</div>
@@ -298,6 +326,43 @@
   </div>
 </div>
 
+<!-- MODAL CONTRAOFERTA DE APUESTA -->
+<div class="modal-overlay" id="counteroffer-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">⚔ RETO RECIBIDO</div></div>
+    <div id="counteroffer-content"></div>
+    <div class="auth-error" id="counteroffer-error"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="auth-submit" style="flex:1" onclick="acceptCounteroffer()">✅ ACEPTAR</button>
+      <button class="auth-submit" style="flex:1;background:linear-gradient(135deg,#ff6b00,#cc4400)" onclick="showCounterofferForm()">🔄 CONTRAOFERTAR</button>
+      <button class="auth-cancel" style="flex:1" onclick="rejectFromCounteroffer()">❌ RECHAZAR</button>
+    </div>
+    <div id="counteroffer-form" style="display:none;margin-top:16px">
+      <div class="auth-label">NUEVA APUESTA (coins)</div>
+      <input class="auth-input" type="number" id="counteroffer-amount" min="0" step="100" placeholder="0 = sin apuesta">
+      <button class="auth-submit" style="margin-top:8px" onclick="sendCounteroffer()">ENVIAR CONTRAOFERTA</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSFERIR COINS -->
+<div class="modal-overlay" id="transfer-modal">
+  <div class="auth-card">
+    <div class="auth-tabs"><div class="auth-tab on">🪙 ENVIAR LEVEL COINS</div></div>
+    <div class="bet-balance-row" style="margin-bottom:16px">Tu saldo: <span class="bet-balance-val" id="transfer-my-balance">0</span> 🪙</div>
+    <div class="auth-label">BUSCAR JUGADOR</div>
+    <input class="auth-input" id="transfer-search" placeholder="Nombre o apodo..." oninput="searchTransferPlayer()">
+    <div id="transfer-player-list" style="max-height:160px;overflow-y:auto;margin:8px 0"></div>
+    <input type="hidden" id="transfer-to-id">
+    <div id="transfer-to-name" style="display:none" class="bet-preview"></div>
+    <div class="auth-label" style="margin-top:12px">CANTIDAD (coins)</div>
+    <input class="auth-input" type="number" id="transfer-amount" min="1" step="1" placeholder="Ej: 500">
+    <div class="auth-error" id="transfer-error"></div>
+    <button class="auth-submit" onclick="submitTransfer()">ENVIAR COINS</button>
+    <button class="auth-cancel" onclick="closeTransferModal()">CANCELAR</button>
+  </div>
+</div>
+
 <audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
 <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
   <span class="a-dot"></span>
@@ -305,6 +370,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782767707"></script>
+<script src="app.js?v=1782778090"></script>
 </body>
 </html>
