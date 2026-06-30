@@ -131,18 +131,17 @@ async function syncProfilesFromCloud() {
   const { data, error } = await sb.from('profiles').select('*');
   if (error || !data) { console.error('Error sincronizando perfiles:', error && error.message); return; }
   data.forEach(row => {
+    const fresh = rowToProfile(row);
     if (!state || row.id !== state.id) {
-      profiles[row.id] = rowToProfile(row);
+      profiles[row.id] = fresh;
     } else {
+      // Fusionar: preservar notificaciones locales no sincronizadas, actualizar todo lo demás
       const cloudNotifs = row.notifications || [];
-      const seen = new Set(state.notifications.map(n => n.icon + n.text + n.time));
-      cloudNotifs.forEach(n => {
-        const key = n.icon + n.text + n.time;
-        if (!seen.has(key)) { state.notifications.push(n); seen.add(key); }
-      });
-      state.team = row.team || 'SIN EQUIPO';
-      state.saldo = row.saldo || 0;
-      state.isAdmin = row.is_admin === true;
+      const seen = new Set(cloudNotifs.map(n => n.icon + n.text + n.time));
+      const localOnly = (state.notifications || []).filter(n => !seen.has(n.icon + n.text + n.time));
+      fresh.notifications = [...cloudNotifs, ...localOnly];
+      fresh.ratedPlayers = state.ratedPlayers || {};
+      state = fresh;
       profiles[state.id] = state;
     }
   });
@@ -718,13 +717,18 @@ async function openPlayerView(id) {
   const modal = document.getElementById('player-view-modal');
   const content = document.getElementById('player-view-content');
   if (!modal || !content) return;
-  let p = profiles[id];
-  if (!p && sb) {
+  // Siempre refrescar desde Supabase para tener datos actualizados
+  if (sb) {
     content.innerHTML = `<div class="rk-empty" style="color:var(--g)">Cargando...</div>`;
     modal.classList.add('open');
     const { data } = await sb.from('profiles').select('*').eq('id', id).single();
-    if (data) { p = rowToProfile(data); profiles[id] = p; }
+    if (data) {
+      const fresh = rowToProfile(data);
+      profiles[id] = fresh;
+      if (state && state.id === id) { state = fresh; saveProfiles(); }
+    }
   }
+  let p = profiles[id];
   if (!p) {
     content.innerHTML = `<div class="rk-empty">No se pudo cargar este jugador.</div>`;
     modal.classList.add('open');
