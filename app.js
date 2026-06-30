@@ -714,17 +714,26 @@ function closePlayerSuggestions() {
   if (box) { box.classList.remove('open'); }
 }
 
-function openPlayerView(id) {
-  const p = profiles[id];
+async function openPlayerView(id) {
   const modal = document.getElementById('player-view-modal');
   const content = document.getElementById('player-view-content');
   if (!modal || !content) return;
+  let p = profiles[id];
+  if (!p && sb) {
+    content.innerHTML = `<div class="rk-empty" style="color:var(--g)">Cargando...</div>`;
+    modal.classList.add('open');
+    const { data } = await sb.from('profiles').select('*').eq('id', id).single();
+    if (data) { p = rowToProfile(data); profiles[id] = p; }
+  }
   if (!p) {
     content.innerHTML = `<div class="rk-empty">No se pudo cargar este jugador.</div>`;
     modal.classList.add('open');
     return;
   }
   try {
+    if (!p.attrs) p.attrs = { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
+    if (!p.ovr) p.ovr = 60;
+    if (!p.xp) p.xp = 0;
     const { className, html } = buildCardHTML(p);
     const canRate = state && state.id !== id && playerSharedMatch(state.id, id);
     content.innerHTML = `
