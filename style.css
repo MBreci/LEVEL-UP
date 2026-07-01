@@ -173,7 +173,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .hf-divider-f{background:linear-gradient(90deg,transparent,rgba(255,0,170,0.3),transparent)}
 .hf-name{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--w);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
 .hf-tag{font-size:8px;font-family:var(--ft);letter-spacing:1px;color:var(--g);background:rgba(0,255,136,0.08);padding:3px 8px;display:inline-block;margin-bottom:10px}
-.hf-stat-row{display:flex;align-items:baseline;justify-content:center;gap:5px;margin-bottom:5px}
+.hf-stat-row{display:flex;align-items:baseline;justify-content:center;gap:5px;margin-bottom:1px}
 .hf-stat-v{font-family:var(--ft);font-weight:900;font-size:20px;color:var(--g);text-shadow:0 0 12px rgba(0,255,136,0.5)}
 .hf-stat-v-f{color:var(--f);text-shadow:0 0 12px rgba(255,0,170,0.5)}
 .hf-stat-l{font-family:var(--ft);font-size:7px;letter-spacing:1.5px;color:var(--td)}
