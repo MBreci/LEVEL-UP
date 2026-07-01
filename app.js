@@ -2679,9 +2679,44 @@ function getMatchEstado(m) {
 function archiveExpiredMatches() {
   let changed = false;
   openMatches.forEach(m => {
-    if (!m.finalizado && getMatchEstado(m) === 'finalizado') { m.finalizado = true; changed = true; }
+    if (!m.finalizado && getMatchEstado(m) === 'finalizado') {
+      m.finalizado = true;
+      changed = true;
+      grantFreeMatchXP(m);
+    }
   });
   if (changed) saveOpenMatches();
+}
+
+// XP por participar en partido modo libre (sin OVR, sin LP, sin atributos)
+const FREE_MATCH_XP = 50;
+const FREE_MATCH_XP_GIVEN_KEY = 'levelup_fmxp_given';
+
+async function grantFreeMatchXP(match) {
+  // Idempotencia: no dar XP dos veces al mismo partido
+  const given = JSON.parse(localStorage.getItem(FREE_MATCH_XP_GIVEN_KEY) || '[]');
+  if (given.includes(match.id)) return;
+  given.push(match.id);
+  localStorage.setItem(FREE_MATCH_XP_GIVEN_KEY, JSON.stringify(given));
+
+  // Verificar que el partido estuvo completo (todos los cupos llenos)
+  const totalCupos = (match.necesita || []).reduce((s, n) => s + (n.cupos || 0), 0);
+  const totalUnidos = (match.necesita || []).reduce((s, n) => s + (n.unidos || []).length, 0);
+  if (totalUnidos < totalCupos) return; // no estaba completo, no se da XP
+
+  const playerIds = (match.necesita || []).flatMap(n => (n.unidos || []).map(u => u.profileId)).filter(Boolean);
+  for (const pid of playerIds) {
+    const p = profiles[pid];
+    if (!p) continue;
+    p.xp = (p.xp || 0) + FREE_MATCH_XP;
+    p.matches = (p.matches || 0) + 1;
+    p.lastUpdate = new Date().toISOString();
+    // Notificación discreta (sin animación completa, solo notif)
+    p.notifications = p.notifications || [];
+    p.notifications.push({ icon: '⚡', text: `+${FREE_MATCH_XP} XP por participar en el partido del ${match.fecha}.`, time: 'AHORA' });
+    profiles[pid] = p;
+    if (sb) await pushProfileToCloud(p);
+  }
 }
 
 function applyBpFilters(list) {
