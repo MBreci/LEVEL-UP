@@ -2698,6 +2698,11 @@ function applyBpFilters(list) {
   });
 }
 
+function scrollToOpenMatches() {
+  const panel = document.getElementById('bp-panel-proximos');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function applyBpFiltersFromUI() {
   bpFilters.zona = document.getElementById('bp-filter-zona').value;
   bpFilters.cancha = document.getElementById('bp-filter-cancha').value.trim();
