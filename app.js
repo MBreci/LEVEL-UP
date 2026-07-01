@@ -3076,6 +3076,15 @@ function renderBuscarPartido() {
   const elJ = document.getElementById('bph-stat-jugadores');
   if (elP) elP.textContent = activeCount || '0';
   if (elJ) elJ.textContent = playerCount || '0';
+  // Stat chips flotantes
+  const openWithSpace = openMatches.filter(m => {
+    if (m.finalizado || getMatchEstado(m) === 'finalizado') return false;
+    return m.necesita && m.necesita.some(n => (n.unidos || []).length < (n.cantidad || 0));
+  }).length;
+  const elStatPlayers = document.getElementById('stat-players');
+  const elStatOpen = document.getElementById('stat-open');
+  if (elStatPlayers) elStatPlayers.textContent = playerCount || '0';
+  if (elStatOpen) elStatOpen.textContent = openWithSpace || '0';
 }
 
 function renderMiParticipacionTimeline() {
