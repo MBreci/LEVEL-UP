@@ -4909,7 +4909,7 @@ function renderTeamMatchesPanel() {
     return `
       <div class="team-hist-row ${finalized ? 'past' : ''}">
         <span class="thr-info">${m.fecha}${m.hora ? ' · ' + m.hora : ''} · ${m.cancha}</span>
-        <span class="thr-rival">VS ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
+        <span class="thr-rival">${myTeam.name} <span style="color:var(--td);font-size:11px">VS</span> ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
         <span class="thr-badge ${badgeCls}">${resultLabel}</span>
         ${canFinalize && isAdmin() ? `<button class="mm-admin-btn" onclick="openAdminTeamMatch('${m.id}')">⚙ REGISTRAR</button>` : ''}
         ${canFinalize && !isAdmin() ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR</button>` : ''}
