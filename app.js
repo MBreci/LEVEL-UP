@@ -1443,7 +1443,7 @@ function playCardRevealStep(data) {
           <div class="reveal-ovr-after" id="reveal-ovr-after">${data.ovrBefore}</div>
         </div>
       </div>`;
-    setTimeout(() => playOvrEvolutionStep(data), 1600);
+    setTimeout(() => playOvrEvolutionStep(data), 2600);
   }, 350);
 }
 
