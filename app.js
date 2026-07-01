@@ -4321,7 +4321,10 @@ function getTeamMatches(teamId, estado) {
   }).sort((a, b) => b.createdAt - a.createdAt);
 }
 
+let _equiposActiveTab = null;
+
 function switchEquiposTab(tab) {
+  _equiposActiveTab = tab;
   ['crear', 'rey', 'programados'].forEach(t => {
     const tabEl = document.getElementById('eq-tab-' + t);
     if (tabEl) tabEl.classList.toggle('on', t === tab);
@@ -4351,9 +4354,12 @@ function renderTeamsModule() {
   renderTeamSearch(document.getElementById('team-search') ? document.getElementById('team-search').value : '');
   renderTeamMatchesPanel();
 
-  if (location.hash === '#crear') switchEquiposTab('crear');
-  else if (location.hash === '#programados') switchEquiposTab('programados');
-  else switchEquiposTab('rey');
+  // Solo cambia el tab si el usuario no lo ha elegido manualmente
+  if (!_equiposActiveTab) {
+    if (location.hash === '#crear') switchEquiposTab('crear');
+    else if (location.hash === '#programados') switchEquiposTab('programados');
+    else switchEquiposTab('rey');
+  }
 }
 
 async function previewTeamPhoto(input) {
