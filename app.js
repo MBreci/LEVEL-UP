@@ -3079,7 +3079,7 @@ function renderBuscarPartido() {
   // Stat chips flotantes
   const openWithSpace = openMatches.filter(m => {
     if (m.finalizado || getMatchEstado(m) === 'finalizado') return false;
-    return m.necesita && m.necesita.some(n => (n.unidos || []).length < (n.cantidad || 0));
+    return m.necesita && m.necesita.some(n => (n.unidos || []).length < (n.cupos || 0));
   }).length;
   const elStatPlayers = document.getElementById('stat-players');
   const elStatOpen = document.getElementById('stat-open');
