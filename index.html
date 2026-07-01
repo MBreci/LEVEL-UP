@@ -274,12 +274,17 @@
       <div class="auth-label">APODO (OPCIONAL)</div>
       <input class="auth-input" id="auth-nickname" autocomplete="off" placeholder="Ej: Santim" maxlength="16">
       <div class="auth-label">POSICIÓN</div>
-      <select class="auth-input" id="auth-position">
-        <option value="DEL">DEL — Delantero</option>
-        <option value="MED">MED — Mediocampista</option>
-        <option value="DEF">DEF — Defensa</option>
-        <option value="POR">POR — Portero</option>
-      </select>
+      <input type="hidden" id="auth-position" value="DEL">
+      <div class="sq-dropdown" id="pos-dropdown" onclick="togglePosDropdown()">
+        <span class="sq-selected chosen" id="pos-selected">DEL — Delantero</span>
+        <span class="sq-arrow">▾</span>
+        <div class="sq-options" id="pos-options">
+          <div class="sq-opt on" onclick="selectPos(this,'DEL','DEL — Delantero')">DEL — Delantero</div>
+          <div class="sq-opt" onclick="selectPos(this,'MED','MED — Mediocampista')">MED — Mediocampista</div>
+          <div class="sq-opt" onclick="selectPos(this,'DEF','DEF — Defensa')">DEF — Defensa</div>
+          <div class="sq-opt" onclick="selectPos(this,'POR','POR — Portero')">POR — Portero</div>
+        </div>
+      </div>
       <div class="auth-label">PREGUNTA DE SEGURIDAD</div>
       <input type="hidden" id="auth-sq">
       <div class="sq-dropdown" id="sq-dropdown" onclick="toggleSQDropdown()">

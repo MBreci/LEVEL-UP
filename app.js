@@ -1712,32 +1712,70 @@ function closeRevealSequence() {
 
 /* ===== AUTH / PERFILES ===== */
 
-function toggleSQDropdown() {
-  const dd = document.getElementById('sq-dropdown');
-  const opts = document.getElementById('sq-options');
+function openCustomDropdown(ddId, optsId) {
+  const dd = document.getElementById(ddId);
+  const opts = document.getElementById(optsId);
+  if (!dd || !opts) return;
   const isOpen = dd.classList.toggle('open');
   if (isOpen) {
+    // Move opts to body so it's never clipped by overflow:hidden ancestors
+    if (opts.parentElement !== document.body) {
+      opts._origin = dd;
+      document.body.appendChild(opts);
+    }
     const rect = dd.getBoundingClientRect();
-    opts.style.top = (rect.bottom + 4) + 'px';
-    opts.style.left = rect.left + 'px';
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const optsH = Math.min(opts.scrollHeight, 260);
+    if (spaceBelow < optsH + 8 && rect.top > optsH + 8) {
+      opts.style.top = (rect.top - optsH - 4 + window.scrollY) + 'px';
+    } else {
+      opts.style.top = (rect.bottom + 4 + window.scrollY) + 'px';
+    }
+    opts.style.left = (rect.left + window.scrollX) + 'px';
     opts.style.width = rect.width + 'px';
+    opts.style.display = 'block';
+  } else {
+    opts.style.display = 'none';
   }
 }
 
+function toggleSQDropdown() { openCustomDropdown('sq-dropdown', 'sq-options'); }
+function togglePosDropdown() { openCustomDropdown('pos-dropdown', 'pos-options'); }
+
 function selectSQ(el, value) {
   event.stopPropagation();
-  document.querySelectorAll('.sq-opt').forEach(o => o.classList.remove('on'));
+  document.querySelectorAll('#sq-options .sq-opt').forEach(o => o.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('auth-sq').value = value;
   const sel = document.getElementById('sq-selected');
   sel.textContent = value;
   sel.classList.add('chosen');
   document.getElementById('sq-dropdown').classList.remove('open');
+  document.getElementById('sq-options').style.display = 'none';
+}
+
+function selectPos(el, value, label) {
+  event.stopPropagation();
+  document.querySelectorAll('#pos-options .sq-opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('auth-position').value = value;
+  const sel = document.getElementById('pos-selected');
+  sel.textContent = label;
+  sel.classList.add('chosen');
+  document.getElementById('pos-dropdown').classList.remove('open');
+  document.getElementById('pos-options').style.display = 'none';
 }
 
 document.addEventListener('click', function(e) {
-  const dd = document.getElementById('sq-dropdown');
-  if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+  ['sq-dropdown','pos-dropdown'].forEach(id => {
+    const dd = document.getElementById(id);
+    const optsId = id === 'sq-dropdown' ? 'sq-options' : 'pos-options';
+    const opts = document.getElementById(optsId);
+    if (dd && !dd.contains(e.target) && opts && !opts.contains(e.target)) {
+      dd.classList.remove('open');
+      if (opts) opts.style.display = 'none';
+    }
+  });
 });
 
 function switchAuthTab(tab) {
