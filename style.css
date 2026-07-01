@@ -619,7 +619,16 @@ section{padding:64px;border-bottom:var(--b1)}
   background:radial-gradient(ellipse 110% 66% at 44% 47%,rgba(5,6,10,0.98) 56%,rgba(5,6,10,0) 86%)}
 .fcard .fco-ovr{letter-spacing:-1px}
 .fcard .fco-pos{color:var(--rc,#fff);font-weight:700;margin-top:3%}
-.fcard .fco-photo{position:absolute;aspect-ratio:1;object-fit:cover;border-radius:50%;z-index:2;box-shadow:0 0 24px -6px rgba(0,0,0,0.8)}
+/* Foto circular en el centro (o placeholder de cámara si aún no hay foto) */
+.fcard .fco-photowrap{position:absolute;aspect-ratio:1;z-index:2;border-radius:50%}
+.fcard .fco-photo-real{width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:0 0 24px -6px rgba(0,0,0,0.85)}
+.fcard .fco-photo-ph{width:100%;height:100%;border-radius:50%;box-sizing:border-box;
+  border:1.5px solid var(--rc,#fff);
+  background:radial-gradient(circle at 50% 34%,var(--rcglow,rgba(255,255,255,0.2)),transparent 62%),rgba(4,5,9,0.42);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%;
+  box-shadow:0 0 26px -8px var(--rcglow,rgba(0,0,0,0.6)),inset 0 0 30px -10px rgba(0,0,0,0.9)}
+.fcard .fco-cam{font-size:15cqw;line-height:1;opacity:.9;filter:grayscale(1) brightness(1.6)}
+.fcard .fco-cam-txt{font-family:var(--fb);font-weight:700;font-size:4cqw;letter-spacing:1px;line-height:1.3;text-align:center;color:rgba(255,255,255,0.72)}
 /* Nombre + apodo: banda sólida que cubre el nombre impreso */
 .fcard .fco-namewrap{position:absolute;display:flex;align-items:center;justify-content:center;z-index:3;overflow:hidden;
   background:linear-gradient(180deg,#070810,#0a0c13 55%,#070810)}
@@ -630,14 +639,16 @@ section{padding:64px;border-bottom:var(--b1)}
 .fcard .fco-statswrap{position:absolute;display:flex;justify-content:space-between;align-items:center;z-index:3;
   font-family:var(--ft);
   background:linear-gradient(90deg,rgba(6,7,11,0) 0%,rgba(6,7,11,0.96) 7%,rgba(6,7,11,0.96) 93%,rgba(6,7,11,0) 100%)}
-.fcard .fco-stat{flex:1;text-align:center;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
+.fcard .fco-stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15em}
+.fcard .fco-stat-l{font-family:var(--fb);font-weight:700;font-size:.6em;letter-spacing:1px;color:var(--rc,#fff);text-shadow:0 1px 2px #000}
+.fcard .fco-stat-v{font-family:var(--ft);font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
 .fcard.rk-leyenda .fco-name{color:#fff}
 /* GOAT: panel claro (mármol crema) -> placas claras + texto oscuro para que se integre */
 .fcard.rk-goat .fco-ovrwrap{background:radial-gradient(ellipse 110% 66% at 44% 47%,rgba(229,225,215,0.97) 56%,rgba(229,225,215,0) 86%)}
 .fcard.rk-goat .fco-namewrap{background:linear-gradient(180deg,#e7e3d8,#efece2 55%,#e7e3d8)}
 .fcard.rk-goat .fco-statswrap{background:linear-gradient(90deg,rgba(231,227,216,0) 0%,rgba(231,227,216,0.97) 7%,rgba(231,227,216,0.97) 93%,rgba(231,227,216,0) 100%)}
-.fcard.rk-goat .fco-ovr,.fcard.rk-goat .fco-name,.fcard.rk-goat .fco-stat{color:#1c1a16;text-shadow:0 1px 1px rgba(255,255,255,0.35)}
-.fcard.rk-goat .fco-pos,.fcard.rk-goat .fco-nick{color:#9a7a1c}
+.fcard.rk-goat .fco-ovr,.fcard.rk-goat .fco-name,.fcard.rk-goat .fco-stat-v{color:#1c1a16;text-shadow:0 1px 1px rgba(255,255,255,0.35)}
+.fcard.rk-goat .fco-pos,.fcard.rk-goat .fco-nick,.fcard.rk-goat .fco-stat-l{color:#9a7a1c}
 .fcard:hover{filter:drop-shadow(0 34px 70px rgba(0,0,0,0.78)) drop-shadow(0 0 30px var(--rcglow,rgba(0,255,136,0.4)))}
 .fc-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
 .fc-cosmos{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
