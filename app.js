@@ -4334,11 +4334,12 @@ function submitFinalizeMatch() {
 function isTeamMatchPast(m) {
   if (m.estado === 'finalizado') return true;
   const raw = m.fechaISO || m.fecha || '';
-  // extract YYYY-MM-DD from whatever format is stored
   const isoMatch = raw.match(/(\d{4}-\d{2}-\d{2})/);
   const dateStr = isoMatch ? isoMatch[1] : null;
   if (dateStr && m.hora) {
-    return new Date(`${dateStr}T${m.hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
+    // Pad hour to HH:MM so new Date() doesn't fail (e.g. "7:30" → "07:30")
+    const hora = m.hora.includes(':') ? m.hora.padStart(5, '0') : m.hora;
+    return new Date(`${dateStr}T${hora}:00`) < new Date(Date.now() - 2 * 60 * 60 * 1000);
   }
   if (dateStr) {
     return new Date(dateStr + 'T23:59:00') < new Date();
