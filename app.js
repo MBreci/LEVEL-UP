@@ -1791,7 +1791,12 @@ async function submitLogin() {
     closeAuth();
     document.getElementById('login-id').value = '';
     document.getElementById('login-password').value = '';
-    if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
+    if (getCurrentPage() === 'index.html') {
+      const pendingMatch = localStorage.getItem('levelup_pending_match');
+      if (pendingMatch) { localStorage.removeItem('levelup_pending_match'); location.href = 'buscar-partido.html?p=' + pendingMatch; }
+      else { location.href = 'dashboard.html'; }
+      return;
+    }
     renderAll();
   } finally {
     btn.disabled = false;
@@ -4971,7 +4976,11 @@ function initApp() {
   loadCurrentProfile();
   const page = getCurrentPage();
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
-  if (!state && !PUBLIC_PAGES.includes(page)) { location.href = 'index.html'; return; }
+  if (!state && !PUBLIC_PAGES.includes(page)) {
+    const sharedP = new URLSearchParams(location.search).get('p');
+    if (sharedP) localStorage.setItem('levelup_pending_match', sharedP);
+    location.href = 'index.html'; return;
+  }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
 
   if (state && (state.nickname === 'Lobo' || state.name === 'Miguel Breci') && (!state.physical || state.physical.weight == null)) {
