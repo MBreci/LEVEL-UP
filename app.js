@@ -632,8 +632,8 @@ function renderHistory() {
 }
 
 function getGeneralRanking() {
-  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, rank: r.name, slug: r.slug, emoji: r.emoji }; });
-  return list.sort((a, b) => b.ovr - a.ovr || a.name.localeCompare(b.name));
+  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, xp: p.xp || 0, rank: r.name, slug: r.slug, emoji: r.emoji }; });
+  return list.sort((a, b) => b.ovr - a.ovr || b.xp - a.xp || a.name.localeCompare(b.name));
 }
 
 function renderRanking(query) {
