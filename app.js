@@ -1527,7 +1527,7 @@ function playRankUpSound() {
     if (ctx.state === 'suspended') ctx.resume();
     const now = ctx.currentTime;
     const master = ctx.createGain();
-    master.gain.value = 0.18;
+    master.gain.value = 0.08;
     master.connect(ctx.destination);
     // rising triumphant arpeggio
     const notes = [392.0, 523.25, 659.25, 783.99, 1046.5];
@@ -5354,7 +5354,7 @@ function setAudioUI(playing) {
 
 document.addEventListener('click', function startAudio() {
   if (localStorage.getItem(AUDIO_MUTED_KEY) === '1') { document.removeEventListener('click', startAudio); return; }
-  aud.volume = 0.7;
+  aud.volume = 0.35;
   aud.play().then(() => {
     audPlaying = true;
     setAudioUI(true);
