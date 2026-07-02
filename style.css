@@ -162,7 +162,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .hero-float{position:absolute;z-index:3;width:150px;background:rgba(4,7,18,0.82);backdrop-filter:blur(16px);border:1px solid rgba(0,255,136,0.22);padding:18px 16px 12px;text-align:center;box-shadow:0 0 32px rgba(0,255,136,0.1),inset 0 0 20px rgba(0,255,136,0.03);animation:floatY 6s ease-in-out infinite;overflow:hidden}
 .hero-float::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:.7}
 .hero-float.hf-left{left:4%;top:35%}
-.hero-float.hf-right{right:4%;top:28%;border-color:rgba(255,0,170,0.22);box-shadow:0 0 32px rgba(255,0,170,0.1),inset 0 0 20px rgba(255,0,170,0.03);animation-delay:1.4s}
+.hero-float.hf-right{right:4%;top:35%;border-color:rgba(255,0,170,0.22);box-shadow:0 0 32px rgba(255,0,170,0.1),inset 0 0 20px rgba(255,0,170,0.03);animation-delay:1.4s}
 .hero-float.hf-right::before{background:linear-gradient(90deg,transparent,var(--f),transparent)}
 .hf-eyebrow{font-family:var(--ft);font-size:7px;letter-spacing:3px;color:var(--g);opacity:.7;margin-bottom:10px}
 .hf-eyebrow-f{color:var(--f)}

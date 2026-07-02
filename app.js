@@ -1092,21 +1092,22 @@ window.addEventListener('resize', () => {
 function renderHeroFloats() {
   if (!document.getElementById('hero-float-left')) return;
   const allProfiles = Object.values(profiles);
-  // Left panel: top player by OVR
-  const topPlayer = allProfiles.sort((a, b) => (b.ovr || 0) - (a.ovr || 0))[0];
+  // Left panel: top player = #1 del ranking real (OVR y luego XP)
+  const ranking = getGeneralRanking();
+  const topPlayer = ranking[0];
   if (topPlayer) {
     const ovrEl = document.getElementById('hf-top-ovr');
     const nameEl = document.getElementById('hf-top-name');
     const rankEl = document.getElementById('hf-top-rank');
     if (ovrEl) ovrEl.textContent = topPlayer.ovr || '—';
-    if (nameEl) nameEl.textContent = (topPlayer.nickname || topPlayer.name || '—').toUpperCase().slice(0, 12);
-    if (rankEl) rankEl.textContent = (topPlayer.rank || 'ROOKIE').toUpperCase();
+    if (nameEl) nameEl.textContent = (topPlayer.name || '—').toUpperCase().slice(0, 12);
+    if (rankEl) rankEl.textContent = (topPlayer.rank || 'CANTERANO').toUpperCase();
   }
-  // Left scroll: recent top players
+  // Left scroll: ranking real
   const leftScroll = document.getElementById('hf-left-scroll');
   if (leftScroll) {
-    const items = allProfiles.slice(0, 6).map(p =>
-      `<div class="hf-scroll-item">⚽ ${(p.nickname || p.name).slice(0,10)} · OVR ${p.ovr || '?'}</div>`
+    const items = ranking.slice(0, 6).map(p =>
+      `<div class="hf-scroll-item">⚽ ${(p.name || '').slice(0,10)} · OVR ${p.ovr || '?'}</div>`
     );
     if (items.length) {
       const doubled = [...items, ...items].join('');
