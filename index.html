@@ -14,8 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1782901500">
-<link rel="stylesheet" href="redesign.css?v=1782901500">
+<link rel="stylesheet" href="style.css?v=1782901000">
 </head>
 <body>
 
@@ -34,7 +33,7 @@
 </header>
 
 <!-- HERO -->
-<section class="hero rd-hero" id="inicio">
+<section class="hero" id="inicio">
   <div class="hero-bg" id="hero-bg">
     <div class="hero-bg-img"></div>
     <div class="hero-bg-smoke"></div>
@@ -42,35 +41,52 @@
     <div class="hero-bg-light"></div>
   </div>
   <div class="hero-glow-core"></div>
+  <div class="hero-particles">
+    <span class="hp hp1"></span><span class="hp hp2"></span><span class="hp hp3"></span>
+    <span class="hp hp4"></span><span class="hp hp5"></span><span class="hp hp6"></span>
+  </div>
   <div class="hero-frame">
     <span class="hf-corner tl"></span><span class="hf-corner tr"></span>
     <span class="hf-corner bl"></span><span class="hf-corner br"></span>
   </div>
-  <div class="rd-hero-inner">
-    <div class="rd-hero-left">
-      <div class="h-season">TEMPORADA BETA &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
-      <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
-      <div class="h-title">
-        <span class="t1">JUEGA.</span>
-        <span class="t2">COMPITE.</span>
-        <span class="t3">ASCIENDE.</span>
-      </div>
-      <div class="h-desc">Transforma cada partido en una carrera deportiva digital.</div>
-      <div class="h-btns">
-        <button class="hb1 hb1-neon" onclick="openAuth(true)">CREAR PERFIL</button>
-        <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
-      </div>
-      <div class="rd-hero-stats">
-        <div class="rd-hs"><div class="rd-hs-v" id="hf-jugadores-n">—</div><div class="rd-hs-l">JUGADORES</div></div>
-        <div class="rd-hs"><div class="rd-hs-v g" id="hf-partidos-n">—</div><div class="rd-hs-l">PARTIDOS</div></div>
-        <div class="rd-hs"><div class="rd-hs-v f" id="hf-goles-n">—</div><div class="rd-hs-l">GOLES</div></div>
-      </div>
+  <!-- PANEL FLOTANTE IZQUIERDA: TOP JUGADOR -->
+  <div class="hero-float hf-left" id="hero-float-left">
+    <div class="hf-eyebrow">TOP JUGADOR</div>
+    <div class="hf-n" id="hf-top-ovr">—</div>
+    <div class="hf-label-small">OVR</div>
+    <div class="hf-divider"></div>
+    <div class="hf-name" id="hf-top-name">—</div>
+    <div class="hf-tag" id="hf-top-rank">—</div>
+    <div class="hf-scroll-wrap">
+      <div class="hf-scroll-inner" id="hf-left-scroll"></div>
     </div>
-    <div class="rd-hero-right">
-      <div class="rd-hero-card-glow"></div>
-      <img class="rd-hero-card" src="assets/ranks/elite-t.png" alt="Carta LEVEL UP">
-      <div class="rd-hero-badge"><span>TU CARTA</span><br>EVOLUCIONA</div>
+  </div>
+  <!-- PANEL FLOTANTE DERECHA: STATS EN VIVO -->
+  <div class="hero-float hf-right" id="hero-float-right">
+    <div class="hf-eyebrow hf-eyebrow-f">EN VIVO</div>
+    <div class="hf-n hf-n-f" id="hf-jugadores-n">—</div>
+    <div class="hf-label-small">JUGADORES</div>
+    <div class="hf-divider hf-divider-f"></div>
+    <div class="hf-stat-row"><span class="hf-stat-v" id="hf-partidos-n">—</span><span class="hf-stat-l">PARTIDOS</span></div>
+    <div class="hf-stat-row"><span class="hf-stat-v hf-stat-v-f" id="hf-goles-n">—</span><span class="hf-stat-l">GOLES</span></div>
+    <div class="hf-scroll-wrap">
+      <div class="hf-scroll-inner hf-scroll-inner-f" id="hf-right-scroll"></div>
     </div>
+  </div>
+  <div class="hero-content">
+    <div class="h-season">TEMPORADA BETA &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
+    <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
+    <div class="h-title">
+      <span class="t1">JUEGA.</span>
+      <span class="t2">COMPITE.</span>
+      <span class="t3">ASCIENDE.</span>
+    </div>
+    <div class="h-desc">Transforma cada partido en una carrera deportiva digital.</div>
+    <div class="h-btns">
+      <button class="hb1 hb1-neon" onclick="openAuth(true)">CREAR PERFIL</button>
+      <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
+    </div>
+    <div class="h-stats" id="hero-stats"></div>
   </div>
 </section>
 
@@ -80,26 +96,6 @@
     <div class="ld-tagline">
       <span class="ld-tg-w">Encuentra jugadores,</span><span class="ld-tg-p"> completa equipos</span><span class="ld-tg-w"> y descubre una comunidad donde</span><span class="ld-tg-g"> siempre hay alguien listo para jugar.</span>
     </div>
-  </div>
-</section>
-
-<!-- SECCIÓN: LOS 8 RANGOS (banners) -->
-<section class="rd-ranks">
-  <div class="rd-ranks-glow"></div>
-  <div class="sec-hdr" style="text-align:center;position:relative;z-index:2;margin-bottom:8px">
-    <div class="sec-eyebrow center"><span class="ar">&#9654;</span> OCHO RANGOS <span class="ar">&#9664;</span></div>
-    <div class="rd-ranks-title">De <span class="g">Canterano</span> a <span class="gold">GOAT</span></div>
-    <div class="rd-ranks-sub">Tu carrera avanza con cada partido. La mayoría nunca llega al último.</div>
-  </div>
-  <div class="rd-ranks-row">
-    <div class="rd-banner"><img src="assets/ranks/canterano-t.png" alt="Canterano"></div>
-    <div class="rd-banner"><img src="assets/ranks/debutante-t.png" alt="Debutante"></div>
-    <div class="rd-banner"><img src="assets/ranks/revelacion-t.png" alt="Revelación"></div>
-    <div class="rd-banner"><img src="assets/ranks/consagrado-t.png" alt="Consagrado"></div>
-    <div class="rd-banner"><img src="assets/ranks/elite-t.png" alt="Élite"></div>
-    <div class="rd-banner"><img src="assets/ranks/idolo-t.png" alt="Ídolo"></div>
-    <div class="rd-banner"><img src="assets/ranks/leyenda-t.png" alt="Leyenda"></div>
-    <div class="rd-banner"><img src="assets/ranks/goat-t.png" alt="GOAT"></div>
   </div>
 </section>
 
@@ -354,6 +350,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1782901500"></script>
+<script src="app.js?v=1782901000"></script>
 </body>
 </html>
