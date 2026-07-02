@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1782902000">
+<link rel="stylesheet" href="landing-v4.css?v=1">
+</head>
+<body class="lv4">
+
+<!-- NAV -->
+<nav class="lv4-nav">
+  <img class="logo" src="assets/logo.png" alt="LEVEL UP">
+  <div class="lv4-links">
+    <a href="#">JUGAR</a>
+    <a href="#">TORNEOS</a>
+    <a href="#">EQUIPOS</a>
+    <a href="#">RANKINGS</a>
+    <a href="#">MODO CARRERA <span class="lv4-new">NUEVO</span></a>
+  </div>
+  <div class="lv4-navr">
+    <button class="lv4-btn ghost" onclick="openAuth(false)">INICIAR SESIÓN</button>
+    <button class="lv4-btn solid" onclick="openAuth(true)">CREAR PERFIL</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="lv4-hero">
+  <div class="lv4-hero-bg"></div>
+  <div class="lv4-hero-in">
+    <div class="lv4-eyebrow">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
+    <h1 class="lv4-title">
+      <span class="w">JUEGA.</span>
+      <span class="g">COMPITE.</span>
+      <span class="f">ASCIENDE.</span>
+    </h1>
+    <div class="lv4-sub">Transforma cada partido en tu leyenda.</div>
+    <div class="lv4-cta">
+      <button class="lv4-btn solid big" onclick="openAuth(true)">CREAR PERFIL</button>
+      <button class="lv4-btn ghost big" onclick="openAuth(false)">INICIAR SESIÓN</button>
+    </div>
+    <div class="lv4-scroll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5" />
+  <path d="m7 13 5 5 5-5" /></svg></div>
+  </div>
+</header>
+
+<!-- ¿QUÉ ES LEVEL UP? -->
+<section class="lv4-what">
+  <div class="lv4-what-intro">
+    <div class="bar"></div>
+    <h3>¿QUÉ ES LEVEL UP?</h3>
+    <p>La plataforma que convierte tu pasión en progreso. Juega, mejora, compite y construye tu historia.</p>
+  </div>
+  <div class="lv4-feat g"><div class="lv4-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 10h2" />
+  <path d="M16 14h2" />
+  <path d="M6.17 15a3 3 0 0 1 5.66 0" />
+  <circle cx="9" cy="11" r="2" />
+  <rect x="2" y="5" width="20" height="14" rx="2" /></svg></div><h4>OVR</h4><p>Evalúa tu habilidad</p></div>
+  <div class="lv4-feat g"><div class="lv4-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></svg></div><h4>XP</h4><p>Gana experiencia</p></div>
+  <div class="lv4-feat f"><div class="lv4-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg></div><h4>RANGOS</h4><p>Sube de nivel y destaca</p></div>
+  <div class="lv4-feat f"><div class="lv4-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" />
+  <path d="M18 17V9" />
+  <path d="M13 17V5" />
+  <path d="M8 17v-3" /></svg></div><h4>RANKING</h4><p>Compite con los mejores</p></div>
+  <div class="lv4-feat g"><div class="lv4-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" />
+  <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" />
+  <path d="M18 9h1.5a1 1 0 0 0 0-5H18" />
+  <path d="M4 22h16" />
+  <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+  <path d="M6 9H4.5a1 1 0 0 1 0-5H6" /></svg></div><h4>LOGROS</h4><p>Desbloquea recompensas</p></div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="lv4-how">
+  <div class="lv4-how-bg"></div>
+  <div class="lv4-how-hdr">CÓMO FUNCIONA</div>
+  <div class="lv4-steps">
+    <div class="lv4-step">
+      <div class="lv4-step-n">1</div><div class="lv4-step-t">JUEGA</div>
+      <div class="lv4-step-vis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></svg></div>
+      <div class="lv4-step-p">Disputa partidos y registra tu rendimiento.</div>
+    </div>
+    <div class="lv4-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></div>
+    <div class="lv4-step">
+      <div class="lv4-step-n">2</div><div class="lv4-step-t">SÉ EVALUADO</div>
+      <div class="lv4-step-vis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2" />
+  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+  <path d="M9 9h.01" />
+  <path d="M15 9h.01" /></svg></div>
+      <div class="lv4-step-p">Nuestro sistema analiza tu desempeño.</div>
+    </div>
+    <div class="lv4-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></div>
+    <div class="lv4-step">
+      <div class="lv4-step-n">3</div><div class="lv4-step-t">MEJORA TU OVR</div>
+      <div class="lv4-step-vis"><img class="lv4-step-card" src="assets/ranks/elite-t.png" alt="Carta"></div>
+      <div class="lv4-step-p">Aumenta tu nivel y hazte más fuerte.</div>
+    </div>
+    <div class="lv4-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></div>
+    <div class="lv4-step">
+      <div class="lv4-step-n">4</div><div class="lv4-step-t">ESCALA POSICIONES</div>
+      <div class="lv4-step-vis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" />
+  <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" />
+  <path d="M18 9h1.5a1 1 0 0 0 0-5H18" />
+  <path d="M4 22h16" />
+  <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+  <path d="M6 9H4.5a1 1 0 0 1 0-5H6" /></svg></div>
+      <div class="lv4-step-p">Sube en el ranking y conviértete en leyenda.</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
