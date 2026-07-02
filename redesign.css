@@ -195,3 +195,59 @@ header .nav-top{border-bottom:1px solid rgba(201,168,76,0.12)}
   .rd-hero-card{width:min(300px,70%)}
   .rd-banner{width:104px}
 }
+
+/* =======================================================================
+   v3 · "TODOS EN UNO" — Cine de lujo + Ultimate Team oro + editorial
+   Baja el exceso de neón, sube el drama cinematográfico y el oro.
+   ======================================================================= */
+
+/* --- fondo hero: cinematográfico, oscuro, spotlight dorado cenital --- */
+.rd-hero .hero-bg-img{filter:brightness(.34) saturate(.9) contrast(1.12)}
+.rd-hero .hero-beams{opacity:.10}
+.rd-hero .hero-bg-smoke{opacity:.28;filter:saturate(.5)}
+.rd-hero .hero-particles{opacity:.35}
+.rd-hero .hero-glow-core{
+  background:radial-gradient(ellipse 45% 55% at 72% 42%,rgba(201,168,76,0.28),transparent 62%);
+  filter:blur(30px);opacity:.9}
+.rd-hero::before{  /* vela cinematográfica: oscurece bordes, aclara el centro-derecha */
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 60% 70% at 70% 45%,transparent 30%,rgba(1,2,6,0.5) 72%,rgba(1,2,6,0.92) 100%),
+             linear-gradient(180deg,rgba(1,2,6,0.6),transparent 30%,transparent 60%,rgba(1,2,6,0.95))}
+.rd-hero .hero-frame{opacity:.5}
+.hf-corner{border-color:rgba(201,168,76,0.5)!important;filter:drop-shadow(0 0 6px var(--goldglow))!important}
+
+/* --- columna izquierda: editorial, más aire --- */
+.rd-hero-inner{padding-top:70px;gap:24px}
+.h-season{color:var(--gold2);letter-spacing:6px;font-size:10px}
+.h-sub-label{color:rgba(210,220,245,0.7);letter-spacing:4px}
+.rd-hero-left .h-title .t1{color:#fff}
+.rd-hero-left .h-title .t2{color:var(--g)}
+.rd-hero-left .h-title .t3{color:var(--gold2);text-shadow:0 0 40px var(--goldglow),0 0 90px rgba(201,168,76,0.25)}
+.h-title::after{background:linear-gradient(90deg,var(--gold),var(--gold2) 50%,transparent);height:12px}
+
+/* --- carta protagonista bajo spotlight dorado + reflejo en piso --- */
+.rd-hero-right{min-height:600px}
+.rd-hero-card{width:min(400px,86%);transform:rotate(-2deg) perspective(1200px) rotateY(6deg)}
+.rd-hero-card-glow{  /* cono de luz cenital dorado */
+  width:520px;height:640px;border-radius:0;background:
+    conic-gradient(from 180deg at 50% -6%,transparent 43%,rgba(201,168,76,0.30) 50%,transparent 57%),
+    radial-gradient(ellipse 50% 40% at 50% 46%,rgba(201,168,76,0.28),transparent 68%);
+  filter:blur(10px);opacity:.95;animation:none}
+.rd-hero-right::after{  /* reflejo elíptico dorado en el "piso" */
+  content:'';position:absolute;bottom:6%;left:50%;transform:translateX(-50%);
+  width:64%;height:70px;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(201,168,76,0.35),transparent 72%);filter:blur(12px)}
+.rd-hero-badge{border-color:rgba(201,168,76,0.55);background:rgba(4,5,10,0.92)}
+
+/* --- barra de stats: más sobria, filo dorado --- */
+.rd-hs{background:rgba(4,6,12,0.75);border:1px solid rgba(201,168,76,0.16)}
+.rd-hs-v{color:var(--gold2)}
+.rd-hs-v.g{color:var(--g)}
+.rd-hs-v.f{color:var(--gold2);text-shadow:0 0 18px var(--goldglow)}  /* menos magenta */
+
+/* --- secciones: más cine, más aire, menos neón --- */
+.ld-pain-section,.ld-imagine-section,.ld-manifesto-section,.ld-teaser-section,.ld-final-section{padding-top:110px;padding-bottom:100px}
+.sec-cine-scrim{opacity:.75}
+.sec-cine-smoke{opacity:.4;filter:saturate(.5)}
+.ld-tg-p{color:var(--gold2);text-shadow:0 0 24px var(--goldglow)}  /* magenta -> oro en el hook */
+.rd-ranks{background:radial-gradient(ellipse 70% 60% at 50% -10%,rgba(201,168,76,0.10),transparent 60%),#020308}
