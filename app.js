@@ -371,14 +371,14 @@ const RANK_FRAME_LAYOUT = {
   debutante: {
     ovr:   { left: 13.5, top: 17.5,   size: 13,  possize: 4.2 },
     photo: { left: 31,   top: 30,   width: 38 },
-    name:  { top: 63.0,  h: 6,      inset: 15.5, size: 4.7 },
-    stats: { top: 70.5,  h: 8,      inset: 13,   size: 4.5 },
+    name:  { top: 62.6,  h: 6.7,    inset: 15.5, size: 4.7 },
+    stats: { top: 70.2,  h: 9,      inset: 13,   size: 4.5 },
   },
   revelacion: {
     ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
     photo: { left: 31,   top: 30,   width: 38 },
-    name:  { top: 62.5,  h: 6,      inset: 12.5, size: 4.5 },
-    stats: { top: 70.0,  h: 8,      inset: 11.5, size: 4.4 },
+    name:  { top: 62.1,  h: 6.6,    inset: 12.5, size: 4.5 },
+    stats: { top: 69.6,  h: 8.8,    inset: 11.5, size: 4.4 },
   },
   consagrado: {
     ovr:   { left: 12,   top: 16.5, size: 12.5, possize: 4 },
@@ -389,29 +389,29 @@ const RANK_FRAME_LAYOUT = {
   elite: {
     ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
     photo: { left: 31,   top: 30,   width: 38 },
-    name:  { top: 63.8,  h: 6,      inset: 12.5, size: 4.5 },
-    stats: { top: 71.0,  h: 8,      inset: 11.5, size: 4.4 },
+    name:  { top: 63.3,  h: 6.8,    inset: 12.5, size: 4.5 },
+    stats: { top: 70.8,  h: 9,      inset: 11.5, size: 4.4 },
   },
   idolo: {
     ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
     photo: { left: 31,   top: 30,   width: 38 },
-    name:  { top: 64.4,  h: 6,      inset: 12.5, size: 4.5 },
-    stats: { top: 71.8,  h: 8,      inset: 11.5, size: 4.4 },
+    name:  { top: 63.8,  h: 7,      inset: 12.5, size: 4.5 },
+    stats: { top: 71.6,  h: 9.3,    inset: 11.5, size: 4.4 },
   },
   leyenda: {
     ovr:   { left: 12,   top: 17.5, size: 12.5, possize: 4 },
     photo: { left: 31,   top: 30,   width: 38 },
-    name:  { top: 64.8,  h: 6,      inset: 12.5, size: 4.5 },
-    stats: { top: 72.0,  h: 8.2,    inset: 11.5, size: 4.4 },
+    name:  { top: 64.2,  h: 6.9,    inset: 12.5, size: 4.5 },
+    stats: { top: 71.8,  h: 9.6,    inset: 11.5, size: 4.4 },
   },
   goat: {
     ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
     photo: { left: 31,   top: 29,   width: 38 },
-    name:  { top: 61.7,  h: 6,      inset: 11,   size: 4.5 },
-    stats: { top: 69.0,  h: 10,     inset: 10.5, size: 4.4 },
+    name:  { top: 61.2,  h: 6.7,    inset: 11,   size: 4.5 },
+    stats: { top: 68.3,  h: 9.3,    inset: 10.5, size: 4.4 },
   },
 };
-function frameLayout(slug) { return RANK_FRAME_LAYOUT[slug] || _frmB; }
+function frameLayout(slug) { return RANK_FRAME_LAYOUT[slug] || RANK_FRAME_LAYOUT.canterano; }
 function buildFrameCardHTML(p, rank) {
   const tier = rank.slug;
   const baked = frameIsBaked(tier);
@@ -426,6 +426,10 @@ function buildFrameCardHTML(p, rank) {
   else if (baked) photoInner = '';
   else photoInner = `<div class="fco-photo-ph"><span class="fco-cam">📷</span><span class="fco-cam-txt">${isMe ? 'TU FOTO<br>APARECERÁ<br>AQUÍ' : 'AÚN SIN<br>FOTO<br>OFICIAL'}</span></div>`;
   const className = 'fcard rk-' + tier + (baked ? ' baked' : '');
+  // El nombre se achica si es largo para que nunca se corte dentro de la banda.
+  const fullNameLen = (p.name || '').length + (p.nickname ? p.nickname.length + 3 : 0);
+  const maxNameChars = (100 - 2 * L.name.inset) / (L.name.size * 0.66); // caracteres que caben aprox.
+  const nameSize = fullNameLen > maxNameChars ? Math.max(L.name.size * maxNameChars / fullNameLen, L.name.size * 0.6) : L.name.size;
   const html = `
     <img class="fcard-img" src="assets/ranks/${tier}.png" alt="${rank.name}">
     <div class="fco-photowrap" style="left:${L.photo.left}%;top:${L.photo.top}%;width:${L.photo.width}%">${photoInner}</div>
@@ -434,7 +438,7 @@ function buildFrameCardHTML(p, rank) {
       <div class="fco fco-pos" style="font-size:${L.ovr.possize}cqw">${p.position}</div>
     </div>
     <div class="fco-namewrap" style="top:${L.name.top}%;height:${L.name.h}%;left:${L.name.inset}%;right:${L.name.inset}%">
-      <div class="fco-name" style="font-size:${L.name.size}cqw">${p.name}${p.nickname ? ` <span class="fco-nick">"${p.nickname}"</span>` : ''}</div>
+      <div class="fco-name" style="font-size:${nameSize.toFixed(2)}cqw">${p.name}${p.nickname ? ` <span class="fco-nick">"${p.nickname}"</span>` : ''}</div>
     </div>
     <div class="fco-statswrap" style="top:${L.stats.top}%;height:${L.stats.h}%;left:${L.stats.inset}%;right:${L.stats.inset}%;font-size:${L.stats.size}cqw">
       ${stats.map(([lbl, v]) => `<span class="fco-stat"><span class="fco-stat-l">${lbl}</span><span class="fco-stat-v">${v}</span></span>`).join('')}
