@@ -354,7 +354,7 @@ function preloadRankFrames(cb) {
     const done = () => { if (--pending === 0) { _rankFramesChecked = true; if (cb) cb(); } };
     img.onload = () => { RANK_FRAME_OK[r.slug] = img.naturalWidth > 0; done(); };
     img.onerror = () => { RANK_FRAME_OK[r.slug] = false; done(); };
-    img.src = 'assets/ranks/' + r.slug + '-t.png?v=5';
+    img.src = 'assets/ranks/' + r.slug + '-t.png?v=6';
   });
 }
 // Layout (porcentajes sobre la imagen del marco) por grupo de proporción.
@@ -431,7 +431,7 @@ function buildFrameCardHTML(p, rank) {
   const maxNameChars = (100 - 2 * L.name.inset) / (L.name.size * 0.66); // caracteres que caben aprox.
   const nameSize = fullNameLen > maxNameChars ? Math.max(L.name.size * maxNameChars / fullNameLen, L.name.size * 0.6) : L.name.size;
   const html = `
-    <img class="fcard-img" src="assets/ranks/${tier}-t.png?v=5" alt="${rank.name}">
+    <img class="fcard-img" src="assets/ranks/${tier}-t.png?v=6" alt="${rank.name}">
     <div class="fco-photowrap" style="left:${L.photo.left}%;top:${L.photo.top}%;width:${L.photo.width}%">${photoInner}</div>
     <div class="fco-ovrwrap" style="left:${L.ovr.left}%;top:${L.ovr.top}%">
       <div class="fco fco-ovr" style="font-size:${L.ovr.size}cqw">${p.ovr}</div>
