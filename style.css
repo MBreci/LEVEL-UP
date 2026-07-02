@@ -610,8 +610,13 @@ section{padding:64px;border-bottom:var(--b1)}
 .fc-frame-img{position:absolute;inset:0;z-index:0;background-size:100% 100%;background-position:center;background-repeat:no-repeat;pointer-events:none;border-radius:16px}
 
 /* ===== CARTA CON MARCO-IMAGEN (datos reales del jugador sobre el PNG) ===== */
-.fcard{position:relative;width:340px;max-width:100%;container-type:inline-size;line-height:1;filter:drop-shadow(0 28px 60px rgba(0,0,0,0.7))}
-.fcard-img{display:block;width:100%;height:auto;border-radius:8px}
+.fcard{position:relative;width:340px;max-width:100%;container-type:inline-size;line-height:1;
+  filter:drop-shadow(0 0 36px var(--rcglow,rgba(0,255,136,0.32))) drop-shadow(0 24px 50px rgba(0,0,0,0.6))}
+/* halo suave detrás que funde el borde negro del PNG con el fondo (adiós caja negra) */
+.fcard::before{content:'';position:absolute;inset:-14%;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 62% 60% at 50% 48%,var(--rcglow,rgba(0,255,136,0.28)),transparent 72%);
+  filter:blur(34px);opacity:.9}
+.fcard-img{display:block;width:100%;height:auto;border-radius:10px}
 .fcard .fco{font-family:var(--ft);font-weight:900;color:#fff;white-space:nowrap;line-height:.92;
   text-shadow:0 2px 4px rgba(0,0,0,0.9)}
 /* OVR + posición, sobre un velo oscuro difuminado que oculta el dato impreso */
