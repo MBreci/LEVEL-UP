@@ -649,18 +649,27 @@ section{padding:64px;border-bottom:var(--b1)}
 .fcard.rk-goat .fco-statswrap{background:linear-gradient(90deg,rgba(231,227,216,0) 0%,rgba(231,227,216,0.97) 7%,rgba(231,227,216,0.97) 93%,rgba(231,227,216,0) 100%)}
 .fcard.rk-goat .fco-ovr,.fcard.rk-goat .fco-name,.fcard.rk-goat .fco-stat-v{color:#1c1a16;text-shadow:0 1px 1px rgba(255,255,255,0.35)}
 .fcard.rk-goat .fco-pos,.fcard.rk-goat .fco-nick,.fcard.rk-goat .fco-stat-l{color:#9a7a1c}
+/* Marcos "baked" (PNG con texto de muestra impreso): paneles OPACOS que tapan la
+   muestra. El OVR se vuelve un chip; nombre y stats bandas sólidas de borde a borde. */
+.fcard.baked .fco-ovrwrap{padding:3.5% 7% 3.5% 5%;border-radius:9px;
+  background:rgba(6,7,12,0.97);box-shadow:0 0 0 1px var(--rc,#fff),0 4px 14px rgba(0,0,0,0.55)}
+.fcard.baked .fco-namewrap{background:#080a11;border-top:1px solid var(--rc);border-bottom:1px solid var(--rc)}
+.fcard.baked .fco-statswrap{background:#080a11}
+.fcard.baked.rk-goat .fco-ovrwrap{background:rgba(233,229,219,0.97);box-shadow:0 0 0 1px #9a7a1c,0 4px 14px rgba(0,0,0,0.4)}
+.fcard.baked.rk-goat .fco-namewrap{background:#e9e5db;border-color:#c9a24a}
+.fcard.baked.rk-goat .fco-statswrap{background:#e9e5db}
 .fcard:hover{filter:drop-shadow(0 34px 70px rgba(0,0,0,0.78)) drop-shadow(0 0 30px var(--rcglow,rgba(0,255,136,0.4)))}
 .fc-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
 .fc-cosmos{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:16px}
 
 /* color tokens por rango */
 .rk-canterano{--rc:#d29a5b;--rc2:#8a5a2b;--rcglow:rgba(210,154,91,0.45)}
-.rk-debutante{--rc:#2e9bff;--rc2:#0a5fd6;--rcglow:rgba(46,155,255,0.5)}
+.rk-debutante{--rc:#2fe6a0;--rc2:#12b47a;--rcglow:rgba(47,230,160,0.5)}
 .rk-revelacion{--rc:#9fe8ff;--rc2:#5fc4ec;--rcglow:rgba(159,232,255,0.55)}
-.rk-consagrado{--rc:#16e08a;--rc2:#0a9d5c;--rcglow:rgba(22,224,138,0.5)}
+.rk-consagrado{--rc:#b06bff;--rc2:#7a2fd6;--rcglow:rgba(176,107,255,0.5)}
 .rk-elite{--rc:#f2cf5b;--rc2:#c79a30;--rcglow:rgba(242,207,91,0.55)}
 .rk-idolo{--rc:#ff4356;--rc2:#7d0f1c;--rcgold:#ffce5b;--rcglow:rgba(255,67,86,0.5)}
-.rk-leyenda{--rc:#eaf1fb;--rc2:#aab8cc;--rcglow:rgba(234,241,251,0.55)}
+.rk-leyenda{--rc:#ffd06b;--rc2:#c79a30;--rcglow:rgba(255,208,107,0.5)}
 .rk-goat{--rc:#ffd86b;--rc2:#a26bff;--rcgold:#ffd86b;--rcglow:rgba(255,216,107,0.55)}
 
 /* ---- materiales de fondo por rango ---- */

@@ -336,8 +336,13 @@ function guestPrompt(text) {
 // Activación RANGO POR RANGO: solo los slugs en esta lista usan el marco-imagen.
 // Vamos agregando cada rango aquí cuando su marco LIMPIO (sin texto) esté listo
 // y la información encima se vea perfecta. Los demás usan la carta CSS.
-const RANK_FRAMES_READY = ['canterano'];
+const RANK_FRAMES_READY = ['canterano', 'debutante', 'revelacion', 'consagrado', 'elite', 'idolo', 'leyenda', 'goat'];
 function rankFrameReady(slug) { return RANK_FRAMES_READY.indexOf(slug) !== -1; }
+// Marcos cuyo PNG trae el texto de muestra "quemado" (OVR/nombre/stats). En estos
+// ponemos paneles opacos encima que tapan la muestra y renderizamos el dato real.
+// El único marco 100% limpio es 'canterano'.
+const RANK_FRAME_BAKED = ['debutante', 'revelacion', 'consagrado', 'elite', 'idolo', 'leyenda', 'goat'];
+function frameIsBaked(slug) { return RANK_FRAME_BAKED.indexOf(slug) !== -1; }
 const RANK_FRAME_OK = {};
 let _rankFramesChecked = false;
 function preloadRankFrames(cb) {
@@ -354,52 +359,73 @@ function preloadRankFrames(cb) {
 }
 // Layout (porcentajes sobre la imagen del marco) por grupo de proporción.
 // Grupo A (0.666): canterano, debutante | B (0.750): revelacion, elite, idolo, leyenda, goat | C (0.800): consagrado
-const _frmCanterano = {
-  ovr:   { left: 13.5, top: 18,   size: 13,  possize: 4.2 },
-  photo: { left: 31,   top: 29,   width: 38 },
-  name:  { top: 59.5,  h: 5.4,    inset: 15.5, size: 4.9 },
-  stats: { top: 66.5,  h: 10,     inset: 13,   size: 5 },
-};
-const _frmDebutante = {
-  ovr:   { left: 13.5, top: 18,   size: 13,  possize: 4.2 },
-  photo: { left: 31,   top: 30,   width: 38 },
-  name:  { top: 61.5,  h: 5.2,    inset: 15.5, size: 4.8 },
-  stats: { top: 68,    h: 9.6,    inset: 13,   size: 4.8 },
-};
-const _frmB = {
-  ovr:   { left: 12,   top: 19.5, size: 12.5, possize: 4 },
-  photo: { left: 31,   top: 30,   width: 38 },
-  name:  { top: 63.5,  h: 5.2,    inset: 12.5, size: 4.6 },
-  stats: { top: 69.8,  h: 9.4,    inset: 11.5, size: 4.6 },
-};
-const _frmGoat = {
-  ovr:   { left: 12,   top: 19.5, size: 12.5, possize: 4 },
-  photo: { left: 31,   top: 27,   width: 38 },
-  name:  { top: 60,    h: 5,      inset: 11,   size: 4.6 },
-  stats: { top: 65.5,  h: 9,      inset: 10.5, size: 4.6 },
-};
-const _frmC = {
-  ovr:   { left: 12,   top: 18.5, size: 12.5, possize: 4 },
-  photo: { left: 31,   top: 30,   width: 38 },
-  name:  { top: 62,    h: 5.2,    inset: 13,   size: 4.6 },
-  stats: { top: 68.5,  h: 9.4,    inset: 11,   size: 4.6 },
-};
+// Coordenadas medidas directamente del texto impreso en cada PNG (detección por
+// contraste), para que los paneles opacos tapen EXACTO la muestra quemada.
 const RANK_FRAME_LAYOUT = {
-  canterano: _frmCanterano, debutante: _frmDebutante,
-  revelacion: _frmB, elite: _frmB, idolo: _frmB, leyenda: _frmB, goat: _frmGoat,
-  consagrado: _frmC,
+  canterano: { // marco LIMPIO (sin texto impreso): posiciones de diseño libre
+    ovr:   { left: 13.5, top: 18,   size: 13,  possize: 4.2 },
+    photo: { left: 31,   top: 29,   width: 38 },
+    name:  { top: 59.5,  h: 5.4,    inset: 15.5, size: 4.9 },
+    stats: { top: 66.5,  h: 10,     inset: 13,   size: 5 },
+  },
+  debutante: {
+    ovr:   { left: 13.5, top: 17.5,   size: 13,  possize: 4.2 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 63.0,  h: 6,      inset: 15.5, size: 4.7 },
+    stats: { top: 70.5,  h: 8,      inset: 13,   size: 4.5 },
+  },
+  revelacion: {
+    ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 62.5,  h: 6,      inset: 12.5, size: 4.5 },
+    stats: { top: 70.0,  h: 8,      inset: 11.5, size: 4.4 },
+  },
+  consagrado: {
+    ovr:   { left: 12,   top: 16.5, size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 60.3,  h: 7.5,    inset: 13,   size: 4.5 },
+    stats: { top: 66.8,  h: 7.6,    inset: 11,   size: 4.4 },
+  },
+  elite: {
+    ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 63.8,  h: 6,      inset: 12.5, size: 4.5 },
+    stats: { top: 71.0,  h: 8,      inset: 11.5, size: 4.4 },
+  },
+  idolo: {
+    ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 64.4,  h: 6,      inset: 12.5, size: 4.5 },
+    stats: { top: 71.8,  h: 8,      inset: 11.5, size: 4.4 },
+  },
+  leyenda: {
+    ovr:   { left: 12,   top: 17.5, size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 30,   width: 38 },
+    name:  { top: 64.8,  h: 6,      inset: 12.5, size: 4.5 },
+    stats: { top: 72.0,  h: 8.2,    inset: 11.5, size: 4.4 },
+  },
+  goat: {
+    ovr:   { left: 12,   top: 17.5,   size: 12.5, possize: 4 },
+    photo: { left: 31,   top: 29,   width: 38 },
+    name:  { top: 61.7,  h: 6,      inset: 11,   size: 4.5 },
+    stats: { top: 69.0,  h: 10,     inset: 10.5, size: 4.4 },
+  },
 };
 function frameLayout(slug) { return RANK_FRAME_LAYOUT[slug] || _frmB; }
 function buildFrameCardHTML(p, rank) {
   const tier = rank.slug;
+  const baked = frameIsBaked(tier);
   const a = p.attrs || { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
   const L = frameLayout(tier);
   const stats = [['PAC', a.pac], ['SHO', a.sho], ['PAS', a.pas], ['DRI', a.dri], ['DEF', a.def], ['FIS', a.fis]];
   const isMe = p.id === (state && state.id);
-  const photoInner = p.photo
-    ? `<img class="fco-photo-real" src="${p.photo}">`
-    : `<div class="fco-photo-ph"><span class="fco-cam">📷</span><span class="fco-cam-txt">${isMe ? 'TU FOTO<br>APARECERÁ<br>AQUÍ' : 'AÚN SIN<br>FOTO<br>OFICIAL'}</span></div>`;
-  const className = 'fcard rk-' + tier;
+  // Con foto: se superpone el círculo. Sin foto: en marcos "baked" se conserva el
+  // placeholder impreso del PNG; en el marco limpio se dibuja el placeholder CSS.
+  let photoInner;
+  if (p.photo) photoInner = `<img class="fco-photo-real" src="${p.photo}">`;
+  else if (baked) photoInner = '';
+  else photoInner = `<div class="fco-photo-ph"><span class="fco-cam">📷</span><span class="fco-cam-txt">${isMe ? 'TU FOTO<br>APARECERÁ<br>AQUÍ' : 'AÚN SIN<br>FOTO<br>OFICIAL'}</span></div>`;
+  const className = 'fcard rk-' + tier + (baked ? ' baked' : '');
   const html = `
     <img class="fcard-img" src="assets/ranks/${tier}.png" alt="${rank.name}">
     <div class="fco-photowrap" style="left:${L.photo.left}%;top:${L.photo.top}%;width:${L.photo.width}%">${photoInner}</div>
