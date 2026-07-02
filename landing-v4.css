@@ -1,0 +1,101 @@
+/* =========================================================================
+   LEVEL UP · Landing v4 — reproduce el Mockup 1 (estadio centrado)
+   Íconos SVG de línea, filas de features y "cómo funciona".
+   Usa vars de style.css: --g #00ff88, --f #ff00aa, --w, --ft, --fb
+   ========================================================================= */
+.lv4{background:#04060b;color:#fff;font-family:var(--fb)}
+.lv4 *{box-sizing:border-box}
+
+/* ---------------- NAV ---------------- */
+.lv4-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 40px;
+  background:linear-gradient(180deg,rgba(4,6,11,0.92),rgba(4,6,11,0));}
+.lv4-nav .logo{height:26px}
+.lv4-links{display:flex;gap:30px;align-items:center}
+.lv4-links a{font-family:var(--ft);font-size:12px;letter-spacing:1.5px;color:rgba(230,240,255,0.8);
+  text-decoration:none;transition:color .2s;position:relative}
+.lv4-links a:hover{color:var(--g)}
+.lv4-new{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:#04120a;background:var(--g);
+  padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.lv4-navr{display:flex;gap:12px;align-items:center}
+.lv4-btn{font-family:var(--ft);font-size:11px;letter-spacing:1.5px;padding:12px 22px;border-radius:8px;
+  cursor:pointer;transition:all .2s;border:none}
+.lv4-btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.25)}
+.lv4-btn.ghost:hover{border-color:var(--g);color:var(--g)}
+.lv4-btn.solid{background:var(--g);color:#04120a;font-weight:800;box-shadow:0 0 24px rgba(0,255,136,0.45)}
+.lv4-btn.solid:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,255,136,0.7)}
+
+/* ---------------- HERO ---------------- */
+.lv4-hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;overflow:hidden;padding:120px 20px 40px}
+.lv4-hero-bg{position:absolute;inset:0;z-index:0;
+  background-image:linear-gradient(180deg,rgba(4,6,11,0.55) 0%,rgba(4,6,11,0.35) 40%,rgba(4,6,11,0.9) 100%),
+    radial-gradient(ellipse 50% 60% at 20% 40%,rgba(0,255,136,0.28),transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 40%,rgba(255,0,170,0.24),transparent 60%),
+    url(assets/bg-hero-stadium.jpg);
+  background-size:cover;background-position:center 30%;
+  filter:brightness(.85) contrast(1.05) saturate(1.1)}
+.lv4-hero-bg::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 55%,#04060b 98%)}
+.lv4-hero-in{position:relative;z-index:2;max-width:900px}
+.lv4-eyebrow{font-family:var(--ft);font-size:13px;letter-spacing:5px;color:var(--g);
+  text-shadow:0 0 16px rgba(0,255,136,0.6);margin-bottom:18px}
+.lv4-title{font-family:var(--ft);font-weight:900;line-height:0.92;letter-spacing:-1px;margin-bottom:22px}
+.lv4-title span{display:block;font-size:clamp(52px,9vw,110px)}
+.lv4-title .w{color:#fff}
+.lv4-title .g{color:var(--g);text-shadow:0 0 40px rgba(0,255,136,0.55)}
+.lv4-title .f{color:var(--f);text-shadow:0 0 40px rgba(255,0,170,0.55)}
+.lv4-sub{font-size:19px;color:rgba(225,235,255,0.92);margin-bottom:34px}
+.lv4-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.lv4-cta .big{padding:16px 34px;font-size:12px}
+.lv4-scroll{margin-top:54px;color:var(--g);font-size:26px;animation:lv4bounce 2s ease-in-out infinite;opacity:.7}
+@keyframes lv4bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ---------------- ¿QUÉ ES LEVEL UP? (feature row) ---------------- */
+.lv4-what{position:relative;z-index:2;max-width:1200px;margin:-40px auto 0;padding:36px 32px;
+  background:rgba(8,11,18,0.72);border:1px solid rgba(255,255,255,0.08);border-radius:18px;
+  backdrop-filter:blur(16px);display:grid;grid-template-columns:1.1fr repeat(5,1fr);gap:8px;align-items:center}
+.lv4-what-intro{padding-right:20px;border-right:1px solid rgba(255,255,255,0.08)}
+.lv4-what-intro h3{font-family:var(--ft);font-size:17px;letter-spacing:1px;margin:0 0 12px;color:#fff}
+.lv4-what-intro .bar{width:30px;height:3px;background:var(--g);margin-bottom:14px;box-shadow:0 0 8px var(--g)}
+.lv4-what-intro p{font-size:13px;line-height:1.6;color:rgba(200,215,240,0.72);margin:0}
+.lv4-feat{text-align:center;padding:10px 8px}
+.lv4-feat-ic{height:44px;margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+.lv4-feat-ic svg{height:40px;width:40px;stroke-width:1.6}
+.lv4-feat.g svg{color:var(--g);filter:drop-shadow(0 0 8px rgba(0,255,136,0.5))}
+.lv4-feat.f svg{color:var(--f);filter:drop-shadow(0 0 8px rgba(255,0,170,0.5))}
+.lv4-feat h4{font-family:var(--ft);font-size:13px;letter-spacing:1.5px;margin:0 0 5px;color:#fff}
+.lv4-feat p{font-size:11px;color:rgba(190,205,235,0.6);margin:0;line-height:1.4}
+
+/* ---------------- CÓMO FUNCIONA (4 pasos) ---------------- */
+.lv4-how{position:relative;padding:100px 24px 110px;text-align:center;overflow:hidden}
+.lv4-how-bg{position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 50% 60% at 12% 60%,rgba(0,255,136,0.10),transparent 55%),
+             radial-gradient(ellipse 50% 60% at 88% 60%,rgba(255,0,170,0.10),transparent 55%)}
+.lv4-how-hdr{position:relative;z-index:2;font-family:var(--ft);font-size:clamp(22px,3vw,34px);
+  font-weight:900;letter-spacing:3px;margin-bottom:60px;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:18px}
+.lv4-how-hdr::before,.lv4-how-hdr::after{content:'';width:60px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--g));box-shadow:0 0 8px var(--g)}
+.lv4-how-hdr::after{background:linear-gradient(90deg,var(--g),transparent)}
+.lv4-steps{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:center;
+  gap:10px;max-width:1180px;margin:0 auto;flex-wrap:wrap}
+.lv4-step{flex:1;min-width:180px;max-width:250px;display:flex;flex-direction:column;align-items:center}
+.lv4-step-n{font-family:var(--ft);font-size:26px;font-weight:900;color:var(--g);
+  text-shadow:0 0 16px rgba(0,255,136,0.6);margin-bottom:2px}
+.lv4-step-t{font-family:var(--ft);font-size:14px;letter-spacing:2px;color:#fff;margin-bottom:22px}
+.lv4-step-vis{height:150px;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.lv4-step-vis svg{height:120px;width:120px;color:var(--g);filter:drop-shadow(0 0 14px rgba(0,255,136,0.45));stroke-width:1.4}
+.lv4-step:nth-child(6) .lv4-step-vis svg,.lv4-step:nth-child(6) .lv4-step-n{color:var(--f);
+  filter:drop-shadow(0 0 14px rgba(255,0,170,0.45));text-shadow:0 0 16px rgba(255,0,170,0.6)}
+.lv4-step-card{height:150px;filter:drop-shadow(0 14px 26px rgba(0,0,0,0.6))}
+.lv4-step-p{font-size:13px;color:rgba(200,215,240,0.7);line-height:1.5;max-width:200px}
+.lv4-arrow{align-self:center;margin-top:70px;color:var(--g);font-size:28px;opacity:.5;flex:0 0 auto}
+
+@media(max-width:900px){
+  .lv4-nav{padding:14px 18px}.lv4-links{display:none}
+  .lv4-what{grid-template-columns:1fr 1fr;gap:18px}
+  .lv4-what-intro{grid-column:1/-1;border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:18px}
+  .lv4-arrow{display:none}
+  .lv4-step{min-width:130px}
+}
