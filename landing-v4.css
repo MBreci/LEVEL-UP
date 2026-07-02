@@ -100,3 +100,27 @@
   .lv4-step{min-width:130px}
 }
 .lv4-scroll svg{width:30px;height:30px}
+
+/* ---- HERO 2: foto de jugador (estilo Mockup 2) ---- */
+.lv4-hero2{flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;
+  padding:120px 6vw 60px;gap:0}
+.lv4-hero-player{position:absolute;right:2%;bottom:0;height:96%;width:auto;z-index:1;
+  filter:drop-shadow(0 0 60px rgba(0,255,136,0.25));
+  -webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent)}
+.lv4-hero2-in{position:relative;z-index:2;max-width:620px}
+.lv4-badge2{display:inline-block;font-family:var(--ft);font-size:11px;letter-spacing:2px;color:var(--g);
+  border:1px solid rgba(0,255,136,0.4);border-radius:30px;padding:8px 18px;margin-bottom:26px;
+  box-shadow:0 0 20px rgba(0,255,136,0.15) inset}
+.lv4-title2{font-family:var(--ft);font-weight:900;line-height:0.95;letter-spacing:-1px;margin-bottom:22px}
+.lv4-title2 span{display:block;font-size:clamp(46px,6.5vw,86px)}
+.lv4-title2 .w{color:#fff}
+.lv4-title2 .g{color:var(--g);text-shadow:0 0 44px rgba(0,255,136,0.5)}
+.lv4-sub2{font-size:18px;line-height:1.6;color:rgba(220,232,255,0.9);max-width:460px;margin-bottom:32px}
+.lv4-social{margin-top:26px;font-size:14px;color:rgba(200,215,240,0.7)}
+.lv4-social b{color:#fff}
+@media(max-width:820px){
+  .lv4-hero2{flex-direction:column;justify-content:flex-end;text-align:center;padding-top:90px}
+  .lv4-hero-player{right:auto;left:50%;transform:translateX(-50%);height:70%;opacity:.45}
+  .lv4-hero2-in{max-width:100%}.lv4-cta{justify-content:center!important}
+  .lv4-badge2{margin-left:auto;margin-right:auto}
+}
