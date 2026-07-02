@@ -336,7 +336,9 @@ function guestPrompt(text) {
 // Activación RANGO POR RANGO: solo los slugs en esta lista usan el marco-imagen.
 // Vamos agregando cada rango aquí cuando su marco LIMPIO (sin texto) esté listo
 // y la información encima se vea perfecta. Los demás usan la carta CSS.
-const RANK_FRAMES_READY = ['canterano', 'debutante', 'revelacion', 'consagrado', 'elite', 'idolo', 'leyenda', 'goat'];
+// Marcos-imagen IA desactivados: se veían forzados y con recorte problemático.
+// Usamos las cartas CSS (estilo cyberpunk que combina con la página).
+const RANK_FRAMES_READY = [];
 function rankFrameReady(slug) { return RANK_FRAMES_READY.indexOf(slug) !== -1; }
 // Marcos cuyo PNG trae el texto de muestra "quemado" (OVR/nombre/stats). En estos
 // ponemos paneles opacos encima que tapan la muestra y renderizamos el dato real.
