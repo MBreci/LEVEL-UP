@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LEVEL UP</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1782900500">
+<link rel="stylesheet" href="redesign.css?v=preview1">
+</head>
+<body>
+
+<!-- NAV -->
+<header>
+  <div class="nav-top">
+    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <nav class="nav-modules">
+      <a class="nm-item nm-item-link on" href="#inicio">INICIO</a>
+    </nav>
+    <div class="nav-right">
+      <button class="btn-g" onclick="openAuth(false)">INICIAR SESIÓN</button>
+      <button class="btn-p" onclick="openAuth(true)">CREAR PERFIL</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-bg" id="hero-bg">
+    <div class="hero-bg-img"></div>
+    <div class="hero-bg-smoke"></div>
+    <div class="hero-beams"></div>
+    <div class="hero-bg-light"></div>
+  </div>
+  <div class="hero-glow-core"></div>
+  <div class="hero-particles">
+    <span class="hp hp1"></span><span class="hp hp2"></span><span class="hp hp3"></span>
+    <span class="hp hp4"></span><span class="hp hp5"></span><span class="hp hp6"></span>
+  </div>
+  <div class="hero-frame">
+    <span class="hf-corner tl"></span><span class="hf-corner tr"></span>
+    <span class="hf-corner bl"></span><span class="hf-corner br"></span>
+  </div>
+  <!-- PANEL FLOTANTE IZQUIERDA: TOP JUGADOR -->
+  <div class="hero-float hf-left" id="hero-float-left">
+    <div class="hf-eyebrow">TOP JUGADOR</div>
+    <div class="hf-n" id="hf-top-ovr">63</div>
+    <div class="hf-label-small">OVR</div>
+    <div class="hf-divider"></div>
+    <div class="hf-name" id="hf-top-name">CHAMPS</div>
+    <div class="hf-tag" id="hf-top-rank">CANTERANO</div>
+    <div class="hf-scroll-wrap">
+      <div class="hf-scroll-inner" id="hf-left-scroll"></div>
+    </div>
+  </div>
+  <!-- PANEL FLOTANTE DERECHA: STATS EN VIVO -->
+  <div class="hero-float hf-right" id="hero-float-right">
+    <div class="hf-eyebrow hf-eyebrow-f">EN VIVO</div>
+    <div class="hf-n hf-n-f" id="hf-jugadores-n">15</div>
+    <div class="hf-label-small">JUGADORES</div>
+    <div class="hf-divider hf-divider-f"></div>
+    <div class="hf-stat-row"><span class="hf-stat-v" id="hf-partidos-n">8</span><span class="hf-stat-l">PARTIDOS</span></div>
+    <div class="hf-stat-row"><span class="hf-stat-v hf-stat-v-f" id="hf-goles-n">42</span><span class="hf-stat-l">GOLES</span></div>
+    <div class="hf-scroll-wrap">
+      <div class="hf-scroll-inner hf-scroll-inner-f" id="hf-right-scroll"></div>
+    </div>
+  </div>
+  <div class="hero-content">
+    <div class="h-season">TEMPORADA BETA &nbsp;·&nbsp; BOGOTÁ &nbsp;·&nbsp; 2026</div>
+    <div class="h-sub-label">LA NUEVA ERA DEL FÚTBOL AMATEUR</div>
+    <div class="h-title">
+      <span class="t1">JUEGA.</span>
+      <span class="t2">COMPITE.</span>
+      <span class="t3">ASCIENDE.</span>
+    </div>
+    <div class="h-desc">Transforma cada partido en una carrera deportiva digital.</div>
+    <div class="h-btns">
+      <button class="hb1 hb1-neon" onclick="openAuth(true)">CREAR PERFIL</button>
+      <button class="hb2" onclick="openAuth(false)">INICIAR SESIÓN</button>
+    </div>
+    <div class="h-stats" id="hero-stats"></div>
+  </div>
+</section>
+
+<!-- SECCIÓN 1.5: PAIN HOOK -->
+<section class="ld-pain-section">
+  <div class="ld-pain-wrap">
+    <div class="ld-tagline">
+      <span class="ld-tg-w">Encuentra jugadores,</span><span class="ld-tg-p"> completa equipos</span><span class="ld-tg-w"> y descubre una comunidad donde</span><span class="ld-tg-g"> siempre hay alguien listo para jugar.</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 2: IMAGINA UN LUGAR DONDE -->
+<section class="sec-cine ld-imagine-section">
+  <div class="sec-cine-bg"></div>
+  <div class="sec-cine-scrim"></div>
+  <div class="sec-cine-smoke"></div>
+  <div class="sec-hdr" style="text-align:center;max-width:680px;margin:0 auto 56px;position:relative;z-index:2">
+    <div class="sec-eyebrow center"><span class="ar">▶</span> UNA IDEA <span class="ar">◀</span></div>
+    <div class="sec-title" style="font-size:clamp(28px,4.5vw,52px);line-height:1.1">Imagina un lugar donde</div>
+  </div>
+  <div class="ld-imagine-grid">
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">⚡</div>
+      <div class="ld-ic-text">Completas rápido tu equipo para asegurar tu partido.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">🎯</div>
+      <div class="ld-ic-text">Cada partido que juegas tiene importancia más allá del marcador.</div>
+    </div>
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">🤝</div>
+      <div class="ld-ic-text">Conoces futbolistas cerca de ti que buscan exactamente lo mismo que tú.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">📈</div>
+      <div class="ld-ic-text">Tu rendimiento queda registrado. Y mejora partido a partido.</div>
+    </div>
+    <div class="ld-imagine-card g">
+      <div class="ld-ic-icon">🏆</div>
+      <div class="ld-ic-text">Tu equipo construye una reputación. Y el barrio empieza a saberlo.</div>
+    </div>
+    <div class="ld-imagine-card f">
+      <div class="ld-ic-icon">📖</div>
+      <div class="ld-ic-text">Tienes una historia deportiva. Una que no desaparece al final del partido.</div>
+    </div>
+  </div>
+  <div class="ld-imagine-cta" style="position:relative;z-index:2">
+    <button class="ld-neon-btn" onclick="openAuth(true)">QUIERO ENTRAR</button>
+  </div>
+</section>
+
+<!-- SECCIÓN 3: MANIFIESTO -->
+<section class="ld-manifesto-section">
+  <div class="ld-manifesto-glow"></div>
+  <div class="ld-manifesto-wrap">
+    <div class="ld-manifesto-body">
+      <p class="ld-manifesto-big"><span class="ld-mf-g">LEVEL UP</span> nació como una iniciativa que propone <span class="ld-mf-f">cambiar la experiencia amateur del fútbol colombiano.</span></p>
+      <p>Conectamos jugadores, facilitamos la organización de partidos y le damos forma a algo que antes no existía en el fútbol de barrio:</p>
+      <p class="ld-manifesto-highlight">una carrera deportiva real.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 5: TU IDENTIDAD DEPORTIVA -->
+<section id="preview-carta" class="ld-carta-section">
+  <div class="ld-carta-glow"></div>
+  <div class="sec-hdr" style="text-align:center;margin-bottom:0;position:relative;z-index:2">
+    <div class="sec-eyebrow center"><span class="ar">▶</span> TU IDENTIDAD <span class="ar">◀</span></div>
+    <div class="ld-carta-title">Tu identidad deportiva<br>todavía no existe.</div>
+    <div class="ld-carta-subtitle">Pero puede empezar hoy.</div>
+  </div>
+  <div class="card-section" style="position:relative;z-index:2">
+    <div class="ld-carta-blur-wrap">
+      <div class="fifa rk-elite epic ld-carta-preview">
+        <div class="fc-shine"></div>
+        <div class="fc-sparks"></div>
+        <span class="fc-corner tl"></span>
+        <span class="fc-corner tr"></span>
+        <span class="fc-corner bl"></span>
+        <span class="fc-corner br"></span>
+        <div class="fc-crest"><span class="fc-crest-orn">◆</span> LEVEL UP <span class="fc-crest-orn">◆</span></div>
+        <div class="fc-head">
+          <div><div class="fc-ovr">??</div><div class="fc-pos">???</div></div>
+          <div class="fc-rank">????</div>
+        </div>
+        <div class="fc-player"><div class="fc-spotlight"></div><div class="fc-photo-placeholder"><span class="fc-photo-icon">?</span><span class="fc-photo-text">TU FICHA</span></div></div>
+        <div class="fc-namebar"><div class="fc-name">TÚ <span class="fc-nick">"?"</span></div></div>
+        <div class="fc-attrs">
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">PAC</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">SHO</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">PAS</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">DRI</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">DEF</div></div>
+          <div class="fca"><div class="fca-v">??</div><div class="fca-l">FIS</div></div>
+        </div>
+        <div class="fc-foot"><div class="fc-team">SIN EQUIPO AÚN</div></div>
+      </div>
+      <div class="ld-carta-overlay">
+        <div class="ld-carta-overlay-text">Crea tu perfil gratis<br>para descubrir cómo<br>comienza tu carrera.</div>
+        <button class="hb1" onclick="openAuth(true)">COMENZAR AHORA</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 6: TEASER - ESTO ES SOLO EL COMIENZO -->
+<section class="sec-cine ld-teaser-section">
+  <div class="sec-cine-bg"></div>
+  <div class="sec-cine-scrim"></div>
+  <div class="sec-cine-smoke"></div>
+  <div class="ld-teaser-wrap">
+    <div class="sec-eyebrow center" style="margin-bottom:24px;position:relative;z-index:2"><span class="ar">▶</span> DETRÁS DEL PERFIL <span class="ar">◀</span></div>
+    <div class="ld-teaser-title">Esto es solo el comienzo.</div>
+    <div class="ld-teaser-note">Hay mucho más esperándote.</div>
+    <div class="ld-teaser-cta-note">Crea tu perfil para conocer más de LEVEL UP. Es totalmente gratis.</div>
+    <div class="ld-teaser-grid">
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">CARRERA DEPORTIVA</div>
+        <div class="ld-tc-hint">Algo que evoluciona con cada partido que juegas.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">EQUIPOS</div>
+        <div class="ld-tc-hint">Construye algo más grande que tú solo.</div>
+      </div>
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">RANGOS</div>
+        <div class="ld-tc-hint">Hay ocho niveles. La mayoría nunca llega al último.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">TORNEOS</div>
+        <div class="ld-tc-hint">Próximamente. Lo que venga después de los partidos normales.</div>
+      </div>
+      <div class="ld-teaser-card">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">REY DEL BARRIO</div>
+        <div class="ld-tc-hint">El título que todos quieren. Solo uno puede tenerlo.</div>
+      </div>
+      <div class="ld-teaser-card f">
+        <div class="ld-tc-lock">🔒</div>
+        <div class="ld-tc-name">Y MÁS...</div>
+        <div class="ld-tc-hint">Logros. Desafíos. Mercado. Cosas que no te podemos contar aquí.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN FINAL: CTA PODEROSO -->
+<section class="ld-final-section">
+  <div class="ld-final-glow-g"></div>
+  <div class="ld-final-glow-f"></div>
+  <div class="ld-final-wrap">
+    <div class="ld-final-title">Estás a punto de comenzar<br><span class="ld-final-highlight">tu carrera deportiva.</span></div>
+    <button class="ld-final-btn" onclick="openAuth(true)">CREAR PERFIL GRATIS</button>
+    <div class="ld-final-sub">Descubre todo lo que LEVEL UP tiene preparado para ti.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="ft-top">
+    <div>
+      <img class="ft-logo-img" src="assets/logo.png" alt="LEVEL UP">
+      <div class="ft-desc">La plataforma deportiva donde cada partido cambia tu carrera. Construido en Bogotá, Colombia.</div>
+    </div>
+  </div>
+  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
+</footer>
+
+<!-- MODAL REGISTRO / INICIO DE SESIÓN -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab on" id="tab-new" onclick="switchAuthTab('new')">CREAR CUENTA</div>
+      <div class="auth-tab" id="tab-existing" onclick="switchAuthTab('existing')">INICIAR SESIÓN</div>
+    </div>
+
+    <div id="auth-new">
+      <div class="auth-photo-note">📷 Tu foto de jugador no se sube aquí: el equipo de LEVEL UP te la toma en tu primer partido en la cancha y la sube a tu carta.</div>
+      <div class="auth-label">NOMBRE</div>
+      <input class="auth-input" id="auth-name" autocomplete="off" placeholder="Ej: Santi Munez" maxlength="24">
+      <div class="auth-label">APODO (OPCIONAL)</div>
+      <input class="auth-input" id="auth-nickname" autocomplete="off" placeholder="Ej: Santim" maxlength="16">
+      <div class="auth-label">POSICIÓN</div>
+      <input type="hidden" id="auth-position" value="DEL">
+      <div class="sq-dropdown" id="pos-dropdown" onclick="togglePosDropdown()">
+        <span class="sq-selected chosen" id="pos-selected">DEL — Delantero</span>
+        <span class="sq-arrow">▾</span>
+        <div class="sq-options" id="pos-options">
+          <div class="sq-opt on" onclick="selectPos(this,'DEL','DEL — Delantero')">DEL — Delantero</div>
+          <div class="sq-opt" onclick="selectPos(this,'MED','MED — Mediocampista')">MED — Mediocampista</div>
+          <div class="sq-opt" onclick="selectPos(this,'DEF','DEF — Defensa')">DEF — Defensa</div>
+          <div class="sq-opt" onclick="selectPos(this,'POR','POR — Portero')">POR — Portero</div>
+        </div>
+      </div>
+      <div class="auth-label">PREGUNTA DE SEGURIDAD</div>
+      <input type="hidden" id="auth-sq">
+      <div class="sq-dropdown" id="sq-dropdown" onclick="toggleSQDropdown()">
+        <span class="sq-selected" id="sq-selected">Elige una pregunta...</span>
+        <span class="sq-arrow">▾</span>
+        <div class="sq-options" id="sq-options">
+          <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mascota?')">¿Cuál es el nombre de tu mascota?</div>
+          <div class="sq-opt" onclick="selectSQ(this,'¿En qué ciudad naciste?')">¿En qué ciudad naciste?</div>
+          <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu colegio?')">¿Cuál es el nombre de tu colegio?</div>
+          <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mejor amigo de infancia?')">¿Cuál es el nombre de tu mejor amigo de infancia?</div>
+          <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el equipo de fútbol de tu corazón?')">¿Cuál es el equipo de fútbol de tu corazón?</div>
+          <div class="sq-opt" onclick="selectSQ(this,'¿Cuál es el nombre de tu mamá?')">¿Cuál es el nombre de tu mamá?</div>
+        </div>
+      </div>
+      <div class="auth-label">RESPUESTA <span class="auth-note-inline">· Recuérdala bien, la necesitarás si olvidas tu contraseña</span></div>
+      <input class="auth-input" id="auth-sa" autocomplete="off" placeholder="Tu respuesta (no distingue mayúsculas)" maxlength="60">
+      <div class="auth-label">CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="auth-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+      <div class="auth-label">CONFIRMAR CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="auth-password-confirm" autocomplete="new-password" placeholder="Repite tu contraseña" maxlength="40">
+      <label class="auth-consent">
+        <input type="checkbox" id="auth-consent">
+        <span>He leído y acepto la <a href="privacidad.html" target="_blank">Política de Tratamiento de Datos Personales y de Imagen</a> de LEVEL UP.</span>
+      </label>
+      <div class="auth-error" id="auth-error"></div>
+      <button class="auth-submit" onclick="submitNewProfile()">CREAR MI CARTA</button>
+    </div>
+
+    <div id="auth-existing" style="display:none">
+      <div class="auth-label">NOMBRE O APODO</div>
+      <input class="auth-input" id="login-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
+      <div class="auth-label">CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="login-password" autocomplete="current-password" placeholder="Tu contraseña" maxlength="40">
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-submit" id="login-submit" onclick="submitLogin()">INICIAR SESIÓN</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></div>
+    </div>
+
+    <div id="auth-reset" style="display:none">
+      <div class="auth-label">NOMBRE O APODO</div>
+      <input class="auth-input" id="reset-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24" oninput="loadResetQuestion()">
+      <div id="reset-sq-wrap" style="display:none">
+        <div class="auth-label" id="reset-sq-label" style="color:var(--g);margin-top:8px"></div>
+        <input class="auth-input" id="reset-sa" autocomplete="off" placeholder="Tu respuesta" maxlength="60">
+        <div class="auth-label">NUEVA CONTRASEÑA</div>
+        <input class="auth-input" type="password" id="reset-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+        <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+        <input class="auth-input" type="password" id="reset-password-confirm" autocomplete="new-password" placeholder="Repite tu nueva contraseña" maxlength="40">
+      </div>
+      <div class="auth-error" id="reset-error"></div>
+      <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
+      <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
+    </div>
+
+    <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">CANCELAR</button>
+  </div>
+</div>
+
+<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+  <span class="a-dot"></span>
+  <span id="audio-lbl">LET'S ROLL</span>
+</div>
+
+</body>
+</html>
