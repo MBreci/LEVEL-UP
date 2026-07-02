@@ -92,6 +92,7 @@ function profileToRow(p) {
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
     is_admin: p.isAdmin || false,
+    community_ratings: p.communityRatings || {}, rated_players: p.ratedPlayers || {},
   };
   // saldo no se incluye aquí a propósito: nunca se escribe desde el frontend,
   // solo se lee. Modificarlo solo es posible vía apply_wallet_transaction (backend).
@@ -111,6 +112,7 @@ function rowToProfile(r) {
     notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
     saldo: r.saldo || 0,
     isAdmin: r.is_admin || false,
+    communityRatings: r.community_ratings || {}, ratedPlayers: r.rated_players || {},
   };
 }
 
@@ -811,13 +813,24 @@ async function openPlayerView(id) {
   modal.classList.add('open');
 }
 
+// IDs de todos los participantes de un partido: creador + inscritos en cupos + confirmados previamente
+function matchParticipantIds(m) {
+  const ids = new Set();
+  if (m.creatorId) ids.add(m.creatorId);
+  (m.necesita || []).forEach(n => (n.unidos || []).forEach(u => { if (u.profileId) ids.add(u.profileId); }));
+  (m.confirmadosPrev || []).forEach(c => { if (c.profileId) ids.add(c.profileId); });
+  return ids;
+}
+
+// ¿Jugué (o voy a jugar) un partido YA disputado junto a este jugador y aún no lo califiqué?
 function playerSharedMatch(myId, otherId) {
   if (state && state.ratedPlayers && state.ratedPlayers[otherId]) return false;
   const allMatches = typeof openMatches !== 'undefined' ? openMatches : [];
-  const myMatches = allMatches.filter(m =>
-    m.finalizado && m.players && m.players.includes(myId) && m.players.includes(otherId)
-  );
-  return myMatches.length > 0;
+  return allMatches.some(m => {
+    if (getMatchEstado(m) !== 'finalizado') return false;
+    const ids = matchParticipantIds(m);
+    return ids.has(myId) && ids.has(otherId);
+  });
 }
 
 let _rateTargetId = null;
@@ -871,6 +884,7 @@ function submitRating() {
   pushProfileToCloud(state);
   closeRateModal();
   closePlayerView();
+  if (typeof renderRateTeammates === 'function') renderRateTeammates();
   alert(`✅ Calificación enviada a ${target.nickname || target.name}.`);
 }
 
@@ -2110,7 +2124,7 @@ function matchToRow(m) {
     valor_por_persona: m.valorPorPersona, observaciones: m.observaciones,
     confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
-    prioritario: m.prioritario || false,
+    prioritario: m.prioritario || false, casual_bet: m.casualBet || null,
     created_at: m.createdAt,
   };
 }
@@ -2122,7 +2136,7 @@ function rowToMatch(r) {
     valorPorPersona: r.valor_por_persona, observaciones: r.observaciones,
     confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
-    prioritario: r.prioritario || false,
+    prioritario: r.prioritario || false, casualBet: r.casual_bet || null,
     createdAt: r.created_at,
   };
 }
@@ -2256,7 +2270,7 @@ const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null };
 
 function getTotalJugadores() {
   // fútbol N = N por equipo × 2 equipos
@@ -2273,7 +2287,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2432,9 +2446,27 @@ function renderBpWizard() {
         <span>Partido abierto: los jugadores pueden unirse directamente. Desmárcalo para aprobar cada solicitud.</span>
       </label>
       <div class="auth-label" style="margin-top:12px">OVR MÍNIMO <span style="color:var(--td);font-weight:300">· Opcional</span></div>
-      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60 — deja vacío para todos los niveles">`;
+      <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60 — deja vacío para todos los niveles">
+
+      <div class="auth-label" style="margin-top:16px">APUESTA AMISTOSA <span style="color:var(--td);font-weight:300">· Opcional — el equipo perdedor paga</span></div>
+      <div class="bp-casualbet-opts" id="bp-casualbet-opts">
+        ${[['','SIN APUESTA'],['cancha','🏟️ LA CANCHA'],['bebida','🍺 LA BEBIDA'],['ambas','🏟️🍺 CANCHA + BEBIDA']].map(([v,l]) =>
+          `<button type="button" class="bp-casualbet ${(bpWizard.casualBet||'')===v?'on':''}" onclick="bpSetCasualBet('${v}')">${l}</button>`).join('')}
+      </div>`;
   }
   renderBpSummary();
+}
+
+function bpSetCasualBet(v) {
+  bpWizard.casualBet = v;
+  document.querySelectorAll('#bp-casualbet-opts .bp-casualbet').forEach(b => {
+    b.classList.toggle('on', (b.getAttribute('onclick') || '').includes(`'${v}'`));
+  });
+  renderBpSummary();
+}
+
+function casualBetLabel(v) {
+  return { cancha: '🏟️ El perdedor paga la cancha', bebida: '🍺 El perdedor paga la bebida', ambas: '🏟️🍺 El perdedor paga cancha + bebida' }[v] || '';
 }
 
 function bpClampPosInput(input) {
@@ -2575,6 +2607,7 @@ function renderBpSummary() {
     ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
     ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
     ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
+    ${bpWizard.casualBet ? `<div class="bpw-summary-row"><span>APUESTA</span><strong>${casualBetLabel(bpWizard.casualBet)}</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
   `;
 }
@@ -2693,6 +2726,7 @@ function submitMatchRequest() {
     confirmadosPrev,
     joinRequests: [],
     finalizado: false,
+    casualBet: bpWizard.casualBet || null,
     createdAt: Date.now(),
   });
   const created = openMatches[0];
@@ -2918,6 +2952,7 @@ function buildMatchCard(m, mode) {
         <span class="bp-pill">💵 ${(m.valorPorPersona || m.precio) ? '$' + Number(m.valorPorPersona || m.precio).toLocaleString('es-CO') + '/jug' : 'GRATIS'}</span>
         <span class="bp-pill">⭐ OVR ${m.ovrMin || 'LIBRE'}</span>
         <span class="bp-pill">👤 ${m.creatorName}</span>
+        ${m.casualBet ? `<span class="bp-pill bp-pill-bet">${casualBetLabel(m.casualBet)}</span>` : ''}
       </div>
 
       <div class="bp-cupos-wrap">
@@ -2992,6 +3027,40 @@ function renderMiParticipacion() {
   el.innerHTML = list.length
     ? list.map(m => buildMatchCard(m, 'mia')).join('')
     : `<div class="bp-empty">No estás inscrito en ningún partido próximo.</div>`;
+  renderRateTeammates();
+}
+
+// Panel "Califica a tus compañeros": partidos ya disputados en los que jugué,
+// con la lista de compañeros que todavía no he calificado.
+function renderRateTeammates() {
+  const el = document.getElementById('bp-rate-teammates');
+  if (!el) return;
+  if (!state) { el.innerHTML = ''; return; }
+  const rated = state.ratedPlayers || {};
+  const played = openMatches.filter(m => getMatchEstado(m) === 'finalizado' && matchParticipantIds(m).has(state.id));
+  const blocks = [];
+  played.sort((a, b) => matchDateTime(b) - matchDateTime(a)).forEach(m => {
+    const mates = [...matchParticipantIds(m)].filter(id => id !== state.id && !rated[id] && profiles[id]);
+    if (!mates.length) return;
+    blocks.push(`
+      <div class="rate-match-card">
+        <div class="rate-match-hdr">
+          <span class="rate-match-title">CALIFICA A TUS COMPAÑEROS</span>
+          <span class="rate-match-sub">${m.cancha || m.zona} · ${m.fecha || ''}</span>
+        </div>
+        <div class="rate-mates">
+          ${mates.map(id => {
+            const p = profiles[id];
+            return `<button class="rate-mate" onclick="openRateModal('${id}')">
+              <span class="rate-mate-av">${(p.nickname||p.name).split(' ').map(s=>s[0]).join('').slice(0,2)}</span>
+              <span class="rate-mate-name">${p.nickname || p.name}</span>
+              <span class="rate-mate-cta">⭐ CALIFICAR</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`);
+  });
+  el.innerHTML = blocks.join('');
 }
 
 function openJoinModal(matchId, pos) {
