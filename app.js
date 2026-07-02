@@ -2098,6 +2098,7 @@ function matchToRow(m) {
     valor_por_persona: m.valorPorPersona, observaciones: m.observaciones,
     confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
+    prioritario: m.prioritario || false,
     created_at: m.createdAt,
   };
 }
@@ -2109,6 +2110,7 @@ function rowToMatch(r) {
     valorPorPersona: r.valor_por_persona, observaciones: r.observaciones,
     confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
+    prioritario: r.prioritario || false,
     createdAt: r.created_at,
   };
 }
@@ -2875,6 +2877,8 @@ function buildMatchCard(m, mode) {
   let urgencyBadge = '';
   if (faltan > 0 && faltan <= 2) urgencyBadge = `<div class="bp-urgency-badge fire">🔥 SOLO FALTAN ${faltan}</div>`;
   else if (pct >= 75 && faltan > 0) urgencyBadge = `<div class="bp-urgency-badge green">🟢 CASI COMPLETO</div>`;
+  // Badge PRIORITARIO: alguien canceló y quedó un cupo libre
+  const priorityBadge = (m.prioritario && faltan > 0) ? `<div class="bp-urgency-badge priority">⚡ PRIORITARIO · CUPO LIBRE</div>` : '';
 
   // Hora formateada
   const hora = m.horaValue ? formatHoraLabel(m.horaValue) : '';
@@ -2889,6 +2893,7 @@ function buildMatchCard(m, mode) {
         </div>
         <div class="bp-card-header-right">
           <div class="bp-estado-badge ${info.cls}">${info.label}</div>
+          ${priorityBadge}
           ${urgencyBadge}
         </div>
       </div>
@@ -2957,8 +2962,10 @@ function buildMatchCard(m, mode) {
 function renderProximosPartidos() {
   const el = document.getElementById('bp-list-proximos');
   if (!el) return;
+  const hasFreeSpot = (m) => getTotalCupos(m) - getTotalUnidos(m) > 0;
+  const isPriority = (m) => m.prioritario && hasFreeSpot(m);
   const list = applyBpFilters(openMatches.filter(m => getMatchEstado(m) !== 'finalizado'))
-    .sort((a, b) => matchDateTime(a) - matchDateTime(b));
+    .sort((a, b) => (isPriority(b) - isPriority(a)) || (matchDateTime(a) - matchDateTime(b)));
   el.innerHTML = list.length
     ? list.map(m => buildMatchCard(m, 'proximos')).join('')
     : `<div class="bp-empty">No hay partidos próximos con estos filtros. Publica el tuyo.</div>`;
@@ -3061,13 +3068,20 @@ function cancelMyParticipation(matchId) {
   if (!state) return;
   const match = openMatches.find(m => m.id === matchId);
   if (!match) return;
-  if ((matchDateTime(match).getTime() - Date.now()) / 3600000 < 24) return;
+  const hoursLeft = (matchDateTime(match).getTime() - Date.now()) / 3600000;
+  if (hoursLeft < 24) {
+    alert('Solo puedes cancelar tu asistencia con un mínimo de 24 horas de anticipación.');
+    return;
+  }
   match.necesita.forEach(n => { n.unidos = n.unidos.filter(u => u.profileId !== state.id); });
+  match.prioritario = true; // se abrió un cupo por cancelación → el partido se marca prioritario
   saveOpenMatches();
   pushMatchToCloud(match);
+  // Aviso inmediato al capitán/creador
   const creator = profiles[match.creatorId];
   if (creator && creator.id !== state.id) {
-    creator.notifications.push({ icon: '🚫', text: `${state.nickname || state.name} canceló su participación en tu partido del ${match.fecha}.`, time: 'AHORA' });
+    creator.notifications = creator.notifications || [];
+    creator.notifications.push({ icon: '⚠️', text: `${state.nickname || state.name} se bajó de tu partido del ${match.fecha}. Quedó un cupo libre — tu partido está ahora en PRIORITARIO.`, time: 'AHORA' });
     profiles[creator.id] = creator;
     saveProfiles();
     pushProfileToCloud(creator);
