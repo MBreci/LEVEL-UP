@@ -447,6 +447,32 @@ function buildFrameCardHTML(p, rank) {
   return { className, html };
 }
 
+// Ajuste a prueba de balas: mide el nombre ya renderizado y lo achica hasta que
+// quepa dentro de su banda (independiente de la fuente / ancho del dispositivo).
+function fitFrameCardNames(root) {
+  const scope = root || document;
+  scope.querySelectorAll('.fcard .fco-namewrap').forEach(wrap => {
+    const name = wrap.querySelector('.fco-name');
+    if (!name) return;
+    let size = parseFloat(getComputedStyle(name).fontSize);
+    let guard = 0;
+    while (name.scrollWidth > wrap.clientWidth - 2 && size > 6 && guard < 60) {
+      size -= 0.5;
+      name.style.fontSize = size + 'px';
+      guard++;
+    }
+  });
+}
+if (typeof document !== 'undefined') {
+  const _fitCards = () => requestAnimationFrame(() => fitFrameCardNames());
+  document.addEventListener('DOMContentLoaded', () => {
+    _fitCards();
+    try {
+      new MutationObserver(_fitCards).observe(document.body, { childList: true, subtree: true });
+    } catch (e) { /* observer no disponible */ }
+  });
+}
+
 function buildCardHTML(p) {
   const rank = getRank(p.xp || 0);
   if (rankFrameReady(rankSlug(rank)) && RANK_FRAME_OK[rankSlug(rank)]) return buildFrameCardHTML(p, rank);
