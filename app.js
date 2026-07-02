@@ -991,6 +991,18 @@ function updateProfileBtn() {
   }
 }
 
+// Re-render seguro: no redibuja si el usuario está escribiendo en un campo o
+// tiene abierto el formulario de crear partido (evita que se le borre/mueva).
+function safeRerender() {
+  const ae = document.activeElement;
+  const typing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable);
+  const form = document.getElementById('bp-form');
+  const formOpen = form && form.style.display !== 'none';
+  const modalOpen = document.querySelector('.modal-overlay.open');
+  if (typing || formOpen || modalOpen) return;
+  renderAll();
+}
+
 function renderAll() {
   renderNav();
   renderHero();
@@ -3224,8 +3236,9 @@ function renderBuscarPartido() {
   renderProximosPartidos();
   renderMiParticipacion();
   renderMiParticipacionTimeline();
-  const form = document.getElementById('bp-form');
-  if (form && form.style.display !== 'none') renderBpWizard();
+  // El wizard NO se re-renderiza aquí: solo se dibuja al abrirlo y en cada
+  // interacción del usuario. Re-dibujarlo en el auto-refresh borraba el campo
+  // que estabas escribiendo y hacía parpadear la pantalla.
   // Hero stats
   const activeCount = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado').length;
   const playerCount = Object.keys(profiles).length;
@@ -5194,10 +5207,12 @@ function initApp() {
   if (state) {
     setInterval(() => {
       syncProfilesFromCloud();
-      syncTeamsFromCloud().then(renderAll);
-      syncTeamInvitesFromCloud().then(renderAll);
-      syncOpenMatchesFromCloud().then(renderAll);
-      syncMatchInvitesFromCloud().then(renderAll);
+      Promise.all([
+        syncTeamsFromCloud(),
+        syncTeamInvitesFromCloud(),
+        syncOpenMatchesFromCloud(),
+        syncMatchInvitesFromCloud(),
+      ]).then(safeRerender);
     }, 20000);
   }
 
