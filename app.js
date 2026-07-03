@@ -155,12 +155,19 @@ async function deleteProfileFromCloud(id) {
   if (error) console.error('Error borrando perfil en la nube:', error.message);
 }
 
+// Columnas del perfil SIN la foto (base64, muy pesada). El sync masivo nunca trae
+// fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
+const PROFILE_SYNC_COLS = 'id,name,nickname,position,team,password_hash,security_question,security_answer_hash,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
+
 async function syncProfilesFromCloud() {
   if (!sb) return;
-  const { data, error } = await sb.from('profiles').select('*');
+  const { data, error } = await sb.from('profiles').select(PROFILE_SYNC_COLS);
   if (error || !data) { console.error('Error sincronizando perfiles:', error && error.message); return; }
   data.forEach(row => {
     const fresh = rowToProfile(row);
+    // Conservar la foto que ya tengamos cargada localmente (el sync no la trae).
+    const prevPhoto = (profiles[row.id] && profiles[row.id].photo) || (state && state.id === row.id && state.photo) || null;
+    if (prevPhoto) fresh.photo = prevPhoto;
     if (!state || row.id !== state.id) {
       profiles[row.id] = fresh;
     } else {
@@ -176,6 +183,23 @@ async function syncProfilesFromCloud() {
   });
   saveProfiles();
   renderAll();
+}
+
+// Carga bajo demanda las fotos de un conjunto de jugadores (solo las que falten).
+// Se usa donde se muestran varias fotos a la vez (p. ej. plantilla de un equipo),
+// evitando descargar las fotos de TODA la base. Re-renderiza una vez al terminar.
+async function ensurePhotos(ids) {
+  if (!sb || !ids || !ids.length) return false;
+  const missing = [...new Set(ids)].filter(id => id && profiles[id] && profiles[id].photo === undefined);
+  if (!missing.length) return false;
+  const { data, error } = await sb.from('profiles').select('id,photo').in('id', missing);
+  if (error || !data) return false;
+  let changed = false;
+  data.forEach(r => {
+    if (profiles[r.id]) { profiles[r.id].photo = r.photo || null; changed = true; }
+  });
+  if (changed) saveProfiles();
+  return changed;
 }
 
 async function hashPassword(password) {
@@ -3459,7 +3483,7 @@ let teamMatches = loadTeamMatches();
 
 function teamToRow(t) {
   return {
-    id: t.id, name: t.name, descripcion: t.desc, city: t.city, color: t.color, photo: t.photo,
+    id: t.id, name: t.name, descripcion: t.desc, city: t.city, color: t.color,
     captain_id: t.captainId, member_ids: t.memberIds, open_for_players: t.openForPlayers,
     join_requests: t.joinRequests, wins: t.wins, draws: t.draws, losses: t.losses,
     goals_for: t.goalsFor, goals_against: t.goalsAgainst, streak: t.streak, created_at: t.createdAt,
@@ -3480,12 +3504,52 @@ async function pushTeamToCloud(t) {
   const { error } = await sb.from('teams').upsert(teamToRow(t));
   if (error) console.error('Error guardando equipo en la nube:', error.message);
 }
+
+// Escribe SOLO el escudo (base64) con un UPDATE dirigido. teamToRow ya no incluye la
+// foto, así que ninguna edición/sync normal del equipo puede borrar el escudo por accidente.
+async function pushTeamPhotoToCloud(t) {
+  if (!sb) return;
+  const { error } = await sb.from('teams').update({ photo: t.photo || null }).eq('id', t.id);
+  if (error) console.error('Error guardando escudo en la nube:', error.message);
+}
+// Columnas de equipo SIN el escudo (base64, ~1.7 MB c/u). El sync masivo nunca lo trae:
+// se carga bajo demanda al ver el equipo. Era la mayor fuga de egress del bucle.
+const TEAM_SYNC_COLS = 'id,name,descripcion,city,color,captain_id,member_ids,open_for_players,join_requests,wins,draws,losses,goals_for,goals_against,streak,created_at,slot_positions,leave_requests,join_log';
+
 async function syncTeamsFromCloud() {
   if (!sb) return;
-  const { data, error } = await sb.from('teams').select('*');
+  const { data, error } = await sb.from('teams').select(TEAM_SYNC_COLS);
   if (error || !data) { console.error('Error sincronizando equipos:', error && error.message); return; }
-  data.forEach(row => { teams[row.id] = rowToTeam(row); });
+  data.forEach(row => {
+    const prevPhoto = teams[row.id] && teams[row.id].photo;
+    teams[row.id] = rowToTeam(row); // sin photo
+    if (prevPhoto) teams[row.id].photo = prevPhoto;
+  });
   saveTeams();
+}
+
+// Carga TODOS los escudos una sola vez por sesión (no en cada ciclo de sync).
+// Los equipos son pocos y sus escudos ya van reducidos; esto los deja visibles en
+// todas las listas SIN volver a descargarlos cada 45s (era la mayor fuga de egress).
+let _teamPhotosLoaded = false;
+async function loadAllTeamPhotosOnce() {
+  if (!sb || _teamPhotosLoaded) return;
+  _teamPhotosLoaded = true;
+  const { data, error } = await sb.from('teams').select('id,photo');
+  if (error || !data) { _teamPhotosLoaded = false; return; }
+  let changed = false;
+  data.forEach(r => { if (teams[r.id] && teams[r.id].photo === undefined) { teams[r.id].photo = r.photo || null; changed = true; } });
+  if (changed) { saveTeams(); if (typeof renderAll === 'function') renderAll(); }
+}
+
+// Carga bajo demanda el escudo de un equipo (solo si no está ya cargado).
+async function ensureTeamPhoto(teamId) {
+  if (!sb || !teams[teamId] || teams[teamId].photo !== undefined) return false;
+  const { data, error } = await sb.from('teams').select('photo').eq('id', teamId).single();
+  if (error || !data) return false;
+  teams[teamId].photo = data.photo || null;
+  saveTeams();
+  return true;
 }
 
 function challengeToRow(c) {
@@ -3615,6 +3679,7 @@ async function submitCreateTeam() {
   teams[team.id] = team;
   saveTeams();
   pushTeamToCloud(team);
+  if (photo) pushTeamPhotoToCloud(team);
   state.team = team.name;
   profiles[state.id] = state;
   saveProfiles();
@@ -3987,8 +4052,10 @@ async function submitEditTeam() {
     return;
   }
   errorEl.textContent = '';
+  let photoChanged = false;
   if (photoInput && photoInput.files && photoInput.files[0]) {
     team.photo = await fileToDataUrl(photoInput.files[0]);
+    photoChanged = true;
   }
   team.name = name.toUpperCase();
   team.desc = desc;
@@ -3996,6 +4063,7 @@ async function submitEditTeam() {
   team.color = color;
   saveTeams();
   pushTeamToCloud(team);
+  if (photoChanged) pushTeamPhotoToCloud(team);
   if (state.team) {
     state.team = team.name;
     profiles[state.id] = state;
@@ -5024,6 +5092,11 @@ function openTeamView(teamId) {
     </div>
   `;
   modal.classList.add('open');
+  // Cargar bajo demanda el escudo del equipo y las fotos de la plantilla
+  // (el sync masivo ya no trae estas imágenes pesadas).
+  Promise.all([ensureTeamPhoto(teamId), ensurePhotos(team.memberIds)]).then(([tCh, pCh]) => {
+    if ((tCh || pCh) && modal.classList.contains('open')) openTeamView(teamId);
+  });
 }
 
 function closeTeamView() {
@@ -5266,9 +5339,9 @@ function initApp() {
   checkPendingReveal();
   syncProfilesFromCloud();
   syncTeamsFromCloud().then(() => {
+    loadAllTeamPhotosOnce();
     const myTeam = getMyTeam();
     if (myTeam) {
-      pushTeamToCloud(myTeam);
       if (state.team !== myTeam.name) {
         state.team = myTeam.name;
         profiles[state.id] = state;
@@ -5307,7 +5380,9 @@ function initApp() {
   }
 
   if (state) {
-    setInterval(() => {
+    const runSync = () => {
+      // No sincronizar si la pestaña está oculta: ahorra egress cuando nadie mira.
+      if (document.visibilityState === 'hidden') return;
       syncProfilesFromCloud();
       Promise.all([
         syncTeamsFromCloud(),
@@ -5315,7 +5390,12 @@ function initApp() {
         syncOpenMatchesFromCloud(),
         syncMatchInvitesFromCloud(),
       ]).then(safeRerender);
-    }, 20000);
+    };
+    setInterval(runSync, 45000);
+    // Al volver a la pestaña, refrescar una vez de inmediato para que se sienta al día.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') runSync();
+    });
   }
 
   // Carga los marcos-imagen de rango; si existen, vuelve a renderizar las cartas con el marco
