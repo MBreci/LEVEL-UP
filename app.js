@@ -84,9 +84,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 function profileToRow(p) {
   return {
     id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
-    photo: p.photo, password_hash: p.passwordHash,
-    security_question: p.securityQuestion || null,
-    security_answer_hash: p.securityAnswerHash || null,
+    photo: p.photo,
     ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
@@ -120,6 +118,35 @@ async function pushProfileToCloud(p) {
   if (!sb) return;
   const { error } = await sb.from('profiles').upsert(profileToRow(p));
   if (error) console.error('Error guardando perfil en la nube:', error.message);
+}
+
+// Escribe SOLO las credenciales (contraseña y pregunta de seguridad) con un UPDATE
+// dirigido. profileToRow ya NO incluye estas columnas, así que ninguna sincronización
+// normal de perfil puede pisar la contraseña con datos viejos de otro dispositivo.
+// Solo se llama explícitamente al registrarse, cambiar contraseña o configurar pregunta.
+async function pushCredentialsToCloud(p) {
+  if (!sb) return { error: null };
+  const { error } = await sb.from('profiles').update({
+    password_hash: p.passwordHash,
+    security_question: p.securityQuestion || null,
+    security_answer_hash: p.securityAnswerHash || null,
+  }).eq('id', p.id);
+  if (error) console.error('Error guardando credenciales en la nube:', error.message);
+  return { error };
+}
+
+// Crea el perfil completo en la nube (incluye credenciales) al registrarse.
+// password_hash es NOT NULL, por eso el alta debe incluirlas en una sola inserción.
+async function createProfileInCloud(p) {
+  if (!sb) return { error: null };
+  const row = Object.assign({}, profileToRow(p), {
+    password_hash: p.passwordHash,
+    security_question: p.securityQuestion || null,
+    security_answer_hash: p.securityAnswerHash || null,
+  });
+  const { error } = await sb.from('profiles').upsert(row);
+  if (error) console.error('Error creando perfil en la nube:', error.message);
+  return { error };
 }
 
 async function deleteProfileFromCloud(id) {
@@ -1991,7 +2018,11 @@ async function submitResetPassword() {
     profile.passwordHash = await hashPassword(password);
     profiles[profile.id] = profile;
     saveProfiles();
-    pushProfileToCloud(profile);
+    const { error: credErr } = await pushCredentialsToCloud(profile);
+    if (credErr) {
+      errorEl.textContent = 'No se pudo guardar la nueva contraseña. Revisa tu conexión e inténtalo de nuevo.';
+      return;
+    }
     document.getElementById('reset-id').value = '';
     document.getElementById('reset-sa').value = '';
     document.getElementById('reset-password').value = '';
@@ -2058,7 +2089,7 @@ async function submitNewProfile() {
   const profile = makeProfile({ name, position, nickname, passwordHash, securityQuestion, securityAnswerHash });
   profiles[profile.id] = profile;
   saveProfiles();
-  pushProfileToCloud(profile);
+  await createProfileInCloud(profile);
   setCurrentProfile(profile.id);
   closeAuth();
   if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
