@@ -5258,7 +5258,9 @@ function initApp() {
     }
   });
   syncMatchInvitesFromCloud().then(renderAll);
-  if (state) pushProfileToCloud(state);
+  // NO empujar el perfil local al cargar: la nube es la fuente de verdad
+  // (syncProfilesFromCloud refresca el estado). Empujar aquí pisaba datos buenos
+  // con datos viejos del dispositivo (bug de reseteo de cartas entre dominios).
 
   const fechaInput = document.getElementById('bp-fecha-date');
   if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
