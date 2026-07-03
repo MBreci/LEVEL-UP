@@ -136,7 +136,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 @keyframes tdot{0%,100%{box-shadow:0 0 4px #ff3333}50%{box-shadow:0 0 12px #ff3333}}
 .tk-lbl{font-family:var(--ft);font-size:8px;letter-spacing:3px;color:#ff3333}
 .tk-feed{flex:1;overflow:hidden;white-space:nowrap}
-.tk-inner{display:inline-flex;gap:48px;animation:tkroll 35s linear infinite}
+.tk-inner{display:inline-flex;gap:48px;animation:tkroll 60s linear infinite}
 @keyframes tkroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .tk-item{font-size:11px;color:var(--tm);display:inline-flex;align-items:center;gap:8px}
 .tk-item strong{color:var(--w);font-weight:500}
