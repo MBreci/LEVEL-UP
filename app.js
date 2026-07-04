@@ -115,9 +115,10 @@ function rowToProfile(r) {
 }
 
 async function pushProfileToCloud(p) {
-  if (!sb) return;
+  if (!sb) return { error: null };
   const { error } = await sb.from('profiles').upsert(profileToRow(p));
   if (error) console.error('Error guardando perfil en la nube:', error.message);
+  return { error };
 }
 
 // Escribe SOLO las credenciales (contraseña y pregunta de seguridad) con un UPDATE
@@ -2102,18 +2103,29 @@ async function submitNewProfile() {
     errorEl.textContent = 'Debes aceptar la Política de Tratamiento de Datos Personales y de Imagen para crear tu cuenta.';
     return;
   }
-  const existing = await findProfileByIdentifier(name) || (nickname ? await findProfileByIdentifier(nickname) : null);
-  if (existing) {
-    errorEl.textContent = 'Ya existe una cuenta con ese nombre o apodo. Inicia sesión o elige otro.';
-    return;
+  // Unicidad: verificar contra la nube (autoritativo), nombre y apodo por separado.
+  const nameTaken = await findProfileByIdentifier(name, true);
+  if (nameTaken) { errorEl.textContent = 'Ese nombre ya está registrado. Si es tuyo, inicia sesión; si no, usa otro.'; return; }
+  if (nickname) {
+    const nickTaken = await findProfileByIdentifier(nickname, true);
+    if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
   }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
   const securityAnswerHash = await hashPassword(securityAnswer);
   const profile = makeProfile({ name, position, nickname, passwordHash, securityQuestion, securityAnswerHash });
+  // Guardar en la nube ANTES de fijar la sesión: si el índice único lo rechaza
+  // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
+  const { error: createErr } = await createProfileInCloud(profile);
+  if (createErr) {
+    const dup = /duplicate key|unique/i.test(createErr.message || '');
+    errorEl.textContent = dup
+      ? 'Ese nombre o apodo se acaba de registrar. Elige otro.'
+      : 'No se pudo crear la cuenta. Revisa tu conexión e inténtalo de nuevo.';
+    return;
+  }
   profiles[profile.id] = profile;
   saveProfiles();
-  await createProfileInCloud(profile);
   setCurrentProfile(profile.id);
   closeAuth();
   if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
@@ -2130,8 +2142,9 @@ async function editNickname() {
     return;
   }
   const newNick = trimmed.toUpperCase();
+  const prevNick = state.nickname;
   if (newNick && newNick !== state.nickname) {
-    const taken = await findProfileByIdentifier(newNick);
+    const taken = await findProfileByIdentifier(newNick, true);
     if (taken && taken.id !== state.id) {
       alert('Ese apodo ya está en uso. Elige otro.');
       return;
@@ -2140,7 +2153,16 @@ async function editNickname() {
   state.nickname = newNick;
   profiles[state.id] = state;
   saveState();
-  pushProfileToCloud(state);
+  // Si el índice único lo rechaza (alguien lo tomó justo ahora), revertir.
+  const { error } = await pushProfileToCloud(state);
+  if (error) {
+    state.nickname = prevNick;
+    profiles[state.id] = state;
+    saveState();
+    alert('Ese apodo se acaba de ocupar. Elige otro.');
+    renderAll();
+    return;
+  }
   renderAll();
 }
 
