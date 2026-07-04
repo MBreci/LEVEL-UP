@@ -1981,9 +1981,29 @@ async function submitLogin() {
   }
 }
 
+// Recuperación de contraseña por CORREO + código. Se construye el panel desde JS
+// para que funcione igual en todas las páginas sin importar su HTML previo.
+let _resetEmail = '';
 function showResetPassword() {
   document.getElementById('auth-existing').style.display = 'none';
-  document.getElementById('auth-reset').style.display = 'block';
+  const panel = document.getElementById('auth-reset');
+  panel.innerHTML = `
+    <div class="auth-label">CORREO ELECTRÓNICO</div>
+    <input class="auth-input" id="reset-email" type="email" autocomplete="off" placeholder="El correo de tu cuenta" maxlength="80">
+    <button class="auth-submit" id="reset-send" onclick="requestResetCode()">ENVIARME EL CÓDIGO</button>
+    <div id="reset-code-wrap" style="display:none">
+      <div class="auth-label">CÓDIGO DE 6 DÍGITOS</div>
+      <input class="auth-input" id="reset-code" inputmode="numeric" autocomplete="off" placeholder="Revisa tu correo (y spam)" maxlength="6">
+      <div class="auth-label">NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
+      <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+      <input class="auth-input" type="password" id="reset-password-confirm" autocomplete="new-password" placeholder="Repite tu nueva contraseña" maxlength="40">
+      <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">CAMBIAR CONTRASEÑA</button>
+    </div>
+    <div class="auth-error" id="reset-error"></div>
+    <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
+  `;
+  panel.style.display = 'block';
 }
 
 function backToLogin() {
@@ -1991,79 +2011,56 @@ function backToLogin() {
   document.getElementById('auth-existing').style.display = 'block';
 }
 
-let _resetProfile = null;
+// Mantiene compatibilidad si alguna vista vieja aún la referencia.
+function loadResetQuestion() {}
 
-async function loadResetQuestion() {
-  const identifier = document.getElementById('reset-id').value.trim();
-  const wrap = document.getElementById('reset-sq-wrap');
-  const label = document.getElementById('reset-sq-label');
-  if (identifier.length < 2) { wrap.style.display = 'none'; _resetProfile = null; return; }
-  const profile = await findProfileByIdentifier(identifier);
-  _resetProfile = profile;
-  if (profile && profile.securityQuestion) {
-    label.textContent = profile.securityQuestion;
-    wrap.style.display = 'block';
-  } else {
-    wrap.style.display = 'none';
+async function requestResetCode() {
+  const email = (document.getElementById('reset-email').value || '').trim().toLowerCase();
+  const errorEl = document.getElementById('reset-error');
+  const btn = document.getElementById('reset-send');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Escribe un correo válido.'; return;
+  }
+  errorEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'ENVIANDO...';
+  try {
+    if (sb) await sb.rpc('request_password_reset', { p_email: email });
+    _resetEmail = email;
+    document.getElementById('reset-code-wrap').style.display = 'block';
+    // Mensaje neutro (no revela si el correo existe).
+    errorEl.style.color = 'var(--g)';
+    errorEl.textContent = 'Si ese correo tiene una cuenta, te enviamos un código. Revisa tu bandeja y spam.';
+  } catch (e) {
+    errorEl.textContent = 'No se pudo enviar el código. Inténtalo de nuevo.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'REENVIAR CÓDIGO';
   }
 }
 
 async function submitResetPassword() {
-  const identifier = document.getElementById('reset-id').value;
-  const securityAnswer = (document.getElementById('reset-sa')?.value || '').trim().toLowerCase();
+  const code = (document.getElementById('reset-code').value || '').trim();
   const password = document.getElementById('reset-password').value;
   const passwordConfirm = document.getElementById('reset-password-confirm').value;
   const errorEl = document.getElementById('reset-error');
   const btn = document.getElementById('reset-submit');
-  if (!identifier.trim()) { errorEl.textContent = 'Escribe el nombre o apodo de tu cuenta.'; return; }
-  if (!securityAnswer) { errorEl.textContent = 'Escribe tu respuesta de seguridad.'; return; }
+  errorEl.style.color = '';
+  if (!/^\d{6}$/.test(code)) { errorEl.textContent = 'Escribe el código de 6 dígitos que te llegó al correo.'; return; }
   if (!isPasswordMediumStrength(password)) {
-    errorEl.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.';
-    return;
+    errorEl.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.'; return;
   }
   if (password !== passwordConfirm) { errorEl.textContent = 'Las contraseñas no coinciden.'; return; }
   errorEl.textContent = '';
-  btn.disabled = true;
-  btn.textContent = 'VERIFICANDO...';
+  btn.disabled = true; btn.textContent = 'VERIFICANDO...';
   try {
-    const profile = _resetProfile || await findProfileByIdentifier(identifier);
-    if (!profile) {
-      errorEl.textContent = 'No encontramos ninguna cuenta con ese nombre o apodo.';
-      return;
-    }
-    if (!profile.securityAnswerHash) {
-      errorEl.textContent = 'Esta cuenta no tiene pregunta de seguridad configurada. Contacta al soporte.';
-      return;
-    }
-    const answerHash = await hashPassword(securityAnswer);
-    if (answerHash !== profile.securityAnswerHash) {
-      errorEl.textContent = 'La respuesta no es correcta. Inténtalo de nuevo.';
-      return;
-    }
-    btn.textContent = 'ACTUALIZANDO...';
-    profile.passwordHash = await hashPassword(password);
-    profiles[profile.id] = profile;
-    saveProfiles();
-    const { error: credErr } = await pushCredentialsToCloud(profile);
-    if (credErr) {
-      errorEl.textContent = 'No se pudo guardar la nueva contraseña. Revisa tu conexión e inténtalo de nuevo.';
-      return;
-    }
-    document.getElementById('reset-id').value = '';
-    document.getElementById('reset-sa').value = '';
-    document.getElementById('reset-password').value = '';
-    document.getElementById('reset-password-confirm').value = '';
-    const wrap = document.getElementById('reset-sq-wrap');
-    if (wrap) wrap.style.display = 'none';
-    _resetProfile = null;
+    const newHash = await hashPassword(password);
+    const { data, error } = await sb.rpc('confirm_password_reset', { p_email: _resetEmail, p_code: code, p_new_hash: newHash });
+    if (error) { errorEl.textContent = 'No se pudo procesar. Revisa tu conexión e inténtalo de nuevo.'; return; }
+    if (data !== true) { errorEl.textContent = 'Código incorrecto o vencido. Pide uno nuevo e inténtalo otra vez.'; return; }
     backToLogin();
-    document.getElementById('login-id').value = identifier.trim();
     document.getElementById('login-error').textContent = '';
-    errorEl.textContent = '';
-    alert('Tu contraseña fue actualizada. Ya puedes iniciar sesión con tu nueva contraseña.');
+    alert('✅ Tu contraseña fue actualizada. Ya puedes iniciar sesión con tu nueva contraseña.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'ACTUALIZAR CONTRASEÑA';
+    btn.disabled = false; btn.textContent = 'CAMBIAR CONTRASEÑA';
   }
 }
 
