@@ -5358,6 +5358,7 @@ function initApp() {
     location.href = 'index.html'; return;
   }
   if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
+  initFeedbackWidget();
 
   if (state && (state.nickname === 'Lobo' || state.name === 'Miguel Breci') && (!state.physical || state.physical.weight == null)) {
     state.physical = Object.assign({}, state.physical, { weight: 85, height: 180, foot: 'DERECHO' });
@@ -6497,4 +6498,115 @@ async function submitAdminTeamMatch(matchId) {
   renderAll();
   checkPendingReveal();
   alert(`✅ Resultado registrado.\n\n${resultLabel}\n\nOVR y estadísticas de ${audience.size} jugadores actualizados.`);
+}
+
+/* ============================ SISTEMA DE REPORTES / TICKETS ============================ */
+function initFeedbackWidget() {
+  if (document.getElementById('fb-fab')) return;
+  const adm = (typeof state !== 'undefined' && state && typeof isAdmin === 'function' && isAdmin());
+  const box = document.createElement('div');
+  box.innerHTML = `
+    <button id="fb-fab" class="fb-fab" onclick="openFeedbackModal()" title="Reportar un problema o dar tu opinión">💬</button>
+    ${adm ? `<button id="fb-admin-fab" class="fb-fab fb-admin" onclick="openAdminTickets()" title="Tickets (admin)">🎫</button>` : ''}
+    <div class="modal-overlay" id="fb-modal">
+      <div class="auth-card" style="max-width:440px">
+        <div class="auth-label" style="font-size:16px;color:var(--g)">CUÉNTANOS</div>
+        <div class="auth-photo-note">¿Encontraste un error o tienes una idea? Escríbenos, lo revisamos.</div>
+        <div class="auth-label">TIPO</div>
+        <div class="fb-types" id="fb-types">
+          <button type="button" class="fb-type on" data-t="bug" onclick="fbPickType('bug')">🐛 Bug</button>
+          <button type="button" class="fb-type" data-t="idea" onclick="fbPickType('idea')">💡 Idea</button>
+          <button type="button" class="fb-type" data-t="comentario" onclick="fbPickType('comentario')">💬 Comentario</button>
+        </div>
+        <div class="auth-label">TU MENSAJE</div>
+        <textarea class="auth-input" id="fb-message" maxlength="1000" rows="4" style="resize:vertical" placeholder="Cuéntanos qué pasó o qué se te ocurre..."></textarea>
+        <div class="auth-label">TU CORREO <span class="auth-note-inline">· Opcional, por si queremos responderte</span></div>
+        <input class="auth-input" id="fb-contact" type="email" maxlength="80" placeholder="tucorreo@gmail.com">
+        <div class="auth-error" id="fb-msg"></div>
+        <button class="auth-submit" id="fb-send" onclick="submitFeedbackForm()">ENVIAR</button>
+        <button class="auth-cancel" onclick="closeFeedbackModal()">CANCELAR</button>
+      </div>
+    </div>
+    <div class="modal-overlay" id="fb-admin-modal">
+      <div class="auth-card" style="max-width:600px;max-height:85vh;overflow-y:auto">
+        <div class="auth-label" style="font-size:16px;color:var(--g)">🎫 TICKETS DE JUGADORES</div>
+        <div id="fb-admin-list"><div class="auth-photo-note">Cargando...</div></div>
+        <button class="auth-cancel" onclick="closeAdminTickets()">CERRAR</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+}
+let _fbType = 'bug';
+function fbPickType(t) {
+  _fbType = t;
+  document.querySelectorAll('#fb-types .fb-type').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+}
+function openFeedbackModal() {
+  _fbType = 'bug'; fbPickType('bug');
+  document.getElementById('fb-message').value = '';
+  document.getElementById('fb-msg').textContent = '';
+  const c = document.getElementById('fb-contact');
+  if (c && (!c.value) && typeof state !== 'undefined' && state && state.email) c.value = state.email;
+  document.getElementById('fb-modal').classList.add('open');
+}
+function closeFeedbackModal() { document.getElementById('fb-modal').classList.remove('open'); }
+async function submitFeedbackForm() {
+  const msgEl = document.getElementById('fb-msg');
+  const text = document.getElementById('fb-message').value.trim();
+  const contact = document.getElementById('fb-contact').value.trim().toLowerCase();
+  const btn = document.getElementById('fb-send');
+  if (text.length < 3) { msgEl.style.color = ''; msgEl.textContent = 'Escribe un poco más para poder ayudarte.'; return; }
+  msgEl.textContent = ''; btn.disabled = true; btn.textContent = 'ENVIANDO...';
+  try {
+    const who = (typeof state !== 'undefined' && state) ? (state.nickname || state.name) : null;
+    const rid = (typeof state !== 'undefined' && state) ? state.id : null;
+    if (sb) await sb.rpc('submit_feedback', {
+      p_type: _fbType, p_message: text, p_reporter_id: rid, p_reporter_name: who,
+      p_contact: contact || (typeof state !== 'undefined' && state ? state.email : null),
+      p_page: (location.pathname.split('/').pop() || 'index.html'), p_ua: navigator.userAgent
+    });
+    msgEl.style.color = 'var(--g)';
+    msgEl.textContent = '¡Gracias! Recibimos tu mensaje. 🙌';
+    document.getElementById('fb-message').value = '';
+    setTimeout(closeFeedbackModal, 1200);
+  } catch (e) {
+    msgEl.style.color = ''; msgEl.textContent = 'No se pudo enviar. Inténtalo de nuevo.';
+  } finally { btn.disabled = false; btn.textContent = 'ENVIAR'; }
+}
+async function openAdminTickets() {
+  if (!state || !isAdmin() || !sb) return;
+  document.getElementById('fb-admin-modal').classList.add('open');
+  const list = document.getElementById('fb-admin-list');
+  list.innerHTML = `<div class="auth-photo-note">Cargando...</div>`;
+  const { data, error } = await sb.rpc('admin_list_feedback', { p_admin_id: state.id });
+  if (error) { list.innerHTML = `<div class="auth-error">No se pudo cargar.</div>`; return; }
+  if (!data || !data.length) { list.innerHTML = `<div class="auth-photo-note">Aún no hay tickets. 🎉</div>`; return; }
+  const icon = { bug: '🐛', idea: '💡', comentario: '💬' };
+  list.innerHTML = data.map(t => `
+    <div class="fb-ticket ${t.status}">
+      <div class="fb-ticket-top">
+        <span class="fb-ticket-type">${icon[t.type] || '💬'} ${t.type.toUpperCase()}</span>
+        <span class="fb-ticket-status fb-st-${t.status}">${t.status.toUpperCase()}</span>
+      </div>
+      <div class="fb-ticket-msg">${(t.message || '').replace(/</g, '&lt;')}</div>
+      <div class="fb-ticket-meta">De: <b>${t.reporter_name || 'Anónimo'}</b>${t.contact_email ? ' · ' + t.contact_email : ''} · ${t.page || ''}</div>
+      ${t.admin_reply ? `<div class="fb-ticket-reply">Admin: ${t.admin_reply.replace(/</g, '&lt;')}</div>` : ''}
+      <textarea class="auth-input fb-reply-box" id="fb-reply-${t.id}" rows="2" placeholder="Responder como Admin..."></textarea>
+      <div class="fb-ticket-actions">
+        <button class="notif-accept" onclick="adminReplyTicket(${t.id})">RESPONDER</button>
+        <button class="mm-admin-btn" onclick="adminSetTicketStatus(${t.id},'resuelto')">MARCAR RESUELTO</button>
+      </div>
+    </div>`).join('');
+}
+function closeAdminTickets() { document.getElementById('fb-admin-modal').classList.remove('open'); }
+async function adminReplyTicket(id) {
+  const box = document.getElementById('fb-reply-' + id);
+  const reply = (box.value || '').trim();
+  if (reply.length < 1) { alert('Escribe una respuesta.'); return; }
+  const { data } = await sb.rpc('admin_reply_feedback', { p_admin_id: state.id, p_feedback_id: id, p_reply: reply, p_status: 'revisado' });
+  if (data === true) { openAdminTickets(); } else { alert('No se pudo enviar la respuesta.'); }
+}
+async function adminSetTicketStatus(id, status) {
+  const { data } = await sb.rpc('admin_reply_feedback', { p_admin_id: state.id, p_feedback_id: id, p_reply: null, p_status: status });
+  if (data === true) openAdminTickets();
 }
