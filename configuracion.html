@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Configuración · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783177706">
+<link rel="stylesheet" href="style.css?v=1783179974">
 </head>
 <body>
 
@@ -157,7 +157,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783177706"></script>
+<script src="app.js?v=1783179974"></script>
 <script>
   function fillConfigForm() {
     if (!state) return;
@@ -173,20 +173,26 @@
     if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
       errEl.textContent = 'Escribe un correo válido.'; return;
     }
-    // Unicidad del correo (si cambió).
-    if (newEmail && newEmail !== (state.email || '') && typeof sb !== 'undefined' && sb) {
-      const { data } = await sb.from('profiles').select('id').eq('email', newEmail).neq('id', state.id).limit(1);
-      if (data && data.length) { errEl.textContent = 'Ese correo ya está en uso por otra cuenta.'; return; }
-    }
+    // Guardar apodo (dato no sensible) por el flujo normal.
     state.nickname = newNick;
-    state.email = newEmail || null;
     if (profiles[state.id]) profiles[state.id] = state;
     saveState();
     const res = await pushProfileToCloud(state);
     if (res && res.error) {
       const dup = /duplicate key|unique/i.test(res.error.message || '');
-      errEl.textContent = dup ? 'Ese apodo o correo ya está en uso.' : 'No se pudo guardar. Revisa tu conexión.';
+      errEl.textContent = dup ? 'Ese apodo ya está en uso.' : 'No se pudo guardar. Revisa tu conexión.';
       return;
+    }
+    // El correo se cambia por función segura (requiere tu contraseña).
+    if (newEmail !== (state.email || '')) {
+      const cur = prompt('Para cambiar tu correo, confirma tu contraseña actual:');
+      if (cur === null) { renderAll(); return; }
+      const curHash = await hashPassword(cur);
+      const { data: r } = await sb.rpc('set_my_email', { p_id: state.id, p_current_hash: curHash, p_email: newEmail });
+      if (r === 'ok') { state.email = newEmail || null; saveState(); }
+      else if (r === 'wrong_password') { errEl.textContent = 'Contraseña incorrecta: el correo no se cambió (el apodo sí).'; return; }
+      else if (r === 'taken') { errEl.textContent = 'Ese correo ya está en uso por otra cuenta.'; return; }
+      else if (r === 'invalid') { errEl.textContent = 'El correo no es válido.'; return; }
     }
     errEl.style.color = 'var(--g)';
     errEl.textContent = 'Cambios guardados.';
@@ -199,15 +205,16 @@
     const nw = document.getElementById('cfg-new-pass').value;
     const nw2 = document.getElementById('cfg-new-pass2').value;
     if (!cur) { msg.textContent = 'Escribe tu contraseña actual.'; return; }
-    const curHash = await hashPassword(cur);
-    if (curHash !== state.passwordHash) { msg.textContent = 'Tu contraseña actual no es correcta.'; return; }
     if (!isPasswordMediumStrength(nw)) { msg.textContent = 'La nueva contraseña debe tener mínimo 6 caracteres, con letras y números.'; return; }
     if (nw !== nw2) { msg.textContent = 'Las contraseñas nuevas no coinciden.'; return; }
-    state.passwordHash = await hashPassword(nw);
+    // Cambio por función segura: la contraseña actual se verifica en el servidor.
+    const curHash = await hashPassword(cur);
+    const newHash = await hashPassword(nw);
+    const { data: ok } = await sb.rpc('change_my_password', { p_id: state.id, p_current_hash: curHash, p_new_hash: newHash });
+    if (ok !== true) { msg.textContent = 'Tu contraseña actual no es correcta.'; return; }
+    state.passwordHash = newHash;
     if (profiles[state.id]) profiles[state.id] = state;
     saveState();
-    const { error } = await pushCredentialsToCloud(state);
-    if (error) { msg.textContent = 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.'; return; }
     document.getElementById('cfg-cur-pass').value = '';
     document.getElementById('cfg-new-pass').value = '';
     document.getElementById('cfg-new-pass2').value = '';

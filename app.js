@@ -83,7 +83,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
   return {
-    id: p.id, name: p.name, nickname: p.nickname, email: p.email || null, position: p.position, team: p.team,
+    id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
     photo: p.photo,
     ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
@@ -141,6 +141,7 @@ async function pushCredentialsToCloud(p) {
 async function createProfileInCloud(p) {
   if (!sb) return { error: null };
   const row = Object.assign({}, profileToRow(p), {
+    email: p.email || null,
     password_hash: p.passwordHash,
     security_question: p.securityQuestion || null,
     security_answer_hash: p.securityAnswerHash || null,
@@ -158,7 +159,9 @@ async function deleteProfileFromCloud(id) {
 
 // Columnas del perfil SIN la foto (base64, muy pesada). El sync masivo nunca trae
 // fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
-const PROFILE_SYNC_COLS = 'id,name,nickname,email,position,team,password_hash,security_question,security_answer_hash,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
+// Columnas de lectura pública: NO incluye password_hash, security_answer_hash ni email
+// (esos nunca se exponen; el login y el propio correo se manejan por funciones seguras).
+const PROFILE_SYNC_COLS = 'id,name,nickname,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
 
 async function syncProfilesFromCloud() {
   if (!sb) return;
@@ -166,9 +169,11 @@ async function syncProfilesFromCloud() {
   if (error || !data) { console.error('Error sincronizando perfiles:', error && error.message); return; }
   data.forEach(row => {
     const fresh = rowToProfile(row);
-    // Conservar la foto que ya tengamos cargada localmente (el sync no la trae).
+    // Conservar foto y correo locales (el sync no los trae por privacidad/egress).
     const prevPhoto = (profiles[row.id] && profiles[row.id].photo) || (state && state.id === row.id && state.photo) || null;
     if (prevPhoto) fresh.photo = prevPhoto;
+    const prevEmail = (state && state.id === row.id && state.email) || (profiles[row.id] && profiles[row.id].email) || null;
+    if (prevEmail) fresh.email = prevEmail;
     if (!state || row.id !== state.id) {
       profiles[row.id] = fresh;
     } else {
@@ -835,9 +840,11 @@ async function openPlayerView(id) {
   if (sb) {
     content.innerHTML = `<div class="rk-empty" style="color:var(--g)">Cargando...</div>`;
     modal.classList.add('open');
-    const { data } = await sb.from('profiles').select('*').eq('id', id).single();
+    const { data } = await sb.from('profiles').select(PROFILE_SYNC_COLS + ',photo').eq('id', id).single();
     if (data) {
       const fresh = rowToProfile(data);
+      const prevEmail = (state && state.id === id && state.email) || (profiles[id] && profiles[id].email) || null;
+      if (prevEmail) fresh.email = prevEmail;
       profiles[id] = fresh;
       if (state && state.id === id) { state = fresh; saveProfiles(); }
     }
@@ -1936,10 +1943,10 @@ async function findProfileByIdentifier(identifier, forceCloud = false) {
     if (local) return local;
   }
   if (!sb) return Object.values(profiles).find(p => p.name === id || p.nickname === id) || null;
-  const { data: byName } = await sb.from('profiles').select('*').eq('name', id).limit(1);
-  if (byName && byName.length) return rowToProfile(byName[0]);
-  const { data: byNick } = await sb.from('profiles').select('*').eq('nickname', id).limit(1);
-  if (byNick && byNick.length) return rowToProfile(byNick[0]);
+  const { data: byName } = await sb.from('profiles').select('id,name,nickname').eq('name', id).limit(1);
+  if (byName && byName.length) return { id: byName[0].id, name: byName[0].name, nickname: byName[0].nickname };
+  const { data: byNick } = await sb.from('profiles').select('id,name,nickname').eq('nickname', id).limit(1);
+  if (byNick && byNick.length) return { id: byNick[0].id, name: byNick[0].name, nickname: byNick[0].nickname };
   return null;
 }
 
@@ -1956,9 +1963,17 @@ async function submitLogin() {
   btn.disabled = true;
   btn.textContent = 'VERIFICANDO...';
   try {
-    const profile = await findProfileByIdentifier(identifier, true);
+    // Login por función segura: el hash se compara en el servidor, nunca sale de la base.
     const hash = await hashPassword(password);
-    if (!profile || hash !== profile.passwordHash) {
+    let profile = null;
+    if (sb) {
+      const { data } = await sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash });
+      if (data) profile = rowToProfile(data);
+    } else {
+      const local = await findProfileByIdentifier(identifier, false);
+      if (local && local.passwordHash === hash) profile = local;
+    }
+    if (!profile) {
       errorEl.textContent = 'Nombre/apodo o contraseña incorrectos.';
       return;
     }
@@ -2116,8 +2131,8 @@ async function submitNewProfile() {
     if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
   }
   if (sb) {
-    const { data: emailTaken } = await sb.from('profiles').select('id').eq('email', email).limit(1);
-    if (emailTaken && emailTaken.length) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
+    const { data: available } = await sb.rpc('email_available', { p_email: email });
+    if (available === false) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
   }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
@@ -2232,8 +2247,9 @@ async function pushMatchToCloud(m) {
   if (error) console.error('Error guardando partido en la nube:', error.message);
 }
 async function deleteMatchFromCloud(id) {
-  if (!sb) return;
-  const { error } = await sb.from('open_matches').delete().eq('id', id);
+  if (!sb || !state) return;
+  // Borrado por función segura: solo el creador puede borrar su partido.
+  const { error } = await sb.rpc('delete_my_match', { p_match_id: id, p_requester_id: state.id });
   if (error) console.error('Error borrando partido en la nube:', error.message);
 }
 async function syncOpenMatchesFromCloud() {
