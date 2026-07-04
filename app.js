@@ -83,7 +83,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
   return {
-    id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
+    id: p.id, name: p.name, nickname: p.nickname, email: p.email || null, position: p.position, team: p.team,
     photo: p.photo,
     ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
@@ -98,7 +98,7 @@ function profileToRow(p) {
 
 function rowToProfile(r) {
   return {
-    id: r.id, name: r.name, nickname: r.nickname, position: r.position, team: r.team,
+    id: r.id, name: r.name, nickname: r.nickname, email: r.email || null, position: r.position, team: r.team,
     photo: r.photo, passwordHash: r.password_hash,
     securityQuestion: r.security_question || null,
     securityAnswerHash: r.security_answer_hash || null,
@@ -158,7 +158,7 @@ async function deleteProfileFromCloud(id) {
 
 // Columnas del perfil SIN la foto (base64, muy pesada). El sync masivo nunca trae
 // fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
-const PROFILE_SYNC_COLS = 'id,name,nickname,position,team,password_hash,security_question,security_answer_hash,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
+const PROFILE_SYNC_COLS = 'id,name,nickname,email,position,team,password_hash,security_question,security_answer_hash,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
 
 async function syncProfilesFromCloud() {
   if (!sb) return;
@@ -212,11 +212,12 @@ function isPasswordMediumStrength(password) {
   return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
-function makeProfile({ name, position, team, nickname, passwordHash, securityQuestion, securityAnswerHash, isAdmin }) {
+function makeProfile({ name, position, team, nickname, email, passwordHash, securityQuestion, securityAnswerHash, isAdmin }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
     nickname: nickname ? nickname.toUpperCase() : '',
+    email: email ? email.trim().toLowerCase() : null,
     position,
     team: team || 'SIN EQUIPO',
     photo: null,
@@ -2080,9 +2081,14 @@ function deleteProfile(id) {
 async function submitNewProfile() {
   const name = document.getElementById('auth-name').value.trim();
   const nickname = document.getElementById('auth-nickname').value.trim();
+  const emailEl = document.getElementById('auth-email');
+  const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
   const position = document.getElementById('auth-position').value;
-  const securityQuestion = document.getElementById('auth-sq').value;
-  const securityAnswer = document.getElementById('auth-sa').value.trim().toLowerCase();
+  // Pregunta de seguridad: opcional (se está migrando a recuperación por correo).
+  const sqEl = document.getElementById('auth-sq');
+  const saEl = document.getElementById('auth-sa');
+  const securityQuestion = sqEl ? sqEl.value : '';
+  const securityAnswer = saEl ? saEl.value.trim().toLowerCase() : '';
   const password = document.getElementById('auth-password').value;
   const passwordConfirm = document.getElementById('auth-password-confirm').value;
   const consent = document.getElementById('auth-consent');
@@ -2092,8 +2098,10 @@ async function submitNewProfile() {
     errorEl.textContent = 'Tu nombre o apodo contiene lenguaje ofensivo. Por favor elige otro.';
     return;
   }
-  if (!securityQuestion) { errorEl.textContent = 'Elige una pregunta de seguridad.'; return; }
-  if (!securityAnswer) { errorEl.textContent = 'Escribe tu respuesta de seguridad.'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Escribe un correo electrónico válido para poder recuperar tu cuenta.';
+    return;
+  }
   if (!isPasswordMediumStrength(password)) {
     errorEl.textContent = 'La contraseña debe tener mínimo 6 caracteres, con letras y números.';
     return;
@@ -2110,10 +2118,14 @@ async function submitNewProfile() {
     const nickTaken = await findProfileByIdentifier(nickname, true);
     if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
   }
+  if (sb) {
+    const { data: emailTaken } = await sb.from('profiles').select('id').eq('email', email).limit(1);
+    if (emailTaken && emailTaken.length) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
+  }
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
-  const securityAnswerHash = await hashPassword(securityAnswer);
-  const profile = makeProfile({ name, position, nickname, passwordHash, securityQuestion, securityAnswerHash });
+  const securityAnswerHash = securityAnswer ? await hashPassword(securityAnswer) : null;
+  const profile = makeProfile({ name, position, nickname, email, passwordHash, securityQuestion, securityAnswerHash });
   // Guardar en la nube ANTES de fijar la sesión: si el índice único lo rechaza
   // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
   const { error: createErr } = await createProfileInCloud(profile);
