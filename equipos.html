@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Equipos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783179974">
+<link rel="stylesheet" href="style.css?v=1783293758">
 </head>
 <body>
 
@@ -106,7 +106,7 @@
     </div>
 
     <div class="pl-search-wrap">
-      <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" oninput="renderTeamSearch(this.value)" onfocus="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
+      <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lu-team-q" readonly onfocus="this.removeAttribute('readonly');renderTeamSearch(this.value)" oninput="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
       <div class="pl-suggest" id="team-suggest"></div>
     </div>
     <div class="pl-grid" id="team-grid"></div>
@@ -368,7 +368,7 @@
     <div class="auth-tabs"><div class="auth-tab on">🪙 ENVIAR LEVEL COINS</div></div>
     <div class="bet-balance-row" style="margin-bottom:16px">Tu saldo: <span class="bet-balance-val" id="transfer-my-balance">0</span> 🪙</div>
     <div class="auth-label">BUSCAR JUGADOR</div>
-    <input class="auth-input" id="transfer-search" placeholder="Nombre o apodo..." oninput="searchTransferPlayer()">
+    <input class="auth-input" id="transfer-search" placeholder="Nombre o apodo..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lu-transfer-q" oninput="searchTransferPlayer()">
     <div id="transfer-player-list" style="max-height:160px;overflow-y:auto;margin:8px 0"></div>
     <input type="hidden" id="transfer-to-id">
     <div id="transfer-to-name" style="display:none" class="bet-preview"></div>
@@ -387,6 +387,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783179974"></script>
+<script src="app.js?v=1783293758"></script>
 </body>
 </html>
