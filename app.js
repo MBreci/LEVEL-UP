@@ -2375,7 +2375,7 @@ const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MIXTO', posiciones: [] };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MASCULINO', posiciones: [] };
 
 function getTotalJugadores() {
   // fútbol N = N por equipo × 2 equipos
@@ -2392,7 +2392,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MIXTO', posiciones: [] };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MASCULINO', posiciones: [] };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2563,7 +2563,7 @@ function renderBpWizard() {
       <div class="auth-label" style="margin-top:16px">MODALIDAD DE GÉNERO</div>
       <div class="bp-casualbet-opts" id="bp-genero-opts">
         ${[['MASCULINO','♂ MASCULINO'],['FEMENINO','♀ FEMENINO'],['MIXTO','⚧ MIXTO']].map(([v,l]) =>
-          `<button type="button" class="bp-casualbet ${(bpWizard.genero||'MIXTO')===v?'on':''}" onclick="bpSetGenero('${v}')">${l}</button>`).join('')}
+          `<button type="button" class="bp-casualbet ${(bpWizard.genero||'MASCULINO')===v?'on':''}" onclick="bpSetGenero('${v}')">${l}</button>`).join('')}
       </div>
 
       <div class="auth-label" style="margin-top:16px">APUESTA AMISTOSA <span style="color:var(--td);font-weight:300">· Opcional — el equipo perdedor paga</span></div>
@@ -2753,7 +2753,7 @@ function renderBpSummary() {
     ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
     ${bpWizardStep === 6 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
     ${bpWizardStep === 6 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
-    <div class="bpw-summary-row"><span>GÉNERO</span><strong>${bpWizard.genero || 'MIXTO'}</strong></div>
+    <div class="bpw-summary-row"><span>GÉNERO</span><strong>${bpWizard.genero || 'MASCULINO'}</strong></div>
     ${(bpWizard.posiciones && bpWizard.posiciones.length) ? `<div class="bpw-summary-row"><span>BUSCA</span><strong>${posBuscadasLabel(bpWizard.posiciones)}</strong></div>` : ''}
     ${bpWizard.casualBet ? `<div class="bpw-summary-row"><span>APUESTA</span><strong>${casualBetLabel(bpWizard.casualBet)}</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
@@ -2876,7 +2876,7 @@ function submitMatchRequest() {
     joinRequests: [],
     finalizado: false,
     casualBet: bpWizard.casualBet || null,
-    genero: bpWizard.genero || 'MIXTO',
+    genero: bpWizard.genero || 'MASCULINO',
     posiciones: bpWizard.posiciones || [],
     createdAt: Date.now(),
   });
