@@ -6857,3 +6857,20 @@ async function sendMatchMessage() {
   else { input.value = text; alert('No se pudo enviar. Debes estar unido al partido para escribir.'); }
 }
 function body_force_rerender() { const b = document.getElementById('mchat-body'); if (b) b.dataset.rendered = '0'; }
+
+/* ============ ENTER para enviar formularios de auth ============ */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  const a = document.activeElement;
+  if (!a || !a.id) return;
+  // Solo si el modal de auth (o la pantalla de reset) está visible.
+  if (a.id === 'login-id' || a.id === 'login-password') {
+    e.preventDefault(); if (typeof submitLogin === 'function') submitLogin();
+  } else if (['auth-name','auth-nickname','auth-email','auth-password','auth-password-confirm'].includes(a.id)) {
+    e.preventDefault(); if (typeof submitNewProfile === 'function') submitNewProfile();
+  } else if (a.id === 'reset-email') {
+    e.preventDefault(); if (typeof requestResetCode === 'function') requestResetCode();
+  } else if (['reset-code','reset-password','reset-password-confirm'].includes(a.id)) {
+    e.preventDefault(); if (typeof submitResetPassword === 'function') submitResetPassword();
+  }
+});
