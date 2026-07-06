@@ -2154,6 +2154,7 @@ async function submitNewProfile() {
   const consent = document.getElementById('auth-consent');
   const errorEl = document.getElementById('auth-error');
   if (!name) { errorEl.textContent = 'Escribe tu nombre para crear tu carta.'; return; }
+  if (!nickname) { errorEl.textContent = 'Escribe tu apodo: es tu identidad única en LEVEL UP.'; return; }
   if (containsProfanity(name) || containsProfanity(nickname)) {
     errorEl.textContent = 'Tu nombre o apodo contiene lenguaje ofensivo. Por favor elige otro.';
     return;
@@ -2171,13 +2172,9 @@ async function submitNewProfile() {
     errorEl.textContent = 'Debes aceptar la Política de Tratamiento de Datos Personales y de Imagen para crear tu cuenta.';
     return;
   }
-  // Unicidad: verificar contra la nube (autoritativo), nombre y apodo por separado.
-  const nameTaken = await findProfileByIdentifier(name, true);
-  if (nameTaken) { errorEl.textContent = 'Ese nombre ya está registrado. Si es tuyo, inicia sesión; si no, usa otro.'; return; }
-  if (nickname) {
-    const nickTaken = await findProfileByIdentifier(nickname, true);
-    if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
-  }
+  // Unicidad: el NOMBRE puede repetirse; el APODO es único (sin distinguir mayúsculas).
+  const nickTaken = await findProfileByIdentifier(nickname, true);
+  if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
   if (sb) {
     const { data: available } = await sb.rpc('email_available', { p_email: email });
     if (available === false) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
