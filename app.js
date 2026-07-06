@@ -91,11 +91,12 @@ function profileToRow(p) {
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
     dorsal: (p.dorsal === 0 || p.dorsal) ? p.dorsal : null,
-    is_admin: p.isAdmin || false,
     community_ratings: p.communityRatings || {}, rated_players: p.ratedPlayers || {},
   };
-  // saldo no se incluye aquí a propósito: nunca se escribe desde el frontend,
-  // solo se lee. Modificarlo solo es posible vía apply_wallet_transaction (backend).
+  // is_admin, saldo, email, founder y las credenciales NO se incluyen aquí a propósito:
+  // son campos protegidos y el trigger del servidor RECHAZA cualquier escritura de ellos
+  // desde el frontend (incluso mandando el mismo valor). Mandarlos rompía el guardado
+  // de los administradores. Se leen vía rowToProfile pero nunca se escriben aquí.
 }
 
 function rowToProfile(r) {

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estado del sistema · LEVEL UP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#020408;color:#eaf2ff;font-family:system-ui,-apple-system,sans-serif;padding:20px;max-width:640px;margin:0 auto}
+h1{font-size:20px;margin:14px 0 4px}
+.sub{color:#8fa;opacity:.6;font-size:13px;margin-bottom:18px}
+.card{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px;margin-bottom:12px;background:rgba(255,255,255,.02)}
+.row{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
+.dot{width:14px;height:14px;border-radius:50%;background:#666;flex-shrink:0}
+.ok .dot{background:#00ff88;box-shadow:0 0 10px #00ff88}
+.bad .dot{background:#ff3b3b;box-shadow:0 0 10px #ff3b3b}
+.detail{font-size:12px;color:#9ab;margin-top:8px;word-break:break-word;font-family:ui-monospace,monospace;line-height:1.5}
+button{width:100%;padding:15px;font-size:15px;font-weight:700;border:none;border-radius:8px;background:linear-gradient(90deg,#00ff88,#00b36b);color:#02120a;cursor:pointer;margin:8px 0}
+.copy{background:rgba(255,255,255,.08);color:#eaf2ff}
+.verdict{padding:16px;border-radius:10px;font-size:15px;line-height:1.6;margin-top:14px}
+.v-ok{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.4)}
+.v-bad{background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.4)}
+.env{font-size:11px;color:#678;margin-top:16px;font-family:ui-monospace,monospace;word-break:break-all}
+</style>
+</head>
+<body>
+<h1>🩺 Estado del sistema · LEVEL UP</h1>
+<div class="sub">Corre esta prueba en el mismo celular/red donde te falla, y mándale la captura a tu equipo.</div>
+
+<button onclick="run()">▶ PROBAR AHORA</button>
+
+<div id="results"></div>
+<div id="verdict"></div>
+<button class="copy" onclick="copyAll()" style="display:none" id="copyBtn">📋 COPIAR RESULTADO</button>
+<div class="env" id="env"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+var SUPABASE_URL='https://vwihedjfxrilfdpmuzzu.supabase.co';
+var SUPABASE_KEY='sb_publishable_2YSO3Wwkogd1Oa3V2zXl-Q_yad19S3_';
+var log=[];
+function card(id,label){ return '<div class="card" id="'+id+'"><div class="row"><span class="dot"></span><span>'+label+'</span></div><div class="detail"></div></div>'; }
+function set(id,ok,detail){
+  var el=document.getElementById(id);
+  el.className='card '+(ok?'ok':'bad');
+  el.querySelector('.detail').textContent=detail||'';
+  log.push((ok?'OK':'FALLO')+' · '+el.querySelector('.row span:last-child').textContent+' · '+(detail||''));
+}
+function timeout(ms){ return new Promise(function(_,rej){ setTimeout(function(){rej(new Error('TIMEOUT ('+ms+'ms) — la conexión no respondió'));},ms); }); }
+async function race(p,ms){ return Promise.race([p,timeout(ms)]); }
+
+async function run(){
+  log=[];
+  document.getElementById('results').innerHTML =
+    card('lib','Cargó la librería de la base') +
+    card('read','LEER de la base (GET)') +
+    card('rpc','FUNCIÓN de la base (RPC)') +
+    card('write','ESCRIBIR en la base (POST) ← lo que falla al guardar/registrar');
+  document.getElementById('verdict').innerHTML='';
+  document.getElementById('copyBtn').style.display='none';
+
+  // 1) library
+  if(typeof supabase==='undefined'||!supabase.createClient){
+    set('lib',false,'No cargó supabase-js. Un bloqueador de anuncios está bloqueando cdn.jsdelivr.net');
+    finish(); return;
+  }
+  set('lib',true,'OK');
+  var sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+  // 2) read
+  try{
+    var r=await race(sb.from('profiles').select('id').limit(1),10000);
+    if(r.error) set('read',false,'Error: '+r.error.message);
+    else set('read',true,'Leyó '+(r.data?r.data.length:0)+' registro(s). OK');
+  }catch(e){ set('read',false,String(e.message||e)); }
+
+  // 3) rpc
+  try{
+    var r2=await race(sb.rpc('email_available',{p_email:'diagnostico'+Date.now()+'@test.com'}),10000);
+    if(r2.error) set('rpc',false,'Error: '+r2.error.message);
+    else set('rpc',true,'Respondió: '+JSON.stringify(r2.data)+'. OK');
+  }catch(e){ set('rpc',false,String(e.message||e)); }
+
+  // 4) write (insert temporal + borrar)
+  try{
+    var testId='diag_'+Date.now();
+    var ins=await race(sb.from('profiles').insert({id:testId,name:'DIAG',nickname:'diag'+Date.now(),position:'DEL',ovr:1,password_hash:'x'}),10000);
+    if(ins.error){ set('write',false,'Error: '+ins.error.message); }
+    else{
+      set('write',true,'Escribió OK. (borrando prueba...)');
+      try{ await race(sb.from('profiles').delete().eq('id',testId),8000); }catch(e){}
+      set('write',true,'Escribió y limpió OK.');
+    }
+  }catch(e){ set('write',false,String(e.message||e)); }
+
+  finish();
+}
+function finish(){
+  var bad=document.querySelectorAll('.card.bad').length;
+  var v=document.getElementById('verdict');
+  if(bad===0){
+    v.className='verdict v-ok';
+    v.innerHTML='✅ <b>Todo funciona en esta red.</b> La base responde y se puede leer y escribir. Si te falló antes, prueba de nuevo — puede haber sido una microcaída de señal.';
+  }else{
+    var readOk=document.getElementById('read').classList.contains('ok');
+    var writeOk=document.getElementById('write').classList.contains('ok');
+    v.className='verdict v-bad';
+    if(!readOk&&!writeOk) v.innerHTML='❌ <b>Tu red está bloqueando la base de datos por completo.</b> Casi seguro un <b>bloqueador de anuncios, VPN o el operador</b>. Prueba: apagar VPN/bloqueadores, cambiar de wifi a datos (o al revés), u otro navegador.';
+    else if(readOk&&!writeOk) v.innerHTML='❌ <b>Puede leer pero NO escribir.</b> Copia este resultado y envíalo — es justo lo que necesito para arreglarlo.';
+    else v.innerHTML='❌ <b>Falla parcial.</b> Copia el resultado y envíalo a tu equipo.';
+  }
+  document.getElementById('copyBtn').style.display='block';
+  document.getElementById('env').textContent='Navegador: '+navigator.userAgent;
+  log.push('UA: '+navigator.userAgent);
+}
+function copyAll(){
+  var txt='LEVEL UP · Diagnóstico\n'+log.join('\n');
+  navigator.clipboard.writeText(txt).then(function(){ alert('Copiado. Pégalo en el chat con tu equipo.'); },function(){ alert(txt); });
+}
+</script>
+</body>
+</html>
