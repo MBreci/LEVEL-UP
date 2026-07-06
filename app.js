@@ -2717,7 +2717,7 @@ function renderBpSummary() {
   const precioEl = document.getElementById('bp-precio');
   const cuposAb = bpWizard.cuposAbiertos !== null ? bpWizard.cuposAbiertos : 0;
   const prevConf = bpWizard.invitados.length;
-  const ready = bpWizard.canchaLibreNombre && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && (bpWizardStep < 7 || cuposAb > 0);
+  const ready = bpWizard.canchaLibreNombre && bpWizard.canchaLibreDireccion && bpWizard.canchaLibreBarrio && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && (bpWizardStep < 7 || cuposAb > 0);
   el.innerHTML = `
     <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
     <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
@@ -2767,7 +2767,9 @@ function bpWizardNext() {
   if (bpWizardStep === 3 && !bpWizard.superficie) { errorEl.textContent = 'Selecciona una superficie.'; return; }
   if (bpWizardStep === 4) {
     if (!bpWizard.canchaLibreNombre.trim()) { errorEl.textContent = 'Escribe el nombre de la cancha.'; return; }
-    if (containsProfanity(bpWizard.canchaLibreNombre) || containsProfanity(bpWizard.canchaLibreObs)) {
+    if (!bpWizard.canchaLibreDireccion.trim()) { errorEl.textContent = 'Escribe la dirección de la cancha.'; return; }
+    if (!bpWizard.canchaLibreBarrio.trim()) { errorEl.textContent = 'Escribe el barrio o zona de la cancha.'; return; }
+    if (containsProfanity(bpWizard.canchaLibreNombre) || containsProfanity(bpWizard.canchaLibreObs) || containsProfanity(bpWizard.canchaLibreDireccion) || containsProfanity(bpWizard.canchaLibreBarrio)) {
       errorEl.textContent = 'El contenido contiene lenguaje inapropiado. Por favor revísalo.'; return;
     }
   }
@@ -2802,8 +2804,8 @@ function submitMatchRequest() {
     errorEl.textContent = 'Completa todos los pasos antes de publicar.';
     return;
   }
-  if (bpWizard.canchaLibre && (!bpWizard.canchaLibreNombre.trim() || !bpWizard.horaLibre)) {
-    errorEl.textContent = 'Completa el nombre de la cancha y la hora.';
+  if (bpWizard.canchaLibre && (!bpWizard.canchaLibreNombre.trim() || !bpWizard.canchaLibreDireccion.trim() || !bpWizard.canchaLibreBarrio.trim() || !bpWizard.horaLibre)) {
+    errorEl.textContent = 'Completa el nombre, la dirección, el barrio y la hora de la cancha.';
     return;
   }
 
