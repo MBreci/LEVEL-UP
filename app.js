@@ -163,6 +163,17 @@ async function pushCredentialsToCloud(p) {
 
 // Crea el perfil completo en la nube (incluye credenciales) al registrarse.
 // password_hash es NOT NULL, por eso el alta debe incluirlas en una sola inserción.
+// Envuelve una promesa con un límite de tiempo: si la red se queda colgada
+// (portal cautivo, bloqueador que no cierra la conexión), rechaza en vez de
+// congelar la interfaz para siempre.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('timeout:' + (label || ''))), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function createProfileInCloud(p) {
   if (!sb) return { error: null };
   const row = Object.assign({}, profileToRow(p), {
@@ -171,11 +182,12 @@ async function createProfileInCloud(p) {
     security_question: p.securityQuestion || null,
     security_answer_hash: p.securityAnswerHash || null,
   });
-  // Reintenta si la primera llamada falla por red (conexión intermitente en celular).
+  // Reintenta una vez si la primera llamada falla por red (conexión intermitente).
+  // Con timeout por intento para no congelar la interfaz si la red se cuelga.
   let error = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await sb.from('profiles').upsert(row);
+      const res = await withTimeout(sb.from('profiles').upsert(row), 8000, 'upsert');
       error = res.error;
     } catch (e) {
       error = e;
@@ -184,7 +196,7 @@ async function createProfileInCloud(p) {
     // Si es un error de la base (duplicado, etc.) no tiene sentido reintentar.
     const msg = (error && error.message) || '';
     if (/duplicate key|unique|violates|constraint/i.test(msg)) break;
-    if (attempt < 2) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+    if (attempt < 1) await new Promise(r => setTimeout(r, 700));
   }
   if (error) console.error('Error creando perfil en la nube:', error && (error.message || error));
   return { error };
@@ -2027,8 +2039,13 @@ async function submitLogin() {
     const hash = await hashPassword(password);
     let profile = null;
     if (sb) {
-      const { data } = await sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash });
-      if (data) profile = rowToProfile(data);
+      try {
+        const { data } = await withTimeout(sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash }), 12000, 'login');
+        if (data) profile = rowToProfile(data);
+      } catch (e) {
+        errorEl.textContent = 'No pudimos conectar con el servidor. Revisa tu internet o desactiva bloqueadores/VPN e inténtalo de nuevo.';
+        return;
+      }
     } else {
       const local = await findProfileByIdentifier(identifier, false);
       if (local && local.passwordHash === hash) profile = local;
@@ -2186,34 +2203,62 @@ async function submitNewProfile() {
     errorEl.textContent = 'Debes aceptar la Política de Tratamiento de Datos Personales y de Imagen para crear tu cuenta.';
     return;
   }
-  // Unicidad: el NOMBRE puede repetirse; el APODO es único (sin distinguir mayúsculas).
-  const nickTaken = await findProfileByIdentifier(nickname, true);
-  if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
-  if (sb) {
-    const { data: available } = await sb.rpc('email_available', { p_email: email });
-    if (available === false) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
-  }
   errorEl.textContent = '';
-  const passwordHash = await hashPassword(password);
-  const securityAnswerHash = securityAnswer ? await hashPassword(securityAnswer) : null;
-  const profile = makeProfile({ name, position, nickname, email, gender, passwordHash, securityQuestion, securityAnswerHash });
-  // Guardar en la nube ANTES de fijar la sesión: si el índice único lo rechaza
-  // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
-  const { error: createErr } = await createProfileInCloud(profile);
-  if (createErr) {
-    const msg = createErr.message || '';
-    const dup = /duplicate key|unique|constraint/i.test(msg);
-    errorEl.textContent = dup
-      ? 'Ese nombre o apodo se acaba de registrar. Elige otro.'
-      : 'No pudimos conectar con el servidor. Revisa tu internet, desactiva bloqueadores de anuncios/VPN o prueba con otro navegador (fuera de modo incógnito) e inténtalo de nuevo.';
-    return;
+
+  // Bloqueo del botón mientras se procesa, con reinicio garantizado al terminar,
+  // para que NUNCA se quede pegado si algo de red falla.
+  const submitBtn = document.querySelector('button.auth-submit[onclick*="submitNewProfile"]');
+  const btnLabel = submitBtn ? submitBtn.textContent : '';
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'CREANDO...'; }
+
+  try {
+    // Pre-chequeo de apodo. Si la red falla, NO bloqueamos: el índice único de la
+    // base de datos es el guardián real y rechazará un duplicado real más abajo.
+    try {
+      const nickTaken = await withTimeout(findProfileByIdentifier(nickname, true), 4000, 'nick');
+      if (nickTaken) { errorEl.textContent = 'Ese apodo ya está en uso. Elige uno diferente.'; return; }
+    } catch (e) { /* red intermitente/timeout: seguimos, la BD valida al insertar */ }
+
+    // Pre-chequeo de correo. Igual: si falla la red, seguimos (la BD tiene índice único).
+    if (sb) {
+      try {
+        const { data: available } = await withTimeout(sb.rpc('email_available', { p_email: email }), 4000, 'email');
+        if (available === false) { errorEl.textContent = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'; return; }
+      } catch (e) { /* seguimos */ }
+    }
+
+    const passwordHash = await hashPassword(password);
+    const securityAnswerHash = securityAnswer ? await hashPassword(securityAnswer) : null;
+    const profile = makeProfile({ name, position, nickname, email, gender, passwordHash, securityQuestion, securityAnswerHash });
+    // Guardar en la nube ANTES de fijar la sesión: si el índice único lo rechaza
+    // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
+    let createErr = null;
+    try {
+      const res = await createProfileInCloud(profile);
+      createErr = res.error;
+    } catch (e) { createErr = e; }
+    if (createErr) {
+      const msg = (createErr && createErr.message) || '';
+      const dup = /duplicate key|unique|constraint/i.test(msg);
+      const dupEmail = /email/i.test(msg);
+      errorEl.textContent = dup
+        ? (dupEmail
+          ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'
+          : 'Ese apodo se acaba de registrar. Elige otro.')
+        : 'No pudimos conectar con el servidor. Revisa tu internet, desactiva bloqueadores de anuncios/VPN o prueba con otro navegador (fuera de modo incógnito) e inténtalo de nuevo.';
+      return;
+    }
+    profiles[profile.id] = profile;
+    saveProfiles();
+    setCurrentProfile(profile.id);
+    closeAuth();
+    if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
+    renderAll();
+  } catch (e) {
+    errorEl.textContent = 'Ocurrió un error inesperado. Revisa tu conexión e inténtalo de nuevo.';
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = btnLabel || 'CREAR MI CARTA'; }
   }
-  profiles[profile.id] = profile;
-  saveProfiles();
-  setCurrentProfile(profile.id);
-  closeAuth();
-  if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
-  renderAll();
 }
 
 async function editNickname() {
