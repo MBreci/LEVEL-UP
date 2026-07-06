@@ -2098,7 +2098,7 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .bp-create-hero-title{font-family:var(--ft);font-size:clamp(22px,3vw,36px);font-weight:900;color:var(--w);line-height:1.1;margin-bottom:12px}
 .bp-create-hero-sub{font-size:13px;color:rgba(220,210,190,0.55);line-height:1.6;max-width:380px;margin-bottom:28px;font-weight:300}
 .bp-create-hero-btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--ft);font-size:12px;font-weight:900;letter-spacing:2px;padding:16px 32px;background:linear-gradient(90deg,#ffb300,#ff8c00);color:#000;border:none;cursor:pointer;transition:all .25s;box-shadow:0 0 32px rgba(255,140,0,0.35)}
-.bp-create-hero-btn:hover{background:#fff;box-shadow:0 0 48px rgba(255,160,0,0.5);transform:translateY(-2px)}
+.bp-create-hero-btn:hover{background:linear-gradient(90deg,#ffd24d,#ffa726);box-shadow:0 0 48px rgba(255,180,0,0.6);transform:translateY(-2px)}
 .bp-create-hero-btn-icon{font-size:20px;font-weight:300;line-height:1}
 .bp-create-hero-deco{position:relative;z-index:2;flex-shrink:0;width:140px;height:140px}
 .bp-create-deco-ring{position:absolute;border-radius:50%;border:1px solid rgba(255,160,0,0.18);top:50%;left:50%;transform:translate(-50%,-50%);animation:ringPulse 3s ease-in-out infinite}
