@@ -44,7 +44,6 @@ const FUNCTIONAL_MODULES = [
   { id: 'reydelbarrio', label: 'REY DEL BARRIO' },
   { id: 'torneos', label: 'TORNEOS' },
   { id: 'ranking', label: 'RANKING' },
-  { id: 'temporada', label: 'TEMPORADA BETA' },
 ];
 
 const WIP_MODULES = [
@@ -345,7 +344,7 @@ function renderNav() {
   const page = getCurrentPage();
   const restricted = isRestrictedPlayer();
   // Jugadores nuevos: Partidos, Rey del Barrio y Torneos (con 'PRONTO') y Temporada Beta.
-  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos', 'temporada'];
+  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos'];
   const SOON_FOR_NEW = ['reydelbarrio', 'torneos'];
   const modules = restricted ? FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id)) : FUNCTIONAL_MODULES;
   modules.forEach(m => {

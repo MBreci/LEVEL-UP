@@ -44,7 +44,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:5000;background:rgba(2,5,16,0
 .dropdown-item:hover{background:rgba(0,255,136,0.07);color:var(--w)}
 .dropdown-item.danger:hover{background:rgba(255,68,68,0.08);color:#ff4444}
 .dropdown-item-sub{display:block;font-family:var(--fb);font-size:9px;color:var(--td);margin-top:3px;letter-spacing:0}
-.season-badge{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--o);border:1px solid rgba(255,102,0,0.7);padding:5px 12px;background:rgba(255,102,0,0.12)}
+.season-badge{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--o);border:1px solid rgba(255,102,0,0.7);padding:5px 12px;background:rgba(255,102,0,0.12);cursor:pointer;text-decoration:none;display:inline-block;transition:all .18s}
+a.season-badge:hover{background:rgba(255,102,0,0.24);box-shadow:0 0 18px -4px rgba(255,102,0,0.8);transform:translateY(-1px)}
 .btn-g{position:relative;overflow:hidden;background:none;border:0.5px solid rgba(0,255,136,0.3);color:var(--g);padding:7px 14px;font-size:9px;letter-spacing:1px;font-family:var(--ft);cursor:pointer;border-radius:2px;transition:all .2s}
 .btn-g:hover{background:rgba(0,255,136,0.1);box-shadow:0 0 18px rgba(0,255,136,0.35);transform:translateY(-2px)}
 .btn-p{position:relative;overflow:hidden;background:var(--g);border:none;color:#020510;padding:7px 18px;font-size:9px;font-weight:700;letter-spacing:1px;font-family:var(--ft);cursor:pointer;border-radius:2px;box-shadow:0 0 18px rgba(0,255,136,0.5);transition:all .2s}
@@ -1802,7 +1803,7 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   .logo-img{height:40px}
   .nav-modules{display:none}
   .nav-right{gap:5px;flex-wrap:nowrap}
-  .season-badge{display:none}
+  .season-badge{padding:5px 8px;font-size:7px}
   .btn-g,.btn-p{padding:6px 10px;font-size:8px;white-space:nowrap;flex-shrink:0}
   .dropdown-wrap{flex-shrink:0}
   .dropdown-menu{min-width:170px}
