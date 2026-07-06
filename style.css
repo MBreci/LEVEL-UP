@@ -3498,3 +3498,10 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .fb-ticket-reply{font-size:13px;color:var(--g);background:rgba(0,255,136,0.06);border-left:2px solid var(--g);padding:6px 10px;border-radius:4px;margin-bottom:8px}
 .fb-reply-box{resize:vertical;margin-bottom:8px}
 .fb-ticket-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Pill de género en la tarjeta de partido */
+.bp-pill-genero{font-weight:600}
+.bp-genero-masculino{background:rgba(0,150,255,0.14)!important;border-color:rgba(0,150,255,0.4)!important;color:#4db8ff!important}
+.bp-genero-femenino{background:rgba(255,0,170,0.14)!important;border-color:rgba(255,0,170,0.4)!important;color:#ff5bc4!important}
+.bp-genero-mixto{background:rgba(160,120,255,0.14)!important;border-color:rgba(160,120,255,0.4)!important;color:#b79bff!important}
+.bps-chip-genero.on{background:rgba(0,255,136,0.14);border-color:var(--g);color:var(--g)}

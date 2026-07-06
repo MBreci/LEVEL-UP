@@ -83,7 +83,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
   return {
-    id: p.id, name: p.name, nickname: p.nickname, position: p.position, team: p.team,
+    id: p.id, name: p.name, nickname: p.nickname, gender: p.gender || null, position: p.position, team: p.team,
     photo: p.photo,
     ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
@@ -98,7 +98,7 @@ function profileToRow(p) {
 
 function rowToProfile(r) {
   return {
-    id: r.id, name: r.name, nickname: r.nickname, email: r.email || null, position: r.position, team: r.team,
+    id: r.id, name: r.name, nickname: r.nickname, email: r.email || null, gender: r.gender || null, position: r.position, team: r.team,
     photo: r.photo, passwordHash: r.password_hash,
     securityQuestion: r.security_question || null,
     securityAnswerHash: r.security_answer_hash || null,
@@ -161,7 +161,7 @@ async function deleteProfileFromCloud(id) {
 // fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
 // Columnas de lectura pública: NO incluye password_hash, security_answer_hash ni email
 // (esos nunca se exponen; el login y el propio correo se manejan por funciones seguras).
-const PROFILE_SYNC_COLS = 'id,name,nickname,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
+const PROFILE_SYNC_COLS = 'id,name,nickname,gender,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
 
 async function syncProfilesFromCloud() {
   if (!sb) return;
@@ -217,12 +217,13 @@ function isPasswordMediumStrength(password) {
   return password.length >= 6 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
-function makeProfile({ name, position, team, nickname, email, passwordHash, securityQuestion, securityAnswerHash, isAdmin }) {
+function makeProfile({ name, position, team, nickname, email, gender, passwordHash, securityQuestion, securityAnswerHash, isAdmin }) {
   return {
     id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: name.toUpperCase(),
     nickname: nickname ? nickname.toUpperCase() : '',
     email: email ? email.trim().toLowerCase() : null,
+    gender: gender || null,
     position,
     team: team || 'SIN EQUIPO',
     photo: null,
@@ -2095,6 +2096,8 @@ async function submitNewProfile() {
   const nickname = document.getElementById('auth-nickname').value.trim();
   const emailEl = document.getElementById('auth-email');
   const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
+  const genderEl = document.getElementById('auth-gender');
+  const gender = genderEl ? genderEl.value : '';
   const position = document.getElementById('auth-position').value;
   // Pregunta de seguridad: opcional (se está migrando a recuperación por correo).
   const sqEl = document.getElementById('auth-sq');
@@ -2137,7 +2140,7 @@ async function submitNewProfile() {
   errorEl.textContent = '';
   const passwordHash = await hashPassword(password);
   const securityAnswerHash = securityAnswer ? await hashPassword(securityAnswer) : null;
-  const profile = makeProfile({ name, position, nickname, email, passwordHash, securityQuestion, securityAnswerHash });
+  const profile = makeProfile({ name, position, nickname, email, gender, passwordHash, securityQuestion, securityAnswerHash });
   // Guardar en la nube ANTES de fijar la sesión: si el índice único lo rechaza
   // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
   const { error: createErr } = await createProfileInCloud(profile);
@@ -2225,7 +2228,7 @@ function matchToRow(m) {
     valor_por_persona: m.valorPorPersona, observaciones: m.observaciones,
     confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
-    prioritario: m.prioritario || false, casual_bet: m.casualBet || null,
+    prioritario: m.prioritario || false, casual_bet: m.casualBet || null, genero: m.genero || 'MIXTO',
     created_at: m.createdAt,
   };
 }
@@ -2237,7 +2240,7 @@ function rowToMatch(r) {
     valorPorPersona: r.valor_por_persona, observaciones: r.observaciones,
     confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
-    prioritario: r.prioritario || false, casualBet: r.casual_bet || null,
+    prioritario: r.prioritario || false, casualBet: r.casual_bet || null, genero: r.genero || 'MIXTO',
     createdAt: r.created_at,
   };
 }
@@ -2294,7 +2297,7 @@ async function syncMatchInvitesFromCloud() {
   });
   saveInvites();
 }
-let bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false };
+let bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false, genero: '' };
 let joinModalCtx = null;
 
 /* ===== ARENAS AFILIADAS (sistema de reserva de canchas) ===== */
@@ -2372,7 +2375,7 @@ const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
 ];
-let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null };
+let bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MIXTO' };
 
 function getTotalJugadores() {
   // fútbol N = N por equipo × 2 equipos
@@ -2389,7 +2392,7 @@ function openMatchForm() {
   form.style.display = opening ? 'block' : 'none';
   if (opening) {
     bpWizardStep = 1;
-    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null };
+    bpWizard = { modalidad: null, categoria: null, superficie: 'SINTÉTICA', arenaId: null, canchaLibre: true, canchaLibreNombre: '', canchaLibreDireccion: '', canchaLibreBarrio: '', canchaLibreValor: '', canchaLibreObs: '', horaLibre: '', fechaISO: null, horaValue: null, invitados: [], cuposAbiertos: null, casualBet: null, genero: 'MIXTO' };
     renderBpWizard();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2550,6 +2553,12 @@ function renderBpWizard() {
       <div class="auth-label" style="margin-top:12px">OVR MÍNIMO <span style="color:var(--td);font-weight:300">· Opcional</span></div>
       <input class="auth-input" type="number" min="0" max="99" id="bp-ovr-min" oninput="renderBpSummary()" placeholder="Ej: 60 — deja vacío para todos los niveles">
 
+      <div class="auth-label" style="margin-top:16px">MODALIDAD DE GÉNERO</div>
+      <div class="bp-casualbet-opts" id="bp-genero-opts">
+        ${[['MIXTO','⚧ MIXTO'],['MASCULINO','♂ MASCULINO'],['FEMENINO','♀ FEMENINO']].map(([v,l]) =>
+          `<button type="button" class="bp-casualbet ${(bpWizard.genero||'MIXTO')===v?'on':''}" onclick="bpSetGenero('${v}')">${l}</button>`).join('')}
+      </div>
+
       <div class="auth-label" style="margin-top:16px">APUESTA AMISTOSA <span style="color:var(--td);font-weight:300">· Opcional — el equipo perdedor paga</span></div>
       <div class="bp-casualbet-opts" id="bp-casualbet-opts">
         ${[['','SIN APUESTA'],['cancha','🏟️ LA CANCHA'],['bebida','🍺 LA BEBIDA'],['ambas','🏟️🍺 CANCHA + BEBIDA']].map(([v,l]) =>
@@ -2559,12 +2568,24 @@ function renderBpWizard() {
   renderBpSummary();
 }
 
+function bpSetGenero(v) {
+  bpWizard.genero = v;
+  document.querySelectorAll('#bp-genero-opts .bp-casualbet').forEach(b => {
+    b.classList.toggle('on', (b.getAttribute('onclick') || '').includes(`'${v}'`));
+  });
+  renderBpSummary();
+}
+
 function bpSetCasualBet(v) {
   bpWizard.casualBet = v;
   document.querySelectorAll('#bp-casualbet-opts .bp-casualbet').forEach(b => {
     b.classList.toggle('on', (b.getAttribute('onclick') || '').includes(`'${v}'`));
   });
   renderBpSummary();
+}
+
+function generoLabel(v) {
+  return { MASCULINO: '♂ MASCULINO', FEMENINO: '♀ FEMENINO', MIXTO: '⚧ MIXTO' }[v || 'MIXTO'] || '⚧ MIXTO';
 }
 
 function casualBetLabel(v) {
@@ -2709,6 +2730,7 @@ function renderBpSummary() {
     ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
     ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
     ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
+    <div class="bpw-summary-row"><span>GÉNERO</span><strong>${bpWizard.genero || 'MIXTO'}</strong></div>
     ${bpWizard.casualBet ? `<div class="bpw-summary-row"><span>APUESTA</span><strong>${casualBetLabel(bpWizard.casualBet)}</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
   `;
@@ -2829,6 +2851,7 @@ function submitMatchRequest() {
     joinRequests: [],
     finalizado: false,
     casualBet: bpWizard.casualBet || null,
+    genero: bpWizard.genero || 'MIXTO',
     createdAt: Date.now(),
   });
   const created = openMatches[0];
@@ -2939,8 +2962,15 @@ function applyBpFilters(list) {
     if (bpFilters.precio && m.precio && parseInt(m.precio, 10) > parseInt(bpFilters.precio, 10)) return false;
     if (bpFilters.cupos && (getTotalCupos(m) - getTotalUnidos(m)) <= 0) return false;
     if (bpFilters.abiertos && m.abierto === false) return false;
+    if (bpFilters.genero && (m.genero || 'MIXTO') !== bpFilters.genero) return false;
     return true;
   });
+}
+
+function applyBpGeneroChip(v) {
+  bpFilters.genero = (bpFilters.genero === v) ? '' : v;
+  document.querySelectorAll('.bps-chip-genero').forEach(c => c.classList.toggle('on', c.dataset.g === bpFilters.genero));
+  renderProximosPartidos();
 }
 
 function scrollToOpenMatches() {
@@ -2961,11 +2991,12 @@ function applyBpFiltersFromUI() {
 }
 
 function resetBpFilters() {
-  bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false };
+  bpFilters = { zona: '', cancha: '', fecha: '', formato: '', ovr: '', precio: '', cupos: false, abiertos: false, genero: '' };
   ['bp-filter-zona','bp-filter-formato'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['bp-filter-cancha','bp-filter-fecha','bp-filter-ovr','bp-filter-precio'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['bp-filter-cupos','bp-filter-abiertos'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
   document.querySelectorAll('.bps-chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.bps-chip-genero').forEach(c => c.classList.remove('on'));
   renderProximosPartidos();
 }
 
@@ -3053,6 +3084,7 @@ function buildMatchCard(m, mode) {
         <span class="bp-pill">🟢 ${m.superficie}</span>
         <span class="bp-pill">💵 ${(m.valorPorPersona || m.precio) ? '$' + Number(m.valorPorPersona || m.precio).toLocaleString('es-CO') + '/jug' : 'GRATIS'}</span>
         <span class="bp-pill">⭐ OVR ${m.ovrMin || 'LIBRE'}</span>
+        <span class="bp-pill bp-pill-genero bp-genero-${(m.genero||'MIXTO').toLowerCase()}">${generoLabel(m.genero)}</span>
         <span class="bp-pill">👤 ${m.creatorName}</span>
         ${m.casualBet ? `<span class="bp-pill bp-pill-bet">${casualBetLabel(m.casualBet)}</span>` : ''}
       </div>

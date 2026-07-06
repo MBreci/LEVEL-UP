@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Partidos · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783293758">
+<link rel="stylesheet" href="style.css?v=1783299182">
 </head>
 <body>
 
@@ -138,6 +138,9 @@
         <button class="bps-chip" onclick="applyBpQuickChip('f7')">⚽ Fútbol 7</button>
         <button class="bps-chip" onclick="applyBpQuickChip('f11')">⚽ Fútbol 11</button>
         <button class="bps-chip" onclick="applyBpQuickChip('cupos')">🟢 Con cupos</button>
+        <button class="bps-chip bps-chip-genero" data-g="MASCULINO" onclick="applyBpGeneroChip('MASCULINO')">♂ Masculino</button>
+        <button class="bps-chip bps-chip-genero" data-g="FEMENINO" onclick="applyBpGeneroChip('FEMENINO')">♀ Femenino</button>
+        <button class="bps-chip bps-chip-genero" data-g="MIXTO" onclick="applyBpGeneroChip('MIXTO')">⚧ Mixto</button>
         <button class="bps-chip" onclick="resetBpFilters()">✕ Limpiar</button>
       </div>
 
@@ -298,6 +301,13 @@
       <input class="auth-input" id="auth-nickname" autocomplete="off" placeholder="Ej: Santim" maxlength="16">
       <div class="auth-label">CORREO ELECTRÓNICO</div>
       <input class="auth-input" id="auth-email" type="email" autocomplete="off" placeholder="Ej: tucorreo.com" maxlength="80">
+      <div class="auth-label">GÉNERO <span class="auth-note-inline">· Opcional</span></div>
+      <select class="auth-input" id="auth-gender">
+        <option value="">Prefiero no decir</option>
+        <option value="MASCULINO">Masculino</option>
+        <option value="FEMENINO">Femenino</option>
+        <option value="OTRO">Otro</option>
+      </select>
       <div class="auth-label">POSICIÓN</div>
       <select class="auth-input" id="auth-position">
         <option value="DEL">DEL — Delantero</option>
@@ -357,6 +367,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783293758"></script>
+<script src="app.js?v=1783299182"></script>
 </body>
 </html>
