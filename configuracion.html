@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Configuración · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783372313">
+<link rel="stylesheet" href="style.css?v=1783372724">
 </head>
 <body>
 
@@ -166,7 +166,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783372313"></script>
+<script src="app.js?v=1783372724"></script>
 <script>
   function fillConfigForm() {
     if (!state) return;
@@ -199,7 +199,9 @@
     const res = await pushProfileToCloud(state);
     if (res && res.error) {
       const dup = /duplicate key|unique/i.test(res.error.message || '');
-      errEl.textContent = dup ? 'Ese apodo ya está en uso.' : 'No se pudo guardar. Revisa tu conexión.';
+      errEl.textContent = dup
+        ? 'Ese apodo ya está en uso.'
+        : 'No pudimos conectar con el servidor. Revisa tu internet, desactiva bloqueadores de anuncios/VPN o prueba con otro navegador e inténtalo de nuevo.';
       return;
     }
     // El correo se cambia por función segura (requiere tu contraseña).

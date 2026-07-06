@@ -143,8 +143,21 @@ function comingSoonHTML(emoji, title, intro, features) {
 
 async function pushProfileToCloud(p) {
   if (!sb) return { error: null };
-  const { error } = await sb.from('profiles').upsert(profileToRow(p));
-  if (error) console.error('Error guardando perfil en la nube:', error.message);
+  const row = profileToRow(p);
+  // Reintento con timeout: si la red se cae o se cuelga un instante, no fallamos
+  // al primer intento (causa típica del "revisa tu conexión" en celulares/redes flojas).
+  let error = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await withTimeout(sb.from('profiles').upsert(row), 8000, 'push-profile');
+      error = res.error;
+    } catch (e) { error = e; }
+    if (!error) return { error: null };
+    const msg = (error && error.message) || '';
+    if (/duplicate key|unique|violates|constraint|protegido/i.test(msg)) break; // error real: no reintentar
+    if (attempt < 2) await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
+  }
+  if (error) console.error('Error guardando perfil en la nube:', error && (error.message || error));
   return { error };
 }
 
