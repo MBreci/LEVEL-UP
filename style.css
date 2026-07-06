@@ -3543,3 +3543,6 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .soon-feat span{display:block;color:rgba(190,205,235,0.6);font-size:12px}
 .soon-foot{font-size:13px;color:rgba(190,205,235,0.7);position:relative}
 .soon-foot a{color:var(--g);text-decoration:none;font-weight:600}
+
+/* Badge 'PRONTO' en items del menú bloqueados para jugadores nuevos */
+.nm-soon{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:#04120a;background:var(--g);padding:2px 6px;border-radius:5px;margin-left:5px;vertical-align:middle;font-weight:800}

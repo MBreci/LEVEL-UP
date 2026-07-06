@@ -343,15 +343,21 @@ function renderNav() {
   nav.innerHTML = '';
   if (!state) return;
   const page = getCurrentPage();
-  // Jugadores nuevos (no fundadores): solo Mi Ficha, Partidos y Temporada Beta.
-  const NEW_ALLOWED = ['ficha', 'partidos', 'temporada'];
-  const modules = isFounder() ? FUNCTIONAL_MODULES : FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id));
+  const restricted = isRestrictedPlayer();
+  // Jugadores nuevos: Partidos, Rey del Barrio y Torneos (con 'PRONTO') y Temporada Beta.
+  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos', 'temporada'];
+  const SOON_FOR_NEW = ['reydelbarrio', 'torneos'];
+  const modules = restricted ? FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id)) : FUNCTIONAL_MODULES;
   modules.forEach(m => {
     const href = PAGE_HREFS[m.id] || '#';
     const el = document.createElement('a');
     el.className = 'nm-item nm-item-link';
     if (href.split('#')[0] === page) el.classList.add('on');
-    el.textContent = m.label;
+    if (restricted && SOON_FOR_NEW.includes(m.id)) {
+      el.innerHTML = `${m.label} <span class="nm-soon">PRONTO</span>`;
+    } else {
+      el.textContent = m.label;
+    }
     el.href = href;
     nav.appendChild(el);
   });
