@@ -5449,6 +5449,7 @@ function respondInvite(inviteId, accept) {
   renderNotifications();
 }
 
+const SHOW_TEAM_ACTIVITY = false; // ponme en true al lanzar la pagina completa
 function renderTicker() {
   const items = [];
   openMatches.filter(m => getMatchEstado(m) !== 'finalizado').forEach(m => {
@@ -5459,8 +5460,9 @@ function renderTicker() {
   Object.values(profiles).slice(-5).forEach(p => {
     items.push(`<span class="tk-item">🆕 <strong>NUEVO JUGADOR</strong> ${p.nickname || p.name} se unió a LEVEL UP</span>`);
   });
-  // Actividad de equipos: solo para fundadores (los nuevos no ven el mundo competitivo).
-  if (!isRestrictedPlayer()) {
+  // Actividad de equipos: desactivada por ahora para TODOS (sin distinción).
+  // Cambiar SHOW_TEAM_ACTIVITY a true cuando se lance la página completa.
+  if (SHOW_TEAM_ACTIVITY) {
     Object.values(teams).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5).forEach(t => {
       items.push(`<span class="tk-item">🛡️ <strong>NUEVO EQUIPO</strong> ${t.name} se formó en LEVEL UP</span>`);
     });
