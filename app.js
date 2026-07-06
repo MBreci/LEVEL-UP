@@ -20,6 +20,8 @@ function containsProfanity(text) {
 
 function playerTeamLabel(p) {
   if (!p) return 'SIN EQUIPO';
+  // Jugadores nuevos no ven los equipos de OTROS (solo el suyo propio).
+  if (typeof isRestrictedPlayer === 'function' && isRestrictedPlayer() && (!state || p.id !== state.id)) return 'SIN EQUIPO';
   const realTeam = typeof teams === 'object' && teams ? Object.values(teams).find(t => t.memberIds && t.memberIds.includes(p.id)) : null;
   return realTeam ? realTeam.name : 'SIN EQUIPO';
 }
@@ -117,6 +119,9 @@ function rowToProfile(r) {
 
 // ¿El usuario actual es fundador? (acceso a Rey del Barrio y Torneos)
 function isFounder() { return !!(state && state.founder); }
+// Jugador nuevo con acceso restringido (founder explícitamente false; undefined = aún
+// no sincronizado, no se restringe para no bloquear a un fundador por error).
+function isRestrictedPlayer() { return !!(state && state.founder === false); }
 
 // Panel "PRÓXIMAMENTE" para jugadores nuevos (no fundadores).
 function comingSoonHTML(emoji, title, intro, features) {
@@ -338,7 +343,10 @@ function renderNav() {
   nav.innerHTML = '';
   if (!state) return;
   const page = getCurrentPage();
-  FUNCTIONAL_MODULES.forEach(m => {
+  // Jugadores nuevos (no fundadores): solo Mi Ficha, Partidos y Temporada Beta.
+  const NEW_ALLOWED = ['ficha', 'partidos', 'temporada'];
+  const modules = isFounder() ? FUNCTIONAL_MODULES : FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id));
+  modules.forEach(m => {
     const href = PAGE_HREFS[m.id] || '#';
     const el = document.createElement('a');
     el.className = 'nm-item nm-item-link';
@@ -353,6 +361,17 @@ function renderNav() {
     adminBtn.textContent = '⚙ ADMIN';
     adminBtn.onclick = () => openAdminPanel();
     nav.appendChild(adminBtn);
+  }
+  // Jugadores nuevos: ocultar accesos competitivos de los menús desplegables.
+  if (isRestrictedPlayer()) {
+    const jugarDd = document.getElementById('jugar-dropdown');
+    if (jugarDd) jugarDd.querySelectorAll('a.dropdown-item').forEach(a => {
+      if ((a.getAttribute('href') || '').includes('equipos.html')) a.style.display = 'none';
+    });
+    const acctDd = document.getElementById('account-dropdown');
+    if (acctDd) acctDd.querySelectorAll('a.dropdown-item').forEach(a => {
+      if ((a.getAttribute('href') || '').includes('dashboard.html')) a.style.display = 'none';
+    });
   }
 }
 
@@ -589,7 +608,7 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
     <div class="fc-foot">
-      <div class="fc-team">${playerTeamLabel(p)}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
+      <div class="fc-team">${playerTeamLabel(p)}${(!isRestrictedPlayer() && teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
       ${buildPhysicalPillsHTML(p)}
     </div>
   `;
@@ -4763,7 +4782,7 @@ function renderTeamsModule() {
     return;
   }
   // Jugadores nuevos (no fundadores): Rey del Barrio en PRÓXIMAMENTE.
-  if (!isFounder()) {
+  if (isRestrictedPlayer()) {
     const sec = document.getElementById('equipos');
     if (sec) sec.innerHTML = comingSoonHTML('👑', 'REY DEL BARRIO', 'El modo competitivo oficial de LEVEL UP: arma tu equipo, reta a otros y demuestra quién manda en el barrio.', [
       ['⚔️', 'Reta a otros equipos', 'Partidos oficiales en canchas certificadas.'],
@@ -5435,18 +5454,21 @@ function renderTicker() {
   Object.values(profiles).slice(-5).forEach(p => {
     items.push(`<span class="tk-item">🆕 <strong>NUEVO JUGADOR</strong> ${p.nickname || p.name} se unió a LEVEL UP</span>`);
   });
-  Object.values(teams).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5).forEach(t => {
-    items.push(`<span class="tk-item">🛡️ <strong>NUEVO EQUIPO</strong> ${t.name} se formó en LEVEL UP</span>`);
-  });
-  teamInvites.filter(i => i.status === 'aceptada').slice(-5).forEach(i => {
-    const p = profiles[i.toId];
-    if (p) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${p.nickname || p.name} se unió a ${i.teamName}</span>`);
-  });
-  Object.values(teams).forEach(t => {
-    (t.joinLog || []).slice(-3).forEach(j => {
-      if (j.name) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${j.name} se unió a ${t.name}</span>`);
+  // Actividad de equipos: solo para fundadores (los nuevos no ven el mundo competitivo).
+  if (!isRestrictedPlayer()) {
+    Object.values(teams).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5).forEach(t => {
+      items.push(`<span class="tk-item">🛡️ <strong>NUEVO EQUIPO</strong> ${t.name} se formó en LEVEL UP</span>`);
     });
-  });
+    teamInvites.filter(i => i.status === 'aceptada').slice(-5).forEach(i => {
+      const p = profiles[i.toId];
+      if (p) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${p.nickname || p.name} se unió a ${i.teamName}</span>`);
+    });
+    Object.values(teams).forEach(t => {
+      (t.joinLog || []).slice(-3).forEach(j => {
+        if (j.name) items.push(`<span class="tk-item">🤝 <strong>NUEVO FICHAJE</strong> ${j.name} se unió a ${t.name}</span>`);
+      });
+    });
+  }
   if (items.length === 0) {
     items.push(`<span class="tk-item">⚽ Sé el primero en publicar tu búsqueda en "BUSCAR PARTIDO"</span>`);
   }
@@ -5464,7 +5486,13 @@ function initApp() {
     if (sharedP) localStorage.setItem('levelup_pending_match', sharedP);
     location.href = 'index.html'; return;
   }
-  if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
+  if (state && page === 'index.html') { location.href = isRestrictedPlayer() ? 'buscar-partido.html' : 'dashboard.html'; return; }
+  // Jugadores nuevos (no fundadores): esconder páginas competitivas (rankings, otros
+  // jugadores, centro de mando con widgets de ranking). Se van a Partidos.
+  if (isRestrictedPlayer()) {
+    const RESTRICTED_GATED = ['dashboard.html', 'ranking.html', 'jugadores.html'];
+    if (RESTRICTED_GATED.includes(page)) { location.href = 'buscar-partido.html'; return; }
+  }
   initFeedbackWidget();
 
   if (state && (state.nickname === 'Lobo' || state.name === 'Miguel Breci') && (!state.physical || state.physical.weight == null)) {
@@ -5612,7 +5640,7 @@ function renderTorneos() {
   if (!listEl) return;
 
   // Jugadores nuevos (no fundadores): Torneos en PRÓXIMAMENTE.
-  if (state && !isFounder()) {
+  if (isRestrictedPlayer()) {
     const sec = document.getElementById('torneos');
     if (sec) sec.innerHTML = comingSoonHTML('🏆', 'TORNEOS', 'Compite en torneos oficiales de LEVEL UP con tu equipo, gana premios y conviértete en leyenda del barrio.', [
       ['🗓️', 'Torneos organizados', 'Fechas, canchas y formato definidos por LEVEL UP.'],
