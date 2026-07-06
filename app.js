@@ -2370,7 +2370,7 @@ function getArenaAvailableSlots(arenaId, fechaISO) {
 }
 
 let bpWizardStep = 1;
-const BPW_STEPS = ['MODALIDAD', 'CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA', 'HORARIO', 'DETALLES'];
+const BPW_STEPS = ['MODALIDAD', 'CATEGORÍA', 'SUPERFICIE', 'ARENA', 'FECHA Y HORA', 'DETALLES'];
 const MODALIDADES = [
   { id: 'abierto', label: 'PARTIDO ABIERTO', icon: '⚽', desc: 'Cualquiera puede unirse según los cupos.' },
   { id: 'privado', label: 'PARTIDO PRIVADO', icon: '🔒', desc: 'Apruebas cada solicitud de ingreso.' },
@@ -2419,7 +2419,7 @@ function renderBpWizard() {
     </div>`).join('');
 
   backBtn.style.display = bpWizardStep > 1 ? 'inline-block' : 'none';
-  nextBtn.textContent = bpWizardStep === 7 ? 'PUBLICAR PARTIDO' : 'SIGUIENTE';
+  nextBtn.textContent = bpWizardStep === 6 ? 'PUBLICAR PARTIDO' : 'SIGUIENTE';
 
   if (bpWizardStep === 1) {
     bodyEl.innerHTML = `
@@ -2476,18 +2476,15 @@ function renderBpWizard() {
       </div>`;
   } else if (bpWizardStep === 5) {
     const todayISO = new Date().toISOString().split('T')[0];
-    bodyEl.innerHTML = `
-      <div class="auth-label">PASO 5 · SELECCIONA LA FECHA</div>
-      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" min="${todayISO}" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">`;
-  } else if (bpWizardStep === 6) {
+    let horaHtml;
     if (bpWizard.canchaLibre) {
-      bodyEl.innerHTML = `
-        <div class="auth-label">PASO 6 · ¿A QUÉ HORA EMPIEZA?</div>
+      horaHtml = `
+        <div class="auth-label" style="margin-top:18px">HORA DE INICIO</div>
         <input class="auth-input" type="time" id="bpw-hora-libre" value="${bpWizard.horaLibre || ''}" onchange="bpWizard.horaLibre=this.value;renderBpSummary()">`;
     } else {
       const slots = bpWizard.arenaId && bpWizard.fechaISO ? getArenaAvailableSlots(bpWizard.arenaId, bpWizard.fechaISO) : [];
-      bodyEl.innerHTML = `
-        <div class="auth-label">PASO 6 · SELECCIONA EL HORARIO</div>
+      horaHtml = `
+        <div class="auth-label" style="margin-top:18px">SELECCIONA EL HORARIO</div>
         <div class="bpw-hora-grid">
           ${slots.length ? slots.map(s => {
             const restantes = (ARENAS.find(a => a.id === bpWizard.arenaId).maxSimultaneos) - s.ocupados;
@@ -2499,7 +2496,11 @@ function renderBpWizard() {
           }).join('') : '<div class="bp-empty">Selecciona arena y fecha primero.</div>'}
         </div>`;
     }
-  } else if (bpWizardStep === 7) {
+    bodyEl.innerHTML = `
+      <div class="auth-label">PASO 5 · FECHA Y HORA</div>
+      <input class="auth-input bpw-date-input" type="date" id="bpw-fecha" min="${todayISO}" value="${bpWizard.fechaISO || ''}" onchange="bpSelectFecha(this.value)">
+      ${horaHtml}`;
+  } else if (bpWizardStep === 6) {
     const totalJug = getTotalJugadores();
     const maxFaltan = getMaxFaltan();
     if (bpWizard.cuposAbiertos === null) bpWizard.cuposAbiertos = Math.min(maxFaltan, totalJug - 1 - bpWizard.invitados.length);
@@ -2555,7 +2556,7 @@ function renderBpWizard() {
 
       <div class="auth-label" style="margin-top:16px">MODALIDAD DE GÉNERO</div>
       <div class="bp-casualbet-opts" id="bp-genero-opts">
-        ${[['MIXTO','⚧ MIXTO'],['MASCULINO','♂ MASCULINO'],['FEMENINO','♀ FEMENINO']].map(([v,l]) =>
+        ${[['MASCULINO','♂ MASCULINO'],['FEMENINO','♀ FEMENINO'],['MIXTO','⚧ MIXTO']].map(([v,l]) =>
           `<button type="button" class="bp-casualbet ${(bpWizard.genero||'MIXTO')===v?'on':''}" onclick="bpSetGenero('${v}')">${l}</button>`).join('')}
       </div>
 
@@ -2717,7 +2718,7 @@ function renderBpSummary() {
   const precioEl = document.getElementById('bp-precio');
   const cuposAb = bpWizard.cuposAbiertos !== null ? bpWizard.cuposAbiertos : 0;
   const prevConf = bpWizard.invitados.length;
-  const ready = bpWizard.canchaLibreNombre && bpWizard.canchaLibreDireccion && bpWizard.canchaLibreBarrio && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && (bpWizardStep < 7 || cuposAb > 0);
+  const ready = bpWizard.canchaLibreNombre && bpWizard.canchaLibreDireccion && bpWizard.canchaLibreBarrio && bpWizard.categoria && bpWizard.fechaISO && bpWizard.horaLibre && (bpWizardStep < 6 || cuposAb > 0);
   el.innerHTML = `
     <div class="bpw-summary-title">RESUMEN DEL PARTIDO</div>
     <div class="bpw-summary-row"><span>MODALIDAD</span><strong>${bpWizard.modalidad ? MODALIDADES.find(m => m.id === bpWizard.modalidad).label : '—'}</strong></div>
@@ -2728,8 +2729,8 @@ function renderBpSummary() {
     <div class="bpw-summary-row"><span>VALOR/PERSONA</span><strong>${bpWizard.canchaLibreValor ? '$' + parseInt(bpWizard.canchaLibreValor).toLocaleString('es-CO') : 'GRATIS'}</strong></div>
     <div class="bpw-summary-row"><span>CAPITÁN</span><strong>${state ? (state.nickname || state.name) : '—'}</strong></div>
     ${bpWizard.categoria ? `<div class="bpw-summary-row"><span>CUPOS TOTALES</span><strong>${getTotalJugadores()} jugadores</strong></div>` : ''}
-    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
-    ${bpWizardStep === 7 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
+    ${bpWizardStep === 6 ? `<div class="bpw-summary-row"><span>BUSCANDO</span><strong>${cuposAb} jugador${cuposAb !== 1 ? 'es' : ''}</strong></div>` : ''}
+    ${bpWizardStep === 6 ? `<div class="bpw-summary-row"><span>CONFIRMADOS</span><strong>${prevConf + 1} (tú${prevConf ? ' + ' + prevConf : ''})</strong></div>` : ''}
     <div class="bpw-summary-row"><span>GÉNERO</span><strong>${bpWizard.genero || 'MIXTO'}</strong></div>
     ${bpWizard.casualBet ? `<div class="bpw-summary-row"><span>APUESTA</span><strong>${casualBetLabel(bpWizard.casualBet)}</strong></div>` : ''}
     <div class="bpw-summary-row"><span>ESTADO</span><strong class="${ready ? 'on' : ''}">${ready ? 'LISTO PARA PUBLICAR' : 'EN PROGRESO'}</strong></div>
@@ -2751,7 +2752,7 @@ function bpSelectModalidad(id) {
 function bpSelectCategoria(id) { bpWizard.categoria = id; renderBpWizard(); }
 function bpSelectSuperficie(id) { bpWizard.superficie = id; renderBpWizard(); }
 function bpSelectArena(id) { bpWizard.arenaId = id || null; renderBpWizard(); }
-function bpSelectFecha(v) { bpWizard.fechaISO = v || null; bpWizard.horaValue = null; renderBpSummary(); }
+function bpSelectFecha(v) { bpWizard.fechaISO = v || null; bpWizard.horaValue = null; if (bpWizardStep === 5 && !bpWizard.canchaLibre) renderBpWizard(); else renderBpSummary(); }
 function bpSelectHora(h) { bpWizard.horaValue = h; renderBpWizard(); }
 
 function bpWizardBack() {
@@ -2774,20 +2775,19 @@ function bpWizardNext() {
     }
   }
   if (bpWizardStep === 5) {
+    // Fecha y hora van juntas en este paso.
     if (!bpWizard.fechaISO) { errorEl.textContent = 'Selecciona la fecha del partido.'; return; }
     const now = new Date(); const todayLocal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     if (bpWizard.fechaISO < todayLocal) { errorEl.textContent = 'No puedes crear un partido en una fecha que ya pasó.'; return; }
-  }
-  if (bpWizardStep === 6) {
-    if (!bpWizard.horaLibre) { errorEl.textContent = 'Indica la hora de inicio.'; return; }
-    const now = new Date(); const todayLocal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    if (bpWizard.fechaISO === todayLocal) {
+    const horaSel = bpWizard.canchaLibre ? bpWizard.horaLibre : bpWizard.horaValue;
+    if (!horaSel) { errorEl.textContent = 'Indica la hora de inicio del partido.'; return; }
+    if (bpWizard.canchaLibre && bpWizard.fechaISO === todayLocal) {
       const [h, m] = bpWizard.horaLibre.split(':').map(Number);
       const matchTime = new Date(); matchTime.setHours(h, m, 0, 0);
       if (matchTime <= now) { errorEl.textContent = 'La hora ya pasó. Selecciona una hora futura.'; return; }
     }
   }
-  if (bpWizardStep < 7) { bpWizardStep++; renderBpWizard(); return; }
+  if (bpWizardStep < 6) { bpWizardStep++; renderBpWizard(); return; }
   submitMatchRequest();
 }
 
@@ -2814,7 +2814,7 @@ function submitMatchRequest() {
     const chosenSlot = slots.find(s => s.hora === bpWizard.horaValue);
     if (!chosenSlot || !chosenSlot.disponible) {
       errorEl.textContent = 'Ese horario ya no está disponible. Selecciona otro.';
-      bpWizardStep = 6;
+      bpWizardStep = 5;
       renderBpWizard();
       return;
     }
