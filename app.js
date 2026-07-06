@@ -3160,7 +3160,7 @@ function buildMatchCard(m, mode) {
         <button onclick="shareMatch('${m.id}')">↗ COMPARTIR</button>
         <button class="${isSaved ? 'on' : ''}" onclick="toggleSaveMatch('${m.id}')">${isSaved ? '★ GUARDADO' : '☆ GUARDAR'}</button>
         <button onclick="openMatchLocation('${m.id}')">📍 UBICACIÓN</button>
-        <button onclick="openWip('Chat del partido')">💬 CHAT</button>
+        <button onclick="openMatchChat('${m.id}')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
         ${isCreator ? buildDeleteMatchButton(m) : ''}
         ${isAdmin() && !m.finalizado ? `<button class="mm-admin-btn" onclick="openAdminMatch('${m.id}')">⚙ ADMINISTRAR</button>` : ''}
@@ -6686,3 +6686,98 @@ async function adminSetTicketStatus(id, status) {
   const { data } = await sb.rpc('admin_reply_feedback', { p_admin_id: state.id, p_feedback_id: id, p_reply: null, p_status: status });
   if (data === true) openAdminTickets();
 }
+
+/* ============================ CHAT DEL PARTIDO ============================ */
+let _chatMatchId = null;
+let _chatTimer = null;
+let _chatLastCount = 0;
+
+function initMatchChatUI() {
+  if (document.getElementById('mchat-modal')) return;
+  const box = document.createElement('div');
+  box.innerHTML = `
+    <div class="modal-overlay" id="mchat-modal">
+      <div class="mchat-card">
+        <div class="mchat-head">
+          <div class="mchat-title">💬 CHAT DEL PARTIDO</div>
+          <div class="mchat-sub" id="mchat-sub"></div>
+        </div>
+        <div class="mchat-body" id="mchat-body"></div>
+        <div class="mchat-input-row" id="mchat-input-row">
+          <input class="mchat-input" id="mchat-input" maxlength="500" placeholder="Escribe un mensaje..." autocomplete="off"
+            onkeydown="if(event.key==='Enter'){sendMatchMessage();}">
+          <button class="mchat-send" id="mchat-send" onclick="sendMatchMessage()">➤</button>
+        </div>
+        <button class="auth-cancel" onclick="closeMatchChat()" style="margin:0 16px 16px">CERRAR</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+}
+
+function openMatchChat(matchId) {
+  if (!state) { openAuth(false); return; }
+  initMatchChatUI();
+  const match = (typeof openMatches !== 'undefined' ? openMatches : []).find(m => m.id === matchId);
+  _chatMatchId = matchId;
+  _chatLastCount = 0;
+  const isPart = match && typeof matchParticipantIds === 'function' && matchParticipantIds(match).has(state.id);
+  document.getElementById('mchat-sub').textContent = match ? (match.cancha || match.zona || '') : '';
+  document.getElementById('mchat-modal').classList.add('open');
+  const inputRow = document.getElementById('mchat-input-row');
+  if (isPart) {
+    inputRow.style.display = 'flex';
+    renderMatchChat();
+    if (_chatTimer) clearInterval(_chatTimer);
+    _chatTimer = setInterval(renderMatchChat, 4000);
+  } else {
+    inputRow.style.display = 'none';
+    document.getElementById('mchat-body').innerHTML = `<div class="mchat-empty">Únete a este partido para ver y escribir en el chat con tu equipo.</div>`;
+  }
+}
+
+function closeMatchChat() {
+  document.getElementById('mchat-modal').classList.remove('open');
+  if (_chatTimer) { clearInterval(_chatTimer); _chatTimer = null; }
+  _chatMatchId = null;
+}
+
+async function renderMatchChat() {
+  if (!sb || !_chatMatchId || !state) return;
+  const body = document.getElementById('mchat-body');
+  if (!body) return;
+  const { data, error } = await sb.rpc('get_match_messages', { p_match_id: _chatMatchId, p_requester_id: state.id });
+  if (error) return;
+  const msgs = data || [];
+  // Evitar re-render (y perder scroll) si no llegaron mensajes nuevos.
+  if (msgs.length === _chatLastCount && body.dataset.rendered === '1') return;
+  _chatLastCount = msgs.length;
+  body.dataset.rendered = '1';
+  if (!msgs.length) {
+    body.innerHTML = `<div class="mchat-empty">Aún no hay mensajes. ¡Rompe el hielo y coordina con tu equipo!</div>`;
+    return;
+  }
+  body.innerHTML = msgs.map(m => {
+    const mine = m.sender_id === state.id;
+    const t = new Date(m.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    return `<div class="mchat-msg ${mine ? 'mine' : ''}">
+      ${mine ? '' : `<div class="mchat-name">${(m.sender_name || 'Jugador').replace(/</g, '&lt;')}</div>`}
+      <div class="mchat-bubble">${(m.text || '').replace(/</g, '&lt;')}</div>
+      <div class="mchat-time">${t}</div>
+    </div>`;
+  }).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendMatchMessage() {
+  if (!sb || !_chatMatchId || !state) return;
+  const input = document.getElementById('mchat-input');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  input.value = '';
+  const { data } = await sb.rpc('post_match_message', {
+    p_match_id: _chatMatchId, p_sender_id: state.id, p_sender_name: state.nickname || state.name, p_text: text
+  });
+  if (data) { body_force_rerender(); renderMatchChat(); }
+  else { input.value = text; alert('No se pudo enviar. Debes estar unido al partido para escribir.'); }
+}
+function body_force_rerender() { const b = document.getElementById('mchat-body'); if (b) b.dataset.rendered = '0'; }
