@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEVEL UP · Torneo de Apertura (Preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#00ff88;--f:#ff00aa;--o:#ff6600;--w:#ffffff;
+  --bg:#020408;--bg2:#06090f;--bg3:#080c14;
+  --gold:#c9a84c;
+  --t:rgba(235,242,255,0.95);--tm:rgba(180,200,240,0.4);--td:rgba(180,200,240,0.2);
+  --ft:'Orbitron',monospace;--fb:'Inter',sans-serif;
+  --b1:0.5px solid rgba(255,255,255,0.07);
+  --b2:0.5px solid rgba(255,255,255,0.12);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:var(--fb);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.25)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* ===== PREVIEW BAR ===== */
+.preview-bar{position:fixed;top:0;left:0;right:0;z-index:9000;background:rgba(255,102,0,0.14);border-bottom:1px solid rgba(255,102,0,0.4);backdrop-filter:blur(10px);padding:8px 16px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--o);text-align:center}
+
+/* ===== BANNER ===== */
+.t-banner{position:relative;overflow:hidden;padding:120px 0 54px;border-bottom:var(--b1);
+  background:radial-gradient(ellipse 70% 90% at 20% 0%,rgba(255,102,0,0.16),transparent 60%),radial-gradient(ellipse 70% 90% at 100% 100%,rgba(0,255,136,0.12),transparent 60%),linear-gradient(180deg,#04060d 0%,#020308 100%)}
+.t-live-chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:#ff3b3b;border:1px solid rgba(255,59,59,0.4);background:rgba(255,59,59,0.08);padding:6px 14px;border-radius:40px;margin-bottom:18px}
+.t-live-dot{width:8px;height:8px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 10px #ff3b3b;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.t-eyebrow{font-family:var(--ft);font-size:10px;letter-spacing:5px;color:var(--o);margin-bottom:14px}
+.t-title{font-family:var(--ft);font-weight:900;font-size:clamp(34px,6vw,66px);line-height:.94;letter-spacing:1px;color:var(--w);text-shadow:0 0 40px rgba(255,102,0,0.3)}
+.t-title span{background:linear-gradient(90deg,var(--o),#ffd24d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.t-sub{font-size:15px;font-weight:300;line-height:1.6;color:rgba(220,230,255,0.7);max-width:560px;margin-top:18px}
+.t-meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:28px}
+.t-meta-i .n{font-family:var(--ft);font-weight:700;font-size:22px;color:var(--w)}
+.t-meta-i .l{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--td);margin-top:4px}
+.t-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+.btn-o{font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:2px;padding:15px 30px;border:none;cursor:pointer;border-radius:3px;background:linear-gradient(90deg,var(--o),#ffa726);color:#0b0500;box-shadow:0 0 26px rgba(255,102,0,0.5);transition:transform .18s,box-shadow .18s}
+.btn-o:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(255,102,0,0.75)}
+.btn-ghost{font-family:var(--ft);font-size:11px;letter-spacing:2px;padding:15px 30px;border:1px solid rgba(0,255,136,0.4);background:rgba(0,255,136,0.04);color:var(--g);cursor:pointer;border-radius:3px;transition:all .18s}
+.btn-ghost:hover{background:rgba(0,255,136,0.1)}
+
+/* ===== SECTION ===== */
+.sec{padding:56px 0;border-bottom:var(--b1)}
+.sec-eyebrow{font-family:var(--ft);font-size:9px;letter-spacing:4px;color:var(--g);margin-bottom:12px}
+.sec-h{font-family:var(--ft);font-weight:900;font-size:clamp(22px,3.4vw,32px);letter-spacing:1px;color:var(--w);margin-bottom:8px}
+.sec-p{font-size:14px;font-weight:300;line-height:1.6;color:rgba(220,230,255,0.6);max-width:640px;margin-bottom:30px}
+
+/* ===== LIVE STREAM ===== */
+.stream{position:relative;aspect-ratio:16/9;border:var(--b2);border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#08101c,#03060d);display:flex;align-items:center;justify-content:center;text-align:center}
+.stream::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,255,136,0.08),transparent 70%)}
+.stream-ico{font-size:52px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(0,255,136,.5))}
+.stream-t{font-family:var(--ft);font-size:13px;letter-spacing:2px;color:var(--w)}
+.stream-s{font-size:12px;color:var(--tm);margin-top:8px}
+.stream-badge{position:absolute;top:14px;left:14px;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:#ff3b3b;border:1px solid rgba(255,59,59,0.5);background:rgba(0,0,0,.5);padding:5px 10px;border-radius:40px;display:flex;align-items:center;gap:6px}
+
+/* ===== SORTEO / DRAW ===== */
+.draw-stage{position:relative;min-height:260px;border:var(--b2);border-radius:8px;background:linear-gradient(135deg,#070d18,#03060d);padding:26px;overflow:hidden}
+.draw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.team-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:rgba(255,255,255,0.02);transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.team-chip .badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-weight:900;font-size:13px;flex-shrink:0}
+.team-chip .nm{font-family:var(--ft);font-size:11px;letter-spacing:1px;color:var(--w)}
+.team-chip .seed{margin-left:auto;font-family:var(--ft);font-size:9px;color:var(--td)}
+.team-chip.shuffling{animation:jiggle .28s infinite}
+.team-chip.locked{border-color:rgba(0,255,136,0.4);box-shadow:0 0 18px rgba(0,255,136,0.15)}
+@keyframes jiggle{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(2px,-3px)}75%{transform:translate(3px,2px)}}
+.draw-controls{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.btn-sm{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;padding:11px 20px;border-radius:3px;cursor:pointer;transition:all .18s}
+.btn-sm.p{background:var(--g);color:#02120a;border:none;box-shadow:0 0 16px rgba(0,255,136,.4)}
+.btn-sm.g{background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--tm)}
+.btn-sm:hover{transform:translateY(-1px)}
+
+/* ===== BRACKET ===== */
+.bracket-scroll{overflow-x:auto;padding-bottom:10px}
+.bracket{display:flex;gap:44px;min-width:760px;padding:10px 4px}
+.round{display:flex;flex-direction:column;justify-content:space-around;gap:20px;flex:1}
+.round-lbl{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--g);text-align:center;margin-bottom:6px}
+.match{position:relative;border:1px solid rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.015);transition:all .5s}
+.match.decided{border-color:rgba(0,255,136,0.35)}
+.slot{display:flex;align-items:center;gap:10px;padding:10px 12px;transition:all .5s}
+.slot+.slot{border-top:1px solid rgba(255,255,255,0.06)}
+.slot .b{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ft);font-weight:900;font-size:10px;flex-shrink:0}
+.slot .n{font-family:var(--ft);font-size:10px;letter-spacing:.5px;color:var(--tm)}
+.slot .sc{margin-left:auto;font-family:var(--ft);font-size:12px;font-weight:700;color:var(--td)}
+.slot.win .n{color:var(--w)}
+.slot.win .sc{color:var(--g)}
+.slot.lose{opacity:.35}
+.slot.lose .n{text-decoration:line-through}
+.champion{margin-top:34px;text-align:center;opacity:0;transform:translateY(14px);transition:all .7s}
+.champion.show{opacity:1;transform:none}
+.champ-cup{font-size:56px;filter:drop-shadow(0 0 26px rgba(255,210,77,.7))}
+.champ-t{font-family:var(--ft);font-size:10px;letter-spacing:4px;color:var(--gold);margin-top:10px}
+.champ-n{font-family:var(--ft);font-weight:900;font-size:30px;color:var(--w);margin-top:8px;background:linear-gradient(90deg,var(--gold),#fff3c4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ===== MODAL ===== */
+.modal{position:fixed;inset:0;z-index:9500;background:rgba(2,4,8,0.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{width:100%;max-width:440px;background:var(--bg2);border:var(--b2);border-radius:10px;padding:30px;position:relative}
+.modal-x{position:absolute;top:14px;right:16px;font-size:22px;color:var(--tm);cursor:pointer;line-height:1}
+.modal-eyebrow{font-family:var(--ft);font-size:9px;letter-spacing:3px;color:var(--o);margin-bottom:8px}
+.modal-h{font-family:var(--ft);font-weight:900;font-size:20px;color:var(--w);margin-bottom:6px}
+.modal-p{font-size:13px;color:var(--tm);line-height:1.5;margin-bottom:20px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-family:var(--ft);font-size:8px;letter-spacing:2px;color:var(--tm);margin-bottom:6px}
+.fld input,.fld textarea{width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:12px;color:var(--w);font-family:var(--fb);font-size:13px;outline:none;transition:border .18s}
+.fld input:focus,.fld textarea:focus{border-color:rgba(0,255,136,0.5)}
+.fld textarea{resize:vertical;min-height:74px}
+.modal-ok{text-align:center;padding:14px 0}
+.modal-ok .ico{font-size:46px;margin-bottom:14px}
+footer{padding:40px 0 60px;text-align:center;color:var(--td);font-family:var(--ft);font-size:9px;letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div class="preview-bar">◆ PREVIEW · ASÍ SE VERÍA EL TORNEO DE APERTURA · nada de esto está publicado todavía</div>
+
+<!-- BANNER -->
+<section class="t-banner">
+  <div class="wrap">
+    <div class="t-live-chip"><span class="t-live-dot"></span>EN VIVO PRÓXIMAMENTE</div>
+    <div class="t-eyebrow">LEVEL UP · TEMPORADA BETA</div>
+    <h1 class="t-title">TORNEO DE<br><span>APERTURA</span></h1>
+    <p class="t-sub">El primer torneo de la comunidad. 8 equipos, un solo campeón. Sorteo en vivo, transmisión del evento y el camino al título minuto a minuto.</p>
+    <div class="t-meta">
+      <div class="t-meta-i"><div class="n">8</div><div class="l">EQUIPOS</div></div>
+      <div class="t-meta-i"><div class="n">7</div><div class="l">PARTIDOS</div></div>
+      <div class="t-meta-i"><div class="n">1</div><div class="l">CAMPEÓN</div></div>
+      <div class="t-meta-i"><div class="n">SÁB</div><div class="l">FECHA</div></div>
+    </div>
+    <div class="t-cta">
+      <button class="btn-o" onclick="openParticipar()">QUIERO PARTICIPAR</button>
+      <a class="btn-ghost" href="#transmision">VER TRANSMISIÓN</a>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE STREAM -->
+<section class="sec" id="transmision">
+  <div class="wrap">
+    <div class="sec-eyebrow">EN VIVO</div>
+    <h2 class="sec-h">Transmisión del evento</h2>
+    <p class="sec-p">El día del torneo, aquí verás todo en vivo: los partidos, el sorteo y la definición del campeón. Se activa automáticamente cuando arranca la transmisión.</p>
+    <div class="stream">
+      <div class="stream-badge"><span class="t-live-dot"></span>EN VIVO</div>
+      <div>
+        <div class="stream-ico">📺</div>
+        <div class="stream-t">LA TRANSMISIÓN APARECERÁ AQUÍ</div>
+        <div class="stream-s">YouTube / Twitch embebido · sábado 6:00 PM</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SORTEO -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-eyebrow">SORTEO</div>
+    <h2 class="sec-h">Mezcla de equipos en vivo</h2>
+    <p class="sec-p">El día del sorteo se mezclan los equipos con esta animación y queda definido el orden del cuadro. Dale a "Mezclar" para ver cómo se sentiría.</p>
+    <div class="draw-stage">
+      <div class="draw-grid" id="drawGrid"></div>
+      <div class="draw-controls">
+        <button class="btn-sm p" onclick="doShuffle()">🎲 MEZCLAR EQUIPOS</button>
+        <button class="btn-sm g" onclick="resetDraw()">Reiniciar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BRACKET -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-eyebrow">CAMINO AL TÍTULO</div>
+    <h2 class="sec-h">El cuadro se va cerrando</h2>
+    <p class="sec-p">A medida que los admin suben los resultados, los equipos que pierden quedan eliminados y el cuadro se cierra hasta llegar al campeón. Dale "Avanzar resultado" para simularlo.</p>
+    <div class="bracket-scroll">
+      <div class="bracket" id="bracket"></div>
+    </div>
+    <div class="champion" id="champion">
+      <div class="champ-cup">🏆</div>
+      <div class="champ-t">CAMPEÓN DEL TORNEO DE APERTURA</div>
+      <div class="champ-n" id="champName">—</div>
+    </div>
+    <div class="draw-controls">
+      <button class="btn-sm p" onclick="advanceResult()">▶ AVANZAR RESULTADO</button>
+      <button class="btn-sm g" onclick="resetBracket()">Reiniciar cuadro</button>
+    </div>
+  </div>
+</section>
+
+<footer>LEVEL UP · PREVIEW DEL TORNEO · vanilla · sin conexión a datos reales</footer>
+
+<!-- MODAL PARTICIPAR -->
+<div class="modal" id="modalPart">
+  <div class="modal-box">
+    <div class="modal-x" onclick="closeParticipar()">×</div>
+    <div id="partForm">
+      <div class="modal-eyebrow">TORNEO DE APERTURA</div>
+      <div class="modal-h">Quiero participar</div>
+      <p class="modal-p">Déjanos tus datos y te escribimos para armar tu equipo y darte el cupo. El mensaje le llega directo al organizador.</p>
+      <div class="fld"><label>NOMBRE Y APODO</label><input id="pName" placeholder="Ej: Miguel · Breco"></div>
+      <div class="fld"><label>CELULAR O CORREO</label><input id="pContact" placeholder="Para contactarte"></div>
+      <div class="fld"><label>MENSAJE (OPCIONAL)</label><textarea id="pMsg" placeholder="¿Ya tienes equipo? ¿Cuántos son?"></textarea></div>
+      <button class="btn-o" style="width:100%" onclick="sendParticipar()">ENVIAR SOLICITUD</button>
+    </div>
+    <div class="modal-ok" id="partOk" style="display:none">
+      <div class="ico">✅</div>
+      <div class="modal-h">¡Solicitud enviada!</div>
+      <p class="modal-p" style="margin-bottom:20px">Te contactamos muy pronto. Guarda tu lugar en el Torneo de Apertura. 🚀</p>
+      <button class="btn-ghost" style="width:100%" onclick="closeParticipar()">LISTO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== TEAMS =====
+var COLORS=['#00ff88','#ff00aa','#ff6600','#3aa0ff','#ffd24d','#a97bff','#ff4d4d','#2ee6c8'];
+var BASE=['LOS TIGRES','BARRIO FC','DEPORTIVO SUR','LA JAURÍA','REAL NORTE','FURIA','LOS PIBES','ATLÉTICO'];
+var teams=[];
+function mk(name,i){return{name:name,color:COLORS[i%COLORS.length],ini:name.replace(/[^A-ZÁ]/g,'').slice(0,2)||name.slice(0,2).toUpperCase()};}
+
+function renderDraw(shuf){
+  var g=document.getElementById('drawGrid');g.innerHTML='';
+  teams.forEach(function(t,i){
+    var d=document.createElement('div');
+    d.className='team-chip'+(shuf?' shuffling':'')+(!shuf?' locked':'');
+    d.innerHTML='<div class="badge" style="background:'+t.color+'22;color:'+t.color+';border:1px solid '+t.color+'55">'+t.ini+'</div>'+
+      '<div class="nm">'+t.name+'</div><div class="seed">#'+(i+1)+'</div>';
+    g.appendChild(d);
+  });
+}
+function resetDraw(){teams=BASE.map(mk);renderDraw(false);}
+function doShuffle(){
+  renderDraw(true);
+  var n=0,iv=setInterval(function(){
+    teams.sort(function(){return Math.random()-.5;});renderDraw(true);
+    if(++n>10){clearInterval(iv);renderDraw(false);buildBracket();}
+  },130);
+}
+
+// ===== BRACKET =====
+var rounds,resultStep;
+function buildBracket(){
+  // seed R1 from current team order
+  rounds=[[],[],[]]; // QF(4), SF(2), F(1)
+  for(var i=0;i<8;i+=2){rounds[0].push({a:teams[i],b:teams[i+1],sa:null,sb:null,w:null});}
+  rounds[1]=[{a:null,b:null,sa:null,sb:null,w:null},{a:null,b:null,sa:null,sb:null,w:null}];
+  rounds[2]=[{a:null,b:null,sa:null,sb:null,w:null}];
+  resultStep=0;
+  document.getElementById('champion').classList.remove('show');
+  document.getElementById('champName').textContent='—';
+  renderBracket();
+}
+var LBL=['CUARTOS','SEMIFINAL','FINAL'];
+function slot(team,score,state){
+  if(!team)return '<div class="slot"><div class="b" style="background:#ffffff08;color:#ffffff20">?</div><div class="n">Por definir</div><div class="sc">—</div></div>';
+  return '<div class="slot '+(state||'')+'"><div class="b" style="background:'+team.color+'22;color:'+team.color+';border:1px solid '+team.color+'55">'+team.ini+'</div><div class="n">'+team.name+'</div><div class="sc">'+(score==null?'–':score)+'</div></div>';
+}
+function renderBracket(){
+  var wrap=document.getElementById('bracket');wrap.innerHTML='';
+  rounds.forEach(function(r,ri){
+    var col=document.createElement('div');col.className='round';
+    var html='<div class="round-lbl">'+LBL[ri]+'</div>';
+    r.forEach(function(m){
+      var sa=m.w?(m.w==='a'?'win':'lose'):'';
+      var sb=m.w?(m.w==='b'?'win':'lose'):'';
+      html+='<div class="match'+(m.w?' decided':'')+'">'+slot(m.a,m.sa,sa)+slot(m.b,m.sb,sb)+'</div>';
+    });
+    col.innerHTML=html;wrap.appendChild(col);
+  });
+}
+function decide(m){
+  // random-ish scores, a slight bias so it feels real
+  m.sa=Math.floor(Math.random()*4);m.sb=Math.floor(Math.random()*4);
+  if(m.sa===m.sb)m.sa++;
+  m.w=m.sa>m.sb?'a':'b';
+  return m.w==='a'?m.a:m.b;
+}
+function advanceResult(){
+  if(!rounds){buildBracket();}
+  // find next undecided match, respecting round order & readiness
+  for(var ri=0;ri<rounds.length;ri++){
+    for(var mi=0;mi<rounds[ri].length;mi++){
+      var m=rounds[ri][mi];
+      if(m.w)continue;
+      if(!m.a||!m.b)continue; // not ready
+      var winner=decide(m);
+      // propagate winner
+      if(ri<2){
+        var nm=rounds[ri+1][Math.floor(mi/2)];
+        if(mi%2===0)nm.a=winner;else nm.b=winner;
+      }else{
+        // champion
+        var ch=document.getElementById('champion');
+        document.getElementById('champName').textContent=winner.name;
+        ch.classList.add('show');
+        ch.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+      renderBracket();
+      return;
+    }
+  }
+}
+function resetBracket(){buildBracket();}
+
+// ===== MODAL =====
+function openParticipar(){document.getElementById('modalPart').classList.add('open');}
+function closeParticipar(){document.getElementById('modalPart').classList.remove('open');document.getElementById('partForm').style.display='block';document.getElementById('partOk').style.display='none';}
+function sendParticipar(){
+  var n=document.getElementById('pName').value.trim();
+  var c=document.getElementById('pContact').value.trim();
+  if(!n||!c){alert('Pon tu nombre y un contacto para escribirte.');return;}
+  // In production this calls submit_feedback -> email al organizador
+  document.getElementById('partForm').style.display='none';
+  document.getElementById('partOk').style.display='block';
+}
+
+// init
+resetDraw();buildBracket();
+</script>
+</body>
+</html>
