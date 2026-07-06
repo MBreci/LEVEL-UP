@@ -6816,7 +6816,7 @@ function initFeedbackWidget() {
   const adm = (typeof state !== 'undefined' && state && typeof isAdmin === 'function' && isAdmin());
   const box = document.createElement('div');
   box.innerHTML = `
-    <button id="fb-fab" class="fb-fab" onclick="openFeedbackModal()" title="Reportar un problema o dar tu opinión">💬</button>
+    <button id="fb-fab" class="fb-fab" onclick="openFeedbackModal()" title="Reportar un problema o dar tu opinión">💬<span id="fb-fab-badge" class="fb-fab-badge" style="display:none"></span></button>
     ${adm ? `<button id="fb-admin-fab" class="fb-fab fb-admin" onclick="openAdminTickets()" title="Tickets (admin)">🎫</button>` : ''}
     <div class="modal-overlay" id="fb-modal">
       <div class="auth-card" style="max-width:440px">
@@ -6834,7 +6834,16 @@ function initFeedbackWidget() {
         <input class="auth-input" id="fb-contact" type="email" maxlength="80" placeholder="tucorreo@gmail.com">
         <div class="auth-error" id="fb-msg"></div>
         <button class="auth-submit" id="fb-send" onclick="submitFeedbackForm()">ENVIAR</button>
+        <button class="auth-cancel" id="fb-mine-btn" onclick="openMyTickets()" style="display:none">VER MIS MENSAJES</button>
         <button class="auth-cancel" onclick="closeFeedbackModal()">CANCELAR</button>
+      </div>
+    </div>
+    <div class="modal-overlay" id="fb-mine-modal">
+      <div class="auth-card" style="max-width:520px;max-height:85vh;overflow-y:auto">
+        <div class="auth-label" style="font-size:16px;color:var(--g)">📨 MIS MENSAJES</div>
+        <div class="auth-photo-note">Aquí ves tus mensajes y la respuesta del equipo LEVEL UP.</div>
+        <div id="fb-mine-list"><div class="auth-photo-note">Cargando...</div></div>
+        <button class="auth-cancel" onclick="closeMyTickets()">CERRAR</button>
       </div>
     </div>
     <div class="modal-overlay" id="fb-admin-modal">
@@ -6845,6 +6854,10 @@ function initFeedbackWidget() {
       </div>
     </div>`;
   document.body.appendChild(box);
+  // Revisar si hay respuestas nuevas del admin para marcar el badge del FAB.
+  if (typeof state !== 'undefined' && state) {
+    setTimeout(() => { try { refreshMyTicketsBadge(); } catch (e) {} }, 1500);
+  }
 }
 let _fbType = 'bug';
 function fbPickType(t) {
@@ -6857,6 +6870,8 @@ function openFeedbackModal() {
   document.getElementById('fb-msg').textContent = '';
   const c = document.getElementById('fb-contact');
   if (c && (!c.value) && typeof state !== 'undefined' && state && state.email) c.value = state.email;
+  const mineBtn = document.getElementById('fb-mine-btn');
+  if (mineBtn) mineBtn.style.display = (typeof state !== 'undefined' && state) ? 'block' : 'none';
   document.getElementById('fb-modal').classList.add('open');
 }
 function closeFeedbackModal() { document.getElementById('fb-modal').classList.remove('open'); }
@@ -6920,6 +6935,65 @@ async function adminSetTicketStatus(id, status) {
   const { data } = await sb.rpc('admin_reply_feedback', { p_admin_id: state.id, p_feedback_id: id, p_reply: null, p_status: status });
   if (data === true) openAdminTickets();
 }
+
+// ===== "MIS MENSAJES": el usuario ve la respuesta del admin (mostrado como LEVEL UP) =====
+const FB_SEEN_KEY = 'levelup_fb_seen';
+function fbLoadSeen() { try { return JSON.parse(localStorage.getItem(FB_SEEN_KEY) || '{}'); } catch (e) { return {}; } }
+function fbSaveSeen(m) { try { localStorage.setItem(FB_SEEN_KEY, JSON.stringify(m)); } catch (e) {} }
+
+async function fetchMyTickets() {
+  if (!sb || typeof state === 'undefined' || !state) return [];
+  try {
+    const { data, error } = await sb.rpc('my_feedback', { p_reporter_id: state.id });
+    if (error || !data) return [];
+    return data;
+  } catch (e) { return []; }
+}
+
+// Cuenta respuestas nuevas (con reply y replied_at que el usuario no ha visto) y marca el badge del FAB.
+async function refreshMyTicketsBadge() {
+  const tickets = await fetchMyTickets();
+  const seen = fbLoadSeen();
+  let unread = 0;
+  tickets.forEach(t => {
+    if (t.admin_reply && t.replied_at && seen[t.id] !== t.replied_at) unread++;
+  });
+  const badge = document.getElementById('fb-fab-badge');
+  if (badge) {
+    if (unread > 0) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.style.display = 'flex'; }
+    else badge.style.display = 'none';
+  }
+}
+
+async function openMyTickets() {
+  document.getElementById('fb-modal').classList.remove('open');
+  const modal = document.getElementById('fb-mine-modal');
+  const list = document.getElementById('fb-mine-list');
+  modal.classList.add('open');
+  list.innerHTML = `<div class="auth-photo-note">Cargando...</div>`;
+  const tickets = await fetchMyTickets();
+  if (!tickets.length) { list.innerHTML = `<div class="auth-photo-note">Aún no has enviado mensajes.</div>`; return; }
+  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆' };
+  const stLabel = { nuevo: 'ENVIADO', revisado: 'RESPONDIDO', resuelto: 'RESUELTO' };
+  list.innerHTML = tickets.map(t => `
+    <div class="fb-ticket ${t.status}">
+      <div class="fb-ticket-top">
+        <span class="fb-ticket-type">${icon[t.type] || '💬'} ${(t.type || '').toUpperCase()}</span>
+        <span class="fb-ticket-status fb-st-${t.status}">${stLabel[t.status] || (t.status || '').toUpperCase()}</span>
+      </div>
+      <div class="fb-ticket-msg">${(t.message || '').replace(/</g, '&lt;')}</div>
+      ${t.admin_reply
+        ? `<div class="fb-ticket-reply"><b style="color:var(--g)">LEVEL UP:</b> ${t.admin_reply.replace(/</g, '&lt;')}</div>`
+        : `<div class="fb-ticket-meta">Aún sin respuesta. Te avisaremos aquí cuando te respondamos. 🙌</div>`}
+    </div>`).join('');
+  // Marcar como vistas las respuestas actuales
+  const seen = fbLoadSeen();
+  tickets.forEach(t => { if (t.admin_reply && t.replied_at) seen[t.id] = t.replied_at; });
+  fbSaveSeen(seen);
+  const badge = document.getElementById('fb-fab-badge');
+  if (badge) badge.style.display = 'none';
+}
+function closeMyTickets() { document.getElementById('fb-mine-modal').classList.remove('open'); }
 
 /* ============================ CHAT DEL PARTIDO ============================ */
 let _chatMatchId = null;

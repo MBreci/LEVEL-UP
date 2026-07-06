@@ -3483,6 +3483,8 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   background:linear-gradient(135deg,var(--g),#00b36b);color:#04120a;font-size:22px;box-shadow:0 6px 20px rgba(0,255,136,0.35);
   display:flex;align-items:center;justify-content:center;transition:transform .18s}
 .fb-fab:hover{transform:translateY(-2px) scale(1.05)}
+.fb-fab{overflow:visible}
+.fb-fab-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff2d55;color:#fff;font-family:var(--ft);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(255,45,85,0.7);border:1.5px solid #04120a}
 .fb-fab.fb-admin{bottom:76px;background:linear-gradient(135deg,#ffb300,#e08a00);color:#1a1200;box-shadow:0 6px 20px rgba(255,180,0,0.35)}
 .fb-types{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .fb-type{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:rgba(220,232,255,0.8);font-size:12px;cursor:pointer;transition:all .15s}
