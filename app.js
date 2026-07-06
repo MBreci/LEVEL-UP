@@ -135,7 +135,7 @@ function comingSoonHTML(emoji, title, intro, features) {
         <div class="soon-features">
           ${features.map(f => `<div class="soon-feat"><span class="soon-feat-ic">${f[0]}</span><div><strong>${f[1]}</strong><span>${f[2]}</span></div></div>`).join('')}
         </div>
-        <div class="soon-foot">Muy pronto podrás desbloquear este mundo. Mientras tanto, <a href="buscar-partido.html">crea y únete a partidos</a> para subir tu OVR. 🚀</div>
+        <div class="soon-foot">Muy pronto podrás desbloquear este mundo. Mientras tanto, <a href="buscar-partido.html">crea y únete a partidos</a> para jugar y conocer a otros jugadores. 🚀</div>
       </div>
     </div>`;
 }
