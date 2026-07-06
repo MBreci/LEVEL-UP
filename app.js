@@ -3807,6 +3807,18 @@ function setSlotPosition(teamId, idx, pos) {
 function containsProfanityImageName(name) {
   return containsProfanity(name || '');
 }
+// Reemplaza cada mala palabra detectada por asteriscos (para el chat).
+function censorProfanity(text) {
+  if (!text) return text || '';
+  return String(text).replace(/[\p{L}]+/gu, function (word) {
+    const n = normalizeForFilter(word);
+    const hit = BANNED_WORDS.some(function (w) {
+      const nw = normalizeForFilter(w);
+      return n === nw || (nw.length >= 5 && n.includes(nw));
+    });
+    return hit ? '*'.repeat(Math.max(3, word.length)) : word;
+  });
+}
 
 async function submitCreateTeam() {
   const errorEl = document.getElementById('team-error');
@@ -6838,7 +6850,7 @@ async function renderMatchChat() {
     const t = new Date(m.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
     return `<div class="mchat-msg ${mine ? 'mine' : ''}">
       ${mine ? '' : `<div class="mchat-name">${(m.sender_name || 'Jugador').replace(/</g, '&lt;')}</div>`}
-      <div class="mchat-bubble">${(m.text || '').replace(/</g, '&lt;')}</div>
+      <div class="mchat-bubble">${censorProfanity(m.text || '').replace(/</g, '&lt;')}</div>
       <div class="mchat-time">${t}</div>
     </div>`;
   }).join('');
@@ -6848,7 +6860,7 @@ async function renderMatchChat() {
 async function sendMatchMessage() {
   if (!sb || !_chatMatchId || !state) return;
   const input = document.getElementById('mchat-input');
-  const text = (input.value || '').trim();
+  const text = censorProfanity((input.value || '').trim());
   if (!text) return;
   input.value = '';
   const { data } = await sb.rpc('post_match_message', {
