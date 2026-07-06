@@ -343,9 +343,9 @@ function renderNav() {
   if (!state) return;
   const page = getCurrentPage();
   const restricted = isRestrictedPlayer();
-  // Jugadores nuevos: Partidos, Rey del Barrio y Torneos (con 'PRONTO') y Temporada Beta.
+  // Jugadores nuevos: Partidos y Torneos abiertos; Rey del Barrio con 'PRONTO'.
   const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos'];
-  const SOON_FOR_NEW = ['reydelbarrio', 'torneos'];
+  const SOON_FOR_NEW = ['reydelbarrio'];
   const modules = restricted ? FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id)) : FUNCTIONAL_MODULES;
   modules.forEach(m => {
     const href = PAGE_HREFS[m.id] || '#';
@@ -5545,6 +5545,7 @@ function initApp() {
     }
   });
   syncMatchInvitesFromCloud().then(renderAll);
+  syncTournamentsFromCloud().then(renderAll);
   // NO empujar el perfil local al cargar: la nube es la fuente de verdad
   // (syncProfilesFromCloud refresca el estado). Empujar aquí pisaba datos buenos
   // con datos viejos del dispositivo (bug de reseteo de cartas entre dominios).
@@ -5572,6 +5573,7 @@ function initApp() {
         syncTeamInvitesFromCloud(),
         syncOpenMatchesFromCloud(),
         syncMatchInvitesFromCloud(),
+        syncTournamentsFromCloud(),
       ]).then(safeRerender);
     };
     setInterval(runSync, 45000);
@@ -5599,6 +5601,53 @@ function loadTournaments() {
 
 function saveTournaments(t) {
   localStorage.setItem('levelup_tournaments', JSON.stringify(t));
+}
+
+// ===== Torneos en la nube: todos ven los mismos torneos que crea el admin =====
+async function syncTournamentsFromCloud() {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('tournaments').select('id,data').order('updated_at', { ascending: false });
+    if (error || !data) return;
+    const map = {};
+    data.forEach(r => { if (r && r.data) map[r.id] = Object.assign({ id: r.id }, r.data); });
+    saveTournaments(map);
+  } catch (e) {}
+}
+
+// El admin publica/actualiza el torneo completo en la nube
+async function pushTournamentToCloud(t) {
+  if (!sb || !state || !t) return { error: 'no-context' };
+  try {
+    const { id } = t;
+    const data = Object.assign({}, t); delete data.id;
+    const { error } = await sb.rpc('upsert_tournament', { p_admin_id: state.id, p_id: id, p_data: data });
+    return { error };
+  } catch (e) { return { error: e }; }
+}
+
+async function setTournamentStatusInCloud(id, status) {
+  if (!sb || !state) return;
+  try { await sb.rpc('set_tournament_status', { p_admin_id: state.id, p_id: id, p_status: status }); } catch (e) {}
+}
+
+async function deleteTournamentInCloud(id) {
+  if (!sb || !state) return;
+  try { await sb.rpc('delete_tournament', { p_admin_id: state.id, p_id: id }); } catch (e) {}
+}
+
+// El capitán (fundador) inscribe su equipo: la nube hace append sin pisar a otros
+async function addTeamToTournamentInCloud(id, entry) {
+  if (!sb || !state) return { error: 'no-context' };
+  try {
+    const { data, error } = await sb.rpc('tournament_add_team', { p_profile_id: state.id, p_id: id, p_entry: entry });
+    if (!error && data) {
+      const map = loadTournaments();
+      map[id] = Object.assign({ id }, data);
+      saveTournaments(map);
+    }
+    return { error };
+  } catch (e) { return { error: e }; }
 }
 
 function toggleTorneoForm() {
@@ -5646,8 +5695,21 @@ function crearTorneo() {
     createdBy: state.id, status: 'abierto', teams: [], createdAt: Date.now()
   };
   saveTournaments(tournaments);
+  pushTournamentToCloud(tournaments[id]).then(r => {
+    if (r && r.error) { errEl.textContent = 'Se guardó localmente pero no se pudo publicar en la nube. Revisa tu conexión.'; }
+  });
   toggleTorneoForm();
   renderTorneos();
+}
+
+// Rol de quien mira el torneo:
+//  'admin'   -> Breco/admins: crean y gestionan.
+//  'founder' -> capitanes y jugadores fundadores: pueden solicitar unirse con su equipo.
+//  'guest'   -> jugadores nuevos (no fundadores): ven todo en general y pueden pedir info.
+function torneoViewerRole() {
+  if (isAdmin()) return 'admin';
+  if (isRestrictedPlayer()) return 'guest';
+  return 'founder';
 }
 
 function renderTorneos() {
@@ -5655,38 +5717,36 @@ function renderTorneos() {
   const listEl = document.getElementById('tn-list');
   if (!listEl) return;
 
-  // Jugadores nuevos (no fundadores): Torneos en PRÓXIMAMENTE.
-  if (isRestrictedPlayer()) {
-    const sec = document.getElementById('torneos');
-    if (sec) sec.innerHTML = comingSoonHTML('🏆', 'TORNEOS', 'Compite en torneos oficiales de LEVEL UP con tu equipo, gana premios y conviértete en leyenda del barrio.', [
-      ['🗓️', 'Torneos organizados', 'Fechas, canchas y formato definidos por LEVEL UP.'],
-      ['🎟️', 'Inscríbete con tu equipo', 'Arma tu escuadra y compite por el título.'],
-      ['🥇', 'Premios reales', 'Gánate reconocimiento, premios y tu lugar en la historia.'],
-    ]);
-    return;
-  }
-
-  if (adminBar) adminBar.style.display = isAdmin() ? 'block' : 'none';
+  const role = torneoViewerRole();
+  if (adminBar) adminBar.style.display = role === 'admin' ? 'block' : 'none';
+  ensureTorneoLeadModal();
 
   const tournaments = loadTournaments();
-  const list = Object.values(tournaments).sort((a, b) => b.createdAt - a.createdAt);
+  const list = Object.values(tournaments).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
   if (!list.length) {
+    const sub = role === 'guest'
+      ? 'Muy pronto arranca el Torneo de Apertura. Déjanos tus datos y te contamos cómo hacer parte.'
+      : (role === 'admin'
+        ? 'Crea el primer torneo con el botón de arriba.'
+        : 'Pronto se publicará el próximo torneo. Asegúrate de tener tu equipo completo (8 jugadores).');
     listEl.innerHTML = `
       <div class="tn-empty">
         <div class="tn-empty-icon">🏆</div>
-        <div class="tn-empty-title">No hay torneos activos</div>
-        <div class="tn-empty-sub">Pronto se publicará el próximo torneo. Asegúrate de tener tu equipo completo.</div>
+        <div class="tn-empty-title">${role === 'guest' ? 'El Torneo de Apertura está en camino' : 'No hay torneos activos'}</div>
+        <div class="tn-empty-sub">${sub}</div>
+        ${role === 'guest' ? `<button class="tn-inscribir-btn" style="margin-top:18px" onclick="abrirQuieroHacerParte('')">QUIERO HACER PARTE</button>` : ''}
       </div>`;
     return;
   }
 
-  listEl.innerHTML = list.map(t => renderTorneoCard(t)).join('');
+  listEl.innerHTML = list.map(t => renderTorneoCard(t, role)).join('');
 }
 
-function renderTorneoCard(t) {
+function renderTorneoCard(t, role) {
+  role = role || torneoViewerRole();
   const teams = loadTournaments()[t.id]?.teams || [];
-  const myTeam = state ? getMyTeam() : null;
+  const myTeam = (role === 'founder' && state) ? getMyTeam() : null;
   const isInscribed = myTeam && teams.some(e => e.teamId === myTeam.id);
   const isCaptain = myTeam && state && myTeam.captainId === state.id;
   const isComplete = myTeam && myTeam.memberIds.length >= 8;
@@ -5719,18 +5779,25 @@ function renderTorneoCard(t) {
   }).join('');
 
   let ctaHtml = '';
-  if (t.status === 'abierto' && state) {
+  if (role === 'guest') {
+    // No fundadores: vista general, no pueden inscribir. Pueden pedir información.
+    ctaHtml = `
+      <div class="tn-cta-note" style="margin-bottom:10px">Estás viendo el torneo en modo espectador. Si quieres participar con tu equipo, escríbenos y te contamos cómo.</div>
+      <button class="tn-inscribir-btn" onclick="abrirQuieroHacerParte('${t.id}')">QUIERO HACER PARTE</button>`;
+  } else if (role === 'founder' && t.status === 'abierto' && state) {
     if (isInscribed) {
       ctaHtml = `<div class="tn-inscribed-badge">✓ TU EQUIPO ESTÁ INSCRITO</div>`;
     } else if (!myTeam) {
       ctaHtml = `<div class="tn-cta-note">Necesitas un equipo para inscribirte. <a href="equipos.html#crear" style="color:var(--g)">Crear equipo →</a></div>`;
     } else if (!isCaptain) {
-      ctaHtml = `<div class="tn-cta-note">Solo el capitán puede inscribir el equipo.</div>`;
+      ctaHtml = `<div class="tn-cta-note">Solo el capitán de <b>${myTeam.name}</b> puede inscribir el equipo al torneo.</div>`;
     } else if (!isComplete) {
       ctaHtml = `<div class="tn-cta-note">Tu equipo necesita 8 jugadores (6 titulares + 2 suplentes) para inscribirse. <a href="equipos.html#crear" style="color:var(--g)">Completar equipo →</a></div>`;
     } else {
       ctaHtml = `<button class="tn-inscribir-btn" onclick="abrirPagoInscripcion('${t.id}')">INSCRIBIR MI EQUIPO — $${Number(t.valorInscripcion).toLocaleString('es-CO')}</button>`;
     }
+  } else if (role === 'founder' && t.status !== 'abierto') {
+    ctaHtml = `<div class="tn-cta-note">Las inscripciones para este torneo están cerradas.</div>`;
   }
 
   return `
@@ -5817,8 +5884,10 @@ function pagarInscripcionConSaldo(torneoId) {
   saveProfiles();
   pushProfileToCloud(state);
 
-  t.teams.push({ teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'saldo' });
+  const entry = { teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'saldo' };
+  t.teams = (t.teams || []).concat([entry]);
   saveTournaments(tournaments);
+  addTeamToTournamentInCloud(torneoId, entry);
   closeTnPayModal();
   renderWalletPill();
   renderTorneos();
@@ -5859,8 +5928,10 @@ async function pagarInscripcionWompi(torneoId) {
     widget.open(result => {
       const tx = result.transaction;
       if (tx && tx.status === 'APPROVED') {
-        t.teams.push({ teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'wompi', wompiRef: data.reference });
+        const entry = { teamId: myTeam.id, paidAt: Date.now(), paymentMethod: 'wompi', wompiRef: data.reference };
+        t.teams = (t.teams || []).concat([entry]);
         saveTournaments(tournaments);
+        addTeamToTournamentInCloud(torneoId, entry);
         closeTnPayModal();
         renderTorneos();
         alert(`✅ ¡${myTeam.name} inscrito al torneo!`);
@@ -5877,6 +5948,7 @@ function cambiarStatusTorneo(torneoId, newStatus) {
   if (!tournaments[torneoId]) return;
   tournaments[torneoId].status = newStatus;
   saveTournaments(tournaments);
+  setTournamentStatusInCloud(torneoId, newStatus);
   renderTorneos();
 }
 
@@ -5886,7 +5958,83 @@ function eliminarTorneo(torneoId) {
   const tournaments = loadTournaments();
   delete tournaments[torneoId];
   saveTournaments(tournaments);
+  deleteTournamentInCloud(torneoId);
   renderTorneos();
+}
+
+// ===== "QUIERO HACER PARTE" (no fundadores / espectadores) =====
+// Captura nombre + contacto + mensaje y le llega al admin como ticket (submit_feedback tipo 'torneo').
+let _torneoLeadId = '';
+function ensureTorneoLeadModal() {
+  if (document.getElementById('tn-lead-modal')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay';
+  wrap.id = 'tn-lead-modal';
+  wrap.style.display = 'none';
+  wrap.innerHTML = `
+    <div class="tn-pay-card">
+      <div class="tn-pay-title">QUIERO HACER PARTE</div>
+      <div class="tn-pay-body">
+        <div class="tn-lead-sub">Déjanos tus datos y te contactamos para contarte cómo participar en el torneo. 🚀</div>
+        <div class="tn-lead-form" id="tn-lead-form">
+          <label class="tn-label">NOMBRE Y APODO</label>
+          <input class="tn-input" id="tn-lead-name" autocomplete="off" placeholder="Ej: Miguel · Breco" maxlength="60">
+          <label class="tn-label" style="margin-top:10px">CELULAR O CORREO</label>
+          <input class="tn-input" id="tn-lead-contact" autocomplete="off" placeholder="Para poder escribirte" maxlength="80">
+          <label class="tn-label" style="margin-top:10px">MENSAJE (OPCIONAL)</label>
+          <textarea class="tn-input tn-textarea" id="tn-lead-msg" placeholder="¿Ya tienes equipo? ¿Cuántos son?" maxlength="400"></textarea>
+          <div class="tn-form-error" id="tn-lead-error"></div>
+          <button class="tn-inscribir-btn" style="width:100%;margin-top:14px" id="tn-lead-send" onclick="enviarQuieroHacerParte()">ENVIAR SOLICITUD</button>
+        </div>
+        <div class="tn-lead-ok" id="tn-lead-ok" style="display:none;text-align:center;padding:14px 0">
+          <div style="font-size:44px;margin-bottom:12px">✅</div>
+          <div class="tn-empty-title">¡Solicitud enviada!</div>
+          <div class="tn-empty-sub">Te contactamos muy pronto. Guarda tu lugar en el torneo.</div>
+        </div>
+      </div>
+      <button class="auth-cancel" onclick="closeTorneoLeadModal()">CERRAR</button>
+    </div>`;
+  document.body.appendChild(wrap);
+}
+function abrirQuieroHacerParte(torneoId) {
+  ensureTorneoLeadModal();
+  _torneoLeadId = torneoId || '';
+  const f = document.getElementById('tn-lead-form');
+  const ok = document.getElementById('tn-lead-ok');
+  if (f) f.style.display = 'block';
+  if (ok) ok.style.display = 'none';
+  const err = document.getElementById('tn-lead-error'); if (err) err.textContent = '';
+  if (state) {
+    const n = document.getElementById('tn-lead-name'); if (n && !n.value) n.value = state.nickname || state.name || '';
+    const c = document.getElementById('tn-lead-contact'); if (c && !c.value) c.value = state.email || '';
+  }
+  document.getElementById('tn-lead-modal').style.display = 'flex';
+}
+function closeTorneoLeadModal() {
+  const m = document.getElementById('tn-lead-modal');
+  if (m) m.style.display = 'none';
+}
+async function enviarQuieroHacerParte() {
+  const name = (document.getElementById('tn-lead-name').value || '').trim();
+  const contact = (document.getElementById('tn-lead-contact').value || '').trim();
+  const msg = (document.getElementById('tn-lead-msg').value || '').trim();
+  const err = document.getElementById('tn-lead-error');
+  const btn = document.getElementById('tn-lead-send');
+  if (!name || !contact) { err.textContent = 'Pon tu nombre y un contacto para escribirte.'; return; }
+  err.textContent = ''; if (btn) { btn.disabled = true; btn.textContent = 'ENVIANDO...'; }
+  const tName = (_torneoLeadId && loadTournaments()[_torneoLeadId]) ? loadTournaments()[_torneoLeadId].nombre : 'Torneo de Apertura';
+  const body = `SOLICITUD DE TORNEO — ${tName}\nNombre: ${name}\nContacto: ${contact}${msg ? '\nMensaje: ' + msg : ''}`;
+  try {
+    if (sb) await sb.rpc('submit_feedback', {
+      p_type: 'torneo', p_message: body,
+      p_reporter_id: (state ? state.id : null), p_reporter_name: name,
+      p_contact: contact, p_page: (location.pathname.split('/').pop() || 'torneos.html'), p_ua: navigator.userAgent
+    });
+    document.getElementById('tn-lead-form').style.display = 'none';
+    document.getElementById('tn-lead-ok').style.display = 'block';
+  } catch (e) {
+    err.textContent = 'No se pudo enviar. Inténtalo de nuevo.';
+  } finally { if (btn) { btn.disabled = false; btn.textContent = 'ENVIAR SOLICITUD'; } }
 }
 
 /* ===== AUDIO ===== */
@@ -6743,7 +6891,7 @@ async function openAdminTickets() {
   const { data, error } = await sb.rpc('admin_list_feedback', { p_admin_id: state.id });
   if (error) { list.innerHTML = `<div class="auth-error">No se pudo cargar.</div>`; return; }
   if (!data || !data.length) { list.innerHTML = `<div class="auth-photo-note">Aún no hay tickets. 🎉</div>`; return; }
-  const icon = { bug: '🐛', idea: '💡', comentario: '💬' };
+  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆' };
   list.innerHTML = data.map(t => `
     <div class="fb-ticket ${t.status}">
       <div class="fb-ticket-top">
