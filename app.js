@@ -110,8 +110,29 @@ function rowToProfile(r) {
     notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
     saldo: r.saldo || 0,
     isAdmin: r.is_admin || false,
+    founder: r.founder || false,
     communityRatings: r.community_ratings || {}, ratedPlayers: r.rated_players || {},
   };
+}
+
+// ¿El usuario actual es fundador? (acceso a Rey del Barrio y Torneos)
+function isFounder() { return !!(state && state.founder); }
+
+// Panel "PRÓXIMAMENTE" para jugadores nuevos (no fundadores).
+function comingSoonHTML(emoji, title, intro, features) {
+  return `
+    <div class="soon-wrap">
+      <div class="soon-card">
+        <div class="soon-badge">PRÓXIMAMENTE</div>
+        <div class="soon-emoji">${emoji}</div>
+        <div class="soon-title">${title}</div>
+        <div class="soon-intro">${intro}</div>
+        <div class="soon-features">
+          ${features.map(f => `<div class="soon-feat"><span class="soon-feat-ic">${f[0]}</span><div><strong>${f[1]}</strong><span>${f[2]}</span></div></div>`).join('')}
+        </div>
+        <div class="soon-foot">Muy pronto podrás desbloquear este mundo. Mientras tanto, <a href="buscar-partido.html">crea y únete a partidos</a> para subir tu OVR. 🚀</div>
+      </div>
+    </div>`;
 }
 
 async function pushProfileToCloud(p) {
@@ -161,7 +182,7 @@ async function deleteProfileFromCloud(id) {
 // fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
 // Columnas de lectura pública: NO incluye password_hash, security_answer_hash ni email
 // (esos nunca se exponen; el login y el propio correo se manejan por funciones seguras).
-const PROFILE_SYNC_COLS = 'id,name,nickname,gender,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,community_ratings,rated_players';
+const PROFILE_SYNC_COLS = 'id,name,nickname,gender,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,founder,community_ratings,rated_players';
 
 async function syncProfilesFromCloud() {
   if (!sb) return;
@@ -4741,6 +4762,16 @@ function renderTeamsModule() {
     renderTeamMatchesPanel();
     return;
   }
+  // Jugadores nuevos (no fundadores): Rey del Barrio en PRÓXIMAMENTE.
+  if (!isFounder()) {
+    const sec = document.getElementById('equipos');
+    if (sec) sec.innerHTML = comingSoonHTML('👑', 'REY DEL BARRIO', 'El modo competitivo oficial de LEVEL UP: arma tu equipo, reta a otros y demuestra quién manda en el barrio.', [
+      ['⚔️', 'Reta a otros equipos', 'Partidos oficiales en canchas certificadas.'],
+      ['📊', 'Sube tu OVR y tu rango', 'Cada partido registra tu desempeño real.'],
+      ['🏆', 'Sé el Rey del Barrio', 'Escala el ranking y gánate el respeto.'],
+    ]);
+    return;
+  }
   const myTeam = getMyTeam();
   const createPanel = document.getElementById('team-create-panel');
   if (createPanel) createPanel.style.display = myTeam ? 'none' : 'block';
@@ -5579,6 +5610,17 @@ function renderTorneos() {
   const adminBar = document.getElementById('tn-admin-bar');
   const listEl = document.getElementById('tn-list');
   if (!listEl) return;
+
+  // Jugadores nuevos (no fundadores): Torneos en PRÓXIMAMENTE.
+  if (state && !isFounder()) {
+    const sec = document.getElementById('torneos');
+    if (sec) sec.innerHTML = comingSoonHTML('🏆', 'TORNEOS', 'Compite en torneos oficiales de LEVEL UP con tu equipo, gana premios y conviértete en leyenda del barrio.', [
+      ['🗓️', 'Torneos organizados', 'Fechas, canchas y formato definidos por LEVEL UP.'],
+      ['🎟️', 'Inscríbete con tu equipo', 'Arma tu escuadra y compite por el título.'],
+      ['🥇', 'Premios reales', 'Gánate reconocimiento, premios y tu lugar en la historia.'],
+    ]);
+    return;
+  }
 
   if (adminBar) adminBar.style.display = isAdmin() ? 'block' : 'none';
 

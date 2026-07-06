@@ -3527,3 +3527,19 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .mchat-input:focus{border-color:var(--g)}
 .mchat-send{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--g),#00b36b);color:#04120a;font-size:16px;cursor:pointer;flex:0 0 auto}
 .mchat-send:hover{transform:scale(1.05)}
+
+/* ===== PANEL PRÓXIMAMENTE (no fundadores) ===== */
+.soon-wrap{display:flex;justify-content:center;padding:40px 18px 80px}
+.soon-card{max-width:520px;width:100%;background:linear-gradient(160deg,rgba(12,16,24,0.95),rgba(8,11,18,0.98));border:1px solid rgba(0,255,136,0.18);border-radius:18px;padding:34px 28px;text-align:center;position:relative;overflow:hidden}
+.soon-card::before{content:'';position:absolute;top:-40%;left:50%;width:280px;height:280px;transform:translateX(-50%);background:radial-gradient(circle,rgba(0,255,136,0.12),transparent 70%);pointer-events:none}
+.soon-badge{display:inline-block;font-family:var(--ft);font-size:10px;letter-spacing:2px;color:#04120a;background:var(--g);padding:5px 14px;border-radius:20px;margin-bottom:18px;position:relative}
+.soon-emoji{font-size:52px;margin-bottom:8px;position:relative}
+.soon-title{font-family:var(--ft);font-size:24px;letter-spacing:2px;color:#fff;margin-bottom:10px;position:relative}
+.soon-intro{font-size:14px;line-height:1.6;color:rgba(210,225,245,0.8);margin-bottom:22px;position:relative}
+.soon-features{display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:22px;position:relative}
+.soon-feat{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px}
+.soon-feat-ic{font-size:22px;flex:0 0 auto}
+.soon-feat strong{display:block;color:#fff;font-size:14px}
+.soon-feat span{display:block;color:rgba(190,205,235,0.6);font-size:12px}
+.soon-foot{font-size:13px;color:rgba(190,205,235,0.7);position:relative}
+.soon-foot a{color:var(--g);text-decoration:none;font-weight:600}
