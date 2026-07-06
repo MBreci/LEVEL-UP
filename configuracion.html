@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Configuración · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783366903">
+<link rel="stylesheet" href="style.css?v=1783372313">
 </head>
 <body>
 
@@ -56,6 +56,8 @@
   <div class="bp-form" style="display:block;max-width:480px;margin:0 auto">
     <div class="auth-label">APODO</div>
     <input class="auth-input" id="cfg-nickname" autocomplete="off" maxlength="16">
+    <div class="auth-label">NÚMERO <span class="auth-note-inline">· Tu dorsal (1 al 99), se ve en el torneo</span></div>
+    <input class="auth-input" id="cfg-dorsal" type="number" min="1" max="99" inputmode="numeric" autocomplete="off" placeholder="Ej: 10">
     <div class="auth-label">CORREO ELECTRÓNICO <span class="auth-note-inline">· Para recuperar tu contraseña</span></div>
     <input class="auth-input" id="cfg-email" type="email" autocomplete="off" maxlength="80" placeholder="tucorreo@gmail.com">
     <div class="auth-label">EQUIPO</div>
@@ -164,11 +166,12 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783366903"></script>
+<script src="app.js?v=1783372313"></script>
 <script>
   function fillConfigForm() {
     if (!state) return;
     document.getElementById('cfg-nickname').value = state.nickname || '';
+    document.getElementById('cfg-dorsal').value = (state.dorsal === 0 || state.dorsal) ? state.dorsal : '';
     document.getElementById('cfg-team').value = state.team || '';
     document.getElementById('cfg-email').value = state.email || '';
   }
@@ -180,8 +183,17 @@
     if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
       errEl.textContent = 'Escribe un correo válido.'; return;
     }
-    // Guardar apodo (dato no sensible) por el flujo normal.
+    // Número (dorsal): 1 al 99, opcional.
+    const dorsalRaw = document.getElementById('cfg-dorsal').value.trim();
+    let newDorsal = null;
+    if (dorsalRaw !== '') {
+      const n = parseInt(dorsalRaw, 10);
+      if (isNaN(n) || n < 1 || n > 99) { errEl.textContent = 'Tu número debe estar entre 1 y 99.'; return; }
+      newDorsal = n;
+    }
+    // Guardar apodo y número (datos no sensibles) por el flujo normal.
     state.nickname = newNick;
+    state.dorsal = newDorsal;
     if (profiles[state.id]) profiles[state.id] = state;
     saveState();
     const res = await pushProfileToCloud(state);

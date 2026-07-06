@@ -90,6 +90,7 @@ function profileToRow(p) {
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
     notif_seen_count: p.notifSeenCount || 0, achievements: p.achievements || [], pending_reveal: p.pendingReveal || null,
+    dorsal: (p.dorsal === 0 || p.dorsal) ? p.dorsal : null,
     is_admin: p.isAdmin || false,
     community_ratings: p.communityRatings || {}, rated_players: p.ratedPlayers || {},
   };
@@ -109,6 +110,7 @@ function rowToProfile(r) {
     history: r.history || [], notifications: r.notifications || [],
     physical: r.physical || { weight: null, height: null, age: null, foot: null },
     notifSeenCount: r.notif_seen_count || 0, achievements: r.achievements || [], pendingReveal: r.pending_reveal || null,
+    dorsal: (r.dorsal === 0 || r.dorsal) ? r.dorsal : null,
     saldo: r.saldo || 0,
     isAdmin: r.is_admin || false,
     founder: r.founder || false,
@@ -212,7 +214,7 @@ async function deleteProfileFromCloud(id) {
 // fotos: se cargan bajo demanda al ver una carta. Esto es el mayor ahorro de egress.
 // Columnas de lectura pública: NO incluye password_hash, security_answer_hash ni email
 // (esos nunca se exponen; el login y el propio correo se manejan por funciones seguras).
-const PROFILE_SYNC_COLS = 'id,name,nickname,gender,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,saldo,is_admin,founder,community_ratings,rated_players';
+const PROFILE_SYNC_COLS = 'id,name,nickname,gender,position,team,ovr,xp,lp,last_update,matches,goals,assists,mvps,attrs,history,notifications,physical,notif_seen_count,achievements,pending_reveal,dorsal,saldo,is_admin,founder,community_ratings,rated_players';
 
 async function syncProfilesFromCloud() {
   if (!sb) return;
@@ -299,6 +301,7 @@ function makeProfile({ name, position, team, nickname, email, gender, passwordHa
     achievements: [],
     saldo: 0,
     pendingReveal: null,
+    dorsal: null,
     isAdmin: isAdmin || false,
   };
 }
@@ -2289,6 +2292,33 @@ async function editNickname() {
     profiles[state.id] = state;
     saveState();
     alert('Ese apodo se acaba de ocupar. Elige otro.');
+    renderAll();
+    return;
+  }
+  renderAll();
+}
+
+// El jugador elige su número (dorsal), del 1 al 99. Se muestra en su carta y en el torneo.
+async function editDorsal() {
+  if (!state) return;
+  const current = (state.dorsal === 0 || state.dorsal) ? String(state.dorsal) : '';
+  const value = prompt('¿Cuál es tu número? (del 1 al 99, deja vacío para quitarlo)', current);
+  if (value === null) return;
+  const trimmed = String(value).trim();
+  let dorsal = null;
+  if (trimmed !== '') {
+    const n = parseInt(trimmed, 10);
+    if (isNaN(n) || n < 0 || n > 99) { alert('Escribe un número válido entre 1 y 99.'); return; }
+    dorsal = n;
+  }
+  const prev = state.dorsal;
+  state.dorsal = dorsal;
+  profiles[state.id] = state;
+  saveState();
+  const { error } = await pushProfileToCloud(state);
+  if (error) {
+    state.dorsal = prev; profiles[state.id] = state; saveState();
+    alert('No se pudo guardar tu número. Revisa tu conexión e inténtalo de nuevo.');
     renderAll();
     return;
   }
@@ -5803,6 +5833,14 @@ function renderTorneos() {
   listEl.innerHTML = list.map(t => renderTorneoCard(t, role)).join('');
 }
 
+// Chip de jugador en la nómina del torneo: muestra su número (dorsal) y marca al capitán.
+function tnPlayerChip(p, isCap, suplente) {
+  const num = (p.dorsal === 0 || p.dorsal) ? p.dorsal : null;
+  const dot = num != null ? `<span class="tn-it-num">${num}</span>` : '';
+  const cap = isCap ? `<span class="tn-it-cap" title="Capitán">C</span>` : '';
+  return `<span class="tn-it-player${suplente ? ' suplente' : ''}">${dot}${p.nickname || p.name}${cap}</span>`;
+}
+
 function renderTorneoCard(t, role) {
   role = role || torneoViewerRole();
   const teams = loadTournaments()[t.id]?.teams || [];
@@ -5832,8 +5870,8 @@ function renderTorneoCard(t, role) {
         </div>
         <div class="tn-it-squad">
           <div class="tn-it-squad-label">TITULARES</div>
-          <div class="tn-it-players">${titulares.map(p => `<span class="tn-it-player">${p.nickname || p.name}</span>`).join('')}</div>
-          ${suplentes.length ? `<div class="tn-it-squad-label" style="margin-top:6px">SUPLENTES</div><div class="tn-it-players">${suplentes.map(p => `<span class="tn-it-player suplente">${p.nickname || p.name}</span>`).join('')}</div>` : ''}
+          <div class="tn-it-players">${titulares.map(p => tnPlayerChip(p, team.captainId === p.id)).join('')}</div>
+          ${suplentes.length ? `<div class="tn-it-squad-label" style="margin-top:6px">SUPLENTES</div><div class="tn-it-players">${suplentes.map(p => tnPlayerChip(p, team.captainId === p.id, true)).join('')}</div>` : ''}
         </div>
       </div>`;
   }).join('');
