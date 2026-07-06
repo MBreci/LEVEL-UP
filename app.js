@@ -171,8 +171,22 @@ async function createProfileInCloud(p) {
     security_question: p.securityQuestion || null,
     security_answer_hash: p.securityAnswerHash || null,
   });
-  const { error } = await sb.from('profiles').upsert(row);
-  if (error) console.error('Error creando perfil en la nube:', error.message);
+  // Reintenta si la primera llamada falla por red (conexión intermitente en celular).
+  let error = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await sb.from('profiles').upsert(row);
+      error = res.error;
+    } catch (e) {
+      error = e;
+    }
+    if (!error) return { error: null };
+    // Si es un error de la base (duplicado, etc.) no tiene sentido reintentar.
+    const msg = (error && error.message) || '';
+    if (/duplicate key|unique|violates|constraint/i.test(msg)) break;
+    if (attempt < 2) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+  }
+  if (error) console.error('Error creando perfil en la nube:', error && (error.message || error));
   return { error };
 }
 
@@ -2187,10 +2201,11 @@ async function submitNewProfile() {
   // (carrera entre dos registros), abortamos sin dejar una cuenta local huérfana.
   const { error: createErr } = await createProfileInCloud(profile);
   if (createErr) {
-    const dup = /duplicate key|unique/i.test(createErr.message || '');
+    const msg = createErr.message || '';
+    const dup = /duplicate key|unique|constraint/i.test(msg);
     errorEl.textContent = dup
       ? 'Ese nombre o apodo se acaba de registrar. Elige otro.'
-      : 'No se pudo crear la cuenta. Revisa tu conexión e inténtalo de nuevo.';
+      : 'No pudimos conectar con el servidor. Revisa tu internet, desactiva bloqueadores de anuncios/VPN o prueba con otro navegador (fuera de modo incógnito) e inténtalo de nuevo.';
     return;
   }
   profiles[profile.id] = profile;
