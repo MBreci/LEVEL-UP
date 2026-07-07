@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEVEL UP · Premios (preview)</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#00ff88;--f:#ff00aa;--o:#ff6600;--w:#fff;--gold:#c9a84c;
+  --cyan:#22d3ee;--mag:#ff2fb0;
+  --bg:#020408;--bg2:#06090f;
+  --t:rgba(235,242,255,.95);--tm:rgba(180,200,240,.55);--td:rgba(180,200,240,.28);
+  --ft:'Orbitron',monospace;--fb:'Inter',sans-serif;--b2:.5px solid rgba(255,255,255,.12);
+}
+body{background:radial-gradient(ellipse 80% 60% at 50% 0%,#0a0f1c,#020408 70%);color:var(--t);font-family:var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+.pv{position:sticky;top:0;z-index:20;background:rgba(255,102,0,.12);border-bottom:1px solid rgba(255,102,0,.35);backdrop-filter:blur(10px);padding:9px 16px;text-align:center;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--o)}
+.wrap{max-width:960px;margin:0 auto;padding:26px 18px 70px}
+.head{text-align:center;margin-bottom:10px}
+.eyebrow{font-family:var(--ft);font-size:10px;letter-spacing:5px;color:var(--gold);margin-bottom:10px}
+.head h1{font-family:var(--ft);font-weight:900;font-size:clamp(26px,5vw,42px);letter-spacing:1px}
+.head h1 span{background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.head p{color:var(--tm);font-size:14px;margin-top:10px}
+
+/* ===== FEATURED PRIZE STAGE ===== */
+.stage{position:relative;margin:30px auto 0;max-width:520px;padding:40px 20px 24px;text-align:center;border-radius:24px;overflow:hidden;
+  background:radial-gradient(ellipse 70% 55% at 50% 38%,rgba(34,211,238,.14),transparent 60%),radial-gradient(ellipse 60% 50% at 50% 45%,rgba(255,47,176,.12),transparent 60%);
+  border:1px solid rgba(201,168,76,.25)}
+.spotlight{position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:120%;height:80%;
+  background:conic-gradient(from 0deg,transparent,rgba(34,211,238,.10),transparent 30%,rgba(255,47,176,.10),transparent 60%);
+  animation:halo 14s linear infinite;filter:blur(6px);pointer-events:none}
+@keyframes halo{to{transform:translateX(-50%) rotate(360deg)}}
+.sparkles{position:absolute;inset:0;pointer-events:none}
+.sp{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);opacity:.8;animation:rise 5s linear infinite}
+.sp:nth-child(2n){background:var(--mag);box-shadow:0 0 8px var(--mag)}
+@keyframes rise{0%{transform:translateY(20px) scale(.6);opacity:0}20%{opacity:.9}100%{transform:translateY(-160px) scale(1);opacity:0}}
+
+.prize-badge{position:relative;z-index:3;display:inline-flex;align-items:center;gap:7px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--gold);border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);padding:6px 14px;border-radius:30px;margin-bottom:8px}
+
+/* rotating jersey */
+.podium{position:relative;z-index:2;perspective:1100px;height:340px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+.floater{animation:bob 4.5s ease-in-out infinite;transform-style:preserve-3d}
+@keyframes bob{0%,100%{transform:translateY(-8px)}50%{transform:translateY(10px)}}
+.spinner{transform-style:preserve-3d;animation:spin360 12s linear infinite;filter:drop-shadow(0 24px 26px rgba(0,0,0,.6)) drop-shadow(0 0 22px rgba(34,211,238,.25))}
+@keyframes spin360{to{transform:rotateY(360deg)}}
+.jersey{width:220px;height:auto;display:block}
+.ring{position:absolute;bottom:34px;left:50%;transform:translateX(-50%) rotateX(72deg);width:230px;height:230px;border-radius:50%;
+  border:2px solid transparent;background:conic-gradient(from 0deg,var(--cyan),var(--mag),var(--gold),var(--cyan)) border-box;
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);
+  animation:spin360 8s linear infinite reverse;opacity:.6;filter:blur(.3px)}
+.reflection{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:180px;height:26px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,211,238,.35),transparent 70%);filter:blur(6px)}
+
+.prize-name{position:relative;z-index:3;font-family:var(--ft);font-weight:900;font-size:24px;letter-spacing:1px;margin-top:4px}
+.prize-sub{position:relative;z-index:3;color:var(--tm);font-size:13px;margin-top:6px}
+.price-tag{position:relative;z-index:3;display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:10px 20px;border-radius:40px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.4)}
+.price-tag .coin{width:26px;height:26px;animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotateY(360deg)}}
+.price-tag .n{font-family:var(--ft);font-weight:900;font-size:22px;color:var(--gold)}
+.price-tag .eq{font-size:11px;color:var(--tm)}
+.cta-row{position:relative;z-index:3;display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.cta{font-family:var(--ft);font-weight:700;font-size:11px;letter-spacing:1px;padding:14px 24px;border-radius:10px;border:none;cursor:pointer;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta.redeem{color:#0b0500;background:linear-gradient(90deg,var(--gold),var(--g));box-shadow:0 0 22px rgba(201,168,76,.35)}
+.cta.win{color:var(--cyan);background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.4)}
+.progress{position:relative;z-index:3;max-width:300px;margin:18px auto 0}
+.progress .pl{display:flex;justify-content:space-between;font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--tm);margin-bottom:6px}
+.progress .pl b{color:var(--t)}
+.progress .track{height:8px;background:rgba(0,0,0,.4);border:1px solid rgba(201,168,76,.25);border-radius:20px;overflow:hidden}
+.progress .fill{height:100%;width:76%;background:linear-gradient(90deg,var(--gold),var(--g));box-shadow:0 0 10px var(--gold);border-radius:20px}
+
+/* ===== CATALOG ===== */
+.cat-title{font-family:var(--ft);font-size:12px;letter-spacing:3px;color:var(--tm);text-align:center;margin:46px 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.rw{background:var(--bg2);border:var(--b2);border-radius:14px;padding:18px;text-align:center;position:relative;overflow:hidden;transition:border .2s}
+.rw:hover{border-color:rgba(201,168,76,.4)}
+.rw .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:44px;filter:drop-shadow(0 0 12px rgba(34,211,238,.3))}
+.rw .rn{font-family:var(--ft);font-size:12px;letter-spacing:.5px;margin-top:8px}
+.rw .rp{font-family:var(--ft);font-size:11px;color:var(--gold);margin-top:8px}
+.rw .rb{display:inline-block;margin-top:10px;font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:5px 12px;border-radius:20px;background:rgba(0,255,136,.08);color:var(--g);border:1px solid rgba(0,255,136,.25);cursor:pointer}
+.rw.locked{opacity:.55}
+.rw.locked .rb{background:rgba(255,255,255,.04);color:var(--td);border-color:rgba(255,255,255,.08)}
+
+.adminbox{margin-top:34px;border:1px dashed rgba(0,255,136,.3);border-radius:12px;padding:18px;background:rgba(0,255,136,.02);text-align:center}
+.adminbox h4{font-family:var(--ft);font-size:11px;letter-spacing:1px;color:var(--g);margin-bottom:8px}
+.adminbox p{color:var(--tm);font-size:12px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="pv">◆ PREVIEW · Página de PREMIOS · el uniforme es de muestra (luego ponemos el tuyo real)</div>
+<div class="wrap">
+
+  <div class="head">
+    <div class="eyebrow">RECOMPENSAS LEVEL UP</div>
+    <h1>GANA. CANJEA. <span>PRESUME.</span></h1>
+    <p>Junta Level Coins jugando o recargando, y llévate premios reales.</p>
+  </div>
+
+  <!-- FEATURED PRIZE -->
+  <div class="stage">
+    <div class="spotlight"></div>
+    <div class="sparkles" id="sparkles"></div>
+
+    <div class="prize-badge">👑 PREMIO ESTRELLA · TEMPORADA 1</div>
+
+    <div class="podium">
+      <div class="floater">
+        <div class="spinner">
+          <!-- ►► REEMPLAZAR por <img class="jersey" src="assets/premio-uniforme.png"> cuando subas la foto ◄◄ -->
+          <svg class="jersey" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="jg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#0c1420"/><stop offset="1" stop-color="#05070c"/>
+              </linearGradient>
+              <linearGradient id="stripe" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#ff2fb0"/>
+              </linearGradient>
+            </defs>
+            <path d="M65 22 L100 40 L135 22 L175 52 L158 92 L140 80 L140 210 L60 210 L60 80 L42 92 L25 52 Z" fill="url(#jg)" stroke="#1b2740" stroke-width="1.5"/>
+            <path d="M92 42 L108 42 L104 210 L96 210 Z" fill="url(#stripe)" opacity=".9"/>
+            <path d="M60 120 L140 200 L140 210 L128 210 L60 150 Z" fill="url(#stripe)" opacity=".5"/>
+            <path d="M65 22 L100 40 L135 22 L128 34 L100 50 L72 34 Z" fill="#22d3ee" opacity=".8"/>
+            <path d="M175 52 L158 92 L150 88 L166 52 Z" fill="#ff2fb0" opacity=".7"/>
+            <!-- crown -->
+            <path d="M92 74 l4 8 l4 -10 l4 10 l4 -8 l-1 12 l-14 0 Z" fill="url(#stripe)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ring"></div>
+      <div class="reflection"></div>
+    </div>
+
+    <div class="prize-name">UNIFORME OFICIAL LEVEL UP</div>
+    <div class="prize-sub">Camiseta + pantaloneta · edición Temporada 1 · diseñado para ganadores</div>
+
+    <div class="price-tag">
+      <svg class="coin" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1a1205" stroke="url(#cg)" stroke-width="2.4"/><text x="20" y="26" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="14" fill="url(#cg)">LC</text><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a84c"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs></svg>
+      <span class="n">140</span>
+      <span class="eq">coins · ≈ $182.000</span>
+    </div>
+
+    <div class="cta-row">
+      <button class="cta redeem" onclick="alert('Canjear → descuenta 140 coins y te llega un ticket para entregarte el uniforme')">CANJEAR AHORA</button>
+      <button class="cta win" onclick="alert('Cómo ganarlo → gánalo jugando y llévate el premio, o canjéalo con tus coins')">CÓMO GANARLO</button>
+    </div>
+
+    <div class="progress">
+      <div class="pl"><span>Tu progreso</span><span><b>106</b> / 140 coins</span></div>
+      <div class="track"><div class="fill"></div></div>
+    </div>
+  </div>
+
+  <!-- CATALOG -->
+  <div class="cat-title">TODOS LOS PREMIOS</div>
+  <div class="grid">
+    <div class="rw"><div class="thumb">🧢</div><div class="rn">Gorra LEVEL UP</div><div class="rp">🪙 40 coins</div><div class="rb">CANJEAR</div></div>
+    <div class="rw"><div class="thumb">⚽</div><div class="rn">Balón oficial</div><div class="rp">🪙 55 coins</div><div class="rb">CANJEAR</div></div>
+    <div class="rw"><div class="thumb">🥤</div><div class="rn">Termo LEVEL UP</div><div class="rp">🪙 25 coins</div><div class="rb">CANJEAR</div></div>
+    <div class="rw locked"><div class="thumb">🎽</div><div class="rn">Uniforme oficial</div><div class="rp">🪙 140 coins</div><div class="rb">TE FALTAN 34</div></div>
+    <div class="rw locked"><div class="thumb">🏆</div><div class="rn">Cupo torneo VIP</div><div class="rp">🪙 50 coins</div><div class="rb">CANJEAR</div></div>
+    <div class="rw locked"><div class="thumb">👟</div><div class="rn">Guayos edición</div><div class="rp">🪙 200 coins</div><div class="rb">PRÓXIMAMENTE</div></div>
+  </div>
+
+  <!-- ADMIN NOTE -->
+  <div class="adminbox">
+    <h4>◆ Cómo cargarás los premios (solo tú, admin)</h4>
+    <p>Igual que los torneos: un botón "+ AGREGAR PREMIO" donde subes foto, nombre y precio en coins. Aparece al instante para todos. Puedes marcarlo "disponible", "agotado" o "próximamente".</p>
+  </div>
+
+</div>
+
+<script>
+// sparkles
+var sp=document.getElementById('sparkles');
+for(var i=0;i<14;i++){
+  var d=document.createElement('div');d.className='sp';
+  d.style.left=(10+Math.random()*80)+'%';
+  d.style.bottom=(20+Math.random()*40)+'%';
+  d.style.animationDelay=(Math.random()*5)+'s';
+  d.style.animationDuration=(3.5+Math.random()*3)+'s';
+  sp.appendChild(d);
+}
+</script>
+</body>
+</html>
