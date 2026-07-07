@@ -7032,7 +7032,7 @@ async function openAdminTickets() {
   const { data, error } = await sb.rpc('admin_list_feedback', { p_admin_id: state.id });
   if (error) { list.innerHTML = `<div class="auth-error">No se pudo cargar.</div>`; return; }
   if (!data || !data.length) { list.innerHTML = `<div class="auth-photo-note">Aún no hay tickets. 🎉</div>`; return; }
-  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆' };
+  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆', canje: '🎁' };
   list.innerHTML = data.map(t => `
     <div class="fb-ticket ${t.status}">
       <div class="fb-ticket-top">
@@ -7099,7 +7099,7 @@ async function openMyTickets() {
   list.innerHTML = `<div class="auth-photo-note">Cargando...</div>`;
   const tickets = await fetchMyTickets();
   if (!tickets.length) { list.innerHTML = `<div class="auth-photo-note">Aún no has enviado mensajes.</div>`; return; }
-  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆' };
+  const icon = { bug: '🐛', idea: '💡', comentario: '💬', torneo: '🏆', canje: '🎁' };
   const stLabel = { nuevo: 'ENVIADO', revisado: 'RESPONDIDO', resuelto: 'RESUELTO' };
   list.innerHTML = tickets.map(t => `
     <div class="fb-ticket ${t.status}">

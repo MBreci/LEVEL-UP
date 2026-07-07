@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783448630">
+<link rel="stylesheet" href="style.css?v=1783448809">
 <style>
 .pz-wrap{max-width:960px;margin:0 auto;padding:120px 18px 70px}
 .pz-head{text-align:center;margin-bottom:10px}
@@ -107,15 +107,11 @@
     <div class="prize-name">UNIFORME OFICIAL LEVEL UP</div>
     <div class="prize-sub">Camiseta + pantaloneta · edición Temporada 1 · diseñado para ganadores</div>
 
-    <div class="price-tag">
+    <button class="price-tag" id="pz-redeem" onclick="canjearPremio('Uniforme oficial LEVEL UP', 140)" style="cursor:pointer;border:1px solid rgba(201,168,76,.4)">
       <svg class="coin" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1a1205" stroke="url(#cg)" stroke-width="2.4"/><text x="20" y="26" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="14" fill="url(#cg)">LC</text><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a84c"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs></svg>
-      <span class="n">140</span><span class="eq">Level Coins</span>
-    </div>
-
-    <div class="cta-row">
-      <button class="pz-cta win" onclick="pzInteres('Uniforme oficial LEVEL UP')">ME INTERESA ESTE PREMIO</button>
-    </div>
-    <div class="pz-soon">🪙 Canje con coins disponible muy pronto</div>
+      <span class="n">140</span><span class="eq">Level Coins · CANJEAR</span>
+    </button>
+    <div id="pz-msg" style="position:relative;z-index:3;margin-top:14px;font-family:var(--ft);font-size:11px;letter-spacing:1px;min-height:16px"></div>
   </div>
 
   <div class="cat-title">TODOS LOS PREMIOS</div>
@@ -131,7 +127,7 @@
 <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()"><span class="a-dot"></span><span id="audio-lbl">LET'S ROLL</span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783448630"></script>
+<script src="app.js?v=1783448809"></script>
 <script>
   // sparkles
   var sp=document.getElementById('sparkles');
@@ -139,14 +135,36 @@
 
   // Uniforme oficial: imagen fija con todas las vistas (las luces del fondo siguen animadas).
 
-  // "Me interesa" -> abre el widget de feedback (le llega ticket al admin)
-  function pzInteres(nombre){
+  // Canjear premio: descuenta los coins (RPC seguro) y avisa al admin para la entrega.
+  async function canjearPremio(nombre, costo){
+    var msg=document.getElementById('pz-msg');
+    var btn=document.getElementById('pz-redeem');
+    if(typeof state==='undefined' || !state){ location.href='index.html'; return; }
+    var misCoins = (typeof toCoins==='function') ? toCoins(state.saldo) : Math.round((state.saldo||0)/1300);
+    if(misCoins < costo){
+      msg.style.color='#ff5a5a';
+      msg.textContent='No tienes suficientes Level Coins ('+misCoins+' / '+costo+'). Recárgalos o gánalos jugando.';
+      return;
+    }
+    if(!confirm('¿Canjear "'+nombre+'" por '+costo+' Level Coins?')) return;
+    msg.style.color=''; msg.textContent='Canjeando...'; if(btn) btn.disabled=true;
     try{
-      if(typeof openFeedbackModal==='function'){
-        openFeedbackModal();
-        setTimeout(function(){ var m=document.getElementById('fb-message'); if(m) m.value='Me interesa el premio: '+nombre; },200);
-      } else { alert('¡Gracias por tu interés en '+nombre+'! Pronto podrás canjearlo con coins.'); }
-    }catch(e){ alert('¡Gracias por tu interés!'); }
+      var r = await sb.rpc('redeem_prize', { p_profile_id: state.id, p_coins: costo, p_prize: nombre });
+      if(r.error){
+        msg.style.color='#ff5a5a';
+        msg.textContent = /insuficiente/i.test(r.error.message||'') ? 'No tienes suficientes Level Coins.' : 'No se pudo canjear. Intenta de nuevo.';
+        return;
+      }
+      // Descontar local + avisar al admin (ticket) para coordinar la entrega
+      state.saldo = Math.max(0, (state.saldo||0) - costo*1300);
+      if(typeof saveProfiles==='function'){ if(typeof profiles!=='undefined'&&profiles[state.id]) profiles[state.id]=state; saveProfiles(); }
+      if(typeof renderWalletPill==='function') renderWalletPill();
+      try{ await sb.rpc('submit_feedback', { p_type:'canje', p_message:'CANJE DE PREMIO: '+nombre+' ('+costo+' coins)', p_reporter_id: state.id, p_reporter_name:(state.nickname||state.name), p_contact:(state.email||null), p_page:'premios.html', p_ua: navigator.userAgent }); }catch(e){}
+      msg.style.color='var(--g)';
+      msg.textContent='✅ ¡Canjeado! Te contactamos para entregarte tu '+nombre+'.';
+    }catch(e){
+      msg.style.color='#ff5a5a'; msg.textContent='Error de conexión. Intenta de nuevo.';
+    }finally{ if(btn) btn.disabled=false; }
   }
 </script>
 </body>
