@@ -81,6 +81,14 @@ const sb = (typeof window !== 'undefined' && window.supabase)
 /* ===== SALDO LEVEL UP (Wompi) ===== */
 const WOMPI_PUBLIC_KEY = 'pub_prod_A6rdOFjZlPik9VTvs72WQ9gZJSRH9ZNn';
 const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functions/v1');
+// ===== LEVEL COINS =====
+// Por dentro el saldo se guarda en pesos; SIEMPRE se muestra en coins (1 coin = $1.300).
+// Nunca se muestran pesos, salvo el precio a pagar al COMPRAR coins (recarga).
+const COIN_VALUE = 1300;
+function toCoins(saldoPesos) { return Math.round((saldoPesos || 0) / COIN_VALUE); }
+function coinsFmt(saldoPesos) { return toCoins(saldoPesos).toLocaleString('es-CO'); }
+// Paquetes de recarga: [coins, precioEnPesos]
+const COIN_PACKS = [[10, 13000], [50, 65000], [100, 130000], [250, 325000]];
 const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
@@ -443,8 +451,7 @@ function renderWalletPill() {
     pill.href = 'saldo.html';
     dropdown.insertBefore(pill, dropdown.firstChild);
   }
-  const saldo = state.saldo || 0;
-  pill.innerHTML = `<span class="wallet-dot"></span> SALDO <strong>$${saldo.toLocaleString('es-CO')}</strong>`;
+  pill.innerHTML = `<span class="wallet-dot"></span> 🪙 <strong>${coinsFmt(state.saldo)} COINS</strong>`;
 }
 
 function getPlatformStats() {
@@ -1447,14 +1454,14 @@ async function renderSaldoPage() {
   const totalUtilizado = walletTx.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
   el.innerHTML = `
     <div class="wallet-balance-card">
-      <div class="wallet-balance-label">SALDO DISPONIBLE</div>
-      <div class="wallet-balance-amount" id="wallet-balance-amount">$${(state.saldo || 0).toLocaleString('es-CO')}</div>
-      <button class="hw-cta-main" disabled style="opacity:0.45;cursor:not-allowed;">DISPONIBLE PRÓXIMAMENTE</button>
+      <div class="wallet-balance-label">TUS LEVEL COINS</div>
+      <div class="wallet-balance-amount" id="wallet-balance-amount">🪙 ${coinsFmt(state.saldo)}</div>
+      <button class="hw-cta-main" onclick="openRecharge()">💳 COMPRAR COINS</button>
       <button class="btn-g" style="margin-top:10px;width:100%;font-size:10px;" onclick="openTransferModal()">🪙 ENVIAR COINS A UN JUGADOR</button>
     </div>
     <div class="wallet-stats-row">
-      <div class="wallet-stat"><div class="wallet-stat-v">$${totalRecargado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL RECARGADO</div></div>
-      <div class="wallet-stat"><div class="wallet-stat-v">$${totalUtilizado.toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL UTILIZADO</div></div>
+      <div class="wallet-stat"><div class="wallet-stat-v">🪙 ${toCoins(totalRecargado).toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL COMPRADO</div></div>
+      <div class="wallet-stat"><div class="wallet-stat-v">🪙 ${toCoins(totalUtilizado).toLocaleString('es-CO')}</div><div class="wallet-stat-l">TOTAL USADO</div></div>
     </div>
     <div class="wallet-history">
       <div class="wallet-history-title">MOVIMIENTOS RECIENTES</div>
@@ -1464,24 +1471,28 @@ async function renderSaldoPage() {
             <div class="wallet-row-type">${walletMovLabel(t)}</div>
             <div class="wallet-row-date">${new Date(t.created_at).toLocaleString('es-CO')}</div>
           </div>
-          <div class="wallet-row-amount ${t.amount >= 0 ? 'pos' : 'neg'}">${t.amount >= 0 ? '+' : ''}$${Number(t.amount).toLocaleString('es-CO')}</div>
+          <div class="wallet-row-amount ${t.amount >= 0 ? 'pos' : 'neg'}">${t.amount >= 0 ? '+' : ''}${toCoins(Math.abs(t.amount)).toLocaleString('es-CO')} 🪙</div>
         </div>
       `).join('') : `<div class="dash-empty">Aún no tienes movimientos.</div>`}
     </div>
     <div class="modal-overlay" id="recharge-modal">
       <div class="auth-card">
-        <div class="auth-label">ELIGE UN VALOR</div>
-        <div class="wallet-quick-grid">
-          ${RECARGA_RAPIDA.map(v => `<button class="wallet-quick-btn" onclick="selectRechargeAmount(${v})">$${v.toLocaleString('es-CO')}</button>`).join('')}
+        <div class="auth-label" style="font-size:15px;color:var(--g)">COMPRAR LEVEL COINS</div>
+        <div class="auth-photo-note">Elige un paquete. Pagas con tarjeta, PSE o Nequi (Wompi).</div>
+        <div class="wallet-quick-grid" style="grid-template-columns:1fr 1fr">
+          ${COIN_PACKS.map(([c, p]) => `<button class="wallet-quick-btn" onclick="selectCoinPack(${p})" style="display:flex;flex-direction:column;gap:3px;height:auto;padding:12px"><b style="font-size:15px;color:var(--gold)">🪙 ${c.toLocaleString('es-CO')}</b><span style="font-size:10px;opacity:.6">$${p.toLocaleString('es-CO')}</span></button>`).join('')}
         </div>
-        <div class="auth-label">O INGRESA UN VALOR PERSONALIZADO</div>
-        <input class="auth-input" type="number" min="5000" step="1000" id="recharge-custom" placeholder="Ej: 45000" oninput="walletCustomAmount=this.value">
         <div class="auth-error" id="recharge-error"></div>
-        <button class="auth-submit" onclick="submitRecharge()">CONTINUAR</button>
         <button class="auth-cancel" onclick="closeRecharge()">CANCELAR</button>
       </div>
     </div>
   `;
+}
+
+// Compra directa de un paquete de coins (el precio va en pesos a Wompi; se acreditan coins).
+function selectCoinPack(pesos) {
+  walletCustomAmount = String(pesos);
+  submitRecharge();
 }
 
 function openRecharge() {
@@ -1543,7 +1554,7 @@ async function submitRecharge() {
 function showWalletSuccessAnim(amount) {
   const badge = document.createElement('div');
   badge.className = 'wallet-success-toast';
-  badge.innerHTML = `<div class="wallet-success-amt">+$${amount.toLocaleString('es-CO')}</div><div>Saldo actualizado</div>`;
+  badge.innerHTML = `<div class="wallet-success-amt">+${toCoins(amount).toLocaleString('es-CO')} 🪙</div><div>Coins acreditados</div>`;
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 3200);
 }
@@ -4538,7 +4549,7 @@ function openCounterofferModal(challengeId) {
   document.getElementById('counteroffer-error').textContent = '';
   document.getElementById('counteroffer-form').style.display = 'none';
   document.getElementById('counteroffer-content').innerHTML = `
-    <div class="bet-balance-row" style="margin-bottom:12px">Tu saldo: <strong>${(state.saldo||0).toLocaleString('es-CO')} 🪙</strong></div>
+    <div class="bet-balance-row" style="margin-bottom:12px">Tu saldo: <strong>${toCoins(state.saldo).toLocaleString('es-CO')} 🪙</strong></div>
     <div style="margin-bottom:8px"><strong>${fromTeam ? fromTeam.name : 'Un equipo'}</strong> te retó:</div>
     <div class="bet-preview" style="margin-bottom:8px">
       📅 ${c.fecha} · ${c.hora}<br>
@@ -4557,7 +4568,7 @@ function acceptCounteroffer() {
   const bet = c ? (c.betAmount || 0) : 0;
   if (bet > 0 && (state.saldo || 0) < bet) {
     document.getElementById('counteroffer-error').textContent =
-      `Necesitas ${bet.toLocaleString('es-CO')} 🪙 para aceptar esta apuesta. Tu saldo disponible: ${(state.saldo||0).toLocaleString('es-CO')} 🪙`;
+      `Necesitas ${bet.toLocaleString('es-CO')} 🪙 para aceptar esta apuesta. Tu saldo disponible: ${toCoins(state.saldo).toLocaleString('es-CO')} 🪙`;
     return;
   }
   respondChallenge(_counterofferId, true);
@@ -4624,7 +4635,7 @@ function sendCounteroffer() {
 /* Transferencia de coins entre jugadores */
 function openTransferModal() {
   if (!state) { openAuth(true); return; }
-  document.getElementById('transfer-my-balance').textContent = (state.saldo || 0).toLocaleString('es-CO');
+  document.getElementById('transfer-my-balance').textContent = coinsFmt(state.saldo);
   document.getElementById('transfer-search').value = '';
   document.getElementById('transfer-player-list').innerHTML = '';
   document.getElementById('transfer-to-id').value = '';
@@ -5403,7 +5414,7 @@ function openChallengeModal(teamId) {
   const betAmt = document.getElementById('bet-amount');
   if (betAmt) betAmt.value = '';
   const betBal = document.getElementById('bet-my-balance');
-  if (betBal) betBal.textContent = (state.saldo || 0).toLocaleString('es-CO');
+  if (betBal) betBal.textContent = coinsFmt(state.saldo);
   document.getElementById('challenge-modal').classList.add('open');
 }
 
@@ -5971,11 +5982,11 @@ function abrirPagoInscripcion(torneoId) {
       <span>📅 ${t.fecha}</span>
       <span>📍 ${t.cancha}</span>
     </div>
-    <div class="tn-pay-monto">VALOR DE INSCRIPCIÓN<br><strong>$${Number(valor).toLocaleString('es-CO')} COP</strong></div>
+    <div class="tn-pay-monto">VALOR DE INSCRIPCIÓN<br><strong>🪙 ${toCoins(valor).toLocaleString('es-CO')} Level Coins</strong></div>
     <div class="tn-pay-methods">
       <button class="tn-pay-btn saldo ${puedeConSaldo ? '' : 'disabled'}" onclick="${puedeConSaldo ? `pagarInscripcionConSaldo('${torneoId}')` : 'void(0)'}">
-        <span class="tn-pay-btn-icon">💳</span>
-        <span>PAGAR CON SALDO<br><small>Disponible: $${saldo.toLocaleString('es-CO')}</small></span>
+        <span class="tn-pay-btn-icon">🪙</span>
+        <span>PAGAR CON COINS<br><small>Tienes: ${coinsFmt(saldo)} 🪙</small></span>
         ${!puedeConSaldo ? '<span class="tn-pay-insuf">SALDO INSUFICIENTE</span>' : ''}
       </button>
       <button class="tn-pay-btn wompi" onclick="pagarInscripcionWompi('${torneoId}')">
@@ -6918,6 +6929,29 @@ async function submitAdminTeamMatch(matchId) {
     headlines.forEach(h => member.notifications.push({ icon: '📈', text: h, time: 'AHORA' }));
     profiles[id] = member;
   });
+
+  // ===== GANAR COINS (solo Rey del Barrio) — el admin acredita vía RPC seguro =====
+  // Solo el equipo ganador gana coins; el MVP recibe un extra. Empate: nadie gana.
+  try {
+    if (sb && isAdmin()) {
+      const ganador = golesA > golesB ? teamA : golesB > golesA ? teamB : null;
+      const awards = [];
+      if (ganador) {
+        ganador.memberIds.forEach(id => {
+          if (!profiles[id]) return;
+          const coins = 2 + (id === mvpId ? 1 : 0);
+          awards.push({ id, coins, reason: id === mvpId ? 'Ganar + MVP (Rey del Barrio)' : 'Ganar partido (Rey del Barrio)' });
+        });
+      }
+      if (awards.length) {
+        await sb.rpc('award_coins', { p_admin_id: state.id, p_awards: awards });
+        awards.forEach(a => {
+          const m = profiles[a.id];
+          if (m) { m.notifications = m.notifications || []; m.notifications.push({ icon: '🪙', text: `¡Ganaste ${a.coins} Level Coins por tu partido!`, time: 'AHORA' }); }
+        });
+      }
+    }
+  } catch (e) { /* si falla, no bloquea el registro del resultado */ }
 
   saveProfiles();
   saveTeamMatches();
