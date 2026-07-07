@@ -1520,6 +1520,7 @@ async function submitRecharge() {
       reference: payload.reference,
       publicKey: payload.publicKey,
       signature: { integrity: payload.signature },
+      redirectUrl: location.origin + '/saldo.html',
     });
     checkout.open(async (result) => {
       if (result && result.transaction && result.transaction.status === 'APPROVED') {
