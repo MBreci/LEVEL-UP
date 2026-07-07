@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783439959">
+<link rel="stylesheet" href="style.css?v=1783440196">
 <style>
 .pz-wrap{max-width:960px;margin:0 auto;padding:120px 18px 70px}
 .pz-head{text-align:center;margin-bottom:10px}
@@ -31,13 +31,12 @@
 .sp:nth-child(2n){background:#ff2fb0;box-shadow:0 0 8px #ff2fb0}
 @keyframes pzrise{0%{transform:translateY(20px) scale(.6);opacity:0}20%{opacity:.9}100%{transform:translateY(-160px) scale(1);opacity:0}}
 .prize-badge{position:relative;z-index:3;display:inline-flex;align-items:center;gap:7px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--gold);border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);padding:6px 14px;border-radius:30px;margin-bottom:8px}
-.podium{position:relative;z-index:2;perspective:1100px;height:380px;display:flex;align-items:center;justify-content:center;margin:6px 0}
-.floater{animation:pzbob 4.5s ease-in-out infinite;transform-style:preserve-3d}
-@keyframes pzbob{0%,100%{transform:translateY(-8px)}50%{transform:translateY(10px)}}
-@keyframes pzspin{to{transform:rotateY(360deg)}}
-/* Uniforme real: 4 fotos (frente/lado/espalda/lado) que voltean como turntable */
-.kit{height:320px;width:auto;max-width:92%;display:block;filter:drop-shadow(0 26px 26px rgba(0,0,0,.6)) drop-shadow(0 0 26px rgba(34,211,238,.28));transition:transform .17s ease-in,opacity .17s ease-in;transform:perspective(900px) rotateY(0deg);will-change:transform,opacity}
-.kit.edge{transform:perspective(900px) rotateY(90deg) scaleX(.4);opacity:.35}
+.podium{position:relative;z-index:2;height:260px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+.floater{animation:pzbob 5s ease-in-out infinite}
+@keyframes pzbob{0%,100%{transform:translateY(-7px)}50%{transform:translateY(9px)}}
+@keyframes pzspin{to{transform:rotate(360deg)}}
+/* Uniforme oficial: imagen fija con todas las vistas + luces animadas detrás */
+.kit{width:100%;max-width:480px;height:auto;display:block;filter:drop-shadow(0 20px 24px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(34,211,238,.22))}
 .ring{position:absolute;bottom:34px;left:50%;transform:translateX(-50%) rotateX(72deg);width:230px;height:230px;border-radius:50%;border:2px solid transparent;background:conic-gradient(from 0deg,#22d3ee,#ff2fb0,var(--gold),#22d3ee) border-box;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);animation:pzspin 8s linear infinite reverse;opacity:.6}
 .reflection{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:180px;height:26px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,211,238,.35),transparent 70%);filter:blur(6px)}
 .prize-name{position:relative;z-index:3;font-family:var(--ft);font-weight:900;font-size:22px;letter-spacing:1px;margin-top:4px;color:var(--w)}
@@ -100,7 +99,7 @@
 
     <div class="podium">
       <div class="floater">
-        <img class="kit" id="pz-kit" src="assets/premio-kit-0.png?v=1" alt="Uniforme oficial LEVEL UP">
+        <img class="kit" id="pz-kit" src="assets/premio-kit-full.png?v=2" alt="Uniforme oficial LEVEL UP">
       </div>
       <div class="reflection"></div>
     </div>
@@ -132,25 +131,13 @@
 <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()"><span class="a-dot"></span><span id="audio-lbl">LET'S ROLL</span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783439959"></script>
+<script src="app.js?v=1783440196"></script>
 <script>
   // sparkles
   var sp=document.getElementById('sparkles');
   for(var i=0;i<14;i++){var d=document.createElement('div');d.className='sp';d.style.left=(10+Math.random()*80)+'%';d.style.bottom=(20+Math.random()*40)+'%';d.style.animationDelay=(Math.random()*5)+'s';d.style.animationDuration=(3.5+Math.random()*3)+'s';sp.appendChild(d);}
 
-  // ===== Uniforme 360: gira mostrando frente → lado → espalda → lado (fotos reales) =====
-  var KIT_FRAMES = ['assets/premio-kit-0.png','assets/premio-kit-1.png','assets/premio-kit-2.png','assets/premio-kit-3.png'];
-  KIT_FRAMES.forEach(function(s){ var im=new Image(); im.src=s; }); // precarga
-  var kit=document.getElementById('pz-kit'), ki=0, kTimer=null;
-  function kitNext(){
-    kit.classList.add('edge');           // voltea a canto
-    setTimeout(function(){
-      ki=(ki+1)%KIT_FRAMES.length;
-      kit.src=KIT_FRAMES[ki];
-      kit.classList.remove('edge');      // abre en la nueva cara
-    },170);
-  }
-  if(kit){ kTimer=setInterval(kitNext,1600); }
+  // Uniforme oficial: imagen fija con todas las vistas (las luces del fondo siguen animadas).
 
   // "Me interesa" -> abre el widget de feedback (le llega ticket al admin)
   function pzInteres(nombre){
