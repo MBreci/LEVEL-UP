@@ -20,8 +20,6 @@ function containsProfanity(text) {
 
 function playerTeamLabel(p) {
   if (!p) return 'SIN EQUIPO';
-  // Jugadores nuevos no ven los equipos de OTROS (solo el suyo propio).
-  if (typeof isRestrictedPlayer === 'function' && isRestrictedPlayer() && (!state || p.id !== state.id)) return 'SIN EQUIPO';
   const realTeam = typeof teams === 'object' && teams ? Object.values(teams).find(t => t.memberIds && t.memberIds.includes(p.id)) : null;
   return realTeam ? realTeam.name : 'SIN EQUIPO';
 }
@@ -400,21 +398,14 @@ function renderNav() {
   nav.innerHTML = '';
   if (!state) return;
   const page = getCurrentPage();
-  const restricted = isRestrictedPlayer();
-  // Jugadores nuevos: Partidos y Torneos abiertos; Rey del Barrio con 'PRONTO'.
-  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos', 'premios'];
-  const SOON_FOR_NEW = ['reydelbarrio'];
-  const modules = restricted ? FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id)) : FUNCTIONAL_MODULES;
-  modules.forEach(m => {
+  // Todos (fundadores y nuevos) ven el menú completo. La única diferencia queda
+  // dentro del torneo (inscribirse vs "estoy interesado"), manejada en renderTorneos.
+  FUNCTIONAL_MODULES.forEach(m => {
     const href = PAGE_HREFS[m.id] || '#';
     const el = document.createElement('a');
     el.className = 'nm-item nm-item-link';
     if (href.split('#')[0] === page) el.classList.add('on');
-    if (restricted && SOON_FOR_NEW.includes(m.id)) {
-      el.innerHTML = `${m.label} <span class="nm-soon">PRONTO</span>`;
-    } else {
-      el.textContent = m.label;
-    }
+    el.textContent = m.label;
     el.href = href;
     nav.appendChild(el);
   });
@@ -424,17 +415,6 @@ function renderNav() {
     adminBtn.textContent = '⚙ ADMIN';
     adminBtn.onclick = () => openAdminPanel();
     nav.appendChild(adminBtn);
-  }
-  // Jugadores nuevos: ocultar accesos competitivos de los menús desplegables.
-  if (isRestrictedPlayer()) {
-    const jugarDd = document.getElementById('jugar-dropdown');
-    if (jugarDd) jugarDd.querySelectorAll('a.dropdown-item').forEach(a => {
-      if ((a.getAttribute('href') || '').includes('equipos.html')) a.style.display = 'none';
-    });
-    const acctDd = document.getElementById('account-dropdown');
-    if (acctDd) acctDd.querySelectorAll('a.dropdown-item').forEach(a => {
-      if ((a.getAttribute('href') || '').includes('dashboard.html')) a.style.display = 'none';
-    });
   }
 }
 
@@ -670,7 +650,7 @@ function buildCardHTML(p) {
       <div class="fca"><div class="fca-v">${a.fis}</div><div class="fca-l">FIS</div></div>
     </div>
     <div class="fc-foot">
-      <div class="fc-team">${playerTeamLabel(p)}${(!isRestrictedPlayer() && teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
+      <div class="fc-team">${playerTeamLabel(p)}${(teams && Object.values(teams).some(t => t.captainId === p.id)) ? ' <span class="fc-captain-badge">⭐ CAPITÁN</span>' : ''}</div>
       ${buildPhysicalPillsHTML(p)}
     </div>
   `;
@@ -4920,16 +4900,6 @@ function renderTeamsModule() {
     renderTeamMatchesPanel();
     return;
   }
-  // Jugadores nuevos (no fundadores): Rey del Barrio en PRÓXIMAMENTE.
-  if (isRestrictedPlayer()) {
-    const sec = document.getElementById('equipos');
-    if (sec) sec.innerHTML = comingSoonHTML('👑', 'REY DEL BARRIO', 'El modo competitivo oficial de LEVEL UP: arma tu equipo, reta a otros y demuestra quién manda en el barrio.', [
-      ['⚔️', 'Reta a otros equipos', 'Partidos oficiales en canchas certificadas.'],
-      ['📊', 'Sube tu OVR y tu rango', 'Cada partido registra tu desempeño real.'],
-      ['🏆', 'Sé el Rey del Barrio', 'Escala el ranking y gánate el respeto.'],
-    ]);
-    return;
-  }
   const myTeam = getMyTeam();
   const createPanel = document.getElementById('team-create-panel');
   if (createPanel) createPanel.style.display = myTeam ? 'none' : 'block';
@@ -5627,13 +5597,9 @@ function initApp() {
     if (sharedP) localStorage.setItem('levelup_pending_match', sharedP);
     location.href = 'index.html'; return;
   }
-  if (state && page === 'index.html') { location.href = isRestrictedPlayer() ? 'buscar-partido.html' : 'dashboard.html'; return; }
-  // Jugadores nuevos (no fundadores): esconder páginas competitivas (rankings, otros
-  // jugadores, centro de mando con widgets de ranking). Se van a Partidos.
-  if (isRestrictedPlayer()) {
-    const RESTRICTED_GATED = ['dashboard.html', 'ranking.html', 'jugadores.html'];
-    if (RESTRICTED_GATED.includes(page)) { location.href = 'buscar-partido.html'; return; }
-  }
+  // Todos (fundadores y nuevos) entran al panel completo. La única diferencia es
+  // la inscripción al torneo (manejada dentro de la vista de Torneos).
+  if (state && page === 'index.html') { location.href = 'dashboard.html'; return; }
   initFeedbackWidget();
 
   if (state && (state.nickname === 'Lobo' || state.name === 'Miguel Breci') && (!state.physical || state.physical.weight == null)) {
