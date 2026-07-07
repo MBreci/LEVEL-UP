@@ -1505,7 +1505,8 @@ async function submitRecharge() {
 
   try {
     const res = await fetch(`${FUNCTIONS_URL}/wallet-init-recharge`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
       body: JSON.stringify({ profileId: state.id, amount }),
     });
     const payload = await res.json();
