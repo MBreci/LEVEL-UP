@@ -86,7 +86,9 @@ const COIN_VALUE = 1300;
 function toCoins(saldoPesos) { return Math.round((saldoPesos || 0) / COIN_VALUE); }
 function coinsFmt(saldoPesos) { return toCoins(saldoPesos).toLocaleString('es-CO'); }
 // Paquetes de recarga: [coins, precioEnPesos, etiquetaOpcional]
-const COIN_PACKS = [[50, 65000, 'Mi cupo'], [100, 130000], [250, 325000], [400, 520000, 'Equipo completo']];
+// Precio con la comisión de Wompi ya incluida (así el neto que te llega cubre el
+// valor en coins). Los coins se GASTAN a $1.300; el pequeño extra al comprar cubre Wompi.
+const COIN_PACKS = [[50, 68000, 'Mi cupo'], [100, 135000], [250, 337000], [400, 540000, 'Equipo completo']];
 const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
