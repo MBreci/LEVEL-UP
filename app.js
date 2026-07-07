@@ -203,7 +203,12 @@ async function createProfileInCloud(p) {
   let error = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await withTimeout(sb.from('profiles').upsert(row), 8000, 'upsert');
+      // IMPORTANTE: INSERT, no UPSERT. El upsert (ON CONFLICT DO UPDATE) exige permiso
+      // de LECTURA sobre las columnas que toca, y anon NO puede leer correo/contraseña
+      // (protegidas) -> daba 401 "permission denied" y rompía TODO registro. Una cuenta
+      // nueva siempre es un insert; si el id/apodo/correo ya existe, el índice único lo
+      // rechaza correctamente (lo manejamos abajo).
+      const res = await withTimeout(sb.from('profiles').insert(row), 8000, 'insert');
       error = res.error;
     } catch (e) {
       error = e;
@@ -2258,11 +2263,14 @@ async function submitNewProfile() {
       const msg = (createErr && createErr.message) || '';
       const dup = /duplicate key|unique|constraint/i.test(msg);
       const dupEmail = /email/i.test(msg);
-      errorEl.textContent = dup
+      const detail = [createErr && createErr.code, createErr && createErr.status, msg]
+        .filter(Boolean).join(' · ') || 'sin detalle';
+      errorEl.innerHTML = (dup
         ? (dupEmail
           ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña.'
           : 'Ese apodo se acaba de registrar. Elige otro.')
-        : 'No pudimos conectar con el servidor. Revisa tu internet, desactiva bloqueadores de anuncios/VPN o prueba con otro navegador (fuera de modo incógnito) e inténtalo de nuevo.';
+        : 'No pudimos crear la cuenta. Inténtalo de nuevo.')
+        + `<br><span style="font-size:10px;opacity:.6">detalle técnico: ${String(detail).replace(/</g,'&lt;').slice(0,160)}</span>`;
       return;
     }
     profiles[profile.id] = profile;
