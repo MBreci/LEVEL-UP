@@ -5897,7 +5897,7 @@ function renderTorneoCard(t, role) {
     } else if (!isComplete) {
       ctaHtml = `<div class="tn-cta-note">Tu equipo necesita 8 jugadores (6 titulares + 2 suplentes) para inscribirse. <a href="equipos.html#crear" style="color:var(--g)">Completar equipo →</a></div>`;
     } else {
-      ctaHtml = `<button class="tn-inscribir-btn" onclick="abrirPagoInscripcion('${t.id}')">INSCRIBIR MI EQUIPO — $${Number(t.valorInscripcion).toLocaleString('es-CO')}</button>`;
+      ctaHtml = `<button class="tn-inscribir-btn" onclick="abrirPagoInscripcion('${t.id}')">INSCRIBIR MI EQUIPO — 🪙 ${toCoins(t.valorInscripcion).toLocaleString('es-CO')} coins</button>`;
     }
   } else if (role === 'founder' && t.status !== 'abierto') {
     ctaHtml = `<div class="tn-cta-note">Las inscripciones para este torneo están cerradas.</div>`;
