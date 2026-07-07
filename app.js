@@ -43,6 +43,7 @@ const FUNCTIONAL_MODULES = [
   { id: 'partidos', label: 'PARTIDOS' },
   { id: 'reydelbarrio', label: 'REY DEL BARRIO' },
   { id: 'torneos', label: 'TORNEOS' },
+  { id: 'premios', label: 'PREMIOS' },
   { id: 'ranking', label: 'RANKING' },
 ];
 
@@ -374,6 +375,7 @@ const PAGE_HREFS = {
   equipos: 'equipos.html',
   reydelbarrio: 'equipos.html#rey',
   torneos: 'torneos.html',
+  premios: 'premios.html',
   temporada: 'temporada-piloto.html',
 };
 
@@ -392,7 +394,7 @@ function renderNav() {
   const page = getCurrentPage();
   const restricted = isRestrictedPlayer();
   // Jugadores nuevos: Partidos y Torneos abiertos; Rey del Barrio con 'PRONTO'.
-  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos'];
+  const NEW_ALLOWED = ['partidos', 'reydelbarrio', 'torneos', 'premios'];
   const SOON_FOR_NEW = ['reydelbarrio'];
   const modules = restricted ? FUNCTIONAL_MODULES.filter(m => NEW_ALLOWED.includes(m.id)) : FUNCTIONAL_MODULES;
   modules.forEach(m => {

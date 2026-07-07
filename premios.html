@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PREMIOS · LEVEL UP</title>
+<script>
+(function(){
+  try {
+    var id = localStorage.getItem('levelup_current_profile');
+    var profiles = JSON.parse(localStorage.getItem('levelup_profiles') || '{}');
+    if (!id || !profiles[id]) location.replace('index.html');
+  } catch(e) { location.replace('index.html'); }
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1783437854">
+<style>
+.pz-wrap{max-width:960px;margin:0 auto;padding:26px 18px 70px}
+.pz-head{text-align:center;margin-bottom:10px}
+.pz-eyebrow{font-family:var(--ft);font-size:10px;letter-spacing:5px;color:var(--gold);margin-bottom:10px}
+.pz-head h1{font-family:var(--ft);font-weight:900;font-size:clamp(24px,5vw,40px);letter-spacing:1px;color:var(--w)}
+.pz-head h1 span{background:linear-gradient(90deg,#22d3ee,#ff2fb0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.pz-head p{color:var(--tm);font-size:14px;margin-top:10px}
+.stage{position:relative;margin:30px auto 0;max-width:520px;padding:40px 20px 24px;text-align:center;border-radius:24px;overflow:hidden;
+  background:radial-gradient(ellipse 70% 55% at 50% 38%,rgba(34,211,238,.14),transparent 60%),radial-gradient(ellipse 60% 50% at 50% 45%,rgba(255,47,176,.12),transparent 60%);border:1px solid rgba(201,168,76,.25)}
+.spotlight{position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:120%;height:80%;background:conic-gradient(from 0deg,transparent,rgba(34,211,238,.10),transparent 30%,rgba(255,47,176,.10),transparent 60%);animation:pzhalo 14s linear infinite;filter:blur(6px);pointer-events:none}
+@keyframes pzhalo{to{transform:translateX(-50%) rotate(360deg)}}
+.sparkles{position:absolute;inset:0;pointer-events:none}
+.sp{position:absolute;width:4px;height:4px;border-radius:50%;background:#22d3ee;box-shadow:0 0 8px #22d3ee;opacity:.8;animation:pzrise 5s linear infinite}
+.sp:nth-child(2n){background:#ff2fb0;box-shadow:0 0 8px #ff2fb0}
+@keyframes pzrise{0%{transform:translateY(20px) scale(.6);opacity:0}20%{opacity:.9}100%{transform:translateY(-160px) scale(1);opacity:0}}
+.prize-badge{position:relative;z-index:3;display:inline-flex;align-items:center;gap:7px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--gold);border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);padding:6px 14px;border-radius:30px;margin-bottom:8px}
+.podium{position:relative;z-index:2;perspective:1100px;height:340px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+.floater{animation:pzbob 4.5s ease-in-out infinite;transform-style:preserve-3d}
+@keyframes pzbob{0%,100%{transform:translateY(-8px)}50%{transform:translateY(10px)}}
+.spinner{position:relative;width:220px;height:250px;transform-style:preserve-3d;animation:pzspin 12s linear infinite;filter:drop-shadow(0 24px 26px rgba(0,0,0,.6)) drop-shadow(0 0 22px rgba(34,211,238,.25))}
+@keyframes pzspin{to{transform:rotateY(360deg)}}
+.face{position:absolute;top:0;left:0;width:220px;height:250px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+.face.back{transform:rotateY(180deg)}
+.jersey{width:220px;height:auto;display:block}
+.ring{position:absolute;bottom:34px;left:50%;transform:translateX(-50%) rotateX(72deg);width:230px;height:230px;border-radius:50%;border:2px solid transparent;background:conic-gradient(from 0deg,#22d3ee,#ff2fb0,var(--gold),#22d3ee) border-box;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);animation:pzspin 8s linear infinite reverse;opacity:.6}
+.reflection{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:180px;height:26px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,211,238,.35),transparent 70%);filter:blur(6px)}
+.prize-name{position:relative;z-index:3;font-family:var(--ft);font-weight:900;font-size:22px;letter-spacing:1px;margin-top:4px;color:var(--w)}
+.prize-sub{position:relative;z-index:3;color:var(--tm);font-size:13px;margin-top:6px}
+.price-tag{position:relative;z-index:3;display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:10px 20px;border-radius:40px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.4)}
+.price-tag .coin{width:26px;height:26px;animation:pzcoin 5s linear infinite}
+@keyframes pzcoin{to{transform:rotateY(360deg)}}
+.price-tag .n{font-family:var(--ft);font-weight:900;font-size:22px;color:var(--gold)}
+.price-tag .eq{font-size:11px;color:var(--tm)}
+.cta-row{position:relative;z-index:3;display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.pz-cta{font-family:var(--ft);font-weight:700;font-size:11px;letter-spacing:1px;padding:14px 24px;border-radius:10px;border:none;cursor:pointer;transition:transform .15s}
+.pz-cta:hover{transform:translateY(-2px)}
+.pz-cta.redeem{color:#0b0500;background:linear-gradient(90deg,var(--gold),var(--g));box-shadow:0 0 22px rgba(201,168,76,.35)}
+.pz-cta.win{color:#22d3ee;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.4)}
+.pz-soon{display:inline-block;margin-top:16px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--o);border:1px solid rgba(255,102,0,.4);background:rgba(255,102,0,.08);padding:7px 14px;border-radius:20px}
+.cat-title{font-family:var(--ft);font-size:12px;letter-spacing:3px;color:var(--tm);text-align:center;margin:46px 0 18px}
+.pz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.rw{background:var(--bg2);border:var(--b2);border-radius:14px;padding:18px;text-align:center;transition:border .2s}
+.rw:hover{border-color:rgba(201,168,76,.4)}
+.rw .thumb{height:110px;display:flex;align-items:center;justify-content:center;font-size:42px;filter:drop-shadow(0 0 12px rgba(34,211,238,.3))}
+.rw .rn{font-family:var(--ft);font-size:12px;margin-top:8px;color:var(--w)}
+.rw .rp{font-family:var(--ft);font-size:11px;color:var(--gold);margin-top:8px}
+.rw .rb{display:inline-block;margin-top:10px;font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:5px 12px;border-radius:20px;background:rgba(0,255,136,.08);color:var(--g);border:1px solid rgba(0,255,136,.25)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-top">
+    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
+    <nav class="nav-modules" id="nav-modules"></nav>
+    <div class="nav-right">
+      <a class="season-badge" href="temporada-piloto.html" title="Conoce la Temporada Beta">TEMPORADA BETA</a>
+      <a class="btn-g" href="notificaciones.html">🔔 <span id="notif-count">0</span></a>
+      <div class="dropdown-wrap">
+        <button class="btn-g" id="profile-btn">PERFIL</button>
+        <div class="dropdown-menu" id="account-dropdown">
+          <a class="dropdown-item" href="dashboard.html#dashboard">CENTRO DE MANDO</a>
+          <a class="dropdown-item" href="carta.html">PERFIL</a>
+          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
+          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
+          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="pz-wrap">
+  <div class="pz-head">
+    <div class="pz-eyebrow">RECOMPENSAS LEVEL UP</div>
+    <h1>GANA. CANJEA. <span>PRESUME.</span></h1>
+    <p>Junta Level Coins jugando o recargando, y llévate premios reales.</p>
+  </div>
+
+  <div class="stage">
+    <div class="spotlight"></div>
+    <div class="sparkles" id="sparkles"></div>
+    <div class="prize-badge">👑 PREMIO ESTRELLA · TEMPORADA 1</div>
+
+    <div class="podium">
+      <div class="floater">
+        <div class="spinner" id="spinner">
+          <div class="face front" id="face-front">
+            <svg class="jersey" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="jg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d1524"/><stop offset="1" stop-color="#04060b"/></linearGradient>
+                <linearGradient id="stripe" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#ff2fb0"/></linearGradient>
+              </defs>
+              <path d="M66 20 L100 38 L134 20 L176 50 L160 96 L142 84 L142 168 L58 168 L58 84 L40 96 L24 50 Z" fill="url(#jg)" stroke="#1b2740" stroke-width="1.4"/>
+              <path d="M84 34 L100 52 L116 34 L110 34 L100 45 L90 34 Z" fill="url(#stripe)"/>
+              <path d="M58 120 L110 168 L96 168 L58 134 Z" fill="#ff2fb0" opacity=".55"/>
+              <path d="M58 100 L142 168 L120 168 L58 118 Z" fill="#22d3ee" opacity=".35"/>
+              <path d="M120 60 L140 96 L132 96 L114 62 Z" fill="#22d3ee" opacity=".5"/>
+              <path d="M128 70 L150 60 L140 96 Z" fill="#ff2fb0" opacity=".4"/>
+              <path d="M176 50 L160 96 L152 92 L168 50 Z" fill="#ff2fb0" opacity=".7"/>
+              <path d="M24 50 L40 96 L48 92 L32 50 Z" fill="#22d3ee" opacity=".7"/>
+              <path d="M112 66 l5 9 l5 -12 l5 12 l5 -9 l-1.5 15 l-17 0 Z" fill="url(#stripe)"/>
+              <path d="M62 174 L138 174 L134 232 L104 232 L100 196 L96 232 L66 232 Z" fill="url(#jg)" stroke="#1b2740" stroke-width="1.2"/>
+              <path d="M120 178 L128 178 L126 232 L120 232 Z" fill="url(#stripe)" opacity=".8"/>
+              <path d="M72 178 l6 0 l1 12 l-8 0 Z" fill="url(#stripe)" opacity=".8"/>
+            </svg>
+          </div>
+          <div class="face back" id="face-back">
+            <svg class="jersey" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+              <path d="M66 20 L100 38 L134 20 L176 50 L160 96 L142 84 L142 168 L58 168 L58 84 L40 96 L24 50 Z" fill="url(#jg)" stroke="#1b2740" stroke-width="1.4"/>
+              <path d="M92 40 L108 40 L106 168 L94 168 Z" fill="url(#stripe)" opacity=".85"/>
+              <path d="M96 40 L104 40 L103 168 L97 168 Z" fill="#04060b"/>
+              <path d="M96 40 L104 40 L103 168 L97 168 Z" fill="url(#stripe)" opacity=".5"/>
+              <path d="M92 50 l4 7 l4 -9 l4 9 l4 -7 l-1 12 l-14 0 Z" fill="#22d3ee"/>
+              <path d="M176 50 L160 96 L152 92 L168 50 Z" fill="#22d3ee" opacity=".7"/>
+              <path d="M24 50 L40 96 L48 92 L32 50 Z" fill="#ff2fb0" opacity=".7"/>
+              <path d="M62 174 L138 174 L134 232 L104 232 L100 196 L96 232 L66 232 Z" fill="url(#jg)" stroke="#1b2740" stroke-width="1.2"/>
+              <path d="M96 178 L104 178 L103 232 L97 232 Z" fill="url(#stripe)" opacity=".8"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="ring"></div>
+      <div class="reflection"></div>
+    </div>
+
+    <div class="prize-name">UNIFORME OFICIAL LEVEL UP</div>
+    <div class="prize-sub">Camiseta + pantaloneta · edición Temporada 1 · diseñado para ganadores</div>
+
+    <div class="price-tag">
+      <svg class="coin" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1a1205" stroke="url(#cg)" stroke-width="2.4"/><text x="20" y="26" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="14" fill="url(#cg)">LC</text><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a84c"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs></svg>
+      <span class="n">140</span><span class="eq">coins · ≈ $182.000</span>
+    </div>
+
+    <div class="cta-row">
+      <button class="pz-cta win" onclick="pzInteres('Uniforme oficial LEVEL UP')">ME INTERESA ESTE PREMIO</button>
+    </div>
+    <div class="pz-soon">🪙 Canje con coins disponible muy pronto</div>
+  </div>
+
+  <div class="cat-title">TODOS LOS PREMIOS</div>
+  <div class="pz-grid">
+    <div class="rw"><div class="thumb">🧢</div><div class="rn">Gorra LEVEL UP</div><div class="rp">🪙 40 coins</div><div class="rb">PRONTO</div></div>
+    <div class="rw"><div class="thumb">⚽</div><div class="rn">Balón oficial</div><div class="rp">🪙 55 coins</div><div class="rb">PRONTO</div></div>
+    <div class="rw"><div class="thumb">🥤</div><div class="rn">Termo LEVEL UP</div><div class="rp">🪙 25 coins</div><div class="rb">PRONTO</div></div>
+    <div class="rw"><div class="thumb">🎽</div><div class="rn">Uniforme oficial</div><div class="rp">🪙 140 coins</div><div class="rb">PRONTO</div></div>
+  </div>
+</div>
+
+<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()"><span class="a-dot"></span><span id="audio-lbl">LET'S ROLL</span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js?v=1783437854"></script>
+<script>
+  // sparkles
+  var sp=document.getElementById('sparkles');
+  for(var i=0;i<14;i++){var d=document.createElement('div');d.className='sp';d.style.left=(10+Math.random()*80)+'%';d.style.bottom=(20+Math.random()*40)+'%';d.style.animationDelay=(Math.random()*5)+'s';d.style.animationDuration=(3.5+Math.random()*3)+'s';sp.appendChild(d);}
+
+  // Si existe la foto real del uniforme (assets/premio-uniforme-frente.png / -espalda.png),
+  // reemplaza automáticamente el dibujo de muestra por tu imagen real.
+  function trySwap(id, src){
+    var img=new Image();
+    img.onload=function(){ var f=document.getElementById(id); if(f){ f.innerHTML=''; var el=document.createElement('img'); el.className='jersey'; el.src=src; f.appendChild(el);} };
+    img.src=src;
+  }
+  trySwap('face-front','assets/premio-uniforme-frente.png');
+  trySwap('face-back','assets/premio-uniforme-espalda.png');
+
+  // "Me interesa" -> abre el widget de feedback (le llega ticket al admin)
+  function pzInteres(nombre){
+    try{
+      if(typeof openFeedbackModal==='function'){
+        openFeedbackModal();
+        setTimeout(function(){ var m=document.getElementById('fb-message'); if(m) m.value='Me interesa el premio: '+nombre; },200);
+      } else { alert('¡Gracias por tu interés en '+nombre+'! Pronto podrás canjearlo con coins.'); }
+    }catch(e){ alert('¡Gracias por tu interés!'); }
+  }
+</script>
+</body>
+</html>
