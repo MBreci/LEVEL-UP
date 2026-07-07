@@ -85,8 +85,8 @@ const FUNCTIONS_URL = SUPABASE_URL.replace('.supabase.co', '.supabase.co/functio
 const COIN_VALUE = 1300;
 function toCoins(saldoPesos) { return Math.round((saldoPesos || 0) / COIN_VALUE); }
 function coinsFmt(saldoPesos) { return toCoins(saldoPesos).toLocaleString('es-CO'); }
-// Paquetes de recarga: [coins, precioEnPesos]
-const COIN_PACKS = [[10, 13000], [50, 65000], [100, 130000], [250, 325000]];
+// Paquetes de recarga: [coins, precioEnPesos, etiquetaOpcional]
+const COIN_PACKS = [[50, 65000, 'Mi cupo'], [100, 130000], [250, 325000], [400, 520000, 'Equipo completo']];
 const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 
 function profileToRow(p) {
@@ -1460,7 +1460,7 @@ async function renderSaldoPage() {
         <div class="auth-label" style="font-size:15px;color:var(--g)">COMPRAR LEVEL COINS</div>
         <div class="auth-photo-note">Elige un paquete. Pagas con tarjeta, PSE o Nequi (Wompi).</div>
         <div class="wallet-quick-grid" style="grid-template-columns:1fr 1fr">
-          ${COIN_PACKS.map(([c, p]) => `<button class="wallet-quick-btn" onclick="selectCoinPack(${p})" style="display:flex;flex-direction:column;gap:3px;height:auto;padding:12px"><b style="font-size:15px;color:var(--gold)">🪙 ${c.toLocaleString('es-CO')}</b><span style="font-size:10px;opacity:.6">$${p.toLocaleString('es-CO')}</span></button>`).join('')}
+          ${COIN_PACKS.map(([c, p, label]) => `<button class="wallet-quick-btn" onclick="selectCoinPack(${p})" style="display:flex;flex-direction:column;gap:2px;height:auto;padding:12px">${label ? `<span style="font-size:8px;letter-spacing:1px;color:var(--g)">${label.toUpperCase()}</span>` : ''}<b style="font-size:15px;color:var(--gold)">🪙 ${c.toLocaleString('es-CO')}</b><span style="font-size:10px;opacity:.6">$${p.toLocaleString('es-CO')}</span></button>`).join('')}
         </div>
         <div class="auth-error" id="recharge-error"></div>
         <button class="auth-cancel" onclick="closeRecharge()">CANCELAR</button>
