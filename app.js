@@ -2080,12 +2080,14 @@ async function submitLogin() {
     document.getElementById('login-id').value = '';
     document.getElementById('login-password').value = '';
     if (getCurrentPage() === 'index.html') {
+      if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; }
       const pendingMatch = localStorage.getItem('levelup_pending_match');
       if (pendingMatch) { localStorage.removeItem('levelup_pending_match'); location.href = 'buscar-partido.html?p=' + pendingMatch; }
       else { location.href = 'dashboard.html'; }
       return;
     }
     renderAll();
+    checkPendingTeamJoin();
   } finally {
     btn.disabled = false;
     btn.textContent = 'INICIAR SESIÓN';
@@ -2274,8 +2276,13 @@ async function submitNewProfile() {
     saveProfiles();
     setCurrentProfile(profile.id);
     closeAuth();
-    if (getCurrentPage() === 'index.html') { location.href = 'dashboard.html'; return; }
+    if (getCurrentPage() === 'index.html') {
+      // Recién creada la cuenta: si lo invitaron a un equipo, lo llevamos directo a la invitación.
+      if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; }
+      location.href = 'dashboard.html'; return;
+    }
     renderAll();
+    checkPendingTeamJoin();
   } catch (e) {
     errorEl.textContent = 'Ocurrió un error inesperado. Revisa tu conexión e inténtalo de nuevo.';
   } finally {
@@ -4059,7 +4066,13 @@ function openSlotInvite(teamId, slotIndex) {
   modal.innerHTML = `
     <div class="slot-invite-card">
       <div class="slot-invite-title">INVITAR A <span class="slot-invite-pos">${label}</span></div>
-      <input class="tn-input" id="slot-invite-input" autocomplete="off" placeholder="Buscar por nombre o apodo..." oninput="searchSlotInvite(this.value,'${teamId}',${slotIndex})">
+      <div class="slot-invite-searchrow">
+        <input class="tn-input" id="slot-invite-input" autocomplete="off" placeholder="Buscar por nombre o apodo..." oninput="searchSlotInvite(this.value,'${teamId}',${slotIndex})">
+        <button class="slot-wa-btn" onclick="invitarSlotWhatsApp('${teamId}',${slotIndex})" title="Invitar por WhatsApp">
+          <span class="slot-wa-ico">📲</span><span class="slot-wa-lbl">WhatsApp</span>
+        </button>
+      </div>
+      <div class="slot-invite-hint">Busca a un jugador que ya esté en LEVEL UP, o invítalo por WhatsApp aunque todavía no tenga cuenta.</div>
       <div id="slot-invite-results" class="slot-invite-results"></div>
       <button class="tn-btn-cancel" style="margin-top:12px" onclick="closeSlotInvite()">CANCELAR</button>
     </div>`;
@@ -4184,6 +4197,196 @@ async function respondTeamInvite(inviteId, accept) {
     pushProfileToCloud(captain);
   }
   renderAll();
+}
+
+// ===== Invitación a un jugador por WhatsApp (enlace directo a unirse al equipo) =====
+// El capitán genera un enlace con el equipo, la casilla y su id. Quien lo abra —tenga
+// cuenta o no— aterriza en LEVEL UP, inicia sesión o crea su cuenta, y de inmediato
+// ve la invitación para aceptar/rechazar unirse al equipo del capitán.
+function invitarSlotWhatsApp(teamId, slotIndex) {
+  const team = teams[teamId] || loadTeams()[teamId];
+  if (!team || !state) return;
+  const isSub = slotIndex >= 6;
+  const rol = isSub ? `suplente ${slotIndex - 5}` : `titular ${slotIndex + 1}`;
+  const cap = state.nickname || state.name;
+  const link = `${LEVELUP_URL}/?join=${encodeURIComponent(teamId)}&slot=${slotIndex}&from=${encodeURIComponent(state.id)}`;
+  const msg =
+    `¡Hola! 👋⚽ Soy *${cap}*, capitán de *${team.name}* en LEVEL UP 👑.\n\n` +
+    `Te quiero en mi equipo como *${rol}*. Toca este enlace para unirte 👇\n${link}\n\n` +
+    `Si aún no tienes cuenta, créala (toma 1 minuto) y de una vez te aparece mi invitación para aceptar. 🔥`;
+  abrirWhatsApp(msg);
+  closeSlotInvite();
+}
+
+const PENDING_JOIN_KEY = 'levelup_pending_join';
+// Se llama lo más temprano posible (antes de cualquier redirección) para no perder
+// los parámetros del enlace de invitación.
+function capturePendingTeamJoin() {
+  try {
+    const qs = new URLSearchParams(location.search);
+    const teamId = qs.get('join');
+    if (!teamId) return;
+    const slot = qs.get('slot');
+    const from = qs.get('from');
+    localStorage.setItem(PENDING_JOIN_KEY, JSON.stringify({
+      teamId,
+      slotIndex: (slot != null && slot !== '') ? parseInt(slot) : null,
+      captainId: from || null,
+      ts: Date.now(),
+    }));
+  } catch (e) {}
+}
+function loadPendingTeamJoin() { try { return JSON.parse(localStorage.getItem(PENDING_JOIN_KEY) || 'null'); } catch (e) { return null; } }
+function clearPendingTeamJoin() { try { localStorage.removeItem(PENDING_JOIN_KEY); } catch (e) {} }
+
+// Verifica si hay una invitación pendiente por enlace y actúa según haya sesión o no.
+async function checkPendingTeamJoin() {
+  const pend = loadPendingTeamJoin();
+  if (!pend || !pend.teamId) return;
+  if (!state) { showJoinAuthPrompt(pend); return; }
+  let team = teams[pend.teamId] || loadTeams()[pend.teamId];
+  if (!team && sb) {
+    try {
+      const { data } = await sb.from('teams').select('*').eq('id', pend.teamId).single();
+      if (data) { team = rowToTeam(data); teams[team.id] = team; saveTeams(); }
+    } catch (e) {}
+  }
+  if (!team) { clearPendingTeamJoin(); return; }
+  // Asegura tener el nombre del capitán (para el mensaje) aunque aún no haya sincronizado perfiles.
+  if (team.captainId && !profiles[team.captainId] && sb) {
+    try {
+      const { data } = await sb.from('profiles').select('id,name,nickname').eq('id', team.captainId).single();
+      if (data) profiles[data.id] = Object.assign(profiles[data.id] || {}, { id: data.id, name: data.name, nickname: data.nickname });
+    } catch (e) {}
+  }
+  // Ya es capitán o ya está dentro: nada que aceptar.
+  if (team.captainId === state.id || (team.memberIds || []).includes(state.id)) { clearPendingTeamJoin(); return; }
+  // Ya pertenece a OTRO equipo: no puede unirse a dos.
+  if (getMyTeam() && getMyTeam().id !== team.id) {
+    clearPendingTeamJoin();
+    showJoinBlockedModal(team);
+    return;
+  }
+  showTeamJoinInvite(team, pend);
+}
+
+// No hay sesión: abre el modal de auth con un aviso de que lo invitaron a un equipo.
+async function showJoinAuthPrompt(pend) {
+  if (!document.getElementById('auth-modal')) return; // página sin modal (equipos.html redirige a index)
+  let teamName = '';
+  if (sb) {
+    try { const { data } = await sb.from('teams').select('name').eq('id', pend.teamId).single(); if (data) teamName = data.name || ''; } catch (e) {}
+  }
+  openAuth(true);
+  const card = document.querySelector('#auth-modal .auth-card');
+  if (card) {
+    let b = document.getElementById('auth-join-banner');
+    if (!b) { b = document.createElement('div'); b.id = 'auth-join-banner'; b.className = 'auth-join-banner'; card.insertBefore(b, card.firstChild); }
+    b.innerHTML = `🛡️ Te invitaron a unirte a <b>${teamName || 'un equipo'}</b>. Crea tu cuenta o inicia sesión y verás la invitación para aceptar.`;
+  }
+}
+
+function showJoinBlockedModal(team) {
+  const existing = document.getElementById('team-join-modal'); if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'team-join-modal'; modal.className = 'slot-invite-overlay';
+  modal.innerHTML = `
+    <div class="slot-invite-card team-join-card">
+      <div class="team-join-emoji">🛡️</div>
+      <div class="team-join-head">Invitación a <b>${team.name}</b></div>
+      <div class="team-join-sub">Ya perteneces a otro equipo. Para unirte a <b>${team.name}</b> primero debes salir de tu equipo actual.</div>
+      <button class="tn-btn-cancel" style="margin-top:16px" onclick="closeTeamJoinModal()">ENTENDIDO</button>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) closeTeamJoinModal(); });
+  document.body.appendChild(modal);
+}
+
+function closeTeamJoinModal() { const m = document.getElementById('team-join-modal'); if (m) m.remove(); }
+
+// Modal de aceptar/rechazar la invitación recibida por enlace.
+function showTeamJoinInvite(team, pend) {
+  const captain = profiles[team.captainId] || (pend.captainId ? profiles[pend.captainId] : null);
+  const capName = captain ? (captain.nickname || captain.name) : 'El capitán';
+  const isSub = pend.slotIndex != null && pend.slotIndex >= 6;
+  const rol = (pend.slotIndex == null) ? '' : (isSub ? `suplente ${pend.slotIndex - 5}` : `titular ${pend.slotIndex + 1}`);
+  const existing = document.getElementById('team-join-modal'); if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'team-join-modal'; modal.className = 'slot-invite-overlay';
+  modal.innerHTML = `
+    <div class="slot-invite-card team-join-card">
+      <div class="team-join-escudo" style="background:${(team.color || '#00ff88')}22;border-color:${(team.color || '#00ff88')}55">
+        ${team.photo ? `<img src="${team.photo}" alt="">` : '⚽'}
+      </div>
+      <div class="team-join-eyebrow">INVITACIÓN DE EQUIPO</div>
+      <div class="team-join-head"><b>${capName}</b> te invitó a unirte a <b>${team.name}</b>${rol ? ` como <b>${rol}</b>` : ''}.</div>
+      <div class="team-join-sub">${team.city ? team.city + ' · ' : ''}${(team.memberIds || []).filter(Boolean).length}/8 jugadores</div>
+      <div class="team-join-actions">
+        <button class="team-join-reject" onclick="rejectTeamJoinLink()">RECHAZAR</button>
+        <button class="team-join-accept" onclick="acceptTeamJoinLink()">ACEPTAR Y UNIRME</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) {} }); // no cerrar por fuera: decisión explícita
+  document.body.appendChild(modal);
+}
+
+async function acceptTeamJoinLink() {
+  const pend = loadPendingTeamJoin();
+  if (!pend || !state) { closeTeamJoinModal(); clearPendingTeamJoin(); return; }
+  const btn = document.querySelector('#team-join-modal .team-join-accept');
+  if (btn) { btn.disabled = true; btn.textContent = 'UNIÉNDOTE...'; }
+  let team = teams[pend.teamId] || loadTeams()[pend.teamId];
+  if (!team && sb) {
+    try { const { data } = await sb.from('teams').select('*').eq('id', pend.teamId).single(); if (data) team = rowToTeam(data); } catch (e) {}
+  }
+  if (!team) { clearPendingTeamJoin(); closeTeamJoinModal(); alert('Este equipo ya no está disponible.'); return; }
+  if (!team.memberIds) team.memberIds = [];
+  if (!team.memberIds.includes(state.id)) {
+    if ((team.memberIds.filter(Boolean).length) >= 8) { clearPendingTeamJoin(); closeTeamJoinModal(); alert('El equipo ya tiene los 8 cupos llenos.'); return; }
+    const idx = pend.slotIndex;
+    if (idx != null && idx >= 0) {
+      while (team.memberIds.length <= idx) team.memberIds.push(null);
+      if (team.memberIds[idx]) team.memberIds.push(state.id); else team.memberIds[idx] = state.id;
+    } else {
+      team.memberIds.push(state.id);
+    }
+    if (!team.joinLog) team.joinLog = [];
+    team.joinLog.push({ name: state.nickname || state.name, time: Date.now() });
+    teams[team.id] = team;
+    saveTeams();
+    await pushTeamToCloud(team);
+    state.team = team.name;
+    profiles[state.id] = state;
+    saveProfiles();
+    pushProfileToCloud(state);
+    const captain = profiles[team.captainId];
+    if (captain) {
+      captain.notifications.push({ icon: '✅', text: `${state.nickname || state.name} aceptó tu invitación y se unió a ${team.name}.`, time: 'AHORA' });
+      saveProfiles();
+      pushProfileToCloud(captain);
+    }
+    state.notifications = state.notifications || [];
+    state.notifications.push({ icon: '🛡️', text: `Te uniste a ${team.name}. ¡A jugar!`, time: 'AHORA' });
+    saveProfiles();
+  }
+  clearPendingTeamJoin();
+  closeTeamJoinModal();
+  if (getCurrentPage() === 'equipos.html') { renderAll(); location.hash = '#crear'; }
+  else { location.href = 'equipos.html#crear'; }
+}
+
+function rejectTeamJoinLink() {
+  const pend = loadPendingTeamJoin();
+  const team = pend ? (teams[pend.teamId] || loadTeams()[pend.teamId]) : null;
+  if (team && state) {
+    const captain = profiles[team.captainId];
+    if (captain) {
+      captain.notifications.push({ icon: '❌', text: `${state.nickname || state.name} rechazó tu invitación a ${team.name}.`, time: 'AHORA' });
+      saveProfiles();
+      pushProfileToCloud(captain);
+    }
+  }
+  clearPendingTeamJoin();
+  closeTeamJoinModal();
 }
 
 function requestJoinTeam(teamId) {
@@ -5632,6 +5835,7 @@ function renderTicker() {
 }
 
 function initApp() {
+  capturePendingTeamJoin(); // guarda el enlace de invitación ANTES de cualquier redirección
   loadCurrentProfile();
   const page = getCurrentPage();
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
@@ -5654,6 +5858,7 @@ function initApp() {
 
   renderAll();
   checkPendingReveal();
+  checkPendingTeamJoin(); // invitación por enlace de WhatsApp: aceptar/rechazar o pedir cuenta
   syncProfilesFromCloud();
   syncTeamsFromCloud().then(() => {
     loadAllTeamPhotosOnce();

@@ -2103,6 +2103,32 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .slot-invite-results{margin-top:8px;max-height:240px;overflow-y:auto}
 .slot-invite-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;font-size:13px;color:rgba(210,220,255,0.85)}
 .slot-invite-item:hover{background:rgba(0,255,136,0.08)}
+/* Fila búsqueda + botón WhatsApp en el modal de casilla */
+.slot-invite-searchrow{display:flex;gap:8px;align-items:stretch}
+.slot-invite-searchrow .tn-input{flex:1;min-width:0}
+.slot-wa-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:10px;cursor:pointer;font-family:var(--ft);font-size:9px;letter-spacing:1px;font-weight:700;color:#062b16;background:linear-gradient(135deg,#25d366,#12a850);border:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(37,211,102,0.28)}
+.slot-wa-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,211,102,0.4)}
+.slot-wa-ico{font-size:14px}
+@media(max-width:420px){.slot-wa-lbl{display:none}.slot-wa-btn{padding:0 12px}}
+.slot-invite-hint{margin-top:8px;font-size:11px;color:rgba(210,220,255,0.45);line-height:1.5}
+/* Aviso de invitación en el modal de auth */
+.auth-join-banner{margin:-4px 0 16px;padding:12px 14px;border-radius:10px;font-size:12px;line-height:1.5;color:#eafff3;background:linear-gradient(135deg,rgba(0,255,136,0.14),rgba(0,255,136,0.04));border:1px solid rgba(0,255,136,0.3)}
+.auth-join-banner b{color:var(--g)}
+/* Modal aceptar/rechazar invitación de equipo */
+.team-join-card{text-align:center}
+.team-join-escudo{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;border:1px solid rgba(0,255,136,0.4);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.team-join-escudo img{width:100%;height:100%;object-fit:cover}
+.team-join-emoji{font-size:38px;margin-bottom:8px}
+.team-join-eyebrow{font-family:var(--ft);font-size:8px;letter-spacing:3px;color:rgba(0,255,136,0.7);margin-bottom:8px}
+.team-join-head{font-size:15px;line-height:1.5;color:var(--w);margin-bottom:6px}
+.team-join-head b{color:var(--g)}
+.team-join-sub{font-size:12px;color:rgba(210,220,255,0.5);margin-bottom:6px}
+.team-join-actions{display:flex;gap:10px;margin-top:20px}
+.team-join-accept{flex:2;padding:13px;border-radius:10px;border:none;cursor:pointer;font-family:var(--ft);font-size:10px;letter-spacing:1px;font-weight:700;color:#052b16;background:linear-gradient(135deg,#00ff88,#00c46a);box-shadow:0 6px 20px rgba(0,255,136,0.3);transition:transform .15s}
+.team-join-accept:hover{transform:translateY(-1px)}
+.team-join-accept:disabled{opacity:.6;cursor:default;transform:none}
+.team-join-reject{flex:1;padding:13px;border-radius:10px;cursor:pointer;font-family:var(--ft);font-size:10px;letter-spacing:1px;background:transparent;color:rgba(255,120,120,0.85);border:1px solid rgba(255,90,90,0.35);transition:background .15s}
+.team-join-reject:hover{background:rgba(255,90,90,0.1)}
 .tn-pay-title{font-family:var(--ft);font-size:13px;font-weight:900;letter-spacing:2px;color:rgba(255,170,0,0.9);margin-bottom:20px;text-align:center}
 .tn-pay-torneo{font-family:var(--ft);font-size:15px;color:var(--w);text-align:center;margin-bottom:8px;font-weight:700}
 .tn-pay-detalle{display:flex;justify-content:center;gap:16px;font-size:12px;color:rgba(210,220,255,0.5);margin-bottom:20px}
