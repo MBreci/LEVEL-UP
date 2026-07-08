@@ -3886,6 +3886,32 @@ function getMyTeam() {
   return Object.values(teams).find(t => t.memberIds.includes(state.id)) || null;
 }
 
+// ===== INVITAR POR WHATSAPP =====
+const LEVELUP_URL = 'https://levelupp.com.co';
+function abrirWhatsApp(mensaje) {
+  window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+}
+function invitarEquipoWhatsApp(teamId) {
+  const t = (teamId && loadTeams()[teamId]) || getMyTeam();
+  const nombre = t ? t.name : 'mi equipo';
+  const yo = state ? (state.nickname || state.name) : '';
+  const msg =
+    `¡Hola! 👋⚽ Estoy armando mi equipo *${nombre}* en LEVEL UP 👑 — la app donde jugamos Rey del Barrio y torneos con premios reales.\n\n` +
+    `Crea tu cuenta gratis aquí 👉 ${LEVELUP_URL}\n\n` +
+    `Luego búscame (${yo}) o busca a *${nombre}* para unirte a mi equipo. ¡Te espero! 🔥`;
+  abrirWhatsApp(msg);
+}
+function invitarTorneoWhatsApp(torneoId) {
+  const t = (torneoId && loadTournaments()[torneoId]) || null;
+  const nombreTorneo = (t && t.nombre) || 'Torneo de Apertura';
+  const yo = state ? (state.nickname || state.name) : '';
+  const msg =
+    `¡Vamos a jugar el *${nombreTorneo}* en LEVEL UP! 🏆⚽👑\n\n` +
+    `Arma tu equipo o únete al mío. Crea tu cuenta gratis 👉 ${LEVELUP_URL}\n\n` +
+    `Cuando entres, búscame: ${yo}. ¡Nos vemos en la cancha! 🔥`;
+  abrirWhatsApp(msg);
+}
+
 const POSITIONS = ['POR', 'DEF', 'MED', 'DEL'];
 
 function makeTeam({ name, desc, city, color, photo, captainId }) {
@@ -5155,6 +5181,10 @@ function renderTeamProfile(teamId) {
             onblur="setTimeout(()=>{const s=document.getElementById('team-invite-suggest');if(s)s.classList.remove('open')},150)">
           <div class="pl-suggest" id="team-invite-suggest"></div>
         </div>
+        <div class="team-mgmt-title" style="margin-top:14px">¿TU AMIGO NO ESTÁ EN LEVEL UP?</div>
+        <button class="wa-invite-btn" onclick="invitarEquipoWhatsApp('${team.id}')">
+          <span style="font-size:16px">📲</span> INVITAR POR WHATSAPP
+        </button>
       </div>` : ''}
 
       ${requests}
@@ -5924,6 +5954,9 @@ function renderTorneoCard(t, role) {
       <div class="tn-card-footer">
         <div class="tn-teams-count">${teams.length} equipo${teams.length !== 1 ? 's' : ''} inscrito${teams.length !== 1 ? 's' : ''}</div>
         ${ctaHtml}
+        <button class="wa-invite-btn" style="margin-top:12px" onclick="invitarTorneoWhatsApp('${t.id}')">
+          <span style="font-size:16px">📲</span> INVITAR AMIGOS POR WHATSAPP
+        </button>
       </div>
       ${teams.length ? `<div class="tn-inscribed-list"><div class="tn-inscribed-title">EQUIPOS INSCRITOS</div>${teamRows}</div>` : ''}
       ${isAdmin() ? `<div class="tn-admin-actions">

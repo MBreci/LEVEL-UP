@@ -1453,6 +1453,8 @@ footer{padding:48px 64px;border-top:var(--b1)}
 .team-mgmt-section{background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-top:none;padding:16px 28px}
 .team-mgmt-title{font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--td);margin-bottom:12px}
 .team-invite-input-main{width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.15);color:var(--w);font-size:13px;padding:12px 16px;border-radius:7px;outline:none;transition:border-color .2s;box-sizing:border-box}
+.wa-invite-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:12px 16px;border:none;border-radius:8px;cursor:pointer;font-family:var(--ft);font-weight:700;font-size:11px;letter-spacing:1px;color:#04120a;background:linear-gradient(90deg,#25d366,#12b552);box-shadow:0 4px 16px rgba(37,211,102,0.28);transition:transform .15s,box-shadow .15s}
+.wa-invite-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(37,211,102,0.45)}
 .team-invite-input-main:focus{border-color:rgba(0,255,136,0.4)}
 .team-invite-input-main::placeholder{color:rgba(255,255,255,0.3)}
 
