@@ -2347,17 +2347,27 @@ async function submitNewProfile() {
         + `<br><span style="font-size:10px;opacity:.6">detalle técnico: ${String(detail).replace(/</g,'&lt;').slice(0,160)}</span>`;
       return;
     }
+    // La cuenta YA quedó creada en la nube. A partir de aquí NADA debe poder
+    // mostrar "error inesperado": si localStorage falla (modo incógnito, WebView
+    // restringido, cuota llena) lo ignoramos y seguimos, porque la cuenta existe
+    // y el usuario puede iniciar sesión igual.
     profiles[profile.id] = profile;
-    saveProfiles();
-    setCurrentProfile(profile.id);
-    closeAuth();
+    let localOk = true;
+    try { saveProfiles(); setCurrentProfile(profile.id); } catch (e) { localOk = false; }
+    try { closeAuth(); } catch (e) {}
+    if (!localOk) {
+      // No pudimos guardar la sesión localmente, pero la cuenta SÍ se creó.
+      errorEl.innerHTML = '¡Tu cuenta se creó! Pero este navegador no permite guardar la sesión '
+        + '(suele pasar en modo incógnito o dentro de apps). Ábrelo en tu navegador normal '
+        + '(Chrome/Safari) e inicia sesión con tu apodo y contraseña.';
+      return;
+    }
     if (getCurrentPage() === 'index.html') {
       // Recién creada la cuenta: si lo invitaron a un equipo, lo llevamos directo a la invitación.
-      if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; }
+      try { if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; } } catch (e) {}
       location.href = 'dashboard.html'; return;
     }
-    renderAll();
-    checkPendingTeamJoin();
+    try { renderAll(); checkPendingTeamJoin(); } catch (e) {}
   } catch (e) {
     const det = (e && (e.message || e.name)) || 'sin detalle';
     errorEl.innerHTML = 'Ocurrió un error inesperado. Revisa tu conexión e inténtalo de nuevo.'
