@@ -3868,6 +3868,7 @@ async function syncTeamMatchesFromCloud() {
 
 const CANCHAS_REGISTRADAS = [
   'Arena 170',
+  'Futboleros 170',
 ];
 
 function getTeamOVR(team) {
@@ -3901,6 +3902,14 @@ function invitarEquipoWhatsApp(teamId) {
     `Luego búscame (${yo}) o busca a *${nombre}* para unirte a mi equipo. ¡Te espero! 🔥`;
   abrirWhatsApp(msg);
 }
+// Link de ubicación que funciona en PC (maps.google.com) y celular (abre la app Maps).
+function tnMapsUrl(t) {
+  const d = (t && t.direccion || '').trim();
+  if (/^https?:\/\//i.test(d)) return d; // si pegaron un link de Maps, se usa directo
+  const q = encodeURIComponent(d || (t && t.cancha) || 'cancha');
+  return 'https://www.google.com/maps/search/?api=1&query=' + q;
+}
+
 function invitarTorneoWhatsApp(torneoId) {
   const t = (torneoId && loadTournaments()[torneoId]) || null;
   const nombreTorneo = (t && t.nombre) || 'Torneo de Apertura';
@@ -5801,6 +5810,7 @@ function crearTorneo() {
   const horaInicio = document.getElementById('tn-hora-inicio').value;
   const horaFin = document.getElementById('tn-hora-fin').value;
   const cancha = document.getElementById('tn-cancha').value;
+  const direccion = (document.getElementById('tn-direccion').value || '').trim();
   const valor = parseInt(document.getElementById('tn-valor').value) || 0;
   const premio1 = (document.getElementById('tn-premio1').value || '').trim();
   const premio2 = (document.getElementById('tn-premio2').value || '').trim();
@@ -5820,7 +5830,7 @@ function crearTorneo() {
   const tournaments = loadTournaments();
   const id = 'tn_' + Date.now();
   tournaments[id] = {
-    id, nombre, fecha, horaInicio, horaFin, cancha, valorInscripcion: valor,
+    id, nombre, fecha, horaInicio, horaFin, cancha, direccion, valorInscripcion: valor,
     premio, premio1, premio2, premio3, obs,
     createdBy: state.id, status: 'abierto', teams: [], createdAt: Date.now()
   };
@@ -5959,6 +5969,15 @@ function renderTorneoCard(t, role) {
           ` : `<div class="tn-card-prize-val">${t.premio || ''}</div>`}
         </div>
       </div>
+      ${(t.cancha || t.direccion) ? `
+        <a class="tn-loc" href="${tnMapsUrl(t)}" target="_blank" rel="noopener">
+          <div class="tn-loc-pin"><span class="tn-loc-ping"></span>📍</div>
+          <div class="tn-loc-info">
+            <div class="tn-loc-name">${t.cancha || 'Ubicación del torneo'}</div>
+            ${t.direccion ? `<div class="tn-loc-addr">${t.direccion.replace(/^https?:\/\/\S+$/i, 'Ver ubicación en el mapa')}</div>` : ''}
+          </div>
+          <div class="tn-loc-cta">VER UBICACIÓN ›</div>
+        </a>` : ''}
       ${t.obs ? `<div class="tn-card-obs">${t.obs}</div>` : ''}
       <div class="tn-card-footer">
         <div class="tn-teams-count">${teams.length} equipo${teams.length !== 1 ? 's' : ''} inscrito${teams.length !== 1 ? 's' : ''}</div>

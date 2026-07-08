@@ -2019,6 +2019,17 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .tn-card-prize-val{font-family:var(--ft);font-size:13px;font-weight:700;color:rgba(255,170,0,0.95);text-shadow:0 0 14px rgba(255,170,0,0.4);max-width:220px;text-align:right}
 .tn-card-prize-2{font-family:var(--fb);font-size:11px;color:rgba(220,230,255,0.6);max-width:220px;text-align:right;margin-top:3px}
 .tn-card-obs{margin:16px 28px 0;font-size:12px;color:rgba(210,220,255,0.55);line-height:1.6;padding:12px;border-left:2px solid rgba(255,255,255,0.08);white-space:pre-line}
+/* Bloque de ubicación clickeable + animación de pin */
+.tn-loc{display:flex;align-items:center;gap:14px;margin:16px 28px 0;padding:14px 16px;border-radius:12px;text-decoration:none;
+  background:linear-gradient(120deg,rgba(0,255,136,0.08),rgba(34,211,238,0.06));border:1px solid rgba(0,255,136,0.2);transition:transform .15s,border-color .2s,box-shadow .2s}
+.tn-loc:hover{transform:translateY(-2px);border-color:rgba(0,255,136,0.5);box-shadow:0 8px 26px rgba(0,255,136,0.14)}
+.tn-loc-pin{position:relative;font-size:22px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(0,255,136,.5))}
+.tn-loc-ping{position:absolute;top:50%;left:50%;width:34px;height:34px;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(0,255,136,0.6);animation:tnPing 1.8s ease-out infinite}
+@keyframes tnPing{0%{transform:translate(-50%,-50%) scale(.4);opacity:.9}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+.tn-loc-info{flex:1;min-width:0}
+.tn-loc-name{font-family:var(--ft);font-size:12px;letter-spacing:1px;color:var(--w)}
+.tn-loc-addr{font-size:11px;color:rgba(210,220,255,0.55);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tn-loc-cta{font-family:var(--ft);font-size:9px;letter-spacing:1px;color:var(--g);white-space:nowrap;flex-shrink:0}
 .tn-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 28px 24px}
 .tn-teams-count{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,220,255,0.4)}
 .tn-inscribir-btn{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:1.5px;padding:12px 22px;background:rgba(0,255,136,0.1);color:var(--g);border:1.5px solid rgba(0,255,136,0.4);cursor:pointer;border-radius:4px;transition:all .2s}
