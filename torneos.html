@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783483036">
+<link rel="stylesheet" href="style.css?v=1783483931">
 </head>
 <body>
 
@@ -97,12 +97,20 @@
             <input class="tn-input" id="tn-valor" type="number" min="0" placeholder="Ej: 50000">
           </div>
           <div class="tn-field full">
-            <label class="tn-label">PREMIO</label>
-            <input class="tn-input" id="tn-premio" autocomplete="off" placeholder="Ej: $500.000 + Trofeo + Carta Especial" maxlength="120">
+            <label class="tn-label">🥇 PRIMER PREMIO</label>
+            <input class="tn-input" id="tn-premio1" autocomplete="off" placeholder="Ej: $500.000 + Trofeo + Uniforme" maxlength="120">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">🥈 SEGUNDO PREMIO</label>
+            <input class="tn-input" id="tn-premio2" autocomplete="off" placeholder="Ej: $200.000 + Medalla" maxlength="120">
+          </div>
+          <div class="tn-field">
+            <label class="tn-label">🥉 TERCER PREMIO</label>
+            <input class="tn-input" id="tn-premio3" autocomplete="off" placeholder="Ej: $100.000" maxlength="120">
           </div>
           <div class="tn-field full">
             <label class="tn-label">OBSERVACIONES</label>
-            <textarea class="tn-input tn-textarea" id="tn-obs" placeholder="Reglas adicionales, formato del torneo, dress code, etc." maxlength="400"></textarea>
+            <textarea class="tn-input tn-textarea" id="tn-obs" rows="6" placeholder="Reglas, formato, dress code, horarios, lo que quieras... sin límite."></textarea>
           </div>
         </div>
         <div class="tn-form-error" id="tn-form-error"></div>
@@ -135,6 +143,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783483036"></script>
+<script src="app.js?v=1783483931"></script>
 </body>
 </html>

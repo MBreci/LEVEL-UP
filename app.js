@@ -5802,7 +5802,9 @@ function crearTorneo() {
   const horaFin = document.getElementById('tn-hora-fin').value;
   const cancha = document.getElementById('tn-cancha').value;
   const valor = parseInt(document.getElementById('tn-valor').value) || 0;
-  const premio = (document.getElementById('tn-premio').value || '').trim();
+  const premio1 = (document.getElementById('tn-premio1').value || '').trim();
+  const premio2 = (document.getElementById('tn-premio2').value || '').trim();
+  const premio3 = (document.getElementById('tn-premio3').value || '').trim();
   const obs = (document.getElementById('tn-obs').value || '').trim();
   const errEl = document.getElementById('tn-form-error');
 
@@ -5810,13 +5812,16 @@ function crearTorneo() {
   if (!fecha) { errEl.textContent = 'La fecha es obligatoria.'; return; }
   if (!horaInicio) { errEl.textContent = 'La hora de inicio es obligatoria.'; return; }
   if (!cancha) { errEl.textContent = 'Selecciona una cancha.'; return; }
-  if (!premio) { errEl.textContent = 'El premio es obligatorio.'; return; }
+  if (!premio1) { errEl.textContent = 'El primer premio es obligatorio.'; return; }
   errEl.textContent = '';
 
+  // premio (texto) se mantiene para compatibilidad con lo ya mostrado.
+  const premio = premio1;
   const tournaments = loadTournaments();
   const id = 'tn_' + Date.now();
   tournaments[id] = {
-    id, nombre, fecha, horaInicio, horaFin, cancha, valorInscripcion: valor, premio, obs,
+    id, nombre, fecha, horaInicio, horaFin, cancha, valorInscripcion: valor,
+    premio, premio1, premio2, premio3, obs,
     createdBy: state.id, status: 'abierto', teams: [], createdAt: Date.now()
   };
   saveTournaments(tournaments);
@@ -5946,8 +5951,12 @@ function renderTorneoCard(t, role) {
           </div>
         </div>
         <div class="tn-card-prize">
-          <div class="tn-card-prize-label">PREMIO</div>
-          <div class="tn-card-prize-val">${t.premio}</div>
+          <div class="tn-card-prize-label">PREMIOS</div>
+          ${(t.premio1 || t.premio2 || t.premio3) ? `
+            ${t.premio1 ? `<div class="tn-card-prize-val">🥇 ${t.premio1}</div>` : ''}
+            ${t.premio2 ? `<div class="tn-card-prize-2">🥈 ${t.premio2}</div>` : ''}
+            ${t.premio3 ? `<div class="tn-card-prize-2">🥉 ${t.premio3}</div>` : ''}
+          ` : `<div class="tn-card-prize-val">${t.premio || ''}</div>`}
         </div>
       </div>
       ${t.obs ? `<div class="tn-card-obs">${t.obs}</div>` : ''}

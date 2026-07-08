@@ -2016,8 +2016,9 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .tn-card-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:rgba(210,220,255,0.55)}
 .tn-card-prize{text-align:right;flex-shrink:0}
 .tn-card-prize-label{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(255,170,0,0.6);margin-bottom:4px}
-.tn-card-prize-val{font-family:var(--ft);font-size:13px;font-weight:700;color:rgba(255,170,0,0.95);text-shadow:0 0 14px rgba(255,170,0,0.4);max-width:200px;text-align:right}
-.tn-card-obs{margin:16px 28px 0;font-size:12px;color:rgba(210,220,255,0.45);font-style:italic;line-height:1.6;padding:12px;border-left:2px solid rgba(255,255,255,0.08)}
+.tn-card-prize-val{font-family:var(--ft);font-size:13px;font-weight:700;color:rgba(255,170,0,0.95);text-shadow:0 0 14px rgba(255,170,0,0.4);max-width:220px;text-align:right}
+.tn-card-prize-2{font-family:var(--fb);font-size:11px;color:rgba(220,230,255,0.6);max-width:220px;text-align:right;margin-top:3px}
+.tn-card-obs{margin:16px 28px 0;font-size:12px;color:rgba(210,220,255,0.55);line-height:1.6;padding:12px;border-left:2px solid rgba(255,255,255,0.08);white-space:pre-line}
 .tn-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 28px 24px}
 .tn-teams-count{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,220,255,0.4)}
 .tn-inscribir-btn{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:1.5px;padding:12px 22px;background:rgba(0,255,136,0.1);color:var(--g);border:1.5px solid rgba(0,255,136,0.4);cursor:pointer;border-radius:4px;transition:all .2s}
