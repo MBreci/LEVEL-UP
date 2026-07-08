@@ -2034,6 +2034,32 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .tn-teams-count{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:rgba(210,220,255,0.4)}
 .tn-inscribir-btn{font-family:var(--ft);font-size:10px;font-weight:700;letter-spacing:1.5px;padding:12px 22px;background:rgba(0,255,136,0.1);color:var(--g);border:1.5px solid rgba(0,255,136,0.4);cursor:pointer;border-radius:4px;transition:all .2s}
 .tn-inscribir-btn:hover{background:rgba(0,255,136,0.18);box-shadow:0 0 20px rgba(0,255,136,0.3)}
+/* ===== Torneo card v2: premium ===== */
+.tn-card{position:relative}
+.tn-card-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,rgba(255,170,0,0),rgba(255,170,0,0.9),rgba(255,0,170,0.8),rgba(255,170,0,0));background-size:200% 100%;animation:tnAccent 5s linear infinite}
+@keyframes tnAccent{0%{background-position:0% 0}100%{background-position:200% 0}}
+.tn-card-head-main{flex:1;min-width:0}
+/* PREMIOS showcase */
+.tn-prizes{margin:20px 28px 0;border-radius:14px;overflow:hidden;border:1px solid rgba(255,170,0,0.22);background:linear-gradient(135deg,rgba(255,170,0,0.1),rgba(255,0,170,0.05) 60%,rgba(2,4,16,0))}
+.tn-prize-main{display:flex;align-items:center;gap:16px;padding:18px 20px;position:relative}
+.tn-prize-main::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 50%,rgba(255,170,0,0.16),transparent 55%);pointer-events:none}
+.tn-prize-trophy{font-size:38px;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(255,170,0,0.55));animation:bpBallFloat 4s ease-in-out infinite}
+.tn-prize-main-txt{min-width:0}
+.tn-prize-label{font-family:var(--ft);font-size:8px;letter-spacing:3px;color:rgba(255,170,0,0.75);margin-bottom:4px}
+.tn-prize-main-val{font-family:var(--ft);font-weight:900;font-size:clamp(18px,2.6vw,26px);line-height:1.05;background:linear-gradient(90deg,#ffe9a8,#ffb300 60%,#ff7ac0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 22px rgba(255,170,0,0.25)}
+.tn-prize-row{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 16px}
+.tn-prize-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(230,236,255,0.8);flex:1 1 200px}
+.tn-prize-medal{font-size:15px;flex-shrink:0}
+/* PRECIOS */
+.tn-price{display:flex;align-items:stretch;margin:16px 28px 0;border-radius:14px;border:1px solid rgba(0,255,136,0.2);background:linear-gradient(135deg,rgba(0,255,136,0.06),rgba(0,255,136,0.01));overflow:hidden}
+.tn-price-col{flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.tn-price-div{width:1px;background:linear-gradient(180deg,transparent,rgba(0,255,136,0.25),transparent);flex-shrink:0}
+.tn-price-k{font-family:var(--ft);font-size:8px;letter-spacing:2px;color:rgba(210,220,255,0.5)}
+.tn-price-v{font-family:var(--ft);font-weight:800;font-size:16px;color:var(--w);display:flex;align-items:baseline;flex-wrap:wrap;gap:8px}
+.tn-price-total{color:var(--g);text-shadow:0 0 14px rgba(0,255,136,0.3)}
+.tn-price-coins{font-family:var(--fb);font-size:11px;font-weight:600;color:rgba(255,200,80,0.9);letter-spacing:0}
+.tn-price-hint{margin-top:6px;font-size:11px;color:rgba(0,255,136,0.75);font-family:var(--fb)}
+@media(max-width:600px){.tn-prizes,.tn-price{margin-left:16px;margin-right:16px}.tn-price{flex-direction:column}.tn-price-div{width:auto;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.25),transparent)}}
 .tn-inscribed-badge{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--g);padding:8px 16px;border:1px solid rgba(0,255,136,0.3);border-radius:20px;background:rgba(0,255,136,0.08)}
 .tn-cta-note{font-size:12px;color:rgba(210,220,255,0.5);line-height:1.5}
 

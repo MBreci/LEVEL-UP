@@ -14,7 +14,7 @@
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1783484757">
+<link rel="stylesheet" href="style.css?v=1783486155">
 </head>
 <body>
 
@@ -93,8 +93,9 @@
             </select>
           </div>
           <div class="tn-field">
-            <label class="tn-label">VALOR DE INSCRIPCIÓN (COP)</label>
-            <input class="tn-input" id="tn-valor" type="number" min="0" placeholder="Ej: 50000">
+            <label class="tn-label">VALOR POR JUGADOR (COP)</label>
+            <input class="tn-input" id="tn-valor" type="number" min="0" placeholder="Ej: 65000" oninput="actualizarPreviewInscripcion()">
+            <div class="tn-price-hint" id="tn-valor-hint">Total por equipo (8 jugadores): —</div>
           </div>
           <div class="tn-field full">
             <label class="tn-label">📍 DIRECCIÓN <span class="auth-note-inline" style="opacity:.6">· La gente podrá abrir la ubicación en Maps</span></label>
@@ -147,6 +148,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783484757"></script>
+<script src="app.js?v=1783486155"></script>
 </body>
 </html>

@@ -5725,6 +5725,19 @@ initApp();
 
 /* ===== TORNEOS ===== */
 
+const TN_TEAM_SIZE = 8; // jugadores por equipo para el cálculo del valor total
+function pesosFmt(n) { return '$' + (Math.round(n || 0)).toLocaleString('es-CO'); }
+
+// Actualiza el hint del formulario mientras el admin escribe el valor por jugador.
+function actualizarPreviewInscripcion() {
+  const hint = document.getElementById('tn-valor-hint');
+  if (!hint) return;
+  const porJugador = parseInt(document.getElementById('tn-valor').value) || 0;
+  if (porJugador <= 0) { hint.textContent = 'Total por equipo (8 jugadores): —'; return; }
+  const total = porJugador * TN_TEAM_SIZE;
+  hint.innerHTML = `${pesosFmt(porJugador)}/jugador · Total equipo: <b>${pesosFmt(total)}</b> · 🪙 ${coinsFmt(total)} coins`;
+}
+
 function isAdmin() {
   return !!(state && state.isAdmin);
 }
@@ -5811,7 +5824,8 @@ function crearTorneo() {
   const horaFin = document.getElementById('tn-hora-fin').value;
   const cancha = document.getElementById('tn-cancha').value;
   const direccion = (document.getElementById('tn-direccion').value || '').trim();
-  const valor = parseInt(document.getElementById('tn-valor').value) || 0;
+  const valorPorJugador = parseInt(document.getElementById('tn-valor').value) || 0;
+  const valor = valorPorJugador * TN_TEAM_SIZE; // total por equipo (8 jugadores)
   const premio1 = (document.getElementById('tn-premio1').value || '').trim();
   const premio2 = (document.getElementById('tn-premio2').value || '').trim();
   const premio3 = (document.getElementById('tn-premio3').value || '').trim();
@@ -5830,7 +5844,8 @@ function crearTorneo() {
   const tournaments = loadTournaments();
   const id = 'tn_' + Date.now();
   tournaments[id] = {
-    id, nombre, fecha, horaInicio, horaFin, cancha, direccion, valorInscripcion: valor,
+    id, nombre, fecha, horaInicio, horaFin, cancha, direccion,
+    valorPorJugador, valorInscripcion: valor,
     premio, premio1, premio2, premio3, obs,
     createdBy: state.id, status: 'abierto', teams: [], createdAt: Date.now()
   };
@@ -5948,10 +5963,27 @@ function renderTorneoCard(t, role) {
     ctaHtml = `<div class="tn-cta-note">Las inscripciones para este torneo están cerradas.</div>`;
   }
 
+  // Precios: valor por jugador y total por equipo (8) + equivalente en coins.
+  const porJugador = t.valorPorJugador || (t.valorInscripcion ? Math.round(t.valorInscripcion / TN_TEAM_SIZE) : 0);
+  const totalEquipo = t.valorInscripcion || (porJugador * TN_TEAM_SIZE);
+  const priceHtml = (porJugador > 0 || totalEquipo > 0) ? `
+    <div class="tn-price">
+      <div class="tn-price-col">
+        <div class="tn-price-k">CUOTA POR JUGADOR</div>
+        <div class="tn-price-v">${pesosFmt(porJugador)}<span class="tn-price-coins">🪙 ${coinsFmt(porJugador)}</span></div>
+      </div>
+      <div class="tn-price-div"></div>
+      <div class="tn-price-col">
+        <div class="tn-price-k">TOTAL POR EQUIPO · 8</div>
+        <div class="tn-price-v tn-price-total">${pesosFmt(totalEquipo)}<span class="tn-price-coins">🪙 ${coinsFmt(totalEquipo)}</span></div>
+      </div>
+    </div>` : '';
+
   return `
     <div class="tn-card">
+      <div class="tn-card-accent"></div>
       <div class="tn-card-header">
-        <div>
+        <div class="tn-card-head-main">
           <div class="tn-card-status ${statusClass}">${statusLabel}</div>
           <div class="tn-card-name">${t.nombre}</div>
           <div class="tn-card-meta">
@@ -5960,15 +5992,22 @@ function renderTorneoCard(t, role) {
             <span>📍 ${t.cancha}</span>
           </div>
         </div>
-        <div class="tn-card-prize">
-          <div class="tn-card-prize-label">PREMIOS</div>
-          ${(t.premio1 || t.premio2 || t.premio3) ? `
-            ${t.premio1 ? `<div class="tn-card-prize-val">🥇 ${t.premio1}</div>` : ''}
-            ${t.premio2 ? `<div class="tn-card-prize-2">🥈 ${t.premio2}</div>` : ''}
-            ${t.premio3 ? `<div class="tn-card-prize-2">🥉 ${t.premio3}</div>` : ''}
-          ` : `<div class="tn-card-prize-val">${t.premio || ''}</div>`}
-        </div>
       </div>
+      ${(t.premio1 || t.premio2 || t.premio3 || t.premio) ? `
+      <div class="tn-prizes">
+        <div class="tn-prize-main">
+          <div class="tn-prize-trophy">🏆</div>
+          <div class="tn-prize-main-txt">
+            <div class="tn-prize-label">PREMIO AL CAMPEÓN</div>
+            <div class="tn-prize-main-val">${t.premio1 || t.premio || ''}</div>
+          </div>
+        </div>
+        ${(t.premio2 || t.premio3) ? `<div class="tn-prize-row">
+          ${t.premio2 ? `<div class="tn-prize-chip"><span class="tn-prize-medal">🥈</span><span>${t.premio2}</span></div>` : ''}
+          ${t.premio3 ? `<div class="tn-prize-chip"><span class="tn-prize-medal">🥉</span><span>${t.premio3}</span></div>` : ''}
+        </div>` : ''}
+      </div>` : ''}
+      ${priceHtml}
       ${(t.cancha || t.direccion) ? `
         <a class="tn-loc" href="${tnMapsUrl(t)}" target="_blank" rel="noopener">
           <div class="tn-loc-pin"><span class="tn-loc-ping"></span>📍</div>
