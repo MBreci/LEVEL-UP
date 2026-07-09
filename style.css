@@ -437,13 +437,15 @@ section{padding:64px;border-bottom:var(--b1)}
 
 /* ===== CARDS PREMIUM MEJORADAS ===== */
 .bp-card-header{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.bp-card-header-left{display:flex;flex-direction:column;gap:4px}
+.bp-card-header-left{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
 .bp-card-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
-.bp-card-zona{font-size:11px;color:var(--td)}
+.bp-card-zona{font-size:11px;color:var(--td);text-decoration:none;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;word-break:break-word;transition:color .15s}
+.bp-card-zona:hover{color:var(--g)}
+.bp-zona-ver{font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--g);border:1px solid rgba(0,255,136,0.35);border-radius:20px;padding:2px 8px;white-space:nowrap}
 .bp-card-pills{position:relative;z-index:1;display:flex;gap:6px;flex-wrap:wrap}
 .bp-pill{font-family:var(--ft);font-size:8px;letter-spacing:0.8px;color:var(--tm);background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);padding:5px 9px;border-radius:20px;white-space:nowrap}
 .bp-cupos-wrap{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px}
-.bp-cupos-label{display:flex;justify-content:space-between;font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--td)}
+.bp-cupos-label{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;font-family:var(--ft);font-size:8px;letter-spacing:1px;color:var(--td)}
 .bp-faltan{color:var(--f)}
 .bp-lleno{color:var(--g)}
 .bp-urgency-badge{font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:4px 10px;border-radius:20px;white-space:nowrap}

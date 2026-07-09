@@ -3312,6 +3312,26 @@ function buildDeleteMatchButton(m) {
   return `<div class="bp-cancel-locked">⚠️ No puedes eliminar este partido porque inicia en menos de 24 horas.</div>`;
 }
 
+// Limpia la dirección para MOSTRAR: quita cualquier URL pegada (y sus paréntesis),
+// para que no se vea el link crudo de Google Maps dentro de la tarjeta.
+function cleanDireccionDisplay(d) {
+  if (!d) return '';
+  return String(d)
+    .replace(/\(?\s*https?:\/\/\S+\s*\)?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/[·,\s]+$/, '')
+    .trim();
+}
+// URL de mapa para un partido: si la dirección trae un link, se usa; si no, se arma
+// una búsqueda de Google Maps (funciona en PC y celular).
+function matchMapsUrl(m) {
+  const d = (m && m.direccion || '').trim();
+  const urlMatch = d.match(/https?:\/\/\S+/i);
+  if (urlMatch) return urlMatch[0].replace(/[)\s]+$/, '');
+  const q = encodeURIComponent(cleanDireccionDisplay(d) || (m && m.cancha) || (m && m.zona) || 'cancha');
+  return 'https://www.google.com/maps/search/?api=1&query=' + q;
+}
+
 function buildMatchCard(m, mode) {
   const estado = getMatchEstado(m);
   const info = ESTADO_INFO[estado];
@@ -3339,7 +3359,7 @@ function buildMatchCard(m, mode) {
       <div class="bp-card-header">
         <div class="bp-card-header-left">
           <div class="bp-card-cancha">${m.cancha || 'CANCHA POR CONFIRMAR'}</div>
-          <div class="bp-card-zona">📍 ${m.zona}${m.direccion ? ' · ' + m.direccion : ''}</div>
+          <a class="bp-card-zona" href="${matchMapsUrl(m)}" target="_blank" rel="noopener">📍 ${m.zona}${cleanDireccionDisplay(m.direccion) ? ' · ' + cleanDireccionDisplay(m.direccion) : ''} <span class="bp-zona-ver">Ver ›</span></a>
         </div>
         <div class="bp-card-header-right">
           <div class="bp-estado-badge ${info.cls}">${info.label}</div>
