@@ -1893,7 +1893,10 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 .ld-imagine-card:hover{transform:translateY(-4px)}
 .ld-imagine-card.g:hover{border-color:rgba(0,255,136,0.45);box-shadow:0 12px 40px -10px rgba(0,255,136,0.3)}
 .ld-imagine-card.f:hover{border-color:rgba(255,0,170,0.45);box-shadow:0 12px 40px -10px rgba(255,0,170,0.3)}
-.ld-ic-icon{font-size:28px;margin-bottom:14px;display:block}
+.ld-ic-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid}
+.ld-ic-icon svg{width:24px;height:24px;filter:drop-shadow(0 0 5px currentColor)}
+.ld-imagine-card.g .ld-ic-icon{color:var(--g);border-color:rgba(0,255,136,0.28);background:linear-gradient(145deg,rgba(0,255,136,0.1),rgba(0,255,136,0.02))}
+.ld-imagine-card.f .ld-ic-icon{color:var(--f);border-color:rgba(255,0,170,0.28);background:linear-gradient(145deg,rgba(255,0,170,0.1),rgba(255,0,170,0.02))}
 .ld-ic-text{font-size:14px;color:rgba(210,220,255,0.8);line-height:1.65;font-weight:300}
 .ld-imagine-cta{text-align:center;margin-top:8px}
 
