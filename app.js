@@ -2579,8 +2579,9 @@ const CATEGORIAS_CANCHA = [
 
 const SUPERFICIES = [
   { id: 'SINTÉTICA', label: 'SINTÉTICA', disponible: true },
-  { id: 'NATURAL', label: 'NATURAL', disponible: true },
+  { id: 'NATURAL', label: 'CÉSPED', disponible: true },
   { id: 'CEMENTO', label: 'CEMENTO', disponible: true },
+  { id: 'LISA', label: 'LISA', disponible: true },
 ];
 
 function formatHoraLabel(hora24) {
