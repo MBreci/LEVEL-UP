@@ -410,18 +410,18 @@ function makeProfile({ name, position, team, nickname, email, gender, passwordHa
 }
 
 function loadProfiles() {
-  try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; } catch { return {}; }
+  try { return JSON.parse(LS.getItem(PROFILES_KEY)) || {}; } catch { return {}; }
 }
 
 function saveProfiles() {
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  LS.setItem(PROFILES_KEY, JSON.stringify(profiles));
 }
 
 let profiles = loadProfiles();
 let state = null;
 
 function setCurrentProfile(id) {
-  localStorage.setItem(CURRENT_KEY, id);
+  LS.setItem(CURRENT_KEY, id);
   state = profiles[id];
 }
 
@@ -432,7 +432,7 @@ function saveState() {
 }
 
 function loadCurrentProfile() {
-  const id = localStorage.getItem(CURRENT_KEY);
+  const id = LS.getItem(CURRENT_KEY);
   if (id && profiles[id]) {
     state = profiles[id];
     return true;
@@ -1652,7 +1652,7 @@ function goToHome(e) {
 
 function logout() {
   state = null;
-  localStorage.removeItem(CURRENT_KEY);
+  LS.removeItem(CURRENT_KEY);
   document.querySelectorAll('.dropdown-menu.open').forEach(d => d.classList.remove('open'));
   location.href = 'index.html';
 }
@@ -2177,8 +2177,8 @@ async function submitLogin() {
     if (getCurrentPage() === 'index.html') {
       try { if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; } } catch (e) {}
       let pendingMatch = null;
-      try { pendingMatch = localStorage.getItem('levelup_pending_match'); } catch (e) {}
-      if (pendingMatch) { try { localStorage.removeItem('levelup_pending_match'); } catch (e) {} location.href = 'buscar-partido.html?p=' + pendingMatch; }
+      try { pendingMatch = LS.getItem('levelup_pending_match'); } catch (e) {}
+      if (pendingMatch) { try { LS.removeItem('levelup_pending_match'); } catch (e) {} location.href = 'buscar-partido.html?p=' + pendingMatch; }
       else { location.href = 'dashboard.html'; }
       return;
     }
@@ -2283,7 +2283,7 @@ function deleteProfile(id) {
   deleteProfileFromCloud(id);
   if (state && state.id === id) {
     state = null;
-    localStorage.removeItem(CURRENT_KEY);
+    LS.removeItem(CURRENT_KEY);
   }
   if (!state) openAuth(true);
 }
@@ -2475,16 +2475,16 @@ function closeAuth() {
 /* ===== BUSCAR PARTIDO ===== */
 
 function loadOpenMatches() {
-  try { return JSON.parse(localStorage.getItem(MATCHES_KEY)) || []; } catch { return []; }
+  try { return JSON.parse(LS.getItem(MATCHES_KEY)) || []; } catch { return []; }
 }
 function saveOpenMatches() {
-  localStorage.setItem(MATCHES_KEY, JSON.stringify(openMatches));
+  LS.setItem(MATCHES_KEY, JSON.stringify(openMatches));
 }
 function loadSavedMatches() {
-  try { return JSON.parse(localStorage.getItem(SAVED_MATCHES_KEY)) || []; } catch { return []; }
+  try { return JSON.parse(LS.getItem(SAVED_MATCHES_KEY)) || []; } catch { return []; }
 }
 function saveSavedMatches() {
-  localStorage.setItem(SAVED_MATCHES_KEY, JSON.stringify(savedMatchIds));
+  LS.setItem(SAVED_MATCHES_KEY, JSON.stringify(savedMatchIds));
 }
 
 let openMatches = loadOpenMatches();
@@ -3224,10 +3224,10 @@ const FREE_MATCH_XP_GIVEN_KEY = 'levelup_fmxp_given';
 
 async function grantFreeMatchXP(match) {
   // Idempotencia: no dar XP dos veces al mismo partido
-  const given = JSON.parse(localStorage.getItem(FREE_MATCH_XP_GIVEN_KEY) || '[]');
+  const given = JSON.parse(LS.getItem(FREE_MATCH_XP_GIVEN_KEY) || '[]');
   if (given.includes(match.id)) return;
   given.push(match.id);
-  localStorage.setItem(FREE_MATCH_XP_GIVEN_KEY, JSON.stringify(given));
+  LS.setItem(FREE_MATCH_XP_GIVEN_KEY, JSON.stringify(given));
 
   // Verificar que el partido estuvo completo (todos los cupos llenos)
   const totalCupos = (match.necesita || []).reduce((s, n) => s + (n.cupos || 0), 0);
@@ -3815,10 +3815,10 @@ function renderMiParticipacionTimeline() {
 /* ===== INVITACIONES (jugadores ya registrados en este dispositivo) ===== */
 
 function loadInvites() {
-  try { return JSON.parse(localStorage.getItem(INVITES_KEY)) || []; } catch { return []; }
+  try { return JSON.parse(LS.getItem(INVITES_KEY)) || []; } catch { return []; }
 }
 function saveInvites() {
-  localStorage.setItem(INVITES_KEY, JSON.stringify(invites));
+  LS.setItem(INVITES_KEY, JSON.stringify(invites));
 }
 
 let invites = loadInvites();
@@ -3834,12 +3834,12 @@ const TEAM_INVITES_KEY = 'levelup_team_invites';
 const CHALLENGES_KEY = 'levelup_challenges';
 const TEAM_MATCHES_KEY = 'levelup_team_matches';
 
-function loadTeams() { try { return JSON.parse(localStorage.getItem(TEAMS_KEY)) || {}; } catch { return {}; } }
-function saveTeams() { localStorage.setItem(TEAMS_KEY, JSON.stringify(teams)); }
+function loadTeams() { try { return JSON.parse(LS.getItem(TEAMS_KEY)) || {}; } catch { return {}; } }
+function saveTeams() { LS.setItem(TEAMS_KEY, JSON.stringify(teams)); }
 let teams = loadTeams();
 
-function loadTeamInvites() { try { return JSON.parse(localStorage.getItem(TEAM_INVITES_KEY)) || []; } catch { return []; } }
-function saveTeamInvites() { localStorage.setItem(TEAM_INVITES_KEY, JSON.stringify(teamInvites)); }
+function loadTeamInvites() { try { return JSON.parse(LS.getItem(TEAM_INVITES_KEY)) || []; } catch { return []; } }
+function saveTeamInvites() { LS.setItem(TEAM_INVITES_KEY, JSON.stringify(teamInvites)); }
 let teamInvites = loadTeamInvites();
 
 function teamInviteToRow(i) {
@@ -3871,12 +3871,12 @@ async function syncTeamInvitesFromCloud() {
   saveTeamInvites();
 }
 
-function loadChallenges() { try { return JSON.parse(localStorage.getItem(CHALLENGES_KEY)) || []; } catch { return []; } }
-function saveChallenges() { localStorage.setItem(CHALLENGES_KEY, JSON.stringify(challenges)); }
+function loadChallenges() { try { return JSON.parse(LS.getItem(CHALLENGES_KEY)) || []; } catch { return []; } }
+function saveChallenges() { LS.setItem(CHALLENGES_KEY, JSON.stringify(challenges)); }
 let challenges = loadChallenges();
 
-function loadTeamMatches() { try { return JSON.parse(localStorage.getItem(TEAM_MATCHES_KEY)) || []; } catch { return []; } }
-function saveTeamMatches() { localStorage.setItem(TEAM_MATCHES_KEY, JSON.stringify(teamMatches)); }
+function loadTeamMatches() { try { return JSON.parse(LS.getItem(TEAM_MATCHES_KEY)) || []; } catch { return []; } }
+function saveTeamMatches() { LS.setItem(TEAM_MATCHES_KEY, JSON.stringify(teamMatches)); }
 let teamMatches = loadTeamMatches();
 
 function teamToRow(t) {
@@ -4361,7 +4361,7 @@ function capturePendingTeamJoin() {
     if (!teamId) return;
     const slot = qs.get('slot');
     const from = qs.get('from');
-    localStorage.setItem(PENDING_JOIN_KEY, JSON.stringify({
+    LS.setItem(PENDING_JOIN_KEY, JSON.stringify({
       teamId,
       slotIndex: (slot != null && slot !== '') ? parseInt(slot) : null,
       captainId: from || null,
@@ -4369,8 +4369,8 @@ function capturePendingTeamJoin() {
     }));
   } catch (e) {}
 }
-function loadPendingTeamJoin() { try { return JSON.parse(localStorage.getItem(PENDING_JOIN_KEY) || 'null'); } catch (e) { return null; } }
-function clearPendingTeamJoin() { try { localStorage.removeItem(PENDING_JOIN_KEY); } catch (e) {} }
+function loadPendingTeamJoin() { try { return JSON.parse(LS.getItem(PENDING_JOIN_KEY) || 'null'); } catch (e) { return null; } }
+function clearPendingTeamJoin() { try { LS.removeItem(PENDING_JOIN_KEY); } catch (e) {} }
 
 // Verifica si hay una invitación pendiente por enlace y actúa según haya sesión o no.
 async function checkPendingTeamJoin() {
@@ -5974,7 +5974,7 @@ function initApp() {
   const PUBLIC_PAGES = ['index.html', 'privacidad.html'];
   if (!state && !PUBLIC_PAGES.includes(page)) {
     const sharedP = new URLSearchParams(location.search).get('p');
-    if (sharedP) localStorage.setItem('levelup_pending_match', sharedP);
+    if (sharedP) LS.setItem('levelup_pending_match', sharedP);
     location.href = 'index.html'; return;
   }
   // Todos (fundadores y nuevos) entran al panel completo. La única diferencia es
@@ -6081,11 +6081,11 @@ function isAdmin() {
 }
 
 function loadTournaments() {
-  try { return JSON.parse(localStorage.getItem('levelup_tournaments') || '{}'); } catch(e) { return {}; }
+  try { return JSON.parse(LS.getItem('levelup_tournaments') || '{}'); } catch(e) { return {}; }
 }
 
 function saveTournaments(t) {
-  localStorage.setItem('levelup_tournaments', JSON.stringify(t));
+  LS.setItem('levelup_tournaments', JSON.stringify(t));
 }
 
 // ===== Torneos en la nube: todos ven los mismos torneos que crea el admin =====
@@ -6592,7 +6592,7 @@ function setAudioUI(playing) {
 }
 
 document.addEventListener('click', function startAudio() {
-  if (localStorage.getItem(AUDIO_MUTED_KEY) === '1') { document.removeEventListener('click', startAudio); return; }
+  if (LS.getItem(AUDIO_MUTED_KEY) === '1') { document.removeEventListener('click', startAudio); return; }
   aud.volume = 0.35;
   aud.play().then(() => {
     audPlaying = true;
@@ -6605,11 +6605,11 @@ function toggleAudio() {
   if (audPlaying) {
     aud.pause();
     audPlaying = false;
-    localStorage.setItem(AUDIO_MUTED_KEY, '1');
+    LS.setItem(AUDIO_MUTED_KEY, '1');
   } else {
     aud.play();
     audPlaying = true;
-    localStorage.setItem(AUDIO_MUTED_KEY, '0');
+    LS.setItem(AUDIO_MUTED_KEY, '0');
   }
   setAudioUI(audPlaying);
 }
@@ -7502,8 +7502,8 @@ async function adminSetTicketStatus(id, status) {
 
 // ===== "MIS MENSAJES": el usuario ve la respuesta del admin (mostrado como LEVEL UP) =====
 const FB_SEEN_KEY = 'levelup_fb_seen';
-function fbLoadSeen() { try { return JSON.parse(localStorage.getItem(FB_SEEN_KEY) || '{}'); } catch (e) { return {}; } }
-function fbSaveSeen(m) { try { localStorage.setItem(FB_SEEN_KEY, JSON.stringify(m)); } catch (e) {} }
+function fbLoadSeen() { try { return JSON.parse(LS.getItem(FB_SEEN_KEY) || '{}'); } catch (e) { return {}; } }
+function fbSaveSeen(m) { try { LS.setItem(FB_SEEN_KEY, JSON.stringify(m)); } catch (e) {} }
 
 async function fetchMyTickets() {
   if (!sb || typeof state === 'undefined' || !state) return [];

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="storage-shim.js?v=1783983953"></script>
+<script src="storage-shim.js?v=1783984523"></script>
 <title>ADMIN PARTIDO · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -494,7 +494,7 @@ table.ap-stats-table{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1783983953"></script>
+<script src="app.js?v=1783984523"></script>
 <script>
 // ====================== ADMIN PARTIDO PAGE ======================
 let _apMatchId = null;
@@ -729,7 +729,7 @@ function apUpdateNotesCount() {
 function apSaveDraft() {
   if (!_apMatchId) return;
   const draft = { stats: _apStats, mvpId: _apMvpId, timerSecs: _apTimerSecs, events: _apEvents, notes: (document.getElementById('ap-notes') || {}).value || '' };
-  localStorage.setItem('ap_draft_' + _apMatchId, JSON.stringify(draft));
+  LS.setItem('ap_draft_' + _apMatchId, JSON.stringify(draft));
   const lbl = document.getElementById('ap-autosave-lbl');
   const now = new Date();
   if (lbl) lbl.textContent = 'Guardado: ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
@@ -738,7 +738,7 @@ function apSaveDraft() {
 function apLoadDraft() {
   if (!_apMatchId) return;
   try {
-    const raw = localStorage.getItem('ap_draft_' + _apMatchId);
+    const raw = LS.getItem('ap_draft_' + _apMatchId);
     if (!raw) return;
     const draft = JSON.parse(raw);
     Object.assign(_apStats, draft.stats || {});
@@ -890,7 +890,7 @@ async function apFinalizeMatch() {
   if (typeof pushTeamToCloud === 'function') { pushTeamToCloud(_apTeamA); pushTeamToCloud(_apTeamB); }
 
   // Clear draft
-  localStorage.removeItem('ap_draft_' + _apMatchId);
+  LS.removeItem('ap_draft_' + _apMatchId);
 
   if (_apTimerRunning) clearInterval(_apTimer);
   alert('✅ Estadísticas enviadas y cartas actualizadas.');
