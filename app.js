@@ -7566,7 +7566,11 @@ function openMatchChat(matchId) {
   initMatchChatUI();
   const match = (typeof openMatches !== 'undefined' ? openMatches : []).find(m => m.id === matchId);
   _chatMatchId = matchId;
-  _chatLastCount = 0;
+  // Limpia el chat anterior: si no, un partido con chat vacío mostraría los
+  // mensajes del último chat abierto (la guardia de re-render lo daba por "igual").
+  _chatLastCount = -1;
+  const _body = document.getElementById('mchat-body');
+  if (_body) { _body.innerHTML = ''; _body.dataset.rendered = '0'; }
   const isPart = match && typeof matchParticipantIds === 'function' && matchParticipantIds(match).has(state.id);
   document.getElementById('mchat-sub').textContent = match ? (match.cancha || match.zona || '') : '';
   document.getElementById('mchat-modal').classList.add('open');
