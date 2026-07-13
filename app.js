@@ -2128,13 +2128,22 @@ async function submitLogin() {
   errorEl.textContent = '';
   btn.disabled = true;
   btn.textContent = 'VERIFICANDO...';
+  // Salvavidas: pase lo que pase, el botón se reactiva a los 10s para que NUNCA
+  // quede "pegado" en VERIFICANDO (típico en celulares con red intermitente).
+  const _watchdog = setTimeout(() => {
+    if (btn.disabled) {
+      btn.disabled = false;
+      btn.textContent = 'INICIAR SESIÓN';
+      if (!errorEl.textContent) errorEl.textContent = 'La conexión está lenta. Revisa tu internet (o desactiva VPN/ahorro de datos) e inténtalo otra vez.';
+    }
+  }, 10000);
   try {
     // Login por función segura: el hash se compara en el servidor, nunca sale de la base.
     const hash = await hashPassword(password);
     let profile = null;
     if (sb) {
       try {
-        const { data } = await withTimeout(sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash }), 12000, 'login');
+        const { data } = await withTimeout(sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash }), 8000, 'login');
         if (data) profile = rowToProfile(data);
       } catch (e) {
         errorEl.textContent = 'No pudimos conectar con el servidor. Revisa tu internet o desactiva bloqueadores/VPN e inténtalo de nuevo.';
@@ -2148,22 +2157,38 @@ async function submitLogin() {
       errorEl.textContent = 'Nombre/apodo o contraseña incorrectos.';
       return;
     }
+    // Verificación OK. Guardar la sesión NO debe poder tumbar el login en silencio:
+    // si el navegador no deja escribir (Safari con privacidad estricta, almacenamiento
+    // lleno), avisamos claro en vez de dejar todo "como si nada".
     profiles[profile.id] = profile;
-    saveProfiles();
-    setCurrentProfile(profile.id);
-    closeAuth();
-    document.getElementById('login-id').value = '';
-    document.getElementById('login-password').value = '';
+    let sessionOk = true;
+    try { saveProfiles(); setCurrentProfile(profile.id); } catch (e) { sessionOk = false; }
+    if (!sessionOk) {
+      errorEl.innerHTML = 'Tu usuario y contraseña son correctos, pero este navegador no permite guardar la sesión '
+        + '(suele ser el modo privado o los ajustes de privacidad de Safari). Desactiva la navegación privada, '
+        + 'o abre la página en Chrome, e inténtalo de nuevo.';
+      return;
+    }
+    try { closeAuth(); } catch (e) {}
+    try {
+      document.getElementById('login-id').value = '';
+      document.getElementById('login-password').value = '';
+    } catch (e) {}
     if (getCurrentPage() === 'index.html') {
-      if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; }
-      const pendingMatch = localStorage.getItem('levelup_pending_match');
-      if (pendingMatch) { localStorage.removeItem('levelup_pending_match'); location.href = 'buscar-partido.html?p=' + pendingMatch; }
+      try { if (loadPendingTeamJoin()) { location.href = 'equipos.html#crear'; return; } } catch (e) {}
+      let pendingMatch = null;
+      try { pendingMatch = localStorage.getItem('levelup_pending_match'); } catch (e) {}
+      if (pendingMatch) { try { localStorage.removeItem('levelup_pending_match'); } catch (e) {} location.href = 'buscar-partido.html?p=' + pendingMatch; }
       else { location.href = 'dashboard.html'; }
       return;
     }
-    renderAll();
-    checkPendingTeamJoin();
+    try { renderAll(); checkPendingTeamJoin(); } catch (e) {}
+  } catch (e) {
+    const det = (e && (e.message || e.name)) || 'sin detalle';
+    errorEl.innerHTML = 'No pudimos completar el inicio de sesión. Inténtalo de nuevo.'
+      + `<br><span style="font-size:10px;opacity:.6">detalle técnico: ${String(det).replace(/</g, '&lt;').slice(0, 160)}</span>`;
   } finally {
+    clearTimeout(_watchdog);
     btn.disabled = false;
     btn.textContent = 'INICIAR SESIÓN';
   }
