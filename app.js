@@ -2530,7 +2530,14 @@ async function syncOpenMatchesFromCloud() {
   const { data, error } = await sb.from('open_matches').select('*');
   if (error || !data) { console.error('Error sincronizando partidos:', error && error.message); return; }
   const cloudIds = new Set(data.map(r => r.id));
-  openMatches = openMatches.filter(m => cloudIds.has(m.id) || m.creatorId === (state && state.id));
+  // Conserva un partido local solo si está en la nube, o si LO CREÉ YO y es muy
+  // reciente (aún no ha terminado de subir). Así, un partido que borré/cancelé
+  // en la nube SÍ desaparece de mi dispositivo (antes se quedaba para siempre).
+  const RECENT_MS = 3 * 60 * 1000;
+  openMatches = openMatches.filter(m =>
+    cloudIds.has(m.id) ||
+    (m.creatorId === (state && state.id) && (Date.now() - (m.createdAt || 0)) < RECENT_MS)
+  );
   data.forEach(row => {
     const existing = openMatches.find(m => m.id === row.id);
     if (existing) Object.assign(existing, rowToMatch(row));
