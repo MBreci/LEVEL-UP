@@ -57,3 +57,16 @@
     try { window.__LEVELUP_STORAGE_FALLBACK__ = true; } catch (e) {}
   }
 })();
+
+/* Modo seguro (diagnóstico/rescate GPU): levelupp.com.co/?safe lo activa y queda
+   guardado; ?nosafe lo apaga. Apaga TODO efecto visual costoso vía CSS .safe-mode. */
+(function () {
+  try {
+    var sp = new URLSearchParams(location.search);
+    if (sp.has('safe')) window.LS.setItem('levelup_safe_mode', '1');
+    if (sp.has('nosafe')) window.LS.removeItem('levelup_safe_mode');
+    if (window.LS.getItem('levelup_safe_mode') === '1' && document.documentElement) {
+      document.documentElement.classList.add('safe-mode');
+    }
+  } catch (e) {}
+})();

@@ -3646,3 +3646,20 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
    ============================================================ */
 *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .hero-beams,.hero-bg-smoke,.sec-cine-smoke,body::after,.hero::after{mix-blend-mode:normal!important}
+
+/* ============================================================
+   MODO SEGURO (html.safe-mode): rescate para gráficas que se
+   corrompen. Apaga TODA animación, transición, filtro, sombra,
+   blend y fondo decorativo. Página plana y estática.
+   Activar: ?safe   ·   Desactivar: ?nosafe
+   ============================================================ */
+html.safe-mode *,html.safe-mode *::before,html.safe-mode *::after{
+  animation:none!important;transition:none!important;
+  filter:none!important;-webkit-filter:none!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  mix-blend-mode:normal!important;box-shadow:none!important;text-shadow:none!important;
+  will-change:auto!important;transform:none!important}
+html.safe-mode .hero-bg-img,html.safe-mode .hero-bg,html.safe-mode .hero-bg-light,
+html.safe-mode body::before,html.safe-mode body::after,html.safe-mode .sec-cine-bg,
+html.safe-mode .sec-cine-scrim,html.safe-mode .ld-manifesto-glow{display:none!important;background:none!important}
+html.safe-mode body{background:#05070d!important}
