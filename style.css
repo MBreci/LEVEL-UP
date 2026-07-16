@@ -101,11 +101,15 @@ a.season-badge:hover{background:rgba(255,102,0,0.24);box-shadow:0 0 18px -4px rg
 .hf-corner.bl{bottom:0;left:0;border-width:0 0 1.5px 1.5px;border-color:rgba(255,0,170,0.45);filter:drop-shadow(0 0 6px rgba(255,0,170,0.5))}
 .hf-corner.br{bottom:0;right:0;border-width:0 1.5px 1.5px 0}
 @media(prefers-reduced-motion:reduce){.hero-bg,.hero-bg-smoke,.hero-bg-light,.hero-bg-img,.hero-beams,.hero::after{animation:none!important;transition:none!important}}
-/* Modo ligero: se activa por JS en equipos con gráfica débil o que van lentos.
-   Apaga las capas decorativas más costosas para la GPU (blend-modes, blurs,
-   partículas) manteniendo el fondo. Evita tirones y artefactos gráficos. */
-.lite-fx .hero-bg-smoke,.lite-fx .hero-beams,.lite-fx .hero-particles,.lite-fx .hero-glow-core,.lite-fx .hero::after,.lite-fx .sec-cine-smoke{display:none!important}
-.lite-fx .hero-bg-img,.lite-fx .hero-bg,.lite-fx .sec-cine-scrim,.lite-fx .sec-cine-bg{animation:none!important;will-change:auto!important}
+/* SEGURIDAD GPU (por defecto para TODOS):
+   Estas capas de pantalla completa usaban mix-blend-mode + blurs + gradientes
+   animados que en gráficas débiles causaban tirones y ARTEFACTOS/cuelgues del
+   driver. Se desactivan globalmente; el landing conserva fondo, luz, marco,
+   paneles flotantes y el título (todo con animaciones baratas de transform).
+   Los equipos potentes no pierden casi nada; los débiles dejan de sufrir. */
+.hero-bg-smoke,.hero-beams,.hero-particles,.hero-glow-core,.hero::after,.sec-cine-smoke{display:none!important}
+.hero-bg-img{animation:none!important;will-change:auto!important}
+.sec-cine-scrim,.sec-cine-bg{animation:none!important;will-change:auto!important}
 
 /* SECTION ATMOSPHERES (sec-cine wrapper shared by all "landing" blocks) */
 .sec-cine{position:relative;overflow:hidden}
