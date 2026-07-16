@@ -2574,6 +2574,9 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   max-width: 480px;
   padding: 28px 24px;
   box-sizing: border-box;
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .ap-header {
   display: flex;
