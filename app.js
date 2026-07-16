@@ -5856,8 +5856,8 @@ function renderTeamMatchesPanel() {
         <span class="thr-info">${m.fecha}${m.hora ? ' · ' + m.hora : ''} · ${m.cancha}</span>
         <span class="thr-rival">${myTeam.name} <span style="color:var(--td);font-size:11px">VS</span> ${rival ? rival.name : 'EQUIPO RIVAL'}</span>
         <span class="thr-badge ${badgeCls}">${resultLabel}</span>
-        ${canFinalize && isAdmin() ? `<button class="mm-admin-btn" onclick="openAdminTeamMatch('${m.id}')">⚙ REGISTRAR</button>` : ''}
-        ${canFinalize && !isAdmin() ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR</button>` : ''}
+        ${(isAdmin() && !finalized) ? `<button class="mm-admin-btn" onclick="openAdminTeamMatch('${m.id}')">⚙ REGISTRAR</button>` : ''}
+        ${(canFinalize && !isAdmin()) ? `<button class="mm-invite-btn" onclick="openFinalizeMatchModal('${m.id}')">FINALIZAR</button>` : ''}
       </div>`;
   };
   el.innerHTML = `
@@ -7456,6 +7456,9 @@ async function submitAdminTeamMatch(matchId) {
 
 /* ============================ SISTEMA DE REPORTES / TICKETS ============================ */
 function initFeedbackWidget() {
+  // La página del partido (admin-partido.html) tiene su propio CSS aislado; el widget
+  // de feedback ahí sale sin estilo y estorba. No se inyecta en esa pantalla.
+  if (typeof getCurrentPage === 'function' && getCurrentPage() === 'admin-partido.html') return;
   if (document.getElementById('fb-fab')) return;
   const adm = (typeof state !== 'undefined' && state && typeof isAdmin === 'function' && isAdmin());
   const box = document.createElement('div');
