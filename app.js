@@ -5974,7 +5974,35 @@ function renderTicker() {
   if (el) el.innerHTML = feed;
 }
 
+// Rendimiento del landing: en equipos con gráfica débil las capas animadas del
+// hero (blend-modes, blurs, partículas) saturan la GPU y causan tirones o
+// artefactos gráficos. Si detectamos poca memoria/reduced-motion, o si medimos
+// pocos FPS, activamos "lite-fx" (apaga esas capas) sin tocar el resto.
+function setupHeroPerf() {
+  var root = document.documentElement;
+  if (!document.querySelector('.hero-bg-smoke')) return; // solo el landing tiene estas capas
+  function lite() { root.classList.add('lite-fx'); }
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { lite(); return; }
+    if (navigator.deviceMemory && navigator.deviceMemory <= 3) { lite(); return; }
+  } catch (e) {}
+  try {
+    var frames = 0, start = performance.now();
+    var step = function (now) {
+      frames++;
+      if (now - start >= 900) {
+        var fps = frames * 1000 / (now - start);
+        if (fps < 45) lite();
+        return;
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  } catch (e) {}
+}
+
 function initApp() {
+  setupHeroPerf();
   capturePendingTeamJoin(); // guarda el enlace de invitación ANTES de cualquier redirección
   loadCurrentProfile();
   const page = getCurrentPage();
