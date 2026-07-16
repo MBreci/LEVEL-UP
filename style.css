@@ -545,7 +545,8 @@ section{padding:64px;border-bottom:var(--b1)}
 .card-left-col #card-ratings{width:100%;max-width:300px}
 @media(max-width:760px){.card-section{justify-content:center}.card-section .pi{flex:1 1 100%;max-width:480px}}
 .photo-process{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:36px;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:10px;padding:48px 40px 56px}
-.photo-process-img{width:100%;max-width:1240px;height:auto;border-radius:10px;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
+.photo-process-img{width:auto;max-width:min(100%,380px);max-height:460px;height:auto;border-radius:10px;object-fit:contain;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
+.photo-process.has-real-photo .photo-process-img{max-width:min(100%,340px);max-height:480px;border-radius:14px;border:1px solid rgba(0,255,136,0.2)}
 .photo-process-text{max-width:780px;text-align:center}
 .photo-process-tag{font-family:var(--ft);font-size:11px;letter-spacing:3px;color:var(--g);margin-bottom:12px}
 .photo-process-title{font-family:var(--ft);font-size:clamp(20px,3vw,28px);letter-spacing:0.5px;color:var(--w);margin-bottom:14px}

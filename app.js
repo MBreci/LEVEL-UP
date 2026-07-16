@@ -94,7 +94,7 @@ const RECARGA_RAPIDA = [20000, 30000, 50000, 100000, 150000, 200000];
 function profileToRow(p) {
   return {
     id: p.id, name: p.name, nickname: p.nickname, gender: p.gender || null, position: p.position, team: p.team,
-    photo: p.photo,
+    photo: p.photo, photo_full: p.photoFull,
     ovr: p.ovr, xp: p.xp, lp: p.lp,
     last_update: p.lastUpdate, matches: p.matches, goals: p.goals, assists: p.assists, mvps: p.mvps,
     attrs: p.attrs, history: p.history, notifications: p.notifications, physical: p.physical,
@@ -111,7 +111,7 @@ function profileToRow(p) {
 function rowToProfile(r) {
   return {
     id: r.id, name: r.name, nickname: r.nickname, email: r.email || null, gender: r.gender || null, position: r.position, team: r.team,
-    photo: r.photo, passwordHash: r.password_hash,
+    photo: r.photo, photoFull: r.photo_full, passwordHash: r.password_hash,
     securityQuestion: r.security_question || null,
     securityAnswerHash: r.security_answer_hash || null,
     ovr: r.ovr, xp: r.xp, lp: r.lp,
@@ -253,6 +253,8 @@ async function syncProfilesFromCloud() {
     // Conservar foto y correo locales (el sync no los trae por privacidad/egress).
     const prevPhoto = (profiles[row.id] && profiles[row.id].photo) || (state && state.id === row.id && state.photo) || null;
     if (prevPhoto) fresh.photo = prevPhoto;
+    const prevPhotoFull = (profiles[row.id] && profiles[row.id].photoFull) || (state && state.id === row.id && state.photoFull) || null;
+    if (prevPhotoFull) fresh.photoFull = prevPhotoFull;
     const prevEmail = (state && state.id === row.id && state.email) || (profiles[row.id] && profiles[row.id].email) || null;
     if (prevEmail) fresh.email = prevEmail;
     if (!state || row.id !== state.id) {
@@ -279,11 +281,11 @@ async function ensurePhotos(ids) {
   if (!sb || !ids || !ids.length) return false;
   const missing = [...new Set(ids)].filter(id => id && profiles[id] && profiles[id].photo === undefined);
   if (!missing.length) return false;
-  const { data, error } = await sb.from('profiles').select('id,photo').in('id', missing);
+  const { data, error } = await sb.from('profiles').select('id,photo,photo_full').in('id', missing);
   if (error || !data) return false;
   let changed = false;
   data.forEach(r => {
-    if (profiles[r.id]) { profiles[r.id].photo = r.photo || null; changed = true; }
+    if (profiles[r.id]) { profiles[r.id].photo = r.photo || null; profiles[r.id].photoFull = r.photo_full || null; changed = true; }
   });
   if (changed) saveProfiles();
   return changed;
@@ -766,6 +768,36 @@ function buildPhysicalHTML(p) {
     </div>`;
 }
 
+// Muestra la foto de CUERPO COMPLETO del jugador (subida por el admin) en la
+// sección "photo-process" de la carta. Si no hay, deja el ejemplo por defecto.
+function updatePlayerFullPhoto() {
+  const wrap = document.querySelector('.photo-process');
+  const img = document.querySelector('.photo-process-img');
+  if (!wrap || !img || !state) return;
+  // Carga diferida: si aún no sabemos si tiene foto, la buscamos una vez.
+  if (state.photoFull === undefined && sb) {
+    sb.from('profiles').select('photo_full').eq('id', state.id).single()
+      .then(function (res) {
+        const d = res && res.data;
+        if (d) { state.photoFull = d.photo_full || null; saveProfiles(); updatePlayerFullPhoto(); }
+      }).catch(function () {});
+    return;
+  }
+  if (state.photoFull) {
+    img.src = state.photoFull;
+    img.alt = 'Foto de ' + (state.nickname || state.name);
+    wrap.classList.add('has-real-photo');
+    const tag = wrap.querySelector('.photo-process-tag');
+    const title = wrap.querySelector('.photo-process-title');
+    const par = wrap.querySelector('.photo-process-text p');
+    if (tag) tag.textContent = 'FOTO OFICIAL';
+    if (title) title.textContent = (state.nickname || state.name);
+    if (par) par.textContent = 'Tu fotografía oficial de LEVEL UP, tomada en la cancha.';
+  } else {
+    wrap.classList.remove('has-real-photo');
+  }
+}
+
 function renderCard() {
   const card = document.getElementById('fifa-card');
   if (!card) return;
@@ -781,6 +813,7 @@ function renderCard() {
   const { className, html } = buildCardHTML(state);
   card.className = className;
   card.innerHTML = html;
+  updatePlayerFullPhoto();
 
   const next = getNextRank(state.xp);
   const prevMin = rank.min;
@@ -6991,7 +7024,7 @@ async function adminFinalizeMatch() {
 
 /* ===== ADMIN PLAYER EDITOR ===== */
 
-function openAdminPlayer(pid) {
+async function openAdminPlayer(pid) {
   if (!isAdmin()) return;
   const p = profiles[pid];
   if (!p) return;
@@ -6999,8 +7032,17 @@ function openAdminPlayer(pid) {
   const modal = document.getElementById('admin-player-modal');
   if (!modal) return;
 
+  // Traer las fotos frescas de la nube (pueden no estar cargadas localmente).
+  if (sb) {
+    try {
+      const { data } = await sb.from('profiles').select('photo,photo_full').eq('id', pid).single();
+      if (data) { p.photo = data.photo || null; p.photoFull = data.photo_full || null; }
+    } catch (e) {}
+  }
+
   const ph = p.physical || {};
   const currentPhoto = p.photo || '';
+  const currentFull = p.photoFull || '';
   document.getElementById('ap-content').innerHTML = `
     <div class="ap-header">
       <div class="ap-title">EDITAR JUGADOR</div>
@@ -7008,14 +7050,22 @@ function openAdminPlayer(pid) {
       <button class="am-close-btn" onclick="closeAdminPlayer()">✕</button>
     </div>
     <div class="ap-form">
-      <label class="ap-label">FOTO</label>
+      <label class="ap-label">FOTO MEDIO CUERPO <span style="opacity:.55;font-weight:400">· para la tarjeta</span></label>
       <div class="ap-photo-wrap">
         ${currentPhoto ? `<img class="ap-photo-preview" id="ap-photo-preview" src="${currentPhoto}" alt="">` : `<div class="ap-photo-preview ap-photo-empty" id="ap-photo-preview">👤</div>`}
         <label class="ap-photo-btn" for="ap-photo-file">📷 SELECCIONAR FOTO</label>
-        <input type="file" id="ap-photo-file" accept="image/*" style="display:none" onchange="previewAdminPhoto(this,'${pid}')">
+        <input type="file" id="ap-photo-file" accept="image/*" style="display:none" onchange="previewAdminPhoto(this,'${pid}','card')">
         <div class="ap-photo-status" id="ap-photo-status">${currentPhoto ? '✔ Foto cargada' : 'Sin foto'}</div>
       </div>
       <input type="hidden" id="ap-photo" value="${currentPhoto}">
+      <label class="ap-label">FOTO CUERPO COMPLETO <span style="opacity:.55;font-weight:400">· para la ficha</span></label>
+      <div class="ap-photo-wrap">
+        ${currentFull ? `<img class="ap-photo-preview" id="ap-photo-full-preview" src="${currentFull}" alt="">` : `<div class="ap-photo-preview ap-photo-empty" id="ap-photo-full-preview">🧍</div>`}
+        <label class="ap-photo-btn" for="ap-photo-full-file">📷 SELECCIONAR FOTO</label>
+        <input type="file" id="ap-photo-full-file" accept="image/*" style="display:none" onchange="previewAdminPhoto(this,'${pid}','full')">
+        <div class="ap-photo-status" id="ap-photo-full-status">${currentFull ? '✔ Foto cargada' : 'Sin foto'}</div>
+      </div>
+      <input type="hidden" id="ap-photo-full" value="${currentFull}">
       <label class="ap-label">PESO (kg)</label>
       <input class="ap-input" id="ap-weight" type="number" value="${ph.weight || ''}" placeholder="70">
       <label class="ap-label">ALTURA (cm)</label>
@@ -7046,24 +7096,27 @@ function selectFoot(foot) {
   document.querySelectorAll('.ap-foot-btn').forEach(b => { if (b.textContent === foot) b.classList.add('on'); });
 }
 
-async function previewAdminPhoto(input, pid) {
+async function previewAdminPhoto(input, pid, kind) {
   const file = input.files[0];
   if (!file) return;
-  const status = document.getElementById('ap-photo-status');
-  const preview = document.getElementById('ap-photo-preview');
+  kind = kind || 'card';
+  const isFull = kind === 'full';
+  const status = document.getElementById(isFull ? 'ap-photo-full-status' : 'ap-photo-status');
+  const preview = document.getElementById(isFull ? 'ap-photo-full-preview' : 'ap-photo-preview');
+  const hidden = document.getElementById(isFull ? 'ap-photo-full' : 'ap-photo');
   status.textContent = 'Subiendo foto...';
 
   if (!sb) { status.textContent = '✗ Sin conexión a Supabase'; return; }
 
   const ext = file.name.split('.').pop().toLowerCase();
-  const path = `players/${pid}.${ext}`;
+  const path = `players/${pid}${isFull ? '-full' : ''}.${ext}`;
   const { error } = await sb.storage.from('player-photos').upload(path, file, { upsert: true });
   if (error) { status.textContent = '✗ Error: ' + error.message; return; }
 
   const { data: urlData } = sb.storage.from('player-photos').getPublicUrl(path);
   const url = urlData.publicUrl + '?t=' + Date.now();
-  document.getElementById('ap-photo').value = url;
-  if (preview) { preview.src = url; preview.className = 'ap-photo-preview'; }
+  hidden.value = url;
+  if (preview) { preview.src = url; preview.className = 'ap-photo-preview'; if (preview.tagName !== 'IMG') { /* placeholder div -> se reemplaza al re-render, pero fijamos bg */ preview.style.backgroundImage = `url(${url})`; preview.style.backgroundSize = 'cover'; preview.textContent = ''; } }
   status.textContent = '✔ Foto subida';
 }
 
@@ -7073,6 +7126,7 @@ async function saveAdminPlayer(pid) {
   if (!p) return;
 
   const photo = document.getElementById('ap-photo').value.trim() || null;
+  const photoFull = document.getElementById('ap-photo-full').value.trim() || null;
   const weight = parseFloat(document.getElementById('ap-weight').value) || null;
   const height = parseFloat(document.getElementById('ap-height').value) || null;
   const age = parseInt(document.getElementById('ap-age').value) || null;
@@ -7082,6 +7136,7 @@ async function saveAdminPlayer(pid) {
   const newIsAdmin = isAdminCheck ? isAdminCheck.checked : p.isAdmin;
 
   p.photo = photo;
+  p.photoFull = photoFull;
   p.physical = { weight, height, age, foot };
   p.isAdmin = newIsAdmin;
   profiles[pid] = p;
