@@ -7124,9 +7124,18 @@ async function saveAdminPlayer(pid) {
 
   saveProfiles();
   await pushProfileToCloud(p);
+  // is_admin es un campo protegido: NO se escribe con el guardado normal.
+  // Se aplica en la nube con una función segura que solo un admin puede llamar.
+  let adminMsg = '';
+  if (sb) {
+    try {
+      const { error } = await sb.rpc('admin_set_is_admin', { p_admin_id: state.id, p_target_id: pid, p_value: !!newIsAdmin });
+      if (error) adminMsg = '\n⚠️ No se pudo cambiar el rol de admin: ' + (error.message || error);
+    } catch (e) { adminMsg = '\n⚠️ No se pudo cambiar el rol de admin.'; }
+  }
   closeAdminPlayer();
   renderAll();
-  alert('✅ Jugador actualizado.');
+  alert('✅ Jugador actualizado.' + (newIsAdmin ? ' Ahora es ADMIN — debe refrescar su sesión para ver los controles.' : '') + adminMsg);
 }
 
 /* ===== ADMIN TEAM MATCH REGISTRATION ===== */
