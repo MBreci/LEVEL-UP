@@ -7754,3 +7754,49 @@ document.addEventListener('keydown', function (e) {
     e.preventDefault(); if (typeof submitResetPassword === 'function') submitResetPassword();
   }
 });
+
+/* ===== Cierre universal de modales: botón X (arriba-derecha) + tecla Esc ===== */
+(function () {
+  var OVERLAY_SEL = '.modal-overlay, .slot-invite-overlay';
+  function cardOf(ov) { return ov.querySelector(':scope > div') || ov.firstElementChild; }
+  function isVisible(ov) {
+    if (ov.classList.contains('modal-overlay')) return ov.classList.contains('open');
+    return true; // overlays creados dinámicamente están visibles mientras existen
+  }
+  function closeOverlay(ov) {
+    if (!ov) return;
+    // Preferir funciones de cierre conocidas (limpian timers, etc.).
+    if (ov.id === 'mchat-modal' && typeof closeMatchChat === 'function') return closeMatchChat();
+    if (ov.id === 'admin-player-modal' && typeof closeAdminPlayer === 'function') return closeAdminPlayer();
+    if (ov.id === 'auth-modal' && typeof closeAuth === 'function') return closeAuth();
+    if (ov.classList.contains('modal-overlay')) ov.classList.remove('open');
+    else ov.remove();
+  }
+  function ensureX(ov) {
+    var card = cardOf(ov);
+    if (!card || card.querySelector(':scope > .modal-x')) return;
+    try { if (getComputedStyle(card).position === 'static') card.style.position = 'relative'; } catch (e) {}
+    var x = document.createElement('button');
+    x.className = 'modal-x'; x.type = 'button'; x.setAttribute('aria-label', 'Cerrar'); x.innerHTML = '✕';
+    x.addEventListener('click', function (e) { e.stopPropagation(); closeOverlay(ov); });
+    card.appendChild(x);
+  }
+  function ensureAll() { try { document.querySelectorAll(OVERLAY_SEL).forEach(ensureX); } catch (e) {} }
+
+  // Esc cierra el modal visible que esté más arriba.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' && e.key !== 'Esc') return;
+    var vis = Array.prototype.slice.call(document.querySelectorAll(OVERLAY_SEL)).filter(isVisible);
+    if (vis.length) { e.preventDefault(); closeOverlay(vis[vis.length - 1]); }
+  });
+
+  ensureAll();
+  if (document.body) {
+    // Inyecta la X en cualquier modal que se cree después (slot-invite, chat, etc.).
+    try {
+      new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++) { if (muts[i].addedNodes && muts[i].addedNodes.length) { ensureAll(); break; } }
+      }).observe(document.body, { childList: true, subtree: true });
+    } catch (e) {}
+  }
+})();
