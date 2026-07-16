@@ -11,7 +11,7 @@
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--t);font-family:var(--fb);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative}
-body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(520px circle at 12% 18%,rgba(0,255,136,0.10),transparent 60%),radial-gradient(480px circle at 88% 75%,rgba(255,0,170,0.09),transparent 60%),radial-gradient(420px circle at 70% 15%,rgba(255,102,0,0.06),transparent 60%);animation:drift 18s ease-in-out infinite alternate}
+body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(520px circle at 12% 18%,rgba(0,255,136,0.10),transparent 60%),radial-gradient(480px circle at 88% 75%,rgba(255,0,170,0.09),transparent 60%),radial-gradient(420px circle at 70% 15%,rgba(255,102,0,0.06),transparent 60%)}
 @keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-2%,2%) scale(1.06)}}
 ::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.25)}
 
@@ -1753,7 +1753,7 @@ footer{padding:48px 64px;border-top:var(--b1)}
 }
 /* viñeta cinematográfica global muy sutil (no captura clics, no toca nav/modales) */
 body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse 130% 100% at 50% 45%,transparent 58%,rgba(0,1,5,0.45) 100%);mix-blend-mode:multiply}
+  background:radial-gradient(ellipse 130% 100% at 50% 45%,transparent 58%,rgba(0,1,5,0.45) 100%)}
 @media(prefers-reduced-motion:reduce){body::after{display:none}}
 
 /* NAV / TICKER — más profundidad y separación */
@@ -3636,3 +3636,13 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 
 /* Cuadros flotantes del hero (TOP JUGADOR / EN VIVO) ocultos por ahora */
 .hero-float{display:none !important}
+
+/* ============================================================
+   SEGURIDAD GPU GLOBAL — evita artefactos/cuelgues del driver en
+   gráficas débiles (Windows/integradas). El backdrop-filter (blur del
+   fondo) y los mix-blend-mode a pantalla completa son los mayores
+   causantes; se desactivan en toda la app. Los paneles conservan su
+   fondo translúcido, solo pierden el desenfoque (diferencia mínima).
+   ============================================================ */
+*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.hero-beams,.hero-bg-smoke,.sec-cine-smoke,body::after,.hero::after{mix-blend-mode:normal!important}
