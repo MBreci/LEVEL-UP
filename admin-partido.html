@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="storage-shim.js?v=1784163398"></script>
+<script src="storage-shim.js?v=1784163826"></script>
 <title>ADMIN PARTIDO · LEVEL UP</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -277,6 +277,32 @@ table.ap-stats-table{
   .ap-bottom{grid-template-columns:1fr;grid-template-rows:auto}
   .ap-panel{border-right:none;border-bottom:1px solid var(--border)}
 }
+/* HORIZONTAL / pantallas de poca altura (tablet o celular acostado):
+   compacta el marcador para dar más espacio a la tabla de jugadores. */
+@media(orientation:landscape) and (max-height:820px){
+  .ap-topbar{padding:6px 14px;gap:12px}
+  .ap-topbar-arena-loc{display:none}
+  .ap-scoreboard{padding:8px 16px}
+  .ap-scoreboard-main{margin-bottom:6px}
+  .ap-score-team,.ap-score-center{min-width:0}
+  .ap-team-shield{width:38px;height:38px;font-size:15px}
+  .ap-team-name{font-size:12px}
+  .ap-score-num{width:44px;height:44px;font-size:22px;border-radius:8px}
+  .ap-score-nums{gap:12px}
+  .ap-timer-big{font-size:18px;padding:2px 10px}
+  .ap-period-lbl{display:none}
+  .ap-resumen-bar{margin-top:2px}
+  .ap-resumen-stat{padding:4px 12px}
+  .ap-resumen-label{margin-bottom:1px}
+  .ap-resumen-val{font-size:11px}
+}
+/* Aún más bajo (celular acostado): recorta al mínimo. */
+@media(orientation:landscape) and (max-height:520px){
+  .ap-resumen-bar{display:none}
+  .ap-team-shield{width:32px;height:32px}
+  .ap-score-num{width:38px;height:38px;font-size:19px}
+  .ap-timer-big{font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -494,7 +520,7 @@ table.ap-stats-table{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1784163398"></script>
+<script src="app.js?v=1784163826"></script>
 <script>
 // ====================== ADMIN PARTIDO PAGE ======================
 let _apMatchId = null;
