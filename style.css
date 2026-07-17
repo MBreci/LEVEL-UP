@@ -3671,3 +3671,16 @@ html.safe-mode body{background:#05070d!important}
 /* Botón X universal para cerrar modales (inyectado por JS) */
 .modal-x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,0.16);background:rgba(10,14,22,0.72);color:rgba(230,236,255,0.75);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:50;padding:0;transition:background .15s,border-color .15s,color .15s,transform .15s}
 .modal-x:hover{background:rgba(255,80,80,0.18);border-color:rgba(255,80,80,0.5);color:#fff;transform:scale(1.06)}
+
+/* ===== Menú hamburguesa (≤900px: iPad vertical, celulares) ===== */
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:40px;height:38px;flex-shrink:0;border:1px solid rgba(255,255,255,0.14);border-radius:9px;background:rgba(255,255,255,0.04);cursor:pointer;padding:0 9px;margin-right:8px}
+.nav-hamburger span{display:block;height:2px;width:100%;background:var(--g);border-radius:2px}
+.mobile-nav-panel{display:none;position:fixed;inset:0;z-index:9000;background:rgba(2,4,10,0.55)}
+.mobile-nav-panel.open{display:block}
+.mnav-card{position:absolute;top:66px;left:12px;right:12px;background:linear-gradient(160deg,#0b0f18,#070a12);border:1px solid rgba(0,255,136,0.2);border-radius:14px;padding:10px;box-shadow:0 24px 70px rgba(0,0,0,0.65)}
+.mnav-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:rgba(210,220,255,0.5);padding:6px 8px 12px}
+.mnav-x{background:none;border:none;color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;line-height:1}
+.mnav-item{display:block;width:100%;text-align:left;padding:14px 14px;margin-bottom:4px;border-radius:10px;font-family:var(--ft);font-size:12px;letter-spacing:1px;color:var(--w);text-decoration:none;border:1px solid transparent;background:none;cursor:pointer}
+.mnav-item:hover,.mnav-item.on{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.28);color:var(--g)}
+.mnav-admin{background:rgba(255,180,0,0.08);border-color:rgba(255,180,0,0.25);color:#ffb300}
+@media(max-width:900px){.nav-hamburger{display:flex}}

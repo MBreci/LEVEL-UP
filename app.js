@@ -495,7 +495,39 @@ function renderNav() {
     adminBtn.onclick = () => openAdminPanel();
     nav.appendChild(adminBtn);
   }
+  buildMobileNav();
 }
+
+// Menú hamburguesa para pantallas ≤900px (iPad vertical, celulares): en esas
+// pantallas la barra .nav-modules se oculta, así que este menú trae los módulos.
+function buildMobileNav() {
+  const navTop = document.querySelector('.nav-top');
+  if (!navTop || !state) return;
+  let burger = document.getElementById('nav-hamburger');
+  if (!burger) {
+    burger = document.createElement('button');
+    burger.id = 'nav-hamburger'; burger.className = 'nav-hamburger'; burger.setAttribute('aria-label', 'Menú');
+    burger.innerHTML = '<span></span><span></span><span></span>';
+    burger.onclick = toggleMobileNav;
+    navTop.insertBefore(burger, navTop.firstChild);
+  }
+  let panel = document.getElementById('mobile-nav-panel');
+  if (!panel) {
+    panel = document.createElement('div'); panel.id = 'mobile-nav-panel'; panel.className = 'mobile-nav-panel';
+    panel.addEventListener('click', function (e) { if (e.target === panel) closeMobileNav(); });
+    document.body.appendChild(panel);
+  }
+  const page = getCurrentPage();
+  let items = FUNCTIONAL_MODULES.map(function (m) {
+    const href = PAGE_HREFS[m.id] || '#';
+    const on = href.split('#')[0] === page ? ' on' : '';
+    return '<a class="mnav-item' + on + '" href="' + href + '">' + m.label + '</a>';
+  }).join('');
+  if (isAdmin()) items += '<button class="mnav-item mnav-admin" onclick="closeMobileNav();openAdminPanel()">⚙ ADMIN</button>';
+  panel.innerHTML = '<div class="mnav-card"><div class="mnav-head">NAVEGACIÓN<button class="mnav-x" onclick="closeMobileNav()">✕</button></div>' + items + '</div>';
+}
+function toggleMobileNav() { const p = document.getElementById('mobile-nav-panel'); if (p) p.classList.toggle('open'); }
+function closeMobileNav() { const p = document.getElementById('mobile-nav-panel'); if (p) p.classList.remove('open'); }
 
 function renderWalletPill() {
   // El saldo ahora aparece dentro del dropdown del perfil, no en el nav.
