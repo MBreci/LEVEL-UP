@@ -517,6 +517,15 @@ function buildMobileNav() {
     panel.addEventListener('click', function (e) { if (e.target === panel) closeMobileNav(); });
     document.body.appendChild(panel);
   }
+  // Botón JUGAR (solo celular): acceso directo a partidos, en el encabezado.
+  const navRight = document.querySelector('.nav-right');
+  if (navRight && !document.getElementById('nav-jugar-mobile')) {
+    const j = document.createElement('a');
+    j.id = 'nav-jugar-mobile'; j.className = 'nav-jugar-mobile';
+    j.href = PAGE_HREFS.partidos || 'buscar-partido.html';
+    j.textContent = 'JUGAR';
+    navRight.insertBefore(j, navRight.firstChild);
+  }
   const page = getCurrentPage();
   let items = FUNCTIONAL_MODULES.map(function (m) {
     const href = PAGE_HREFS[m.id] || '#';

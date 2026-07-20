@@ -3693,3 +3693,10 @@ html.safe-mode body{background:#05070d!important}
 .mnav-div{height:1px;background:rgba(255,255,255,0.08);margin:8px 6px}
 .mnav-danger{color:#ff6b6b!important}
 .mnav-danger:hover{background:rgba(255,80,80,0.1)!important;border-color:rgba(255,80,80,0.3)!important;color:#ff8a8a!important}
+
+/* Botón JUGAR en el encabezado (solo celular/tablet vertical) */
+.nav-jugar-mobile{display:none}
+@media(max-width:900px){
+  .nav-jugar-mobile{display:inline-flex;align-items:center;padding:8px 18px;border-radius:22px;background:linear-gradient(135deg,#00ff88,#00c46a);color:#052b16;font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:1.5px;text-decoration:none;box-shadow:0 4px 16px rgba(0,255,136,0.28);white-space:nowrap}
+  .nav-jugar-mobile:active{transform:scale(.96)}
+}
