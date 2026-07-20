@@ -3684,3 +3684,12 @@ html.safe-mode body{background:#05070d!important}
 .mnav-item:hover,.mnav-item.on{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.28);color:var(--g)}
 .mnav-admin{background:rgba(255,180,0,0.08);border-color:rgba(255,180,0,0.25);color:#ffb300}
 @media(max-width:900px){.nav-hamburger{display:flex}}
+
+/* Celular/tablet vertical: la barra derecha deja solo TEMPORADA BETA + notificaciones.
+   PERFIL y JUGAR PARTIDO se acceden desde el menú hamburguesa. */
+@media(max-width:900px){
+  .nav-right .dropdown-wrap{display:none!important}
+}
+.mnav-div{height:1px;background:rgba(255,255,255,0.08);margin:8px 6px}
+.mnav-danger{color:#ff6b6b!important}
+.mnav-danger:hover{background:rgba(255,80,80,0.1)!important;border-color:rgba(255,80,80,0.3)!important;color:#ff8a8a!important}

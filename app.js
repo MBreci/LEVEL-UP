@@ -524,7 +524,15 @@ function buildMobileNav() {
     return '<a class="mnav-item' + on + '" href="' + href + '">' + m.label + '</a>';
   }).join('');
   if (isAdmin()) items += '<button class="mnav-item mnav-admin" onclick="closeMobileNav();openAdminPanel()">⚙ ADMIN</button>';
-  panel.innerHTML = '<div class="mnav-card"><div class="mnav-head">NAVEGACIÓN<button class="mnav-x" onclick="closeMobileNav()">✕</button></div>' + items + '</div>';
+  // Acciones que en celular se sacan de la barra derecha para no amontonar.
+  items += '<div class="mnav-div"></div>';
+  items += '<a class="mnav-item" href="buscar-partido.html">⚽ JUGAR PARTIDO</a>';
+  items += '<a class="mnav-item" href="equipos.html#crear">🛡️ MI EQUIPO</a>';
+  items += '<div class="mnav-div"></div>';
+  items += '<a class="mnav-item" href="carta.html">PERFIL</a>';
+  items += '<a class="mnav-item" href="configuracion.html">CONFIGURACIÓN</a>';
+  items += '<button class="mnav-item mnav-danger" onclick="closeMobileNav();logout()">CERRAR SESIÓN</button>';
+  panel.innerHTML = '<div class="mnav-card"><div class="mnav-head">MENÚ<button class="mnav-x" onclick="closeMobileNav()">✕</button></div>' + items + '</div>';
 }
 function toggleMobileNav() { const p = document.getElementById('mobile-nav-panel'); if (p) p.classList.toggle('open'); }
 function closeMobileNav() { const p = document.getElementById('mobile-nav-panel'); if (p) p.classList.remove('open'); }
