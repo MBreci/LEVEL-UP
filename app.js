@@ -422,6 +422,30 @@ function saveProfiles() {
 let profiles = loadProfiles();
 let state = null;
 
+// Conteo REAL de jugadores registrados (desde la nube). Evita que el contador
+// muestre primero el número de perfiles cacheados (p. ej. 30) y luego salte al
+// total (82) cuando termina de sincronizar.
+let _totalPlayers = (function () {
+  try { const v = parseInt(LS.getItem('levelup_total_players')); return isNaN(v) ? null : v; } catch (e) { return null; }
+})();
+async function fetchTotalPlayers() {
+  if (!sb) return;
+  try {
+    const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true });
+    if (typeof count === 'number' && count >= 0) {
+      const changed = _totalPlayers !== count;
+      _totalPlayers = count;
+      try { LS.setItem('levelup_total_players', String(count)); } catch (e) {}
+      if (changed) { try { (typeof safeRerender === 'function' ? safeRerender : renderAll)(); } catch (e) {} }
+    }
+  } catch (e) {}
+}
+// Total a mostrar: el real de la nube si ya lo tenemos, si no el local (fallback).
+function displayPlayerCount() {
+  if (_totalPlayers != null) return _totalPlayers;
+  try { return Object.keys(profiles).length; } catch (e) { return 0; }
+}
+
 function setCurrentProfile(id) {
   LS.setItem(CURRENT_KEY, id);
   state = profiles[id];
@@ -1448,7 +1472,7 @@ function renderHeroFloats() {
   const jugEl = document.getElementById('hf-jugadores-n');
   const partEl = document.getElementById('hf-partidos-n');
   const golesEl = document.getElementById('hf-goles-n');
-  if (jugEl) jugEl.textContent = allProfiles.length || '0';
+  if (jugEl) jugEl.textContent = displayPlayerCount() || '0';
   const activeMatches = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado');
   if (partEl) partEl.textContent = activeMatches.length || '0';
   const totalGoles = allProfiles.reduce((acc, p) => acc + (p.goles || 0), 0);
@@ -3852,7 +3876,7 @@ function renderBuscarPartido() {
   // que estabas escribiendo y hacía parpadear la pantalla.
   // Hero stats
   const activeCount = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado').length;
-  const playerCount = Object.keys(profiles).length;
+  const playerCount = displayPlayerCount();
   const elP = document.getElementById('bph-stat-partidos');
   const elJ = document.getElementById('bph-stat-jugadores');
   if (elP) elP.textContent = activeCount || '0';
@@ -6110,6 +6134,7 @@ function initApp() {
   checkPendingReveal();
   checkPendingTeamJoin(); // invitación por enlace de WhatsApp: aceptar/rechazar o pedir cuenta
   syncProfilesFromCloud();
+  fetchTotalPlayers();
   syncTeamsFromCloud().then(() => {
     loadAllTeamPhotosOnce();
     const myTeam = getMyTeam();
@@ -6157,6 +6182,7 @@ function initApp() {
       // No sincronizar si la pestaña está oculta: ahorra egress cuando nadie mira.
       if (document.visibilityState === 'hidden') return;
       syncProfilesFromCloud();
+      fetchTotalPlayers();
       Promise.all([
         syncTeamsFromCloud(),
         syncTeamInvitesFromCloud(),
