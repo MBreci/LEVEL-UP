@@ -6344,7 +6344,8 @@ function crearTorneo() {
 //  'guest'   -> jugadores nuevos (no fundadores): ven todo en general y pueden pedir info.
 function torneoViewerRole() {
   if (isAdmin()) return 'admin';
-  if (isRestrictedPlayer()) return 'guest';
+  // Inscripción abierta a TODOS: cualquier jugador (fundador o nuevo) puede
+  // inscribir su equipo. Antes los no fundadores caían como 'guest'.
   return 'founder';
 }
 
