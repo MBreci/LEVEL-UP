@@ -446,9 +446,25 @@ function displayPlayerCount() {
   try { return Object.keys(profiles).length; } catch (e) { return 0; }
 }
 
+// Rellena campos que TODA carta debe tener. Un perfil sin estos (escritura
+// local a medias en un WebView, esquema viejo, sincronización parcial) hacía
+// que renderNotifications/renderAll lanzara "reading 'length'" y CONGELARA el
+// arranque de la app: el usuario "hace todo pero lo último no carga". Con esto,
+// un perfil incompleto se repara en vez de romper toda la interfaz.
+function normalizeProfile(p) {
+  if (!p || typeof p !== 'object') return p;
+  if (!Array.isArray(p.notifications)) p.notifications = [];
+  if (!Array.isArray(p.history)) p.history = [];
+  if (!Array.isArray(p.achievements)) p.achievements = [];
+  if (typeof p.notifSeenCount !== 'number') p.notifSeenCount = 0;
+  if (!p.attrs || typeof p.attrs !== 'object') p.attrs = { pac: 60, sho: 60, pas: 60, dri: 60, def: 60, fis: 60 };
+  if (!p.physical || typeof p.physical !== 'object') p.physical = { weight: null, height: null, age: null, foot: null };
+  return p;
+}
+
 function setCurrentProfile(id) {
   LS.setItem(CURRENT_KEY, id);
-  state = profiles[id];
+  state = normalizeProfile(profiles[id]);
 }
 
 function saveState() {
@@ -460,7 +476,7 @@ function saveState() {
 function loadCurrentProfile() {
   const id = LS.getItem(CURRENT_KEY);
   if (id && profiles[id]) {
-    state = profiles[id];
+    state = normalizeProfile(profiles[id]);
     return true;
   }
   return false;
@@ -1231,6 +1247,7 @@ function renderNotifications() {
   const myTeamInvites = getMyTeamInvites();
   const myChallenges = getMyChallenges();
   const myLeaveRequests = getMyTeamLeaveRequests();
+  if (!Array.isArray(state.notifications)) state.notifications = [];
   const totalCount = state.notifications.length + myInvites.filter(i => i.status === 'pendiente').length + myTeamInvites.length + myChallenges.length + myLeaveRequests.length;
   if (getCurrentPage() === 'notificaciones.html' && totalCount !== (state.notifSeenCount || 0)) {
     state.notifSeenCount = totalCount;
@@ -1344,23 +1361,27 @@ function safeRerender() {
 }
 
 function renderAll() {
-  renderNav();
-  renderHero();
-  renderCard();
-  renderHistory();
-  renderRanking();
-  renderPlayerSearch(document.getElementById('pl-search') ? document.getElementById('pl-search').value : '');
-  renderNotifications();
-  renderWipGrid();
-  renderBuscarPartido();
-  renderTeamsModule();
-  renderTicker();
-  renderHeroFloats();
-  updateProfileBtn();
-  renderDashboard();
-  renderWelcomeHome();
-  renderSaldoPage();
-  renderTorneos();
+  // Cada render se aísla: si UNO falla (dato corrupto, campo faltante) los demás
+  // siguen y la app NO se congela. Antes, un throw aquí abortaba initApp completo
+  // y dejaba la pantalla pegada en "cargando".
+  const safe = (fn, arg) => { try { fn(arg); } catch (e) { console.error('render falló:', fn.name || '?', e); } };
+  safe(renderNav);
+  safe(renderHero);
+  safe(renderCard);
+  safe(renderHistory);
+  safe(renderRanking);
+  safe(renderPlayerSearch, document.getElementById('pl-search') ? document.getElementById('pl-search').value : '');
+  safe(renderNotifications);
+  safe(renderWipGrid);
+  safe(renderBuscarPartido);
+  safe(renderTeamsModule);
+  safe(renderTicker);
+  safe(renderHeroFloats);
+  safe(updateProfileBtn);
+  safe(renderDashboard);
+  safe(renderWelcomeHome);
+  safe(renderSaldoPage);
+  safe(renderTorneos);
 }
 
 const HW_ACTIONS = [
