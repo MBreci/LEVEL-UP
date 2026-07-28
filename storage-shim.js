@@ -45,11 +45,29 @@
   } catch (e) { nativeOk = false; }
 
   if (nativeOk) {
-    // Nativo sirve: úsalo, pero con red de seguridad por si falla puntualmente.
+    // Nativo pasa la prueba, pero eso NO garantiza que persista entre páginas:
+    // los navegadores in-app (Instagram/Facebook/TikTok) suelen APROBAR la prueba
+    // dentro de una página y luego BORRAR/aislar localStorage al navegar. Resultado:
+    // el usuario inicia sesión, se guarda la sesión, navega a dashboard.html y allí
+    // localStorage está vacío -> la guarda lo devuelve al inicio ("verifica y no entra").
+    // Solución: espejar SIEMPRE en window.name (que sí sobrevive la navegación en la
+    // misma pestaña) y leer de ahí cuando el nativo venga vacío.
+    var ns = nameStore();
     window.LS = {
-      getItem: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return nameStore().getItem(k); } },
-      setItem: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { nameStore().setItem(k, v); } },
-      removeItem: function (k) { try { window.localStorage.removeItem(k); } catch (e) { nameStore().removeItem(k); } },
+      getItem: function (k) {
+        var v = null;
+        try { v = window.localStorage.getItem(k); } catch (e) {}
+        if (v === null || v === undefined) return ns.getItem(k);
+        return v;
+      },
+      setItem: function (k, v) {
+        try { window.localStorage.setItem(k, v); } catch (e) {}
+        try { ns.setItem(k, v); } catch (e) {}
+      },
+      removeItem: function (k) {
+        try { window.localStorage.removeItem(k); } catch (e) {}
+        try { ns.removeItem(k); } catch (e) {}
+      },
     };
   } else {
     // Nativo bloqueado: respaldo en window.name (persiste en la pestaña).
