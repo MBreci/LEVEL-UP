@@ -6134,7 +6134,51 @@ function setupHeroPerf() {
   } catch (e) {}
 }
 
+// Detecta navegadores in-app (Instagram, Facebook, TikTok, etc.) donde el
+// almacenamiento es frágil y la sesión puede perderse. Muestra un aviso para
+// abrir en el navegador real. Se puede cerrar y no vuelve a molestar en la sesión.
+function isInAppBrowser() {
+  var ua = navigator.userAgent || '';
+  return /Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|Twitter|TikTok|musical_ly|Snapchat|Pinterest|WhatsApp/i.test(ua);
+}
+
+function showInAppBrowserBanner() {
+  try {
+    if (!isInAppBrowser()) return;
+    if (LS.getItem('levelup_iab_dismissed') === '1') return;
+    if (document.getElementById('iab-banner')) return;
+    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    // iOS: el menú de "abrir en navegador" está arriba a la derecha (•••).
+    // Android: suele estar en el mismo menú de tres puntos.
+    var tip = isIOS
+      ? 'Toca <b>•••</b> (arriba a la derecha) y elige <b>“Abrir en el navegador”</b>.'
+      : 'Toca <b>⋮</b> (arriba a la derecha) y elige <b>“Abrir en Chrome”</b>.';
+    var bar = document.createElement('div');
+    bar.id = 'iab-banner';
+    bar.className = 'iab-banner';
+    bar.innerHTML =
+      '<div class="iab-inner">' +
+        '<div class="iab-ico">🌐</div>' +
+        '<div class="iab-txt">' +
+          '<div class="iab-title">Ábrelo en tu navegador</div>' +
+          '<div class="iab-sub">Estás dentro de una app (Instagram/Facebook). Para que tu sesión no se pierda: ' + tip + '</div>' +
+        '</div>' +
+        '<button class="iab-x" aria-label="Cerrar" onclick="dismissInAppBanner()">✕</button>' +
+      '</div>';
+    document.body.appendChild(bar);
+    document.body.classList.add('has-iab-banner');
+  } catch (e) {}
+}
+
+function dismissInAppBanner() {
+  try { LS.setItem('levelup_iab_dismissed', '1'); } catch (e) {}
+  var b = document.getElementById('iab-banner');
+  if (b) b.remove();
+  try { document.body.classList.remove('has-iab-banner'); } catch (e) {}
+}
+
 function initApp() {
+  showInAppBrowserBanner();
   setupHeroPerf();
   capturePendingTeamJoin(); // guarda el enlace de invitación ANTES de cualquier redirección
   loadCurrentProfile();

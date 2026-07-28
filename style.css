@@ -3700,3 +3700,16 @@ html.safe-mode body{background:#05070d!important}
   .nav-jugar-mobile{display:inline-flex;align-items:center;padding:8px 18px;border-radius:22px;background:linear-gradient(135deg,#00ff88,#00c46a);color:#052b16;font-family:var(--ft);font-size:11px;font-weight:700;letter-spacing:1.5px;text-decoration:none;box-shadow:0 4px 16px rgba(0,255,136,0.28);white-space:nowrap}
   .nav-jugar-mobile:active{transform:scale(.96)}
 }
+
+/* ===== Aviso navegador in-app (Instagram/Facebook) ===== */
+.iab-banner{position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#0a0f1c,#06090f);border-bottom:1px solid rgba(0,255,136,0.35);box-shadow:0 6px 24px rgba(0,0,0,0.55);animation:iabDrop .35s ease}
+@keyframes iabDrop{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.iab-inner{display:flex;align-items:flex-start;gap:12px;max-width:720px;margin:0 auto;padding:12px 14px}
+.iab-ico{font-size:22px;line-height:1.2;flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(0,255,136,0.5))}
+.iab-txt{flex:1 1 auto;min-width:0}
+.iab-title{font-family:var(--ft);font-size:11px;letter-spacing:1.5px;color:var(--g);text-shadow:0 0 10px rgba(0,255,136,0.4);margin-bottom:4px}
+.iab-sub{font-family:var(--fb);font-size:12px;line-height:1.5;color:rgba(220,230,245,0.82)}
+.iab-sub b{color:var(--w);font-weight:600}
+.iab-x{flex:0 0 auto;background:none;border:0.5px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.6);width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer;transition:all .18s}
+.iab-x:hover{color:var(--w);border-color:rgba(255,255,255,0.5)}
+body.has-iab-banner{padding-top:76px}
