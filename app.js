@@ -2267,10 +2267,16 @@ async function submitLogin() {
   try {
     // Login por función segura: el hash se compara en el servidor, nunca sale de la base.
     const hash = await hashPassword(password);
+    // El nombre/apodo se GUARDA en mayúsculas y sin espacios (normalizeId) al
+    // registrar. El login debe buscar con la MISMA forma: si mandamos lo que el
+    // usuario teclea tal cual (minúsculas, un espacio de más), no coincide y da
+    // "usuario o contraseña incorrectos" aunque la clave sea correcta. Este era
+    // el caso de "me deja crear pero no me deja iniciar sesión".
+    const idNorm = normalizeId(identifier);
     let profile = null;
     if (sb) {
       try {
-        const { data } = await withTimeout(sb.rpc('verify_login', { p_identifier: identifier, p_password_hash: hash }), 8000, 'login');
+        const { data } = await withTimeout(sb.rpc('verify_login', { p_identifier: idNorm, p_password_hash: hash }), 8000, 'login');
         if (data) profile = rowToProfile(data);
       } catch (e) {
         errorEl.textContent = 'No pudimos conectar con el servidor. Revisa tu internet o desactiva bloqueadores/VPN e inténtalo de nuevo.';
