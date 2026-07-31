@@ -617,7 +617,7 @@ function renderHero() {
   if (el) {
     const stats = getPlatformStats();
     el.innerHTML = `
-      <div class="h-stat"><div class="h-stat-n">${stats.jugadores}</div><div class="h-stat-l">JUGADORES</div></div>
+      <div class="h-stat"><div class="h-stat-n">${_totalPlayers != null ? _totalPlayers : '—'}</div><div class="h-stat-l">JUGADORES</div></div>
       <div class="h-stat"><div class="h-stat-n">${stats.partidos}</div><div class="h-stat-l">PARTIDOS</div></div>
       <div class="h-stat"><div class="h-stat-n">${stats.mvps}</div><div class="h-stat-l">MVP OTORGADOS</div></div>
     `;
