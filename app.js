@@ -1493,7 +1493,10 @@ function renderHeroFloats() {
   const jugEl = document.getElementById('hf-jugadores-n');
   const partEl = document.getElementById('hf-partidos-n');
   const golesEl = document.getElementById('hf-goles-n');
-  if (jugEl) jugEl.textContent = displayPlayerCount() || '0';
+  // Solo mostramos el número cuando tenemos el total REAL de la nube (o el último
+  // cacheado). Si aún no llega, dejamos '—' en vez de un conteo local parcial que
+  // hacía el parpadeo raro (p. ej. 53 -> 100). fetchTotalPlayers re-renderiza al llegar.
+  if (jugEl && _totalPlayers != null) jugEl.textContent = _totalPlayers;
   const activeMatches = openMatches.filter(m => !m.finalizado && getMatchEstado(m) !== 'finalizado');
   if (partEl) partEl.textContent = activeMatches.length || '0';
   const totalGoles = allProfiles.reduce((acc, p) => acc + (p.goles || 0), 0);
