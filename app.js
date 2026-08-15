@@ -534,6 +534,13 @@ function renderNav() {
     adminBtn.textContent = '⚙ ADMIN';
     adminBtn.onclick = () => openAdminPanel();
     nav.appendChild(adminBtn);
+
+    const statsBtn = document.createElement('a');
+    statsBtn.className = 'nm-item nm-admin-pill';
+    statsBtn.textContent = '📊 ESTADÍSTICAS';
+    statsBtn.href = 'admin-estadisticas.html';
+    if (page === 'admin-estadisticas.html') statsBtn.classList.add('on');
+    nav.appendChild(statsBtn);
   }
   buildMobileNav();
 }
@@ -573,6 +580,7 @@ function buildMobileNav() {
     return '<a class="mnav-item' + on + '" href="' + href + '">' + m.label + '</a>';
   }).join('');
   if (isAdmin()) items += '<button class="mnav-item mnav-admin" onclick="closeMobileNav();openAdminPanel()">⚙ ADMIN</button>';
+  if (isAdmin()) items += '<a class="mnav-item mnav-admin" href="admin-estadisticas.html">📊 ESTADÍSTICAS</a>';
   // Acciones que en celular se sacan de la barra derecha para no amontonar.
   items += '<div class="mnav-div"></div>';
   items += '<a class="mnav-item" href="buscar-partido.html">⚽ JUGAR PARTIDO</a>';
@@ -1382,6 +1390,7 @@ function renderAll() {
   safe(renderWelcomeHome);
   safe(renderSaldoPage);
   safe(renderTorneos);
+  safe(renderStatsHub);
 }
 
 const HW_ACTIONS = [
@@ -2635,7 +2644,7 @@ function matchToRow(m) {
     confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
     prioritario: m.prioritario || false, casual_bet: m.casualBet || null, genero: m.genero || 'MIXTO', posiciones_buscadas: m.posiciones || [],
-    created_at: m.createdAt,
+    created_at: m.createdAt, stats: m.stats || {},
   };
 }
 function rowToMatch(r) {
@@ -2647,7 +2656,7 @@ function rowToMatch(r) {
     confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
     prioritario: r.prioritario || false, casualBet: r.casual_bet || null, genero: r.genero || 'MIXTO', posiciones: r.posiciones_buscadas || [],
-    createdAt: r.created_at,
+    createdAt: r.created_at, stats: r.stats || {},
   };
 }
 async function pushMatchToCloud(m) {
@@ -3597,7 +3606,7 @@ function buildMatchCard(m, mode) {
         <button onclick="openMatchChat('${m.id}')">💬 CHAT</button>
         ${mode === 'mia' ? buildCancelButton(m) : ''}
         ${isCreator ? buildDeleteMatchButton(m) : ''}
-        ${isAdmin() && !m.finalizado ? `<button class="mm-admin-btn" onclick="openAdminMatch('${m.id}')">⚙ ADMINISTRAR</button>` : ''}
+        ${isAdmin() ? `<button class="mm-admin-btn" onclick="openAdminMatch('${m.id}')">${m.finalizado ? '⚙ VER / CORREGIR' : '⚙ ADMINISTRAR'}</button>` : ''}
       </div>
     </div>`;
 }
@@ -4126,6 +4135,7 @@ function teamMatchToRow(m) {
     id: m.id, team_a_id: m.teamAId, team_b_id: m.teamBId, cancha: m.cancha, costo: m.costo,
     fecha: m.fecha, hora: m.hora, jugadores: m.jugadores, observaciones: m.observaciones,
     estado: m.estado, resultado: m.resultado, mvp_id: m.mvpId, created_at: m.createdAt,
+    stats: m.stats || {}, torneo_id: m.torneoId || null,
   };
 }
 function rowToTeamMatch(r) {
@@ -4133,6 +4143,7 @@ function rowToTeamMatch(r) {
     id: r.id, teamAId: r.team_a_id, teamBId: r.team_b_id, cancha: r.cancha, costo: r.costo,
     fecha: r.fecha, hora: r.hora, jugadores: r.jugadores, observaciones: r.observaciones,
     estado: r.estado, resultado: r.resultado, mvpId: r.mvp_id, createdAt: r.created_at,
+    stats: r.stats || {}, torneoId: r.torneo_id || null,
   };
 }
 async function pushTeamMatchToCloud(m) {
@@ -6412,6 +6423,126 @@ function crearTorneo() {
   renderTorneos();
 }
 
+// Crea un partido entre dos equipos ya inscritos en un torneo (fixture manual).
+// No pasa por retos/aceptación — el admin arma el cruce directamente, mismo
+// shape de team_matches que respondChallenge() pero con torneoId.
+function crearPartidoTorneo(torneoId) {
+  if (!isAdmin()) return;
+  const teamAId = (document.getElementById('adm-tn-teamA-' + torneoId) || {}).value;
+  const teamBId = (document.getElementById('adm-tn-teamB-' + torneoId) || {}).value;
+  const fecha = (document.getElementById('adm-tn-fecha-' + torneoId) || {}).value;
+  const hora = (document.getElementById('adm-tn-hora-' + torneoId) || {}).value;
+  const cancha = (document.getElementById('adm-tn-cancha-' + torneoId) || {}).value || '';
+  if (!teamAId || !teamBId) { alert('Selecciona los dos equipos.'); return; }
+  if (teamAId === teamBId) { alert('Los dos equipos deben ser distintos.'); return; }
+  if (!fecha) { alert('Ingresa la fecha del partido.'); return; }
+  const teamA = teams[teamAId], teamB = teams[teamBId];
+  if (!teamA || !teamB) return;
+
+  const match = {
+    id: 'tm_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    teamAId, teamBId, cancha, costo: '',
+    fecha, hora, jugadores: '', observaciones: '',
+    torneoId,
+    estado: 'programado', resultado: null, mvpId: null, createdAt: Date.now(),
+  };
+  teamMatches.push(match);
+  saveTeamMatches();
+  pushTeamMatchToCloud(match);
+  renderAdminPanel();
+  alert(`✅ Partido de torneo creado: ${teamA.name} vs ${teamB.name}.`);
+}
+
+// Tabla de goleadores/asistencias y posiciones de un torneo, calculada a partir
+// de los partidos de equipo etiquetados con ese torneoId (no hay tabla aparte).
+function calcTorneoStats(torneoId) {
+  const matches = teamMatches.filter(m => m.torneoId === torneoId);
+  const finalizados = matches.filter(m => m.estado === 'finalizado' && m.resultado);
+
+  const scorers = {}; // pid -> { goles, asistencias }
+  const standings = {}; // teamId -> { w,d,l,gf,ga }
+  finalizados.forEach(m => {
+    Object.entries(m.stats || {}).forEach(([pid, s]) => {
+      if (!scorers[pid]) scorers[pid] = { goles: 0, asistencias: 0 };
+      scorers[pid].goles += s.goles || 0;
+      scorers[pid].asistencias += s.asistencias || 0;
+    });
+    const gA = m.resultado.golesA || 0, gB = m.resultado.golesB || 0;
+    [[m.teamAId, gA, gB], [m.teamBId, gB, gA]].forEach(([tid, gf, ga]) => {
+      if (!tid) return;
+      if (!standings[tid]) standings[tid] = { w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+      standings[tid].gf += gf; standings[tid].ga += ga;
+      if (gf > ga) standings[tid].w++; else if (gf < ga) standings[tid].l++; else standings[tid].d++;
+    });
+  });
+
+  const scorersList = Object.entries(scorers)
+    .map(([pid, s]) => ({ pid, name: (profiles[pid] && (profiles[pid].nickname || profiles[pid].name)) || pid, ...s }))
+    .sort((a, b) => b.goles - a.goles || b.asistencias - a.asistencias)
+    .slice(0, 10);
+
+  const standingsList = Object.entries(standings)
+    .map(([teamId, s]) => ({ teamId, name: (teams[teamId] && teams[teamId].name) || teamId, ...s, pts: s.w * 3 + s.d, dg: s.gf - s.ga }))
+    .sort((a, b) => b.pts - a.pts || b.dg - a.dg);
+
+  return { matches, scorersList, standingsList };
+}
+
+// Bloque del panel admin para un torneo: inscritos, crear cruce, partidos y tabla.
+function renderAdminTorneoCard(t) {
+  const inscritos = (t.teams || []).map(e => teams[e.teamId]).filter(Boolean);
+  const { matches, scorersList, standingsList } = calcTorneoStats(t.id);
+
+  const teamOptions = inscritos.map(tm => `<option value="${tm.id}">${tm.name}</option>`).join('');
+  const crearHtml = inscritos.length >= 2 ? `
+    <div class="adm-torneo-form">
+      <select id="adm-tn-teamA-${t.id}"><option value="">Equipo A</option>${teamOptions}</select>
+      <select id="adm-tn-teamB-${t.id}"><option value="">Equipo B</option>${teamOptions}</select>
+      <input type="date" id="adm-tn-fecha-${t.id}">
+      <input type="time" id="adm-tn-hora-${t.id}">
+      <input type="text" id="adm-tn-cancha-${t.id}" placeholder="Cancha" value="${t.cancha || ''}">
+      <button class="adm-edit-btn" onclick="crearPartidoTorneo('${t.id}')">+ CREAR PARTIDO</button>
+    </div>` : `<div class="adm-empty">Necesita al menos 2 equipos inscritos para crear cruces.</div>`;
+
+  const matchesHtml = matches.length ? matches.map(m => {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    const done = m.estado === 'finalizado' && m.resultado;
+    const badge = done ? `${m.resultado.golesA}-${m.resultado.golesB}` : 'PROGRAMADO';
+    return `
+      <div class="adm-match-row">
+        <div class="adm-match-info">
+          <div class="adm-match-teams">${teamA ? teamA.name : '?'} vs ${teamB ? teamB.name : '?'}</div>
+          <div class="adm-match-meta">${m.fecha}${m.hora ? ' · '+m.hora : ''} · ${m.cancha||''}</div>
+        </div>
+        <span class="adm-badge ${done ? 'adm-badge-done' : 'adm-badge-prog'}">${badge}</span>
+        <button class="adm-edit-btn ${done ? 'adm-edit-btn-gray' : ''}" onclick="closeAdminPanel();openAdminTeamMatch('${m.id}')">${done ? 'VER' : 'REGISTRAR'}</button>
+      </div>`;
+  }).join('') : '<div class="adm-empty">Sin partidos creados todavía.</div>';
+
+  const scorersHtml = scorersList.length ? `
+    <table class="adm-torneo-table">
+      <thead><tr><th>JUGADOR</th><th>G</th><th>A</th></tr></thead>
+      <tbody>${scorersList.map(s => `<tr><td>${s.name}</td><td>${s.goles}</td><td>${s.asistencias}</td></tr>`).join('')}</tbody>
+    </table>` : '';
+
+  const standingsHtml = standingsList.length ? `
+    <table class="adm-torneo-table">
+      <thead><tr><th>EQUIPO</th><th>PJ</th><th>PTS</th><th>DG</th></tr></thead>
+      <tbody>${standingsList.map(s => `<tr><td>${s.name}</td><td>${s.w+s.d+s.l}</td><td>${s.pts}</td><td>${s.dg>0?'+':''}${s.dg}</td></tr>`).join('')}</tbody>
+    </table>` : '';
+
+  return `
+    <div class="adm-torneo-card">
+      <div class="adm-torneo-title">${t.nombre} <span class="adm-badge adm-badge-${t.status==='abierto'?'prog':'done'}">${(t.status||'').toUpperCase()}</span></div>
+      <div class="adm-match-meta">${t.fecha || ''} · ${inscritos.length} equipo(s) inscrito(s)</div>
+      ${crearHtml}
+      <div class="adm-torneo-subtitle">PARTIDOS</div>
+      ${matchesHtml}
+      ${standingsList.length ? `<div class="adm-torneo-subtitle">POSICIONES</div>${standingsHtml}` : ''}
+      ${scorersList.length ? `<div class="adm-torneo-subtitle">GOLEADORES</div>${scorersHtml}` : ''}
+    </div>`;
+}
+
 // Rol de quien mira el torneo:
 //  'admin'   -> Breco/admins: crean y gestionan.
 //  'founder' -> capitanes y jugadores fundadores: pueden solicitar unirse con su equipo.
@@ -6838,11 +6969,670 @@ function toggleAudio() {
    una imagen de pantalla completa. En gráficas débiles eso congela la página.
    Se elimina: el fondo queda estático (sin pérdida real). */
 
+/* ===== CENTRO DE ESTADÍSTICAS (admin-estadisticas.html) =====
+   Página aparte del panel/modal ⚙ ADMIN (ese sigue igual, no se toca). Reutiliza
+   sin modificar: openAdminMatch, openAdminTeamMatch, openAdminPlayer,
+   pushTournamentToCloud, calcTorneoStats, crearPartidoTorneo. */
+
+let statsHubFiltroModo = 'todos';
+let statsHubFiltroTorneo = '';
+const SH_JUGADORES_PAGE_SIZE = 10;
+let statsHubJugadoresQuery = '';
+let statsHubJugadoresPage = 1;
+
+// Campos de box score por modo (mismo shape que ya usan admin-partido.html y el
+// modal de Modo Libre — no se unifica el contrato, solo se replican los campos
+// para poder cargarlos inline aquí, sin popup).
+const SH_TEAM_FIELD_STATS = [
+  { key: 'goles', label: 'GOL', icon: '⚽' },
+  { key: 'asistencias', label: 'ASIST', icon: '🎯' },
+  { key: 'tirosAlArco', label: 'TIRO', icon: '🥅' },
+  { key: 'pasesClave', label: 'PASE CLAVE', icon: '⚡' },
+  { key: 'recuperaciones', label: 'RECUP', icon: '🛡' },
+  { key: 'jugadasDestacadas', label: 'JUG. DEST', icon: '✨' },
+];
+const SH_TEAM_POR_STATS = [
+  { key: 'atajadas', label: 'ATAJADAS', icon: '🧤' },
+  { key: 'atajadasArea', label: 'ATAJ. ÁREA', icon: '📐' },
+  { key: 'despejes', label: 'DESPEJES', icon: '👊' },
+  { key: 'achiques', label: 'ACHIQUES', icon: '🔒' },
+  { key: 'pasesLargos', label: 'PASES LARGOS', icon: '📏' },
+  { key: 'jugadasIniciadas', label: 'JUG. INICIADAS', icon: '🎯' },
+];
+const SH_TEAM_NEG_STATS = [
+  { key: 'erroresGraves', label: 'ERROR GRAVE', icon: '❌' },
+  { key: 'oportunidadesFalladas', label: 'OP. FALLADA', icon: '😮' },
+  { key: 'faltasCometidas', label: 'FALTA', icon: '🦵' },
+  { key: 'amarillas', label: 'AMARILLA', icon: '🟨' },
+  { key: 'rojas', label: 'ROJA', icon: '🟥' },
+];
+const SH_LIBRE_STATS = [
+  { key: 'goles', label: 'GOL', icon: '⚽' },
+  { key: 'asistencias', label: 'ASIST', icon: '🎯' },
+  { key: 'tirosAlArco', label: 'TIRO', icon: '🥅' },
+  { key: 'recuperaciones', label: 'RECUP', icon: '🛡' },
+  { key: 'errores', label: 'ERROR', icon: '❌' },
+  { key: 'amarillas', label: 'AMARILLA', icon: '🟨' },
+];
+
+// Misma fórmula de calificación que admin-partido.html (apCalcRating), copiada
+// para poder calcularla en vivo acá sin depender de esa página.
+function shCalcRating(position, s) {
+  if (position === 'POR') {
+    let r = 6.5;
+    r += (s.atajadas||0)*.15 + (s.atajadasArea||0)*.2 + (s.despejes||0)*.05 + (s.achiques||0)*.1 + (s.pasesLargos||0)*.02 + (s.jugadasIniciadas||0)*.08;
+    r -= (s.erroresGraves||0)*.4 + (s.oportunidadesFalladas||0)*.15 + (s.faltasCometidas||0)*.05 + (s.amarillas||0)*.3 + (s.rojas||0)*1.2;
+    return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
+  }
+  let r = 6.0;
+  r += (s.goles||0)*.35 + (s.asistencias||0)*.2 + (s.tirosAlArco||0)*.08 + (s.pasesClave||0)*.1 + (s.recuperaciones||0)*.02 + (s.jugadasDestacadas||0)*.2;
+  r -= (s.erroresGraves||0)*.3 + (s.oportunidadesFalladas||0)*.1 + (s.faltasCometidas||0)*.05 + (s.amarillas||0)*.3 + (s.rojas||0)*1.0;
+  return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
+}
+
+let _shOpenMatchId = null;
+let _shOpenEsEquipo = null;
+let _shOpenDone = false;
+let _shCorrecting = false;
+let _shMvpId = null;
+const _shStats = {}; // { pid: { statKey: value } }
+
+function initStatsHubPage() {
+  if (!isAdmin()) {
+    document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">🔒 Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>';
+    return;
+  }
+  renderStatsHub();
+}
+
+function statsHubSetFiltroModo(modo) {
+  statsHubFiltroModo = modo;
+  document.querySelectorAll('.sh-filtro-btn').forEach(b => b.classList.toggle('on', b.dataset.modo === modo));
+  renderStatsHubPartidos();
+}
+function statsHubSetFiltroTorneo(id) {
+  statsHubFiltroTorneo = id;
+  renderStatsHubPartidos();
+}
+
+function renderStatsHub() {
+  renderStatsHubPartidos();
+  renderStatsHubJugadores();
+  renderStatsHubTorneos();
+}
+
+// IDs de jugadores de un partido, en cualquiera de los dos modos.
+function statsHubMatchPlayerIds(m, esEquipo) {
+  if (esEquipo) {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    return [...((teamA && teamA.memberIds) || []), ...((teamB && teamB.memberIds) || [])];
+  }
+  const ids = [];
+  (m.necesita || []).forEach(slot => (slot.unidos || []).forEach(u => ids.push(u.profileId)));
+  if (m.creatorId && !ids.includes(m.creatorId)) ids.unshift(m.creatorId);
+  return [...new Set(ids)];
+}
+
+// ===== Interfaz inline de carga/corrección de un partido (sin popup) =====
+
+function statsHubToggleDetail(matchId, esEquipo) {
+  if (!isAdmin()) return;
+  const wasOpen = _shOpenMatchId === matchId;
+  document.querySelectorAll('.sh-detail.open').forEach(d => { d.classList.remove('open'); d.innerHTML = ''; });
+  _shOpenMatchId = null; _shOpenEsEquipo = null; _shCorrecting = false;
+  if (wasOpen) return;
+
+  const wrap = document.getElementById('sh-detail-' + matchId);
+  if (!wrap) return;
+  _shOpenMatchId = matchId; _shOpenEsEquipo = esEquipo;
+  wrap.classList.add('open');
+  statsHubRenderDetail(matchId, esEquipo);
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function statsHubBuildM2(pid, esEquipo) {
+  const s = _shStats[pid] || {};
+  const mvp = pid === _shMvpId;
+  if (esEquipo) {
+    const p = profiles[pid];
+    const cal = shCalcRating(p ? p.position : null, s);
+    return {
+      goles: s.goles || 0, asistencias: s.asistencias || 0, tirosAlArco: s.tirosAlArco || 0,
+      pasesClave: s.pasesClave || 0, recuperaciones: s.recuperaciones || 0, jugadasDestacadas: s.jugadasDestacadas || 0,
+      erroresGraves: s.erroresGraves || 0, oportunidadesFalladas: s.oportunidadesFalladas || 0,
+      faltasCometidas: s.faltasCometidas || 0, amarillas: s.amarillas || 0, rojas: s.rojas || 0,
+      atajadas: s.atajadas || 0, atajadasArea: s.atajadasArea || 0, despejes: s.despejes || 0,
+      achiques: s.achiques || 0, pasesLargos: s.pasesLargos || 0, jugadasIniciadas: s.jugadasIniciadas || 0,
+      calificacion: cal, mvp,
+    };
+  }
+  const calInput = document.getElementById('sh-cal-' + pid);
+  const cal = calInput ? (parseFloat(calInput.value) || 6.5) : (s.calificacion || 6.5);
+  return {
+    goles: s.goles || 0, asistencias: s.asistencias || 0, tirosAlArco: s.tirosAlArco || 0, pases: s.tirosAlArco || 0,
+    recuperaciones: s.recuperaciones || 0, errores: s.errores || 0, amarillas: s.amarillas || 0,
+    calificacion: cal, mvp,
+  };
+}
+
+function statsHubUpdateRowPreview(pid) {
+  const p = profiles[pid];
+  const el = document.getElementById('sh-preview-' + pid);
+  if (!p || !el || _shOpenEsEquipo === null) return;
+  if (_shOpenDone) {
+    // Partido ya jugado: no hay una previsualización confiable de "antes/después"
+    // (el delta real ya se aplicó en su momento) — se muestra el estado actual.
+    el.innerHTML = `ACTUAL: OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A`;
+    return;
+  }
+  const m2 = statsHubBuildM2(pid, _shOpenEsEquipo);
+  const d = computeMatchDeltas(p, m2);
+  el.innerHTML = `OVR ${d.ovrBefore} → <b>${d.ovrAfter}</b> · XP +${d.xpGain} · LP +${d.lpGain}`;
+}
+
+function statsHubUpdateScoreboard() {
+  if (!_shOpenEsEquipo || !_shOpenMatchId) return;
+  const m = teamMatches.find(x => x.id === _shOpenMatchId);
+  if (!m) return;
+  const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+  const sum = team => ((team && team.memberIds) || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
+  const elA = document.getElementById('sh-score-a'), elB = document.getElementById('sh-score-b');
+  if (elA) elA.textContent = sum(teamA);
+  if (elB) elB.textContent = sum(teamB);
+}
+
+function statsHubStatChange(pid, key, delta) {
+  if (!_shStats[pid]) _shStats[pid] = {};
+  _shStats[pid][key] = Math.max(0, (_shStats[pid][key] || 0) + delta);
+  const el = document.getElementById('sh-s-' + pid + '-' + key);
+  if (el) el.textContent = _shStats[pid][key];
+  const p = profiles[pid];
+  if (p && _shOpenEsEquipo) {
+    const calEl = document.getElementById('sh-cal-live-' + pid);
+    if (calEl) calEl.textContent = shCalcRating(p.position, _shStats[pid]).toFixed(1);
+  }
+  statsHubUpdateRowPreview(pid);
+  if (_shOpenEsEquipo) statsHubUpdateScoreboard();
+}
+
+function statsHubSetMvp(pid) { _shMvpId = pid; }
+
+function statsHubStartCorrection(matchId, esEquipo) {
+  if (!confirm('Vas a corregir el box score ya cargado.\n\nOVR, XP y el historial YA aplicados NO se recalculan automáticamente — solo se corrige el detalle guardado. Si necesitás ajustar la carta de un jugador, hacelo desde "Editar jugador".\n\n¿Continuar?')) return;
+  _shCorrecting = true;
+  statsHubRenderDetail(matchId, esEquipo);
+}
+
+function statsHubBuildPlayerRow(pid, esEquipo, editable) {
+  const p = profiles[pid];
+  if (!p) return '';
+  const isPor = esEquipo && p.position === 'POR';
+  const fields = esEquipo ? (isPor ? SH_TEAM_POR_STATS : SH_TEAM_FIELD_STATS) : SH_LIBRE_STATS;
+  const negFields = esEquipo ? SH_TEAM_NEG_STATS : [];
+  const s = _shStats[pid] || {};
+  const cellsHtml = fields.concat(negFields).map(f => {
+    const val = s[f.key] || 0;
+    if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-lbl">${f.icon}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
+    return `<div class="sh-stat-cell"><span class="sh-stat-lbl">${f.icon}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div>`;
+  }).join('');
+  const calHtml = esEquipo
+    ? `<span class="sh-cal-auto" id="sh-cal-live-${pid}">${shCalcRating(p.position, s).toFixed(1)}</span>`
+    : `<input class="sh-cal-input" id="sh-cal-${pid}" type="number" min="1" max="10" step="0.5" value="${s.calificacion || 6.5}" ${editable ? '' : 'disabled'} onchange="statsHubUpdateRowPreview('${pid}')">`;
+  const mvpChecked = _shMvpId === pid ? 'checked' : '';
+  return `
+    <div class="sh-player-row" data-pid="${pid}">
+      <div class="sh-player-name">${p.nickname || p.name} <span class="sh-player-pos">${p.position}</span></div>
+      <div class="sh-stat-cells">${cellsHtml}</div>
+      <div class="sh-cal-wrap">CALIF ${calHtml}</div>
+      <label class="sh-mvp-wrap"><input type="radio" name="sh-mvp-${_shOpenMatchId}" value="${pid}" ${mvpChecked} ${editable ? '' : 'disabled'} onchange="statsHubSetMvp('${pid}')"> MVP</label>
+      <div class="sh-preview" id="sh-preview-${pid}"></div>
+    </div>`;
+}
+
+function statsHubRenderDetail(matchId, esEquipo) {
+  const wrap = document.getElementById('sh-detail-' + matchId);
+  if (!wrap) return;
+  const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
+  if (!m) return;
+
+  const done = esEquipo ? !!(m.estado === 'finalizado' && m.resultado) : !!(m.finalizado && m.resultado);
+  _shOpenDone = done;
+  const editable = !done || _shCorrecting;
+
+  Object.keys(_shStats).forEach(k => delete _shStats[k]);
+  _shMvpId = m.mvpId || null;
+  if (m.stats) Object.entries(m.stats).forEach(([pid, s]) => { _shStats[pid] = Object.assign({}, s); });
+
+  const playerIds = statsHubMatchPlayerIds(m, esEquipo);
+  let playersHtml;
+  if (esEquipo) {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    playersHtml = `
+      <div class="sh-team-block"><div class="sh-team-title">${teamA ? teamA.name : '?'}</div>${(teamA && teamA.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>
+      <div class="sh-team-block"><div class="sh-team-title">${teamB ? teamB.name : '?'}</div>${(teamB && teamB.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>`;
+  } else {
+    playersHtml = playerIds.length ? playerIds.map(pid => statsHubBuildPlayerRow(pid, false, editable)).join('') : '<div class="adm-empty">Sin jugadores confirmados.</div>';
+  }
+
+  const scoreHtml = esEquipo
+    ? `<div class="sh-score"><span id="sh-score-a">0</span> - <span id="sh-score-b">0</span></div>`
+    : `<div class="sh-score-inputs">LOCAL <input class="sh-cal-input" id="sh-goles-local" type="number" min="0" value="${done ? (m.resultado.golesLocal || 0) : 0}" ${editable ? '' : 'disabled'}> · VISITANTE <input class="sh-cal-input" id="sh-goles-visitante" type="number" min="0" value="${done ? (m.resultado.golesVisitante || 0) : 0}" ${editable ? '' : 'disabled'}></div>`;
+
+  const actionHtml = !done
+    ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},false)">✅ FINALIZAR</button>`
+    : (_shCorrecting
+      ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},true)">💾 GUARDAR CORRECCIÓN</button>`
+      : `<button class="adm-edit-btn" onclick="statsHubStartCorrection('${matchId}',${esEquipo})">✏️ CORREGIR</button>
+         <button class="sh-btn-warn" onclick="statsHubResetMatch('${matchId}',${esEquipo})">⚠️ MARCAR COMO SIN REGISTRAR</button>`);
+
+  wrap.innerHTML = `
+    ${scoreHtml}
+    <div class="sh-players-wrap">${playersHtml}</div>
+    <textarea class="sh-notes" id="sh-notes-${matchId}" placeholder="Notas del partido" ${editable ? '' : 'disabled'}>${m.notes || ''}</textarea>
+    <div class="sh-detail-actions">${actionHtml}</div>
+  `;
+
+  if (esEquipo) statsHubUpdateScoreboard();
+  playerIds.forEach(pid => statsHubUpdateRowPreview(pid));
+}
+
+async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
+  if (!isAdmin()) return;
+  const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
+  if (!m) return;
+  const notes = (document.getElementById('sh-notes-' + matchId) || {}).value || '';
+
+  if (correctionOnly) {
+    if (!confirm('¿Guardar la corrección? El marcador y las cartas ya aplicadas NO cambian, solo el detalle del box score.')) return;
+    const playerIds = statsHubMatchPlayerIds(m, esEquipo);
+    const statsMap = {};
+    playerIds.forEach(pid => { statsMap[pid] = statsHubBuildM2(pid, esEquipo); });
+    m.stats = statsMap;
+    m.mvpId = _shMvpId;
+    m.notes = notes;
+    if (esEquipo) { saveTeamMatches(); await pushTeamMatchToCloud(m); }
+    else { saveOpenMatches(); await pushMatchToCloud(m); }
+    alert('✅ Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
+    statsHubToggleDetail(matchId, esEquipo);
+    renderStatsHub();
+    return;
+  }
+
+  if (esEquipo) {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    if (!teamA || !teamB) return;
+    const golesA = (teamA.memberIds || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
+    const golesB = (teamB.memberIds || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
+    const label = golesA > golesB ? `${teamA.name} gana ${golesA}-${golesB} a ${teamB.name}`
+      : golesA < golesB ? `${teamB.name} gana ${golesB}-${golesA} a ${teamA.name}`
+      : `Empate ${golesA}-${golesB}`;
+    if (!confirm(`¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`)) return;
+
+    teamA.goalsFor = (teamA.goalsFor || 0) + golesA; teamA.goalsAgainst = (teamA.goalsAgainst || 0) + golesB;
+    teamB.goalsFor = (teamB.goalsFor || 0) + golesB; teamB.goalsAgainst = (teamB.goalsAgainst || 0) + golesA;
+    if (golesA > golesB) { teamA.wins = (teamA.wins || 0) + 1; teamB.losses = (teamB.losses || 0) + 1; }
+    else if (golesA < golesB) { teamB.wins = (teamB.wins || 0) + 1; teamA.losses = (teamA.losses || 0) + 1; }
+    else { teamA.draws = (teamA.draws || 0) + 1; teamB.draws = (teamB.draws || 0) + 1; }
+
+    const resultLabel = golesA > golesB ? `${teamA.name} venció a ${teamB.name} ${golesA}-${golesB}`
+      : golesA < golesB ? `${teamB.name} venció a ${teamA.name} ${golesB}-${golesA}`
+      : `${teamA.name} empató con ${teamB.name} ${golesA}-${golesB}`;
+
+    const statsMap = {};
+    const allIds = [...(teamA.memberIds || []), ...(teamB.memberIds || [])];
+    for (const pid of allIds) {
+      const p = profiles[pid]; if (!p) continue;
+      const m2 = statsHubBuildM2(pid, true);
+      const d = computeMatchDeltas(p, m2);
+      // Se guardan también los deltas aplicados junto al box score (en la misma
+      // columna stats, sin migración nueva) para poder revertir con precisión
+      // si el partido se registró por error — ver statsHubResetMatch.
+      statsMap[pid] = Object.assign({}, m2, { ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
+      checkAchievements(p, m2);
+      p.ovr = d.ovrAfter; p.xp = d.xpAfter; p.lp = (p.lp || 0) + d.lpGain; p.matches = (p.matches || 0) + 1;
+      p.goals = (p.goals || 0) + m2.goles; p.assists = (p.assists || 0) + m2.asistencias;
+      if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+      if (d.attrsGain) d.attrsGain.forEach(k => { if (p.attrs && p.attrs[k] !== undefined) p.attrs[k] = Math.min(99, p.attrs[k] + 1); });
+      p.lastUpdate = new Date().toISOString();
+      p.history = p.history || [];
+      p.history.push({ date: m.fecha, cancha: m.cancha, result: resultLabel, goles: m2.goles, asistencias: m2.asistencias, recuperaciones: m2.recuperaciones, calificacion: m2.calificacion, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
+      const teamObj = (teamA.memberIds || []).includes(pid) ? teamA : teamB;
+      const rivalName = teamObj.id === m.teamAId ? teamB.name : teamA.name;
+      p.pendingReveal = { matchId: m.id, resultLabel, teamName: teamObj.name, rivalName, ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain, rankBefore: d.rankBefore ? d.rankBefore.name : null, rankAfter: d.rankAfter ? d.rankAfter.name : null, rankChanged: !!(d.rankBefore && d.rankAfter && d.rankBefore.name !== d.rankAfter.name) };
+      profiles[pid] = p;
+      await pushProfileToCloud(p);
+    }
+
+    m.estado = 'finalizado'; m.resultado = { golesA, golesB }; m.stats = statsMap; m.mvpId = _shMvpId; m.notes = notes;
+
+    const winTeam = golesA > golesB ? teamA : golesB > golesA ? teamB : null;
+    if (winTeam) {
+      const cap = profiles[winTeam.captainId];
+      if (cap) { cap.notifications = cap.notifications || []; cap.notifications.push({ icon: '🏆', text: resultLabel, time: 'AHORA' }); profiles[winTeam.captainId] = cap; }
+    }
+
+    saveTeamMatches(); saveProfiles(); saveTeams();
+    await pushTeamMatchToCloud(m);
+    await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
+    alert(`✅ Resultado registrado.\n\n${resultLabel}`);
+  } else {
+    const golesLocal = parseInt((document.getElementById('sh-goles-local') || {}).value, 10) || 0;
+    const golesVisitante = parseInt((document.getElementById('sh-goles-visitante') || {}).value, 10) || 0;
+    if (!confirm('¿Confirmar y enviar estas estadísticas?')) return;
+
+    const playerIds = statsHubMatchPlayerIds(m, false);
+    const statsMap = {};
+    for (const pid of playerIds) {
+      const p = profiles[pid]; if (!p) continue;
+      const m2 = statsHubBuildM2(pid, false);
+      const d = computeMatchDeltas(p, m2);
+      statsMap[pid] = Object.assign({}, m2, { ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
+      checkAchievements(p, m2);
+      p.ovr = d.ovrAfter; p.xp = d.xpAfter; p.lp = (p.lp || 0) + d.lpGain;
+      p.goals = (p.goals || 0) + m2.goles; p.assists = (p.assists || 0) + m2.asistencias; p.matches = (p.matches || 0) + 1;
+      if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
+      p.lastUpdate = new Date().toISOString();
+      p.history = p.history || [];
+      p.history.push({ date: m.fecha, cancha: m.cancha || m.zona, calificacion: m2.calificacion, goles: m2.goles, asistencias: m2.asistencias, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain });
+      profiles[pid] = p;
+      await pushProfileToCloud(p);
+    }
+    m.finalizado = true; m.resultado = { golesLocal, golesVisitante }; m.stats = statsMap; m.mvpId = _shMvpId; m.notes = notes;
+    saveOpenMatches(); await pushMatchToCloud(m); saveProfiles();
+    alert('✅ Estadísticas enviadas y cartas actualizadas.');
+  }
+
+  statsHubToggleDetail(matchId, esEquipo);
+  renderStatsHub();
+}
+
+// Deshace un partido registrado por error: si el partido se finalizó con esta
+// misma herramienta, revierte con precisión OVR/XP/LP/goles/asistencias/PJ de
+// cada jugador (los deltas quedan guardados junto al box score en m.stats) y
+// vuelve a dejarlo "sin registrar" para cargarlo de nuevo. Si es un partido
+// viejo sin esos deltas guardados, solo reinicia el estado del partido y avisa
+// que los efectos ya aplicados a los jugadores hay que corregirlos a mano.
+async function statsHubResetMatch(matchId, esEquipo) {
+  if (!isAdmin()) return;
+  const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
+  if (!m) return;
+  const statsMap = m.stats || {};
+  const pids = Object.keys(statsMap);
+  const hasDeltas = pids.length > 0 && pids.every(pid => statsMap[pid] && statsMap[pid].ovrDelta !== undefined);
+
+  const warn = hasDeltas
+    ? '⚠️ Esto va a REVERTIR el registro de este partido: se restan el OVR/XP/LP/goles/asistencias/partidos jugados que ganó cada jugador, y el partido vuelve a quedar "sin registrar" para cargarlo de nuevo.\n\n¿Seguro que este partido se marcó por error?'
+    : '⚠️ Este partido no tiene guardados los deltas que aplicó (se cargó antes de esta función) — solo se puede reiniciar el ESTADO del partido. El OVR/XP/goles/asistencias que ya se le sumaron a cada jugador NO se revierten solos; si hace falta, corregilos a mano desde "Editar jugador".\n\n¿Continuar igual?';
+  if (!confirm(warn)) return;
+
+  if (hasDeltas) {
+    const cancha = esEquipo ? m.cancha : (m.cancha || m.zona);
+    for (const pid of pids) {
+      const p = profiles[pid];
+      const d = statsMap[pid];
+      if (!p || !d) continue;
+      p.ovr = Math.max(40, Math.min(99, (p.ovr || 60) - (d.ovrDelta || 0)));
+      p.xp = Math.max(0, (p.xp || 0) - (d.xpGain || 0));
+      p.lp = Math.max(0, (p.lp || 0) - (d.lpGain || 0));
+      p.goals = Math.max(0, (p.goals || 0) - (d.goles || 0));
+      p.assists = Math.max(0, (p.assists || 0) - (d.asistencias || 0));
+      p.matches = Math.max(0, (p.matches || 0) - 1);
+      if (d.mvp) p.mvps = Math.max(0, (p.mvps || 0) - 1);
+      if (p.history && p.history.length) {
+        for (let i = p.history.length - 1; i >= 0; i--) {
+          const h = p.history[i];
+          if (h.date === m.fecha && h.cancha === cancha) { p.history.splice(i, 1); break; }
+        }
+      }
+      profiles[pid] = p;
+      await pushProfileToCloud(p);
+    }
+  }
+
+  if (esEquipo) {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    if (teamA && teamB && m.resultado) {
+      const { golesA, golesB } = m.resultado;
+      teamA.goalsFor = Math.max(0, (teamA.goalsFor || 0) - golesA); teamA.goalsAgainst = Math.max(0, (teamA.goalsAgainst || 0) - golesB);
+      teamB.goalsFor = Math.max(0, (teamB.goalsFor || 0) - golesB); teamB.goalsAgainst = Math.max(0, (teamB.goalsAgainst || 0) - golesA);
+      if (golesA > golesB) { teamA.wins = Math.max(0, (teamA.wins || 0) - 1); teamB.losses = Math.max(0, (teamB.losses || 0) - 1); }
+      else if (golesA < golesB) { teamB.wins = Math.max(0, (teamB.wins || 0) - 1); teamA.losses = Math.max(0, (teamA.losses || 0) - 1); }
+      else { teamA.draws = Math.max(0, (teamA.draws || 0) - 1); teamB.draws = Math.max(0, (teamB.draws || 0) - 1); }
+      saveTeams();
+      await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
+    }
+    m.estado = 'programado'; m.resultado = null; m.stats = {}; m.mvpId = null; m.notes = '';
+    saveTeamMatches();
+    await pushTeamMatchToCloud(m);
+  } else {
+    m.finalizado = false; m.resultado = null; m.stats = {}; m.mvpId = null; m.notes = '';
+    saveOpenMatches();
+    await pushMatchToCloud(m);
+  }
+  saveProfiles();
+
+  alert('✅ Partido reiniciado. Ya podés volver a cargar sus estadísticas.');
+  statsHubToggleDetail(matchId, esEquipo);
+  renderStatsHub();
+}
+
+function renderStatsHubPartidos() {
+  const el = document.getElementById('sh-partidos-list');
+  if (!el) return;
+  // Si hay un detalle de partido abierto (cargando/corrigiendo estadísticas a
+  // mano), no se vuelve a pintar la lista: un sync de fondo no debe borrar lo
+  // que el admin está escribiendo.
+  if (_shOpenMatchId) return;
+  const tournaments = loadTournaments();
+
+  let rows = [];
+  if (statsHubFiltroModo !== 'rey') {
+    rows = rows.concat(openMatches.map(m => ({ m, esEquipo: false })));
+  }
+  if (statsHubFiltroModo !== 'libre') {
+    rows = rows.concat(teamMatches.map(m => ({ m, esEquipo: true })));
+  }
+  if (statsHubFiltroTorneo) {
+    rows = rows.filter(r => r.esEquipo && r.m.torneoId === statsHubFiltroTorneo);
+  }
+  rows.sort((a, b) => {
+    const da = a.esEquipo ? new Date(`${a.m.fecha}T${a.m.hora || '00:00'}`) : matchDateTime(a.m);
+    const db = b.esEquipo ? new Date(`${b.m.fecha}T${b.m.hora || '00:00'}`) : matchDateTime(b.m);
+    return db - da;
+  });
+  rows = rows.slice(0, 60);
+
+  el.innerHTML = rows.length ? rows.map(({ m, esEquipo }) => {
+    const done = esEquipo ? !!(m.estado === 'finalizado' && m.resultado) : !!(m.finalizado && m.resultado);
+    const badge = done
+      ? (esEquipo ? `${m.resultado.golesA}-${m.resultado.golesB}` : `${m.resultado.golesLocal||0}-${m.resultado.golesVisitante||0}`)
+      : 'SIN REGISTRAR';
+    const badgeCls = done ? 'adm-badge-done' : 'adm-badge-prog';
+    const torneo = esEquipo && m.torneoId ? (tournaments[m.torneoId] && tournaments[m.torneoId].nombre) : null;
+    const titulo = esEquipo
+      ? `${(teams[m.teamAId]||{}).name || '?'} vs ${(teams[m.teamBId]||{}).name || '?'}`
+      : (m.cancha || m.zona || 'Partido Modo Libre');
+    return `
+      <div class="adm-match-row sh-match-row">
+        <div class="adm-match-info">
+          <div class="adm-match-teams">${titulo} <span class="sh-mode-tag">${esEquipo ? 'REY DEL BARRIO' : 'MODO LIBRE'}</span></div>
+          <div class="adm-match-meta">${m.fecha}${(m.hora || m.horaValue) ? ' · ' + (m.hora || m.horaValue) : ''}${torneo ? ' · 🏆 ' + torneo : ''}</div>
+        </div>
+        <span class="adm-badge ${badgeCls}">${badge}</span>
+        <button class="adm-edit-btn" onclick="statsHubToggleDetail('${m.id}',${esEquipo})">📋 ${done ? 'VER / CORREGIR' : 'CARGAR ESTADÍSTICAS'}</button>
+        <div class="sh-detail" id="sh-detail-${m.id}"></div>
+      </div>`;
+  }).join('') : '<div class="adm-empty">No hay partidos con este filtro.</div>';
+}
+
+function statsHubJugadoresSearch(value) {
+  statsHubJugadoresQuery = value || '';
+  statsHubJugadoresPage = 1;
+  renderStatsHubJugadores();
+}
+
+function statsHubJugadoresGoPage(page) {
+  statsHubJugadoresPage = page;
+  renderStatsHubJugadores();
+}
+
+// Filtro multi-término: cada palabra escrita debe matchear al menos uno de los
+// campos (mismo criterio de substring que renderPlayerSearch en jugadores.html,
+// extendido a varios términos a la vez y a posición/dorsal — útil para buscar
+// por ejemplo "santi DEL" o el número de camiseta).
+function statsHubPlayerMatches(p, query) {
+  const terms = (query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!terms.length) return true;
+  const haystacks = [
+    (p.name || '').toLowerCase(),
+    (p.nickname || '').toLowerCase(),
+    (p.position || '').toLowerCase(),
+    (p.team || '').toLowerCase(),
+    (p.dorsal === 0 || p.dorsal) ? String(p.dorsal) : '',
+  ];
+  return terms.every(term => haystacks.some(h => h.includes(term)));
+}
+
+function renderStatsHubJugadores() {
+  const el = document.getElementById('sh-jugadores-list');
+  if (!el) return;
+  const allPlayers = Object.values(profiles)
+    .filter(p => statsHubPlayerMatches(p, statsHubJugadoresQuery))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  const totalPages = Math.max(1, Math.ceil(allPlayers.length / SH_JUGADORES_PAGE_SIZE));
+  if (statsHubJugadoresPage > totalPages) statsHubJugadoresPage = totalPages;
+  const start = (statsHubJugadoresPage - 1) * SH_JUGADORES_PAGE_SIZE;
+  const pageItems = allPlayers.slice(start, start + SH_JUGADORES_PAGE_SIZE);
+
+  el.innerHTML = pageItems.length ? pageItems.map(p => `
+    <div class="adm-player-row">
+      <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
+      <div class="adm-player-info">
+        <div class="adm-player-name">${p.nickname || p.name}</div>
+        <div class="adm-player-meta">${p.position || '?'} · OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A · ${p.matches||0} PJ</div>
+      </div>
+      <button class="adm-edit-btn" onclick="openAdminPlayer('${p.id}')">EDITAR</button>
+    </div>`).join('') : '<div class="adm-empty">No se encontraron jugadores con ese filtro.</div>';
+
+  const pagEl = document.getElementById('sh-jugadores-paginator');
+  if (pagEl) {
+    pagEl.innerHTML = totalPages <= 1 ? '' : `
+      <button class="sh-page-btn" ${statsHubJugadoresPage <= 1 ? 'disabled' : ''} onclick="statsHubJugadoresGoPage(${statsHubJugadoresPage - 1})">‹ ANTERIOR</button>
+      <span class="sh-page-info">Página ${statsHubJugadoresPage} de ${totalPages} · ${allPlayers.length} jugador(es)</span>
+      <button class="sh-page-btn" ${statsHubJugadoresPage >= totalPages ? 'disabled' : ''} onclick="statsHubJugadoresGoPage(${statsHubJugadoresPage + 1})">SIGUIENTE ›</button>
+    `;
+  }
+}
+
+function renderStatsHubTorneos() {
+  const el = document.getElementById('sh-torneos-list');
+  if (!el) return;
+  const tournaments = Object.values(loadTournaments()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  el.innerHTML = tournaments.length ? tournaments.map(t => renderStatsTorneoCard(t)).join('') : '<div class="adm-empty">No hay torneos creados aún.</div>';
+
+  // Repoblar el filtro de torneo cada vez que llegan datos nuevos de la nube
+  // (no solo al cargar la página), conservando la selección actual.
+  const sel = document.getElementById('sh-filtro-torneo');
+  if (sel) {
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Todos los torneos</option>' + tournaments.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+    if (prev && tournaments.some(t => t.id === prev)) sel.value = prev;
+  }
+}
+
+// Tarjeta de torneo del Centro de Estadísticas: además de lo que ya muestra
+// renderAdminTorneoCard (partidos, goleadores, posiciones — sin tocar esa
+// función ni el modal viejo), agrega premios editables y campeón.
+function renderStatsTorneoCard(t) {
+  const inscritos = (t.teams || []).map(e => teams[e.teamId]).filter(Boolean);
+  const { matches, scorersList, standingsList } = calcTorneoStats(t.id);
+
+  const teamOptions = inscritos.map(tm => `<option value="${tm.id}">${tm.name}</option>`).join('');
+  const crearHtml = inscritos.length >= 2 ? `
+    <div class="adm-torneo-form">
+      <select id="adm-tn-teamA-${t.id}"><option value="">Equipo A</option>${teamOptions}</select>
+      <select id="adm-tn-teamB-${t.id}"><option value="">Equipo B</option>${teamOptions}</select>
+      <input type="date" id="adm-tn-fecha-${t.id}">
+      <input type="time" id="adm-tn-hora-${t.id}">
+      <input type="text" id="adm-tn-cancha-${t.id}" placeholder="Cancha" value="${t.cancha || ''}">
+      <button class="adm-edit-btn" onclick="crearPartidoTorneo('${t.id}');renderStatsHub()">+ CREAR PARTIDO</button>
+    </div>` : `<div class="adm-empty">Necesita al menos 2 equipos inscritos para crear cruces.</div>`;
+
+  const matchesHtml = matches.length ? matches.map(m => {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    const done = m.estado === 'finalizado' && m.resultado;
+    const badge = done ? `${m.resultado.golesA}-${m.resultado.golesB}` : 'PROGRAMADO';
+    return `
+      <div class="adm-match-row">
+        <div class="adm-match-info">
+          <div class="adm-match-teams">${teamA ? teamA.name : '?'} vs ${teamB ? teamB.name : '?'}</div>
+          <div class="adm-match-meta">${m.fecha}${m.hora ? ' · '+m.hora : ''} · ${m.cancha||''}</div>
+        </div>
+        <span class="adm-badge ${done ? 'adm-badge-done' : 'adm-badge-prog'}">${badge}</span>
+        <button class="adm-edit-btn ${done ? 'adm-edit-btn-gray' : ''}" onclick="openAdminTeamMatch('${m.id}')">${done ? 'VER / CORREGIR' : 'REGISTRAR'}</button>
+      </div>`;
+  }).join('') : '<div class="adm-empty">Sin partidos creados todavía.</div>';
+
+  const scorersHtml = scorersList.length ? `
+    <table class="adm-torneo-table">
+      <thead><tr><th>JUGADOR</th><th>G</th><th>A</th></tr></thead>
+      <tbody>${scorersList.map(s => `<tr><td>${s.name}</td><td>${s.goles}</td><td>${s.asistencias}</td></tr>`).join('')}</tbody>
+    </table>` : '';
+
+  const standingsHtml = standingsList.length ? `
+    <table class="adm-torneo-table">
+      <thead><tr><th>EQUIPO</th><th>PJ</th><th>PTS</th><th>DG</th></tr></thead>
+      <tbody>${standingsList.map(s => `<tr><td>${s.name}</td><td>${s.w+s.d+s.l}</td><td>${s.pts}</td><td>${s.dg>0?'+':''}${s.dg}</td></tr>`).join('')}</tbody>
+    </table>` : '';
+
+  const campeonOptions = inscritos.map(tm => `<option value="${tm.id}" ${t.campeonTeamId === tm.id ? 'selected' : ''}>${tm.name}</option>`).join('');
+
+  return `
+    <div class="adm-torneo-card">
+      <div class="adm-torneo-title">${t.nombre} <span class="adm-badge adm-badge-${t.status==='abierto'?'prog':'done'}">${(t.status||'').toUpperCase()}</span></div>
+      <div class="adm-match-meta">${t.fecha || ''} · ${inscritos.length} equipo(s) inscrito(s)</div>
+      ${crearHtml}
+      <div class="adm-torneo-subtitle">PARTIDOS</div>
+      ${matchesHtml}
+      ${standingsList.length ? `<div class="adm-torneo-subtitle">POSICIONES</div>${standingsHtml}` : ''}
+      ${scorersList.length ? `<div class="adm-torneo-subtitle">GOLEADORES</div>${scorersHtml}` : ''}
+      <div class="adm-torneo-subtitle">PREMIOS Y CAMPEÓN</div>
+      <div class="adm-torneo-form">
+        <input type="text" id="sh-premio1-${t.id}" placeholder="1er premio" value="${t.premio1 || ''}">
+        <input type="text" id="sh-premio2-${t.id}" placeholder="2do premio" value="${t.premio2 || ''}">
+        <input type="text" id="sh-premio3-${t.id}" placeholder="3er premio" value="${t.premio3 || ''}">
+        <select id="sh-campeon-${t.id}"><option value="">Sin definir</option>${campeonOptions}</select>
+        <button class="adm-edit-btn" onclick="guardarTorneoStatsHub('${t.id}')">💾 GUARDAR TORNEO</button>
+      </div>
+    </div>`;
+}
+
+async function guardarTorneoStatsHub(torneoId) {
+  if (!isAdmin()) return;
+  const tournaments = loadTournaments();
+  const t = tournaments[torneoId];
+  if (!t) return;
+
+  t.premio1 = (document.getElementById('sh-premio1-' + torneoId) || {}).value || '';
+  t.premio2 = (document.getElementById('sh-premio2-' + torneoId) || {}).value || '';
+  t.premio3 = (document.getElementById('sh-premio3-' + torneoId) || {}).value || '';
+  t.premio = t.premio1; // se mantiene alineado con el campo que ya se muestra en torneos.html
+  t.campeonTeamId = (document.getElementById('sh-campeon-' + torneoId) || {}).value || null;
+
+  saveTournaments(tournaments);
+  const r = await pushTournamentToCloud(t);
+  if (r && r.error) { alert('Se guardó localmente pero no se pudo publicar en la nube. Revisa tu conexión.'); return; }
+  alert('✅ Torneo actualizado.');
+  renderStatsHubTorneos();
+}
+
 /* ===== ADMIN SYSTEM ===== */
 
 let adminMatchTimer = null;
 let adminMatchTimerSeconds = 0;
 let adminMatchId = null;
+let adminCorrectionMode = false;
 
 function openAdminPanel() {
   if (!isAdmin()) return;
@@ -6906,11 +7696,41 @@ function renderAdminPanel() {
       </div>`;
   }).join('') : '<div class="adm-empty">No hay partidos de equipo aún.</div>';
 
+  // Partidos Modo Libre
+  const freeMatches = openMatches
+    .slice()
+    .sort((a, b) => matchDateTime(b) - matchDateTime(a))
+    .slice(0, 20);
+  const freeMatchesHtml = freeMatches.length ? freeMatches.map(m => {
+    const past = matchDateTime(m) < new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const done = !!(m.finalizado && m.resultado);
+    const badge = done ? `${m.resultado.golesLocal||0}-${m.resultado.golesVisitante||0}` : (past ? 'SIN REGISTRAR' : 'PROGRAMADO');
+    const badgeCls = done ? 'adm-badge-done' : (past ? 'adm-badge-old' : 'adm-badge-prog');
+    return `
+      <div class="adm-match-row">
+        <div class="adm-match-info">
+          <div class="adm-match-teams">${m.cancha || m.zona || 'Partido'}</div>
+          <div class="adm-match-meta">${m.fecha}${m.horaValue ? ' · '+m.horaValue : ''}</div>
+        </div>
+        <span class="adm-badge ${badgeCls}">${badge}</span>
+        ${past && !done ? `<button class="adm-edit-btn" onclick="closeAdminPanel();openAdminMatch('${m.id}')">REGISTRAR</button>` : ''}
+        ${done ? `<button class="adm-edit-btn adm-edit-btn-gray" onclick="closeAdminPanel();openAdminMatch('${m.id}')">VER</button>` : ''}
+      </div>`;
+  }).join('') : '<div class="adm-empty">No hay partidos de Modo Libre aún.</div>';
+
+  // Torneos
+  const tournaments = Object.values(loadTournaments()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const torneosHtml = tournaments.length ? tournaments.map(t => renderAdminTorneoCard(t)).join('') : '<div class="adm-empty">No hay torneos creados aún.</div>';
+
   content.innerHTML = `
     <div class="adm-section-title">JUGADORES <span class="adm-count">${allPlayers.length}</span></div>
     <div class="adm-player-list">${playersHtml}</div>
     <div class="adm-section-title" style="margin-top:28px">PARTIDOS REY DEL BARRIO</div>
     <div class="adm-match-list">${matchesHtml}</div>
+    <div class="adm-section-title" style="margin-top:28px">PARTIDOS MODO LIBRE</div>
+    <div class="adm-match-list">${freeMatchesHtml}</div>
+    <div class="adm-section-title" style="margin-top:28px">TORNEOS</div>
+    <div class="adm-torneo-list">${torneosHtml}</div>
   `;
 }
 
@@ -6920,6 +7740,7 @@ function openAdminMatch(matchId) {
   if (!m) return;
   adminMatchId = matchId;
   adminMatchTimerSeconds = 0;
+  adminCorrectionMode = false;
 
   // Build confirmed players list
   const allUnidos = [];
@@ -6932,26 +7753,41 @@ function openAdminMatch(matchId) {
   const modal = document.getElementById('admin-match-modal');
   if (!modal) return;
 
+  const done = !!(m.finalizado && m.resultado);
+  // Precargar estadísticas ya guardadas si el partido ya fue registrado (ver/corregir).
+  Object.keys(_adminStats).forEach(k => delete _adminStats[k]);
+  if (done && m.stats) {
+    Object.entries(m.stats).forEach(([pid, s]) => {
+      _adminStats[pid] = { goles: s.goles || 0, asistencias: s.asistencias || 0, tirosAlArco: s.pases || 0, recuperaciones: s.recuperaciones || 0, errores: 0, amarillas: 0 };
+    });
+  }
+
   const playerRows = playerIds.map(pid => {
     const p = profiles[pid] || { name: pid, position: '?', ovr: 60 };
+    const s = _adminStats[pid] || {};
+    const savedCal = (done && m.stats && m.stats[pid] && m.stats[pid].calificacion) || 6.5;
+    const savedMvp = done && m.mvpId === pid;
+    const statCell = (key) => done
+      ? `<td class="am-stat-cell"><span id="am-${key}-${pid}">${s[key] || 0}</span></td>`
+      : `<td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','${key}',-1)">−</button> <span id="am-${key}-${pid}">${s[key] || 0}</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','${key}',1)">+</button></td>`;
     return `
       <tr data-pid="${pid}">
         <td class="am-name-cell">${p.nickname || p.name}<br><span class="am-pos">${p.position} · OVR ${p.ovr}</span></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','goles',-1)">−</button> <span id="am-goles-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','goles',1)">+</button></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','asistencias',-1)">−</button> <span id="am-asistencias-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','asistencias',1)">+</button></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','tirosAlArco',-1)">−</button> <span id="am-tirosAlArco-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','tirosAlArco',1)">+</button></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','recuperaciones',-1)">−</button> <span id="am-recuperaciones-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','recuperaciones',1)">+</button></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','errores',-1)">−</button> <span id="am-errores-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','errores',1)">+</button></td>
-        <td class="am-stat-cell"><button class="am-btn-minus" onclick="adminStatChange('${pid}','amarillas',-1)">−</button> <span id="am-amarillas-${pid}">0</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','amarillas',1)">+</button></td>
-        <td><input class="am-cal-input" id="am-cal-${pid}" type="number" min="1" max="10" step="0.5" value="6.5"></td>
-        <td><input type="radio" name="am-mvp" value="${pid}"></td>
+        ${statCell('goles')}
+        ${statCell('asistencias')}
+        ${statCell('tirosAlArco')}
+        ${statCell('recuperaciones')}
+        ${statCell('errores')}
+        ${statCell('amarillas')}
+        <td><input class="am-cal-input" id="am-cal-${pid}" type="number" min="1" max="10" step="0.5" value="${savedCal}" ${done ? 'disabled' : ''}></td>
+        <td><input type="radio" name="am-mvp" value="${pid}" ${savedMvp ? 'checked' : ''} ${done ? 'disabled' : ''}></td>
       </tr>`;
   }).join('');
 
   document.getElementById('admin-match-content').innerHTML = `
     <div class="am-header">
       <div>
-        <div class="am-match-title">⚙ ADMINISTRAR PARTIDO</div>
+        <div class="am-match-title">⚙ ${done ? 'PARTIDO REGISTRADO' : 'ADMINISTRAR PARTIDO'}</div>
         <div class="am-match-sub">${m.cancha || m.zona} · ${m.fecha} · ${m.horaValue || ''}</div>
       </div>
       <button class="am-close-btn" onclick="closeAdminMatch()">✕ CERRAR</button>
@@ -6959,9 +7795,9 @@ function openAdminMatch(matchId) {
 
     <div class="am-scoreboard">
       <div class="am-score-team">LOCAL</div>
-      <input class="am-score-input" id="am-goles-local" type="number" min="0" value="0">
+      <input class="am-score-input" id="am-goles-local" type="number" min="0" value="${done ? (m.resultado.golesLocal || 0) : 0}" ${done ? 'disabled' : ''}>
       <div class="am-score-sep">·</div>
-      <input class="am-score-input" id="am-goles-visitante" type="number" min="0" value="0">
+      <input class="am-score-input" id="am-goles-visitante" type="number" min="0" value="${done ? (m.resultado.golesVisitante || 0) : 0}" ${done ? 'disabled' : ''}>
       <div class="am-score-team">VISITANTE</div>
     </div>
 
@@ -7001,10 +7837,12 @@ function openAdminMatch(matchId) {
 
     <div class="am-notes-wrap">
       <label class="am-notes-label">NOTAS DEL PARTIDO</label>
-      <textarea class="am-notes" id="am-notes" rows="3" placeholder="Observaciones, incidentes, etc."></textarea>
+      <textarea class="am-notes" id="am-notes" rows="3" placeholder="Observaciones, incidentes, etc." ${done ? 'disabled' : ''}>${done ? (m.notes || '') : ''}</textarea>
     </div>
 
-    <button class="am-finalize-btn" onclick="adminFinalizeMatch()">✅ FINALIZAR Y ENVIAR ESTADÍSTICAS</button>
+    ${done
+      ? `<button class="am-finalize-btn" id="am-correct-btn" onclick="adminStartCorrection()">✏️ CORREGIR DATOS CARGADOS</button>`
+      : `<button class="am-finalize-btn" onclick="adminFinalizeMatch()">✅ FINALIZAR Y ENVIAR ESTADÍSTICAS</button>`}
   `;
 
   modal.classList.add('open');
@@ -7075,6 +7913,7 @@ async function adminFinalizeMatch() {
   if (!isAdmin() || !adminMatchId) return;
   const match = openMatches.find(x => x.id === adminMatchId);
   if (!match) return;
+  if (match.finalizado) { alert('Este partido ya fue registrado.'); return; }
 
   const golesLocal = parseInt(document.getElementById('am-goles-local').value) || 0;
   const golesVisitante = parseInt(document.getElementById('am-goles-visitante').value) || 0;
@@ -7151,6 +7990,71 @@ async function adminFinalizeMatch() {
   closeAdminMatch();
   renderAll();
   alert('✅ Estadísticas enviadas y cartas actualizadas.');
+}
+
+// ===== Modo corrección (Modo Libre) — igual criterio que admin-partido.html:
+// reabre un partido ya finalizado para arreglar el detalle cargado, sin
+// recalcular OVR/XP/LP (ya se aplicaron a la carta al finalizar).
+function adminStartCorrection() {
+  if (!isAdmin() || !adminMatchId) return;
+  if (!confirm('Vas a corregir el box score ya cargado.\n\nOVR, XP y el historial YA aplicados NO se recalculan automáticamente — solo se corrige el detalle guardado. Si necesitás ajustar la carta de un jugador, hacelo desde "Editar jugador".\n\n¿Continuar?')) return;
+  adminCorrectionMode = true;
+
+  document.querySelectorAll('#am-player-tbody tr[data-pid]').forEach(row => {
+    const pid = row.dataset.pid;
+    const s = _adminStats[pid] || {};
+    ['goles', 'asistencias', 'tirosAlArco', 'recuperaciones', 'errores', 'amarillas'].forEach(key => {
+      const cell = row.querySelector(`#am-${key}-${pid}`).closest('td');
+      cell.innerHTML = `<button class="am-btn-minus" onclick="adminStatChange('${pid}','${key}',-1)">−</button> <span id="am-${key}-${pid}">${s[key] || 0}</span> <button class="am-btn-plus" onclick="adminStatChange('${pid}','${key}',1)">+</button>`;
+    });
+    const cal = row.querySelector(`#am-cal-${pid}`);
+    if (cal) cal.disabled = false;
+    const mvp = row.querySelector('input[name="am-mvp"]');
+    if (mvp) mvp.disabled = false;
+  });
+  const goalsLocal = document.getElementById('am-goles-local');
+  const goalsVis = document.getElementById('am-goles-visitante');
+  if (goalsLocal) goalsLocal.disabled = true; // el marcador ya aplicado no se toca
+  if (goalsVis) goalsVis.disabled = true;
+  const notes = document.getElementById('am-notes');
+  if (notes) notes.disabled = false;
+
+  const btn = document.getElementById('am-correct-btn');
+  if (btn) { btn.textContent = '💾 GUARDAR CORRECCIÓN'; btn.setAttribute('onclick', 'adminSaveCorrection()'); btn.removeAttribute('id'); }
+}
+
+async function adminSaveCorrection() {
+  if (!isAdmin() || !adminMatchId) return;
+  const match = openMatches.find(x => x.id === adminMatchId);
+  if (!match) return;
+  if (!confirm('¿Guardar la corrección? El marcador y las cartas ya aplicadas NO cambian, solo el detalle del box score.')) return;
+
+  const mvpRadio = document.querySelector('input[name="am-mvp"]:checked');
+  const mvpId = mvpRadio ? mvpRadio.value : null;
+  const notes = (document.getElementById('am-notes').value || '').trim();
+
+  const statsMap = {};
+  document.querySelectorAll('#am-player-tbody tr[data-pid]').forEach(row => {
+    const pid = row.dataset.pid;
+    const s = _adminStats[pid] || {};
+    const calInput = document.getElementById(`am-cal-${pid}`);
+    statsMap[pid] = {
+      goles: s.goles || 0, asistencias: s.asistencias || 0, pases: s.tirosAlArco || 0,
+      recuperaciones: s.recuperaciones || 0, calificacion: calInput ? parseFloat(calInput.value) || 6.5 : 6.5,
+      mvp: pid === mvpId,
+    };
+  });
+
+  match.stats = statsMap;
+  match.mvpId = mvpId;
+  match.notes = notes;
+
+  saveOpenMatches();
+  await pushMatchToCloud(match);
+
+  adminCorrectionMode = false;
+  closeAdminMatch();
+  alert('✅ Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
 }
 
 /* ===== ADMIN PLAYER EDITOR ===== */

@@ -495,6 +495,9 @@ table.ap-stats-table{
 
   <!-- Actions -->
   <div class="ap-panel ap-actions">
+    <button class="ap-btn-draft" id="ap-correct-btn" style="display:none" onclick="apStartCorrection()">
+      ✏️ CORREGIR DATOS CARGADOS
+    </button>
     <button class="ap-btn-finalize" onclick="apFinalizeMatch()">
       <span>✅</span>
       FINALIZAR Y ENVIAR ESTADÍSTICAS
@@ -533,6 +536,7 @@ let _apTimerSecs = 0;
 let _apTimerRunning = false;
 let _apAutoSaveTimer = null;
 let _apEvents = [];
+let _apCorrectionMode = false;
 const _apStats = {}; // { pid: { stat: value } }
 
 const AP_FIELD_POS_STATS = [
@@ -923,6 +927,70 @@ async function apFinalizeMatch() {
   location.href = 'equipos.html#programados';
 }
 
+// ===== Modo corrección: reabre un partido finalizado para arreglar datos mal
+// cargados. NO recalcula OVR/XP/LP (ya se aplicaron a la carta al finalizar) —
+// solo corrige el detalle guardado. Si la corrección debe reflejarse en la
+// carta, se ajusta al jugador a mano desde el editor de jugador del panel admin.
+function apStartCorrection() {
+  if (!isAdmin() || !_apMatch) return;
+  if (!confirm('Vas a corregir el box score ya cargado.\n\nOVR, XP y el historial de los jugadores YA aplicados NO se recalculan automáticamente — solo se corrige el detalle guardado. Si necesitás ajustar la carta de un jugador, hacelo desde "Editar jugador".\n\n¿Continuar?')) return;
+  _apCorrectionMode = true;
+
+  const tbodyA = document.getElementById('ap-tbody-a');
+  const tbodyB = document.getElementById('ap-tbody-b');
+  let rowNum = 1;
+  tbodyA.innerHTML = (_apTeamA.memberIds || []).map(pid => apBuildPlayerRow(pid, rowNum++, _apTeamA.color || '#00e676', false)).join('');
+  rowNum = 6;
+  tbodyB.innerHTML = (_apTeamB.memberIds || []).map(pid => apBuildPlayerRow(pid, rowNum++, _apTeamB.color || '#ff1f44', false)).join('');
+  const allIds = [...(_apTeamA.memberIds || []), ...(_apTeamB.memberIds || [])];
+  allIds.forEach(pid => { apUpdateRatingDisplay(pid); apUpdateResumen(pid); });
+
+  const ta = document.getElementById('ap-notes');
+  if (ta) ta.disabled = false;
+
+  const btn = document.querySelector('.ap-btn-finalize');
+  if (btn) {
+    btn.disabled = false; btn.style.opacity = '1';
+    btn.textContent = '💾 GUARDAR CORRECCIÓN';
+    btn.setAttribute('onclick', 'apSaveCorrection()');
+  }
+  const correctBtn = document.getElementById('ap-correct-btn');
+  if (correctBtn) correctBtn.remove();
+}
+
+async function apSaveCorrection() {
+  if (!isAdmin() || !_apMatch) return;
+  if (!confirm('¿Guardar la corrección? El marcador y las cartas ya aplicadas NO cambian, solo el detalle del box score.')) return;
+
+  const statsMap = {};
+  const allPlayerIds = [...(_apTeamA.memberIds || []), ...(_apTeamB.memberIds || [])];
+  for (const pid of allPlayerIds) {
+    const s = _apStats[pid] || {};
+    const p = profiles[pid];
+    const isPor = p && p.position === 'POR';
+    statsMap[pid] = Object.assign({}, _apMatch.stats && _apMatch.stats[pid], {
+      goles: s.goles || 0, asistencias: s.asistencias || 0, tirosAlArco: s.tirosAlArco || 0,
+      pasesClave: s.pasesClave || 0, recuperaciones: s.recuperaciones || 0, jugadasDestacadas: s.jugadasDestacadas || 0,
+      erroresGraves: s.erroresGraves || 0, oportunidadesFalladas: s.oportunidadesFalladas || 0,
+      faltasCometidas: s.faltasCometidas || 0, amarillas: s.amarillas || 0, rojas: s.rojas || 0,
+      atajadas: s.atajadas || 0, atajadasArea: s.atajadasArea || 0, despejes: s.despejes || 0,
+      achiques: s.achiques || 0, pasesLargos: s.pasesLargos || 0, jugadasIniciadas: s.jugadasIniciadas || 0,
+      calificacion: apCalcRating(pid), mvp: pid === _apMvpId,
+    });
+  }
+
+  _apMatch.stats = statsMap;
+  _apMatch.mvpId = _apMvpId;
+  _apMatch.notes = (document.getElementById('ap-notes') || {}).value || _apMatch.notes;
+
+  saveTeamMatches();
+  if (typeof pushTeamMatchToCloud === 'function') await pushTeamMatchToCloud(_apMatch);
+
+  _apCorrectionMode = false;
+  alert('✅ Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
+  location.reload();
+}
+
 function saveteams_wrapper() {
   try { if (typeof saveTeams === 'function') saveTeams(); } catch(e) {}
 }
@@ -982,6 +1050,8 @@ function apStatCell(pid, key, isNeg, done) {
 }
 
 function initAdminPage() {
+  if (!isAdmin()) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">🔒 Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>'; return; }
+
   const params = new URLSearchParams(location.search);
   _apMatchId = params.get('m');
   if (!_apMatchId) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">ERROR: No se especificó ID de partido.</div>'; return; }
@@ -1059,6 +1129,8 @@ function initAdminPage() {
     document.querySelector('.ap-btn-finalize').disabled = true;
     document.querySelector('.ap-btn-finalize').style.opacity = '.5';
     document.getElementById('ap-live-indicator').innerHTML = '<span style="color:var(--y)">✅ FINALIZADO</span>';
+    const correctBtn = document.getElementById('ap-correct-btn');
+    if (correctBtn) correctBtn.style.display = 'inline-flex';
   }
 
   if (!done) {
