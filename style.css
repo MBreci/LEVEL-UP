@@ -3010,15 +3010,33 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
 }
 .sh-stat-cell {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 11px;
   color: var(--td, #7a8b9a);
   background: #111820;
   border-radius: 8px;
-  padding: 3px 6px;
+  padding: 5px 8px;
+  min-width: 64px;
 }
-.sh-stat-lbl { font-size: 11px; }
+.sh-stat-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--td, #7a8b9a);
+  white-space: nowrap;
+}
+.sh-stat-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sh-stat-cell > span:not(.sh-stat-name) {
+  color: #fff;
+  font-weight: 700;
+}
 .sh-mini-btn {
   width: 18px;
   height: 18px;

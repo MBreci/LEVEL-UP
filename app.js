@@ -7172,8 +7172,8 @@ function statsHubBuildPlayerRow(pid, esEquipo, editable) {
   const s = _shStats[pid] || {};
   const cellsHtml = fields.concat(negFields).map(f => {
     const val = s[f.key] || 0;
-    if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-lbl">${f.icon}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
-    return `<div class="sh-stat-cell"><span class="sh-stat-lbl">${f.icon}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div>`;
+    if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.icon} ${f.label}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
+    return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.icon} ${f.label}</span><div class="sh-stat-inner"><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div></div>`;
   }).join('');
   const calHtml = esEquipo
     ? `<span class="sh-cal-auto" id="sh-cal-live-${pid}">${shCalcRating(p.position, s).toFixed(1)}</span>`
