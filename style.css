@@ -2964,6 +2964,14 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   font-size: 12px;
   margin-bottom: 14px;
 }
+.sh-score-inputs b { color: #fff; }
+.sh-score-hint {
+  text-align: center;
+  color: var(--td, #7a8b9a);
+  font-size: 10px;
+  margin-top: -8px;
+  margin-bottom: 14px;
+}
 .sh-players-wrap {
   display: flex;
   flex-direction: column;
@@ -3002,6 +3010,37 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   font-size: 9px;
   color: var(--td, #7a8b9a);
   margin-left: 4px;
+}
+.sh-player-team {
+  font-size: 9px;
+  color: var(--g, #00ff88);
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #0d1a12;
+  border: 1px solid #133622;
+}
+.sh-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sh-detail-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.sh-detail-vs {
+  color: var(--td, #7a8b9a);
+  font-weight: 400;
+  margin: 0 4px;
+}
+.sh-detail-torneo {
+  font-size: 10px;
+  color: var(--td, #7a8b9a);
 }
 .sh-stat-cells {
   display: flex;

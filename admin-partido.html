@@ -195,7 +195,6 @@ table.ap-stats-table{
   font-family:var(--ft);font-size:32px;font-weight:900;color:var(--g);text-align:center;
   letter-spacing:2px;padding:6px 0 8px
 }
-.ap-timer-icon{text-align:center;font-size:16px;margin-bottom:4px;color:var(--td)}
 .ap-timer-btns{display:flex;gap:6px;margin-bottom:8px}
 .ap-addtime-btn{
   flex:1;padding:5px 0;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);
@@ -327,7 +326,7 @@ table.ap-stats-table{
       <div class="ap-autosave-dot"></div>
       <span>GUARDADO AUTOMÁTICO</span>
     </div>
-    <button class="ap-back-btn" onclick="apGoBack()">← VOLVER</button>
+    <button class="ap-back-btn" onclick="apGoBack()">VOLVER</button>
   </div>
 </div>
 
@@ -335,7 +334,7 @@ table.ap-stats-table{
 <div class="ap-scoreboard">
   <div class="ap-scoreboard-main">
     <div class="ap-score-team" id="ap-team-a-info">
-      <div class="ap-team-shield" id="ap-shield-a">🛡</div>
+      <div class="ap-team-shield" id="ap-shield-a"></div>
       <div class="ap-team-info">
         <div class="ap-team-name" id="ap-name-a">LOCAL</div>
         <span class="ap-team-badge local">LOCAL</span>
@@ -358,7 +357,7 @@ table.ap-stats-table{
     </div>
 
     <div class="ap-score-team right" id="ap-team-b-info">
-      <div class="ap-team-shield" id="ap-shield-b">🛡</div>
+      <div class="ap-team-shield" id="ap-shield-b"></div>
       <div class="ap-team-info" style="text-align:right">
         <div class="ap-team-name" id="ap-name-b">VISITANTE</div>
         <span class="ap-team-badge visitante">VISITANTE</span>
@@ -464,7 +463,6 @@ table.ap-stats-table{
   <!-- Timer -->
   <div class="ap-panel">
     <div class="ap-panel-title">MINUTO ACTUAL</div>
-    <div class="ap-timer-icon">⏱</div>
     <div class="ap-timer-display" id="ap-timer-display">00:00</div>
     <div class="ap-timer-btns">
       <button class="ap-addtime-btn" onclick="apAddTime(1)">+1 MIN</button>
@@ -472,7 +470,6 @@ table.ap-stats-table{
       <button class="ap-addtime-btn" onclick="apAddTime(10)">+10 MIN</button>
     </div>
     <button class="ap-toggle-btn" id="ap-toggle-btn" onclick="apToggleTimer()">
-      <span id="ap-toggle-icon">▶</span>
       <span id="ap-toggle-lbl">INICIAR / DETENER</span>
     </button>
     <div style="margin-top:8px">
@@ -496,18 +493,16 @@ table.ap-stats-table{
   <!-- Actions -->
   <div class="ap-panel ap-actions">
     <button class="ap-btn-draft" id="ap-correct-btn" style="display:none" onclick="apStartCorrection()">
-      ✏️ CORREGIR DATOS CARGADOS
+      CORREGIR DATOS CARGADOS
     </button>
     <button class="ap-btn-finalize" onclick="apFinalizeMatch()">
-      <span>✅</span>
       FINALIZAR Y ENVIAR ESTADÍSTICAS
-      <span>↗</span>
     </button>
     <button class="ap-btn-draft" onclick="apSaveDraft()">
-      💾 GUARDAR BORRADOR
+      GUARDAR BORRADOR
     </button>
     <button class="ap-btn-cancel" onclick="apCancelMatch()">
-      ✕ CANCELAR PARTIDO
+      CANCELAR PARTIDO
     </button>
   </div>
 </div>
@@ -518,7 +513,7 @@ table.ap-stats-table{
     <div class="ap-conn-dot"></div>
     CONEXIÓN ESTABLE
   </div>
-  <div class="ap-admin-lbl">👤 ADMIN: <strong id="ap-admin-name">—</strong></div>
+  <div class="ap-admin-lbl">ADMIN: <strong id="ap-admin-name">—</strong></div>
   <div class="ap-autosave-lbl" id="ap-autosave-lbl">Los cambios se guardan automáticamente cada 15 segundos</div>
 </div>
 
@@ -540,27 +535,27 @@ let _apCorrectionMode = false;
 const _apStats = {}; // { pid: { stat: value } }
 
 const AP_FIELD_POS_STATS = [
-  { key:'goles',          label:'GOL',              icon:'⚽', shortkey:'G' },
-  { key:'asistencias',    label:'ASIST.',            icon:'🎯', shortkey:'A' },
-  { key:'tirosAlArco',    label:'TIRO AL ARCO',      icon:'🥅', shortkey:'TA' },
-  { key:'pasesClave',     label:'PASE CLAVE',        icon:'⚡', shortkey:'PC' },
-  { key:'recuperaciones', label:'RECUPERACIÓN',      icon:'🛡',  shortkey:'REC' },
-  { key:'jugadasDestacadas',label:'JUGADA DESTACADA',icon:'✨', shortkey:'JD' },
+  { key:'goles',          label:'GOL',              shortkey:'G' },
+  { key:'asistencias',    label:'ASIST.',            shortkey:'A' },
+  { key:'tirosAlArco',    label:'TIRO AL ARCO',      shortkey:'TA' },
+  { key:'pasesClave',     label:'PASE CLAVE',        shortkey:'PC' },
+  { key:'recuperaciones', label:'RECUPERACIÓN',      shortkey:'REC' },
+  { key:'jugadasDestacadas',label:'JUGADA DESTACADA',shortkey:'JD' },
 ];
 const AP_POR_POS_STATS = [
-  { key:'atajadas',          label:'ATAJADAS',              icon:'🧤', shortkey:'ATJ' },
-  { key:'atajadasArea',      label:'ATAJ. DENTRO DEL ÁREA', icon:'📐', shortkey:'AA' },
-  { key:'despejes',          label:'DESPEJES',              icon:'👊', shortkey:'DES' },
-  { key:'achiques',          label:'ACHIQUÉS',              icon:'🔒', shortkey:'ACH' },
-  { key:'pasesLargos',       label:'PASES LARGOS',          icon:'📏', shortkey:'PL' },
-  { key:'jugadasIniciadas',  label:'JUGADAS INICIADAS',     icon:'🎯', shortkey:'JI' },
+  { key:'atajadas',          label:'ATAJADAS',              shortkey:'ATJ' },
+  { key:'atajadasArea',      label:'ATAJ. DENTRO DEL ÁREA', shortkey:'AA' },
+  { key:'despejes',          label:'DESPEJES',              shortkey:'DES' },
+  { key:'achiques',          label:'ACHIQUÉS',              shortkey:'ACH' },
+  { key:'pasesLargos',       label:'PASES LARGOS',          shortkey:'PL' },
+  { key:'jugadasIniciadas',  label:'JUGADAS INICIADAS',     shortkey:'JI' },
 ];
 const AP_NEG_STATS = [
-  { key:'erroresGraves',        label:'ERROR GRAVE',     icon:'❌', shortkey:'EG' },
-  { key:'oportunidadesFalladas',label:'OP. FALLADA',     icon:'😮', shortkey:'OF' },
-  { key:'faltasCometidas',      label:'FALTA COMETIDA',  icon:'🦵', shortkey:'F' },
-  { key:'amarillas',            label:'AMARILLA',        icon:'🟨', shortkey:'AM' },
-  { key:'rojas',                label:'ROJA',            icon:'🟥', shortkey:'R' },
+  { key:'erroresGraves',        label:'ERROR GRAVE',     shortkey:'EG' },
+  { key:'oportunidadesFalladas',label:'OP. FALLADA',     shortkey:'OF' },
+  { key:'faltasCometidas',      label:'FALTA COMETIDA',  shortkey:'F' },
+  { key:'amarillas',            label:'AMARILLA',        shortkey:'AM' },
+  { key:'rojas',                label:'ROJA',            shortkey:'R' },
 ];
 
 function apGetStat(pid, key) {
@@ -677,7 +672,6 @@ function apStatChange(pid, statKey, delta, isNeg) {
     const min = Math.floor(_apTimerSecs / 60);
     const allStats = [...AP_FIELD_POS_STATS, ...AP_POR_POS_STATS, ...AP_NEG_STATS];
     const def = allStats.find(d => d.key === statKey);
-    const icon = def ? def.icon : '•';
     const label = def ? def.label : statKey;
 
     // Determine team
@@ -685,7 +679,7 @@ function apStatChange(pid, statKey, delta, isNeg) {
     const teamName = side === 'A' ? (_apTeamA ? _apTeamA.name : 'LOCAL') : (_apTeamB ? _apTeamB.name : 'VISITANTE');
     const dotColor = side === 'A' ? (_apTeamA ? _apTeamA.color || '#00e676' : '#00e676') : (_apTeamB ? _apTeamB.color || '#ff1f44' : '#ff1f44');
 
-    const evt = { min, icon, text: `${pName} (${teamName}) — ${label}`, dotColor };
+    const evt = { min, text: `${pName} (${teamName}) — ${label}`, dotColor };
     _apEvents.unshift(evt);
 
     const listEl = document.getElementById('ap-events-list');
@@ -693,7 +687,7 @@ function apStatChange(pid, statKey, delta, isNeg) {
       if (listEl.querySelector('div[style]')) listEl.innerHTML = '';
       const div = document.createElement('div');
       div.className = 'ap-event-item';
-      div.innerHTML = `<span class="ap-event-min">${min}'</span><span class="ap-event-dot" style="background:${dotColor}"></span><span class="ap-event-text">${icon} ${evt.text}</span>`;
+      div.innerHTML = `<span class="ap-event-min">${min}'</span><span class="ap-event-dot" style="background:${dotColor}"></span><span class="ap-event-text">${evt.text}</span>`;
       listEl.prepend(div);
     }
   }
@@ -708,13 +702,11 @@ function apSetMvp(pid) {
 
 function apToggleTimer() {
   const btn = document.getElementById('ap-toggle-btn');
-  const icon = document.getElementById('ap-toggle-icon');
   const lbl = document.getElementById('ap-toggle-lbl');
   if (_apTimerRunning) {
     clearInterval(_apTimer);
     _apTimerRunning = false;
     if (btn) btn.classList.remove('running');
-    if (icon) icon.textContent = '▶';
     if (lbl) lbl.textContent = 'INICIAR / DETENER';
   } else {
     _apTimer = setInterval(() => {
@@ -723,7 +715,6 @@ function apToggleTimer() {
     }, 1000);
     _apTimerRunning = true;
     if (btn) btn.classList.add('running');
-    if (icon) icon.textContent = '⏹';
     if (lbl) lbl.textContent = 'DETENER';
   }
 }
@@ -809,7 +800,7 @@ async function apFinalizeMatch() {
   if (!confirm(`¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`)) return;
 
   const btn = document.querySelector('.ap-btn-finalize');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Procesando...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
 
   const notes = (document.getElementById('ap-notes') || {}).value || '';
 
@@ -923,7 +914,7 @@ async function apFinalizeMatch() {
   LS.removeItem('ap_draft_' + _apMatchId);
 
   if (_apTimerRunning) clearInterval(_apTimer);
-  alert('✅ Estadísticas enviadas y cartas actualizadas.');
+  alert('Estadísticas enviadas y cartas actualizadas.');
   location.href = 'equipos.html#programados';
 }
 
@@ -951,7 +942,7 @@ function apStartCorrection() {
   const btn = document.querySelector('.ap-btn-finalize');
   if (btn) {
     btn.disabled = false; btn.style.opacity = '1';
-    btn.textContent = '💾 GUARDAR CORRECCIÓN';
+    btn.textContent = 'GUARDAR CORRECCIÓN';
     btn.setAttribute('onclick', 'apSaveCorrection()');
   }
   const correctBtn = document.getElementById('ap-correct-btn');
@@ -987,7 +978,7 @@ async function apSaveCorrection() {
   if (typeof pushTeamMatchToCloud === 'function') await pushTeamMatchToCloud(_apMatch);
 
   _apCorrectionMode = false;
-  alert('✅ Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
+  alert('Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
   location.reload();
 }
 
@@ -1050,7 +1041,7 @@ function apStatCell(pid, key, isNeg, done) {
 }
 
 function initAdminPage() {
-  if (!isAdmin()) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">🔒 Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>'; return; }
+  if (!isAdmin()) { document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>'; return; }
 
   const params = new URLSearchParams(location.search);
   _apMatchId = params.get('m');
@@ -1092,7 +1083,7 @@ function initAdminPage() {
   document.getElementById('ap-shield-a').style.borderColor = colA + '66';
   document.getElementById('ap-shield-a').style.background = colA + '11';
   document.getElementById('ap-shield-a').style.color = colA;
-  document.getElementById('ap-shield-a').textContent = _apTeamA.photo ? '' : '🛡';
+  document.getElementById('ap-shield-a').textContent = '';
   if (_apTeamA.photo) document.getElementById('ap-shield-a').innerHTML = `<img src="${_apTeamA.photo}" style="width:100%;height:100%;border-radius:8px;object-fit:cover">`;
 
   document.getElementById('ap-shield-b').style.borderColor = colB + '66';
@@ -1128,7 +1119,7 @@ function initAdminPage() {
     if (_apMatch.notes) { const ta = document.getElementById('ap-notes'); if (ta) { ta.value = _apMatch.notes; ta.disabled = true; } }
     document.querySelector('.ap-btn-finalize').disabled = true;
     document.querySelector('.ap-btn-finalize').style.opacity = '.5';
-    document.getElementById('ap-live-indicator').innerHTML = '<span style="color:var(--y)">✅ FINALIZADO</span>';
+    document.getElementById('ap-live-indicator').innerHTML = '<span style="color:var(--y)">FINALIZADO</span>';
     const correctBtn = document.getElementById('ap-correct-btn');
     if (correctBtn) correctBtn.style.display = 'inline-flex';
   }

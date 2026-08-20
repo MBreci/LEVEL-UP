@@ -1,5 +1,7 @@
 /* ===== LEVEL UP — MVP ===== */
 
+// TODO: TODOS SE MARCAN COMO ADMIN
+
 const BANNED_WORDS = [
   'puta', 'puto', 'mierda', 'pendejo', 'pendeja', 'cabron', 'cabrón', 'gonorrea',
   'malparido', 'malparida', 'hijueputa', 'hpta', 'verga', 'culo', 'marica', 'maricon', 'maricón',
@@ -537,7 +539,7 @@ function renderNav() {
 
     const statsBtn = document.createElement('a');
     statsBtn.className = 'nm-item nm-admin-pill';
-    statsBtn.textContent = '📊 ESTADÍSTICAS';
+    statsBtn.textContent = 'ESTADÍSTICAS';
     statsBtn.href = 'admin-estadisticas.html';
     if (page === 'admin-estadisticas.html') statsBtn.classList.add('on');
     nav.appendChild(statsBtn);
@@ -6984,35 +6986,35 @@ let statsHubJugadoresPage = 1;
 // modal de Modo Libre — no se unifica el contrato, solo se replican los campos
 // para poder cargarlos inline aquí, sin popup).
 const SH_TEAM_FIELD_STATS = [
-  { key: 'goles', label: 'GOL', icon: '⚽' },
-  { key: 'asistencias', label: 'ASIST', icon: '🎯' },
-  { key: 'tirosAlArco', label: 'TIRO', icon: '🥅' },
-  { key: 'pasesClave', label: 'PASE CLAVE', icon: '⚡' },
-  { key: 'recuperaciones', label: 'RECUP', icon: '🛡' },
-  { key: 'jugadasDestacadas', label: 'JUG. DEST', icon: '✨' },
+  { key: 'goles', label: 'GOL' },
+  { key: 'asistencias', label: 'ASIST' },
+  { key: 'tirosAlArco', label: 'TIRO' },
+  { key: 'pasesClave', label: 'PASE CLAVE' },
+  { key: 'recuperaciones', label: 'RECUP' },
+  { key: 'jugadasDestacadas', label: 'JUG. DEST' },
 ];
 const SH_TEAM_POR_STATS = [
-  { key: 'atajadas', label: 'ATAJADAS', icon: '🧤' },
-  { key: 'atajadasArea', label: 'ATAJ. ÁREA', icon: '📐' },
-  { key: 'despejes', label: 'DESPEJES', icon: '👊' },
-  { key: 'achiques', label: 'ACHIQUES', icon: '🔒' },
-  { key: 'pasesLargos', label: 'PASES LARGOS', icon: '📏' },
-  { key: 'jugadasIniciadas', label: 'JUG. INICIADAS', icon: '🎯' },
+  { key: 'atajadas', label: 'ATAJADAS' },
+  { key: 'atajadasArea', label: 'ATAJ. ÁREA' },
+  { key: 'despejes', label: 'DESPEJES' },
+  { key: 'achiques', label: 'ACHIQUES' },
+  { key: 'pasesLargos', label: 'PASES LARGOS' },
+  { key: 'jugadasIniciadas', label: 'JUG. INICIADAS' },
 ];
 const SH_TEAM_NEG_STATS = [
-  { key: 'erroresGraves', label: 'ERROR GRAVE', icon: '❌' },
-  { key: 'oportunidadesFalladas', label: 'OP. FALLADA', icon: '😮' },
-  { key: 'faltasCometidas', label: 'FALTA', icon: '🦵' },
-  { key: 'amarillas', label: 'AMARILLA', icon: '🟨' },
-  { key: 'rojas', label: 'ROJA', icon: '🟥' },
+  { key: 'erroresGraves', label: 'ERROR GRAVE' },
+  { key: 'oportunidadesFalladas', label: 'OP. FALLADA' },
+  { key: 'faltasCometidas', label: 'FALTA' },
+  { key: 'amarillas', label: 'AMARILLA' },
+  { key: 'rojas', label: 'ROJA' },
 ];
 const SH_LIBRE_STATS = [
-  { key: 'goles', label: 'GOL', icon: '⚽' },
-  { key: 'asistencias', label: 'ASIST', icon: '🎯' },
-  { key: 'tirosAlArco', label: 'TIRO', icon: '🥅' },
-  { key: 'recuperaciones', label: 'RECUP', icon: '🛡' },
-  { key: 'errores', label: 'ERROR', icon: '❌' },
-  { key: 'amarillas', label: 'AMARILLA', icon: '🟨' },
+  { key: 'goles', label: 'GOL' },
+  { key: 'asistencias', label: 'ASIST' },
+  { key: 'tirosAlArco', label: 'TIRO' },
+  { key: 'recuperaciones', label: 'RECUP' },
+  { key: 'errores', label: 'ERROR' },
+  { key: 'amarillas', label: 'AMARILLA' },
 ];
 
 // Misma fórmula de calificación que admin-partido.html (apCalcRating), copiada
@@ -7030,8 +7032,21 @@ function shCalcRating(position, s) {
   return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
 }
 
+// Misma idea que shCalcRating, pero con el set de estadísticas más chico que
+// usa Modo Libre (SH_LIBRE_STATS: sin distinción de portero ni las columnas
+// que solo existen en Rey del Barrio/Torneo). Antes la calificación de Modo
+// Libre se tecleaba a mano; ahora se calcula automático igual que en el otro
+// modo, con los mismos pesos base donde el campo existe en ambos.
+function shCalcRatingLibre(s) {
+  let r = 6.0;
+  r += (s.goles||0)*.35 + (s.asistencias||0)*.2 + (s.tirosAlArco||0)*.08 + (s.recuperaciones||0)*.02;
+  r -= (s.errores||0)*.3 + (s.amarillas||0)*.3;
+  return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
+}
+
 let _shOpenMatchId = null;
 let _shOpenEsEquipo = null;
+let _shOpenWrapId = null;
 let _shOpenDone = false;
 let _shCorrecting = false;
 let _shMvpId = null;
@@ -7039,7 +7054,7 @@ const _shStats = {}; // { pid: { statKey: value } }
 
 function initStatsHubPage() {
   if (!isAdmin()) {
-    document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">🔒 Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>';
+    document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Orbitron,sans-serif">Acceso restringido a administradores. <a href="dashboard.html" style="color:#00e676">Volver</a></div>';
     return;
   }
   renderStatsHub();
@@ -7075,16 +7090,28 @@ function statsHubMatchPlayerIds(m, esEquipo) {
 
 // ===== Interfaz inline de carga/corrección de un partido (sin popup) =====
 
-function statsHubToggleDetail(matchId, esEquipo) {
-  if (!isAdmin()) return;
-  const wasOpen = _shOpenMatchId === matchId;
+// wrapId es opcional: el mismo partido de torneo puede aparecer tanto en el
+// listado general de PARTIDOS como en su tarjeta dentro de TORNEOS — cada lugar
+// usa un id de contenedor distinto (ver renderStatsTorneoCard) para no chocar
+// con un id de DOM duplicado; por defecto usa el del listado general.
+// Cierra el detalle actualmente abierto sin importar en qué contenedor esté
+// (listado general o tarjeta de torneo) — usar esto, no statsHubToggleDetail,
+// cuando lo único que hace falta es cerrar (ej. después de guardar).
+function statsHubCloseDetail() {
   document.querySelectorAll('.sh-detail.open').forEach(d => { d.classList.remove('open'); d.innerHTML = ''; });
-  _shOpenMatchId = null; _shOpenEsEquipo = null; _shCorrecting = false;
+  _shOpenMatchId = null; _shOpenEsEquipo = null; _shCorrecting = false; _shOpenWrapId = null;
+}
+
+function statsHubToggleDetail(matchId, esEquipo, wrapId) {
+  if (!isAdmin()) return;
+  wrapId = wrapId || ('sh-detail-' + matchId);
+  const wasOpen = _shOpenMatchId === matchId && _shOpenWrapId === wrapId;
+  statsHubCloseDetail();
   if (wasOpen) return;
 
-  const wrap = document.getElementById('sh-detail-' + matchId);
+  const wrap = document.getElementById(wrapId);
   if (!wrap) return;
-  _shOpenMatchId = matchId; _shOpenEsEquipo = esEquipo;
+  _shOpenMatchId = matchId; _shOpenEsEquipo = esEquipo; _shOpenWrapId = wrapId;
   wrap.classList.add('open');
   statsHubRenderDetail(matchId, esEquipo);
   wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -7106,8 +7133,7 @@ function statsHubBuildM2(pid, esEquipo) {
       calificacion: cal, mvp,
     };
   }
-  const calInput = document.getElementById('sh-cal-' + pid);
-  const cal = calInput ? (parseFloat(calInput.value) || 6.5) : (s.calificacion || 6.5);
+  const cal = shCalcRatingLibre(s);
   return {
     goles: s.goles || 0, asistencias: s.asistencias || 0, tirosAlArco: s.tirosAlArco || 0, pases: s.tirosAlArco || 0,
     recuperaciones: s.recuperaciones || 0, errores: s.errores || 0, amarillas: s.amarillas || 0,
@@ -7127,18 +7153,21 @@ function statsHubUpdateRowPreview(pid) {
   }
   const m2 = statsHubBuildM2(pid, _shOpenEsEquipo);
   const d = computeMatchDeltas(p, m2);
-  el.innerHTML = `OVR ${d.ovrBefore} → <b>${d.ovrAfter}</b> · XP +${d.xpGain} · LP +${d.lpGain}`;
+  el.innerHTML = `OVR ${d.ovrBefore} a <b>${d.ovrAfter}</b> · XP +${d.xpGain} · LP +${d.lpGain}`;
 }
 
+// El marcador oficial ahora se escribe a mano (inputs sh-goles-a/sh-goles-b,
+// igual que ya funcionaba en Modo Libre) porque no siempre coincide con la
+// suma de goles por jugador (autogoles, goles no atribuidos en la planilla de
+// Veo, etc.). Esto solo actualiza el texto de referencia con esa suma.
 function statsHubUpdateScoreboard() {
   if (!_shOpenEsEquipo || !_shOpenMatchId) return;
   const m = teamMatches.find(x => x.id === _shOpenMatchId);
   if (!m) return;
   const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
   const sum = team => ((team && team.memberIds) || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
-  const elA = document.getElementById('sh-score-a'), elB = document.getElementById('sh-score-b');
-  if (elA) elA.textContent = sum(teamA);
-  if (elB) elB.textContent = sum(teamB);
+  const el = document.getElementById('sh-score-sum');
+  if (el) el.textContent = `${sum(teamA)}-${sum(teamB)}`;
 }
 
 function statsHubStatChange(pid, key, delta) {
@@ -7147,9 +7176,9 @@ function statsHubStatChange(pid, key, delta) {
   const el = document.getElementById('sh-s-' + pid + '-' + key);
   if (el) el.textContent = _shStats[pid][key];
   const p = profiles[pid];
-  if (p && _shOpenEsEquipo) {
+  if (p) {
     const calEl = document.getElementById('sh-cal-live-' + pid);
-    if (calEl) calEl.textContent = shCalcRating(p.position, _shStats[pid]).toFixed(1);
+    if (calEl) calEl.textContent = (_shOpenEsEquipo ? shCalcRating(p.position, _shStats[pid]) : shCalcRatingLibre(_shStats[pid])).toFixed(1);
   }
   statsHubUpdateRowPreview(pid);
   if (_shOpenEsEquipo) statsHubUpdateScoreboard();
@@ -7172,16 +7201,21 @@ function statsHubBuildPlayerRow(pid, esEquipo, editable) {
   const s = _shStats[pid] || {};
   const cellsHtml = fields.concat(negFields).map(f => {
     const val = s[f.key] || 0;
-    if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.icon} ${f.label}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
-    return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.icon} ${f.label}</span><div class="sh-stat-inner"><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div></div>`;
+    if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.label}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
+    return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.label}</span><div class="sh-stat-inner"><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div></div>`;
   }).join('');
-  const calHtml = esEquipo
-    ? `<span class="sh-cal-auto" id="sh-cal-live-${pid}">${shCalcRating(p.position, s).toFixed(1)}</span>`
-    : `<input class="sh-cal-input" id="sh-cal-${pid}" type="number" min="1" max="10" step="0.5" value="${s.calificacion || 6.5}" ${editable ? '' : 'disabled'} onchange="statsHubUpdateRowPreview('${pid}')">`;
+  // Calificación automática en los dos modos (antes en Modo Libre se tecleaba a
+  // mano); se recalcula en vivo con cada +/- de estadística vía statsHubStatChange.
+  const calHtml = `<span class="sh-cal-auto" id="sh-cal-live-${pid}">${(esEquipo ? shCalcRating(p.position, s) : shCalcRatingLibre(s)).toFixed(1)}</span>`;
   const mvpChecked = _shMvpId === pid ? 'checked' : '';
+  // En Modo Libre los jugadores no están agrupados por equipo (no es partido de
+  // equipos), así que acá sí hace falta mostrar el equipo real del jugador para
+  // no confundirlo con otro. En Rey del Barrio/Torneo ya está agrupado por
+  // bloque de equipo arriba, así que repetirlo sería ruido.
+  const teamBadge = !esEquipo ? ` <span class="sh-player-team">${playerTeamLabel(p)}</span>` : '';
   return `
     <div class="sh-player-row" data-pid="${pid}">
-      <div class="sh-player-name">${p.nickname || p.name} <span class="sh-player-pos">${p.position}</span></div>
+      <div class="sh-player-name">${p.nickname || p.name} <span class="sh-player-pos">${p.position}</span>${teamBadge}</div>
       <div class="sh-stat-cells">${cellsHtml}</div>
       <div class="sh-cal-wrap">CALIF ${calHtml}</div>
       <label class="sh-mvp-wrap"><input type="radio" name="sh-mvp-${_shOpenMatchId}" value="${pid}" ${mvpChecked} ${editable ? '' : 'disabled'} onchange="statsHubSetMvp('${pid}')"> MVP</label>
@@ -7190,7 +7224,7 @@ function statsHubBuildPlayerRow(pid, esEquipo, editable) {
 }
 
 function statsHubRenderDetail(matchId, esEquipo) {
-  const wrap = document.getElementById('sh-detail-' + matchId);
+  const wrap = document.getElementById(_shOpenWrapId || ('sh-detail-' + matchId));
   if (!wrap) return;
   const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
   if (!m) return;
@@ -7208,24 +7242,49 @@ function statsHubRenderDetail(matchId, esEquipo) {
   if (esEquipo) {
     const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
     playersHtml = `
-      <div class="sh-team-block"><div class="sh-team-title">${teamA ? teamA.name : '?'}</div>${(teamA && teamA.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>
-      <div class="sh-team-block"><div class="sh-team-title">${teamB ? teamB.name : '?'}</div>${(teamB && teamB.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>`;
+      <div class="sh-team-block"><div class="sh-team-title">LOCAL · ${teamA ? teamA.name : '?'}</div>${(teamA && teamA.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>
+      <div class="sh-team-block"><div class="sh-team-title">VISITANTE · ${teamB ? teamB.name : '?'}</div>${(teamB && teamB.memberIds || []).map(pid => statsHubBuildPlayerRow(pid, true, editable)).join('')}</div>`;
   } else {
     playersHtml = playerIds.length ? playerIds.map(pid => statsHubBuildPlayerRow(pid, false, editable)).join('') : '<div class="adm-empty">Sin jugadores confirmados.</div>';
   }
 
+  // Encabezado del detalle: repite modo + rival/cancha + torneo dentro del panel
+  // expandido (no solo en la fila colapsada de arriba), para que quede claro
+  // contra quién se jugó mientras se cargan las estadísticas jugador por jugador.
+  const tournaments = loadTournaments();
+  const torneoNombre = esEquipo && m.torneoId ? (tournaments[m.torneoId] && tournaments[m.torneoId].nombre) : null;
+  const tituloDetalle = esEquipo
+    ? `${(teams[m.teamAId]||{}).name || '?'} <span class="sh-detail-vs">vs</span> ${(teams[m.teamBId]||{}).name || '?'}`
+    : (m.cancha || m.zona || 'Partido Modo Libre');
+  const headerHtml = `<div class="sh-detail-header">
+    <span class="sh-mode-tag">${esEquipo ? 'REY DEL BARRIO / TORNEO' : 'MODO LIBRE'}</span>
+    <span class="sh-detail-title">${tituloDetalle}</span>
+    ${torneoNombre ? `<span class="sh-detail-torneo">${torneoNombre}</span>` : ''}
+  </div>`;
+
+  // Marcador editable a mano en ambos modos (antes en Rey del Barrio/Torneo se
+  // calculaba solo sumando los goles cargados por jugador, sin poder corregirlo
+  // si no coincidía con el resultado real del partido, ej. autogoles).
   const scoreHtml = esEquipo
-    ? `<div class="sh-score"><span id="sh-score-a">0</span> - <span id="sh-score-b">0</span></div>`
+    ? `<div class="sh-score-inputs">
+         <b>${(teams[m.teamAId]||{}).name || 'EQUIPO A'}</b>
+         <input class="sh-cal-input" id="sh-goles-a" type="number" min="0" value="${done ? (m.resultado.golesA || 0) : 0}" ${editable ? '' : 'disabled'}>
+         —
+         <input class="sh-cal-input" id="sh-goles-b" type="number" min="0" value="${done ? (m.resultado.golesB || 0) : 0}" ${editable ? '' : 'disabled'}>
+         <b>${(teams[m.teamBId]||{}).name || 'EQUIPO B'}</b>
+       </div>
+       <div class="sh-score-hint">Suma de goles cargados por jugador (referencia): <span id="sh-score-sum">0-0</span></div>`
     : `<div class="sh-score-inputs">LOCAL <input class="sh-cal-input" id="sh-goles-local" type="number" min="0" value="${done ? (m.resultado.golesLocal || 0) : 0}" ${editable ? '' : 'disabled'}> · VISITANTE <input class="sh-cal-input" id="sh-goles-visitante" type="number" min="0" value="${done ? (m.resultado.golesVisitante || 0) : 0}" ${editable ? '' : 'disabled'}></div>`;
 
   const actionHtml = !done
-    ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},false)">✅ FINALIZAR</button>`
+    ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},false)">FINALIZAR</button>`
     : (_shCorrecting
-      ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},true)">💾 GUARDAR CORRECCIÓN</button>`
-      : `<button class="adm-edit-btn" onclick="statsHubStartCorrection('${matchId}',${esEquipo})">✏️ CORREGIR</button>
-         <button class="sh-btn-warn" onclick="statsHubResetMatch('${matchId}',${esEquipo})">⚠️ MARCAR COMO SIN REGISTRAR</button>`);
+      ? `<button class="adm-edit-btn" onclick="statsHubSaveMatch('${matchId}',${esEquipo},true)">GUARDAR CORRECCIÓN</button>`
+      : `<button class="adm-edit-btn" onclick="statsHubStartCorrection('${matchId}',${esEquipo})">CORREGIR</button>
+         <button class="sh-btn-warn" onclick="statsHubResetMatch('${matchId}',${esEquipo})">MARCAR COMO SIN REGISTRAR</button>`);
 
   wrap.innerHTML = `
+    ${headerHtml}
     ${scoreHtml}
     <div class="sh-players-wrap">${playersHtml}</div>
     <textarea class="sh-notes" id="sh-notes-${matchId}" placeholder="Notas del partido" ${editable ? '' : 'disabled'}>${m.notes || ''}</textarea>
@@ -7252,8 +7311,8 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
     m.notes = notes;
     if (esEquipo) { saveTeamMatches(); await pushTeamMatchToCloud(m); }
     else { saveOpenMatches(); await pushMatchToCloud(m); }
-    alert('✅ Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
-    statsHubToggleDetail(matchId, esEquipo);
+    alert('Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
+    statsHubCloseDetail();
     renderStatsHub();
     return;
   }
@@ -7261,8 +7320,8 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
   if (esEquipo) {
     const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
     if (!teamA || !teamB) return;
-    const golesA = (teamA.memberIds || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
-    const golesB = (teamB.memberIds || []).reduce((s, pid) => s + ((_shStats[pid] && _shStats[pid].goles) || 0), 0);
+    const golesA = parseInt((document.getElementById('sh-goles-a') || {}).value, 10) || 0;
+    const golesB = parseInt((document.getElementById('sh-goles-b') || {}).value, 10) || 0;
     const label = golesA > golesB ? `${teamA.name} gana ${golesA}-${golesB} a ${teamB.name}`
       : golesA < golesB ? `${teamB.name} gana ${golesB}-${golesA} a ${teamA.name}`
       : `Empate ${golesA}-${golesB}`;
@@ -7314,7 +7373,7 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
     saveTeamMatches(); saveProfiles(); saveTeams();
     await pushTeamMatchToCloud(m);
     await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
-    alert(`✅ Resultado registrado.\n\n${resultLabel}`);
+    alert(`Resultado registrado.\n\n${resultLabel}`);
   } else {
     const golesLocal = parseInt((document.getElementById('sh-goles-local') || {}).value, 10) || 0;
     const golesVisitante = parseInt((document.getElementById('sh-goles-visitante') || {}).value, 10) || 0;
@@ -7339,10 +7398,10 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
     }
     m.finalizado = true; m.resultado = { golesLocal, golesVisitante }; m.stats = statsMap; m.mvpId = _shMvpId; m.notes = notes;
     saveOpenMatches(); await pushMatchToCloud(m); saveProfiles();
-    alert('✅ Estadísticas enviadas y cartas actualizadas.');
+    alert('Estadísticas enviadas y cartas actualizadas.');
   }
 
-  statsHubToggleDetail(matchId, esEquipo);
+  statsHubCloseDetail();
   renderStatsHub();
 }
 
@@ -7361,8 +7420,8 @@ async function statsHubResetMatch(matchId, esEquipo) {
   const hasDeltas = pids.length > 0 && pids.every(pid => statsMap[pid] && statsMap[pid].ovrDelta !== undefined);
 
   const warn = hasDeltas
-    ? '⚠️ Esto va a REVERTIR el registro de este partido: se restan el OVR/XP/LP/goles/asistencias/partidos jugados que ganó cada jugador, y el partido vuelve a quedar "sin registrar" para cargarlo de nuevo.\n\n¿Seguro que este partido se marcó por error?'
-    : '⚠️ Este partido no tiene guardados los deltas que aplicó (se cargó antes de esta función) — solo se puede reiniciar el ESTADO del partido. El OVR/XP/goles/asistencias que ya se le sumaron a cada jugador NO se revierten solos; si hace falta, corregilos a mano desde "Editar jugador".\n\n¿Continuar igual?';
+    ? 'Esto va a REVERTIR el registro de este partido: se restan el OVR/XP/LP/goles/asistencias/partidos jugados que ganó cada jugador, y el partido vuelve a quedar "sin registrar" para cargarlo de nuevo.\n\n¿Seguro que este partido se marcó por error?'
+    : 'Este partido no tiene guardados los deltas que aplicó (se cargó antes de esta función) — solo se puede reiniciar el ESTADO del partido. El OVR/XP/goles/asistencias que ya se le sumaron a cada jugador NO se revierten solos; si hace falta, corregilos a mano desde "Editar jugador".\n\n¿Continuar igual?';
   if (!confirm(warn)) return;
 
   if (hasDeltas) {
@@ -7411,8 +7470,8 @@ async function statsHubResetMatch(matchId, esEquipo) {
   }
   saveProfiles();
 
-  alert('✅ Partido reiniciado. Ya podés volver a cargar sus estadísticas.');
-  statsHubToggleDetail(matchId, esEquipo);
+  alert('Partido reiniciado. Ya podés volver a cargar sus estadísticas.');
+  statsHubCloseDetail();
   renderStatsHub();
 }
 
@@ -7456,10 +7515,10 @@ function renderStatsHubPartidos() {
       <div class="adm-match-row sh-match-row">
         <div class="adm-match-info">
           <div class="adm-match-teams">${titulo} <span class="sh-mode-tag">${esEquipo ? 'REY DEL BARRIO' : 'MODO LIBRE'}</span></div>
-          <div class="adm-match-meta">${m.fecha}${(m.hora || m.horaValue) ? ' · ' + (m.hora || m.horaValue) : ''}${torneo ? ' · 🏆 ' + torneo : ''}</div>
+          <div class="adm-match-meta">${m.fecha}${(m.hora || m.horaValue) ? ' · ' + (m.hora || m.horaValue) : ''}${torneo ? ' · ' + torneo : ''}</div>
         </div>
         <span class="adm-badge ${badgeCls}">${badge}</span>
-        <button class="adm-edit-btn" onclick="statsHubToggleDetail('${m.id}',${esEquipo})">📋 ${done ? 'VER / CORREGIR' : 'CARGAR ESTADÍSTICAS'}</button>
+        <button class="adm-edit-btn" onclick="statsHubToggleDetail('${m.id}',${esEquipo})">${done ? 'VER / CORREGIR' : 'CARGAR ESTADÍSTICAS'}</button>
         <div class="sh-detail" id="sh-detail-${m.id}"></div>
       </div>`;
   }).join('') : '<div class="adm-empty">No hay partidos con este filtro.</div>';
@@ -7510,7 +7569,7 @@ function renderStatsHubJugadores() {
       <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
       <div class="adm-player-info">
         <div class="adm-player-name">${p.nickname || p.name}</div>
-        <div class="adm-player-meta">${p.position || '?'} · OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A · ${p.matches||0} PJ</div>
+        <div class="adm-player-meta">${p.position || '?'} · ${playerTeamLabel(p)} · OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A · ${p.matches||0} PJ</div>
       </div>
       <button class="adm-edit-btn" onclick="openAdminPlayer('${p.id}')">EDITAR</button>
     </div>`).join('') : '<div class="adm-empty">No se encontraron jugadores con ese filtro.</div>';
@@ -7528,6 +7587,10 @@ function renderStatsHubJugadores() {
 function renderStatsHubTorneos() {
   const el = document.getElementById('sh-torneos-list');
   if (!el) return;
+  // Mismo resguardo que renderStatsHubPartidos: si hay un detalle de partido de
+  // torneo abierto (cargando estadísticas a mano), no repintar por un sync de
+  // fondo y perder lo que el admin está escribiendo.
+  if (_shOpenMatchId) return;
   const tournaments = Object.values(loadTournaments()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   el.innerHTML = tournaments.length ? tournaments.map(t => renderStatsTorneoCard(t)).join('') : '<div class="adm-empty">No hay torneos creados aún.</div>';
 
@@ -7541,38 +7604,34 @@ function renderStatsHubTorneos() {
   }
 }
 
-// Tarjeta de torneo del Centro de Estadísticas: además de lo que ya muestra
-// renderAdminTorneoCard (partidos, goleadores, posiciones — sin tocar esa
-// función ni el modal viejo), agrega premios editables y campeón.
+// Tarjeta de torneo del Centro de Estadísticas: esta página NO crea ni edita
+// torneos (eso se hace en torneos.html al inscribirse, y el premio/campeón
+// desde el modal ⚙ ADMIN viejo si hace falta) — acá solo se cargan/corrigen
+// los resultados y estadísticas de los partidos YA JUGADOS del torneo, con el
+// mismo editor inline (marcador + box score por jugador) que usa el listado
+// general de PARTIDOS de arriba. Cada partido usa un id de contenedor propio
+// ('sh-tn-detail-') para poder abrirse acá sin chocar con el mismo partido si
+// también aparece listado arriba.
 function renderStatsTorneoCard(t) {
   const inscritos = (t.teams || []).map(e => teams[e.teamId]).filter(Boolean);
   const { matches, scorersList, standingsList } = calcTorneoStats(t.id);
 
-  const teamOptions = inscritos.map(tm => `<option value="${tm.id}">${tm.name}</option>`).join('');
-  const crearHtml = inscritos.length >= 2 ? `
-    <div class="adm-torneo-form">
-      <select id="adm-tn-teamA-${t.id}"><option value="">Equipo A</option>${teamOptions}</select>
-      <select id="adm-tn-teamB-${t.id}"><option value="">Equipo B</option>${teamOptions}</select>
-      <input type="date" id="adm-tn-fecha-${t.id}">
-      <input type="time" id="adm-tn-hora-${t.id}">
-      <input type="text" id="adm-tn-cancha-${t.id}" placeholder="Cancha" value="${t.cancha || ''}">
-      <button class="adm-edit-btn" onclick="crearPartidoTorneo('${t.id}');renderStatsHub()">+ CREAR PARTIDO</button>
-    </div>` : `<div class="adm-empty">Necesita al menos 2 equipos inscritos para crear cruces.</div>`;
-
   const matchesHtml = matches.length ? matches.map(m => {
     const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
     const done = m.estado === 'finalizado' && m.resultado;
-    const badge = done ? `${m.resultado.golesA}-${m.resultado.golesB}` : 'PROGRAMADO';
+    const badge = done ? `${m.resultado.golesA}-${m.resultado.golesB}` : 'SIN REGISTRAR';
+    const wrapId = 'sh-tn-detail-' + m.id;
     return `
-      <div class="adm-match-row">
+      <div class="adm-match-row sh-match-row">
         <div class="adm-match-info">
           <div class="adm-match-teams">${teamA ? teamA.name : '?'} vs ${teamB ? teamB.name : '?'}</div>
           <div class="adm-match-meta">${m.fecha}${m.hora ? ' · '+m.hora : ''} · ${m.cancha||''}</div>
         </div>
         <span class="adm-badge ${done ? 'adm-badge-done' : 'adm-badge-prog'}">${badge}</span>
-        <button class="adm-edit-btn ${done ? 'adm-edit-btn-gray' : ''}" onclick="openAdminTeamMatch('${m.id}')">${done ? 'VER / CORREGIR' : 'REGISTRAR'}</button>
+        <button class="adm-edit-btn" onclick="statsHubToggleDetail('${m.id}',true,'${wrapId}')">${done ? 'VER / CORREGIR' : 'CARGAR ESTADÍSTICAS'}</button>
+        <div class="sh-detail" id="${wrapId}"></div>
       </div>`;
-  }).join('') : '<div class="adm-empty">Sin partidos creados todavía.</div>';
+  }).join('') : '<div class="adm-empty">Sin partidos para este torneo todavía.</div>';
 
   const scorersHtml = scorersList.length ? `
     <table class="adm-torneo-table">
@@ -7586,45 +7645,15 @@ function renderStatsTorneoCard(t) {
       <tbody>${standingsList.map(s => `<tr><td>${s.name}</td><td>${s.w+s.d+s.l}</td><td>${s.pts}</td><td>${s.dg>0?'+':''}${s.dg}</td></tr>`).join('')}</tbody>
     </table>` : '';
 
-  const campeonOptions = inscritos.map(tm => `<option value="${tm.id}" ${t.campeonTeamId === tm.id ? 'selected' : ''}>${tm.name}</option>`).join('');
-
   return `
     <div class="adm-torneo-card">
       <div class="adm-torneo-title">${t.nombre} <span class="adm-badge adm-badge-${t.status==='abierto'?'prog':'done'}">${(t.status||'').toUpperCase()}</span></div>
       <div class="adm-match-meta">${t.fecha || ''} · ${inscritos.length} equipo(s) inscrito(s)</div>
-      ${crearHtml}
       <div class="adm-torneo-subtitle">PARTIDOS</div>
       ${matchesHtml}
       ${standingsList.length ? `<div class="adm-torneo-subtitle">POSICIONES</div>${standingsHtml}` : ''}
       ${scorersList.length ? `<div class="adm-torneo-subtitle">GOLEADORES</div>${scorersHtml}` : ''}
-      <div class="adm-torneo-subtitle">PREMIOS Y CAMPEÓN</div>
-      <div class="adm-torneo-form">
-        <input type="text" id="sh-premio1-${t.id}" placeholder="1er premio" value="${t.premio1 || ''}">
-        <input type="text" id="sh-premio2-${t.id}" placeholder="2do premio" value="${t.premio2 || ''}">
-        <input type="text" id="sh-premio3-${t.id}" placeholder="3er premio" value="${t.premio3 || ''}">
-        <select id="sh-campeon-${t.id}"><option value="">Sin definir</option>${campeonOptions}</select>
-        <button class="adm-edit-btn" onclick="guardarTorneoStatsHub('${t.id}')">💾 GUARDAR TORNEO</button>
-      </div>
     </div>`;
-}
-
-async function guardarTorneoStatsHub(torneoId) {
-  if (!isAdmin()) return;
-  const tournaments = loadTournaments();
-  const t = tournaments[torneoId];
-  if (!t) return;
-
-  t.premio1 = (document.getElementById('sh-premio1-' + torneoId) || {}).value || '';
-  t.premio2 = (document.getElementById('sh-premio2-' + torneoId) || {}).value || '';
-  t.premio3 = (document.getElementById('sh-premio3-' + torneoId) || {}).value || '';
-  t.premio = t.premio1; // se mantiene alineado con el campo que ya se muestra en torneos.html
-  t.campeonTeamId = (document.getElementById('sh-campeon-' + torneoId) || {}).value || null;
-
-  saveTournaments(tournaments);
-  const r = await pushTournamentToCloud(t);
-  if (r && r.error) { alert('Se guardó localmente pero no se pudo publicar en la nube. Revisa tu conexión.'); return; }
-  alert('✅ Torneo actualizado.');
-  renderStatsHubTorneos();
 }
 
 /* ===== ADMIN SYSTEM ===== */
@@ -7814,7 +7843,7 @@ function openAdminMatch(matchId) {
         <thead>
           <tr>
             <th>JUGADOR</th>
-            <th>⚽ GOL</th>
+            <th>GOL</th>
             <th>🎯 ASIST</th>
             <th>🥅 TIRO</th>
             <th>🛡 RECUP</th>
