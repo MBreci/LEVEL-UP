@@ -2646,7 +2646,7 @@ function matchToRow(m) {
     confirmados_prev: m.confirmadosPrev,
     abierto: m.abierto, necesita: m.necesita, join_requests: m.joinRequests, finalizado: m.finalizado,
     prioritario: m.prioritario || false, casual_bet: m.casualBet || null, genero: m.genero || 'MIXTO', posiciones_buscadas: m.posiciones || [],
-    created_at: m.createdAt, stats: m.stats || {},
+    created_at: m.createdAt, stats: m.stats || {}, notes: m.notes || null,
   };
 }
 function rowToMatch(r) {
@@ -2658,7 +2658,7 @@ function rowToMatch(r) {
     confirmadosPrev: r.confirmados_prev || [],
     abierto: r.abierto, necesita: r.necesita || [], joinRequests: r.join_requests || [], finalizado: r.finalizado,
     prioritario: r.prioritario || false, casualBet: r.casual_bet || null, genero: r.genero || 'MIXTO', posiciones: r.posiciones_buscadas || [],
-    createdAt: r.created_at, stats: r.stats || {},
+    createdAt: r.created_at, stats: r.stats || {}, notes: r.notes || '',
   };
 }
 async function pushMatchToCloud(m) {
@@ -4137,7 +4137,7 @@ function teamMatchToRow(m) {
     id: m.id, team_a_id: m.teamAId, team_b_id: m.teamBId, cancha: m.cancha, costo: m.costo,
     fecha: m.fecha, hora: m.hora, jugadores: m.jugadores, observaciones: m.observaciones,
     estado: m.estado, resultado: m.resultado, mvp_id: m.mvpId, created_at: m.createdAt,
-    stats: m.stats || {}, torneo_id: m.torneoId || null,
+    stats: m.stats || {}, torneo_id: m.torneoId || null, notes: m.notes || null,
   };
 }
 function rowToTeamMatch(r) {
@@ -4145,7 +4145,7 @@ function rowToTeamMatch(r) {
     id: r.id, teamAId: r.team_a_id, teamBId: r.team_b_id, cancha: r.cancha, costo: r.costo,
     fecha: r.fecha, hora: r.hora, jugadores: r.jugadores, observaciones: r.observaciones,
     estado: r.estado, resultado: r.resultado, mvpId: r.mvp_id, createdAt: r.created_at,
-    stats: r.stats || {}, torneoId: r.torneo_id || null,
+    stats: r.stats || {}, torneoId: r.torneo_id || null, notes: r.notes || '',
   };
 }
 async function pushTeamMatchToCloud(m) {
@@ -7145,13 +7145,33 @@ function statsHubUpdateRowPreview(pid) {
   const p = profiles[pid];
   const el = document.getElementById('sh-preview-' + pid);
   if (!p || !el || _shOpenEsEquipo === null) return;
-  if (_shOpenDone) {
-    // Partido ya jugado: no hay una previsualización confiable de "antes/después"
-    // (el delta real ya se aplicó en su momento) — se muestra el estado actual.
+  const m2 = statsHubBuildM2(pid, _shOpenEsEquipo);
+
+  if (_shOpenDone && !_shCorrecting) {
+    // Partido ya jugado y solo en modo lectura (VER, sin corregir): no hay nada
+    // que recalcular todavía, se muestra el estado actual de la carta.
     el.innerHTML = `ACTUAL: OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A`;
     return;
   }
-  const m2 = statsHubBuildM2(pid, _shOpenEsEquipo);
+
+  if (_shOpenDone && _shCorrecting) {
+    // Modo CORREGIR: el jugador TODAVÍA tiene aplicado el delta viejo de este
+    // partido (statsHubSaveMatch recién lo revierte al guardar, no al entrar a
+    // corregir) — para que la previsualización no mienta, se simula ya
+    // revertido antes de calcular el nuevo delta, así se ve el resultado neto
+    // final tal cual va a quedar la carta al guardar. _shStats[pid] todavía
+    // trae ovrDelta/xpGain guardados de la carga original (statsHubRenderDetail
+    // copia todo m.stats[pid] tal cual al entrar a corregir).
+    const old = _shStats[pid] || {};
+    const baseline = Object.assign({}, p, {
+      ovr: Math.max(40, Math.min(99, (p.ovr || 60) - (old.ovrDelta || 0))),
+      xp: Math.max(0, (p.xp || 0) - (old.xpGain || 0)),
+    });
+    const d = computeMatchDeltas(baseline, m2);
+    el.innerHTML = `OVR ${p.ovr||60} a <b>${d.ovrAfter}</b> · este partido corregido da XP +${d.xpGain} · LP +${d.lpGain}`;
+    return;
+  }
+
   const d = computeMatchDeltas(p, m2);
   el.innerHTML = `OVR ${d.ovrBefore} a <b>${d.ovrAfter}</b> · XP +${d.xpGain} · LP +${d.lpGain}`;
 }
@@ -7170,11 +7190,13 @@ function statsHubUpdateScoreboard() {
   if (el) el.textContent = `${sum(teamA)}-${sum(teamB)}`;
 }
 
-function statsHubStatChange(pid, key, delta) {
+// Cada celda de estadística es un input numérico directo (no +/-): al admin le
+// suele llegar una planilla externa (Veo) con el número final de cada acción
+// por jugador, así que escribir el número de una vez es más rápido que hacer
+// clic uno por uno.
+function statsHubStatInput(pid, key, rawValue) {
   if (!_shStats[pid]) _shStats[pid] = {};
-  _shStats[pid][key] = Math.max(0, (_shStats[pid][key] || 0) + delta);
-  const el = document.getElementById('sh-s-' + pid + '-' + key);
-  if (el) el.textContent = _shStats[pid][key];
+  _shStats[pid][key] = Math.max(0, parseInt(rawValue, 10) || 0);
   const p = profiles[pid];
   if (p) {
     const calEl = document.getElementById('sh-cal-live-' + pid);
@@ -7187,7 +7209,7 @@ function statsHubStatChange(pid, key, delta) {
 function statsHubSetMvp(pid) { _shMvpId = pid; }
 
 function statsHubStartCorrection(matchId, esEquipo) {
-  if (!confirm('Vas a corregir el box score ya cargado.\n\nOVR, XP y el historial YA aplicados NO se recalculan automáticamente — solo se corrige el detalle guardado. Si necesitás ajustar la carta de un jugador, hacelo desde "Editar jugador".\n\n¿Continuar?')) return;
+  if (!confirm('Vas a corregir este partido.\n\nAl guardar la corrección se revierte con precisión lo que ya se le había sumado a cada jugador (OVR/XP/LP/goles/asistencias) y se vuelve a calcular todo con los datos corregidos que cargues acá. No se pierde nada: se ajusta sobre el puntaje actual de cada jugador.\n\n¿Continuar?')) return;
   _shCorrecting = true;
   statsHubRenderDetail(matchId, esEquipo);
 }
@@ -7202,10 +7224,10 @@ function statsHubBuildPlayerRow(pid, esEquipo, editable) {
   const cellsHtml = fields.concat(negFields).map(f => {
     const val = s[f.key] || 0;
     if (!editable) return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.label}</span><span id="sh-s-${pid}-${f.key}">${val}</span></div>`;
-    return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.label}</span><div class="sh-stat-inner"><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',-1)">−</button><span id="sh-s-${pid}-${f.key}">${val}</span><button class="sh-mini-btn" onclick="statsHubStatChange('${pid}','${f.key}',1)">+</button></div></div>`;
+    return `<div class="sh-stat-cell"><span class="sh-stat-name">${f.label}</span><input class="sh-stat-num" id="sh-s-${pid}-${f.key}" type="number" min="0" value="${val}" oninput="statsHubStatInput('${pid}','${f.key}',this.value)"></div>`;
   }).join('');
   // Calificación automática en los dos modos (antes en Modo Libre se tecleaba a
-  // mano); se recalcula en vivo con cada +/- de estadística vía statsHubStatChange.
+  // mano); se recalcula en vivo con cada cambio de estadística vía statsHubStatInput.
   const calHtml = `<span class="sh-cal-auto" id="sh-cal-live-${pid}">${(esEquipo ? shCalcRating(p.position, s) : shCalcRatingLibre(s)).toFixed(1)}</span>`;
   const mvpChecked = _shMvpId === pid ? 'checked' : '';
   // En Modo Libre los jugadores no están agrupados por equipo (no es partido de
@@ -7213,9 +7235,10 @@ function statsHubBuildPlayerRow(pid, esEquipo, editable) {
   // no confundirlo con otro. En Rey del Barrio/Torneo ya está agrupado por
   // bloque de equipo arriba, así que repetirlo sería ruido.
   const teamBadge = !esEquipo ? ` <span class="sh-player-team">${playerTeamLabel(p)}</span>` : '';
+  const dorsal = (p.dorsal === 0 || p.dorsal) ? `<span class="sh-player-dorsal">#${p.dorsal}</span>` : '';
   return `
     <div class="sh-player-row" data-pid="${pid}">
-      <div class="sh-player-name">${p.nickname || p.name} <span class="sh-player-pos">${p.position}</span>${teamBadge}</div>
+      <div class="sh-player-name">${dorsal}${p.nickname || p.name} <span class="sh-player-pos">${p.position}</span>${teamBadge}</div>
       <div class="sh-stat-cells">${cellsHtml}</div>
       <div class="sh-cal-wrap">CALIF ${calHtml}</div>
       <label class="sh-mvp-wrap"><input type="radio" name="sh-mvp-${_shOpenMatchId}" value="${pid}" ${mvpChecked} ${editable ? '' : 'disabled'} onchange="statsHubSetMvp('${pid}')"> MVP</label>
@@ -7295,27 +7318,79 @@ function statsHubRenderDetail(matchId, esEquipo) {
   playerIds.forEach(pid => statsHubUpdateRowPreview(pid));
 }
 
+// Revierte con precisión los efectos que ESTE partido ya le había aplicado a
+// cada jugador y equipo (OVR/XP/LP/goles/asistencias/PJ/historial/récord de
+// equipo), usando los deltas guardados junto al box score en m.stats. Se usa
+// tanto para "marcar como sin registrar" como, dentro de statsHubSaveMatch,
+// para recalcular una corrección completa (primero revertir lo viejo, después
+// volver a aplicar lo corregido) — así el puntaje de cada jugador siempre
+// termina correspondiendo exactamente a los datos cargados la última vez, sin
+// arrastrar ni duplicar nada del cálculo anterior. Publica acá mismo los
+// perfiles/equipos que revierte (no depende de que quien llama vuelva a tocar
+// a estos mismos jugadores, porque en una corrección el roster pudo cambiar).
+// Devuelve false si el partido no tiene deltas guardados (se cargó antes de
+// que existiera esta función) y por lo tanto no se puede revertir con precisión.
+async function statsHubRevertPlayerEffects(m, esEquipo) {
+  const statsMap = m.stats || {};
+  const pids = Object.keys(statsMap);
+  const hasDeltas = pids.length > 0 && pids.every(pid => statsMap[pid] && statsMap[pid].ovrDelta !== undefined);
+  if (!hasDeltas) return false;
+
+  const cancha = esEquipo ? m.cancha : (m.cancha || m.zona);
+  for (const pid of pids) {
+    const p = profiles[pid];
+    const d = statsMap[pid];
+    if (!p || !d) continue;
+    p.ovr = Math.max(40, Math.min(99, (p.ovr || 60) - (d.ovrDelta || 0)));
+    p.xp = Math.max(0, (p.xp || 0) - (d.xpGain || 0));
+    p.lp = Math.max(0, (p.lp || 0) - (d.lpGain || 0));
+    p.goals = Math.max(0, (p.goals || 0) - (d.goles || 0));
+    p.assists = Math.max(0, (p.assists || 0) - (d.asistencias || 0));
+    p.matches = Math.max(0, (p.matches || 0) - 1);
+    if (d.mvp) p.mvps = Math.max(0, (p.mvps || 0) - 1);
+    (d.attrsGain || []).forEach(k => { if (p.attrs && p.attrs[k] !== undefined) p.attrs[k] = Math.max(0, p.attrs[k] - 1); });
+    if (p.history && p.history.length) {
+      for (let i = p.history.length - 1; i >= 0; i--) {
+        const h = p.history[i];
+        if (h.matchId ? h.matchId === m.id : (h.date === m.fecha && h.cancha === cancha)) { p.history.splice(i, 1); break; }
+      }
+    }
+    profiles[pid] = p;
+    await pushProfileToCloud(p);
+  }
+
+  if (esEquipo) {
+    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
+    if (teamA && teamB && m.resultado) {
+      const { golesA, golesB } = m.resultado;
+      teamA.goalsFor = Math.max(0, (teamA.goalsFor || 0) - golesA); teamA.goalsAgainst = Math.max(0, (teamA.goalsAgainst || 0) - golesB);
+      teamB.goalsFor = Math.max(0, (teamB.goalsFor || 0) - golesB); teamB.goalsAgainst = Math.max(0, (teamB.goalsAgainst || 0) - golesA);
+      if (golesA > golesB) { teamA.wins = Math.max(0, (teamA.wins || 0) - 1); teamB.losses = Math.max(0, (teamB.losses || 0) - 1); }
+      else if (golesA < golesB) { teamB.wins = Math.max(0, (teamB.wins || 0) - 1); teamA.losses = Math.max(0, (teamA.losses || 0) - 1); }
+      else { teamA.draws = Math.max(0, (teamA.draws || 0) - 1); teamB.draws = Math.max(0, (teamB.draws || 0) - 1); }
+      saveTeams();
+      await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
+    }
+  }
+  saveProfiles();
+  return true;
+}
+
+// GUARDAR/FINALIZAR: aplica el box score cargado a cada jugador y (en Rey del
+// Barrio/Torneo) al récord del equipo. Con correctionOnly=true, ANTES de
+// aplicar lo nuevo se revierte con precisión lo que este mismo partido ya
+// había sumado (statsHubRevertPlayerEffects) y recién ahí se vuelve a calcular
+// todo desde los datos corregidos — no se resetea al jugador, se ajusta sobre
+// su puntaje actual: se le resta exactamente lo viejo y se le suma exactamente
+// lo nuevo. Así una corrección deja el OVR/XP/LP/goles/asistencias de cada
+// jugador y el récord del equipo exactamente como si el dato corregido se
+// hubiera cargado bien desde el principio, sin tener que tocar nada a mano en
+// la base de datos.
 async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
   if (!isAdmin()) return;
   const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
   if (!m) return;
   const notes = (document.getElementById('sh-notes-' + matchId) || {}).value || '';
-
-  if (correctionOnly) {
-    if (!confirm('¿Guardar la corrección? El marcador y las cartas ya aplicadas NO cambian, solo el detalle del box score.')) return;
-    const playerIds = statsHubMatchPlayerIds(m, esEquipo);
-    const statsMap = {};
-    playerIds.forEach(pid => { statsMap[pid] = statsHubBuildM2(pid, esEquipo); });
-    m.stats = statsMap;
-    m.mvpId = _shMvpId;
-    m.notes = notes;
-    if (esEquipo) { saveTeamMatches(); await pushTeamMatchToCloud(m); }
-    else { saveOpenMatches(); await pushMatchToCloud(m); }
-    alert('Corrección guardada. El marcador y las cartas ya aplicadas no cambiaron.');
-    statsHubCloseDetail();
-    renderStatsHub();
-    return;
-  }
 
   if (esEquipo) {
     const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
@@ -7325,7 +7400,15 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
     const label = golesA > golesB ? `${teamA.name} gana ${golesA}-${golesB} a ${teamB.name}`
       : golesA < golesB ? `${teamB.name} gana ${golesB}-${golesA} a ${teamA.name}`
       : `Empate ${golesA}-${golesB}`;
-    if (!confirm(`¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`)) return;
+    const confirmMsg = correctionOnly
+      ? `¿Corregir este partido completo?\n\n${label}\n\nSe va a REVERTIR con precisión lo que ya se le había sumado a cada jugador y al récord de los equipos con los datos anteriores, y se vuelve a calcular todo (OVR/XP/LP/goles/asistencias/partidos jugados) con los datos corregidos que cargaste. No se borra nada del jugador: se ajusta sobre su puntaje actual.`
+      : `¿Confirmar resultado?\n\n${label}\n\nEsto actualizará OVR y estadísticas de todos los jugadores.`;
+    if (!confirm(confirmMsg)) return;
+
+    if (correctionOnly) {
+      const reverted = await statsHubRevertPlayerEffects(m, true);
+      if (!reverted && !confirm('Este partido se cargó antes de que existiera esta función y no tiene guardado lo que aplicó la primera vez, así que no se puede revertir con precisión. Si continuás, lo nuevo se va a SUMAR encima de lo que ya tenía cada jugador, sin restar lo viejo primero.\n\n¿Continuar de todos modos?')) return;
+    }
 
     teamA.goalsFor = (teamA.goalsFor || 0) + golesA; teamA.goalsAgainst = (teamA.goalsAgainst || 0) + golesB;
     teamB.goalsFor = (teamB.goalsFor || 0) + golesB; teamB.goalsAgainst = (teamB.goalsAgainst || 0) + golesA;
@@ -7345,8 +7428,11 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
       const d = computeMatchDeltas(p, m2);
       // Se guardan también los deltas aplicados junto al box score (en la misma
       // columna stats, sin migración nueva) para poder revertir con precisión
-      // si el partido se registró por error — ver statsHubResetMatch.
-      statsMap[pid] = Object.assign({}, m2, { ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
+      // si el partido se registró por error o hay que corregirlo — ver
+      // statsHubRevertPlayerEffects. attrsGain también se guarda: son los +1
+      // permanentes de atributo que se aplican abajo, y si no quedaran
+      // guardados una corrección los duplicaría (no se podrían restar).
+      statsMap[pid] = Object.assign({}, m2, { ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain, attrsGain: d.attrsGain || [] });
       checkAchievements(p, m2);
       p.ovr = d.ovrAfter; p.xp = d.xpAfter; p.lp = (p.lp || 0) + d.lpGain; p.matches = (p.matches || 0) + 1;
       p.goals = (p.goals || 0) + m2.goles; p.assists = (p.assists || 0) + m2.asistencias;
@@ -7354,30 +7440,45 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
       if (d.attrsGain) d.attrsGain.forEach(k => { if (p.attrs && p.attrs[k] !== undefined) p.attrs[k] = Math.min(99, p.attrs[k] + 1); });
       p.lastUpdate = new Date().toISOString();
       p.history = p.history || [];
-      p.history.push({ date: m.fecha, cancha: m.cancha, result: resultLabel, goles: m2.goles, asistencias: m2.asistencias, recuperaciones: m2.recuperaciones, calificacion: m2.calificacion, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
+      p.history.push({ matchId: m.id, date: m.fecha, cancha: m.cancha, result: resultLabel, goles: m2.goles, asistencias: m2.asistencias, recuperaciones: m2.recuperaciones, calificacion: m2.calificacion, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain, lpGain: d.lpGain });
       const teamObj = (teamA.memberIds || []).includes(pid) ? teamA : teamB;
       const rivalName = teamObj.id === m.teamAId ? teamB.name : teamA.name;
-      p.pendingReveal = { matchId: m.id, resultLabel, teamName: teamObj.name, rivalName, ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain, rankBefore: d.rankBefore ? d.rankBefore.name : null, rankAfter: d.rankAfter ? d.rankAfter.name : null, rankChanged: !!(d.rankBefore && d.rankAfter && d.rankBefore.name !== d.rankAfter.name) };
+      // El reveal post-partido (animación de evolución de carta) solo se dispara
+      // la primera vez que se finaliza — una corrección ya no debe volver a
+      // mostrarle al jugador esa secuencia por segunda vez.
+      if (!correctionOnly) {
+        p.pendingReveal = { matchId: m.id, resultLabel, teamName: teamObj.name, rivalName, ovrBefore: d.ovrBefore, ovrAfter: d.ovrAfter, xpGain: d.xpGain, lpGain: d.lpGain, rankBefore: d.rankBefore ? d.rankBefore.name : null, rankAfter: d.rankAfter ? d.rankAfter.name : null, rankChanged: !!(d.rankBefore && d.rankAfter && d.rankBefore.name !== d.rankAfter.name) };
+      }
       profiles[pid] = p;
       await pushProfileToCloud(p);
     }
 
     m.estado = 'finalizado'; m.resultado = { golesA, golesB }; m.stats = statsMap; m.mvpId = _shMvpId; m.notes = notes;
 
-    const winTeam = golesA > golesB ? teamA : golesB > golesA ? teamB : null;
-    if (winTeam) {
-      const cap = profiles[winTeam.captainId];
-      if (cap) { cap.notifications = cap.notifications || []; cap.notifications.push({ icon: '🏆', text: resultLabel, time: 'AHORA' }); profiles[winTeam.captainId] = cap; }
+    if (!correctionOnly) {
+      const winTeam = golesA > golesB ? teamA : golesB > golesA ? teamB : null;
+      if (winTeam) {
+        const cap = profiles[winTeam.captainId];
+        if (cap) { cap.notifications = cap.notifications || []; cap.notifications.push({ icon: '🏆', text: resultLabel, time: 'AHORA' }); profiles[winTeam.captainId] = cap; }
+      }
     }
 
     saveTeamMatches(); saveProfiles(); saveTeams();
     await pushTeamMatchToCloud(m);
     await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
-    alert(`Resultado registrado.\n\n${resultLabel}`);
+    alert(correctionOnly ? `Corrección guardada.\n\n${resultLabel}\n\nEl puntaje de cada jugador quedó recalculado con los datos corregidos.` : `Resultado registrado.\n\n${resultLabel}`);
   } else {
     const golesLocal = parseInt((document.getElementById('sh-goles-local') || {}).value, 10) || 0;
     const golesVisitante = parseInt((document.getElementById('sh-goles-visitante') || {}).value, 10) || 0;
-    if (!confirm('¿Confirmar y enviar estas estadísticas?')) return;
+    const confirmMsg = correctionOnly
+      ? 'Vas a corregir este partido completo.\n\nSe va a REVERTIR con precisión lo que ya se le había sumado a cada jugador con los datos anteriores, y se vuelve a calcular todo (OVR/XP/LP/goles/asistencias/partidos jugados) con los datos corregidos. No se borra nada del jugador: se ajusta sobre su puntaje actual.\n\n¿Continuar?'
+      : '¿Confirmar y enviar estas estadísticas?';
+    if (!confirm(confirmMsg)) return;
+
+    if (correctionOnly) {
+      const reverted = await statsHubRevertPlayerEffects(m, false);
+      if (!reverted && !confirm('Este partido se cargó antes de que existiera esta función y no tiene guardado lo que aplicó la primera vez, así que no se puede revertir con precisión. Si continuás, lo nuevo se va a SUMAR encima de lo que ya tenía cada jugador, sin restar lo viejo primero.\n\n¿Continuar de todos modos?')) return;
+    }
 
     const playerIds = statsHubMatchPlayerIds(m, false);
     const statsMap = {};
@@ -7392,25 +7493,24 @@ async function statsHubSaveMatch(matchId, esEquipo, correctionOnly) {
       if (m2.mvp) p.mvps = (p.mvps || 0) + 1;
       p.lastUpdate = new Date().toISOString();
       p.history = p.history || [];
-      p.history.push({ date: m.fecha, cancha: m.cancha || m.zona, calificacion: m2.calificacion, goles: m2.goles, asistencias: m2.asistencias, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain });
+      p.history.push({ matchId: m.id, date: m.fecha, cancha: m.cancha || m.zona, calificacion: m2.calificacion, goles: m2.goles, asistencias: m2.asistencias, mvp: m2.mvp, ovrDelta: d.ovrDelta, xpGain: d.xpGain });
       profiles[pid] = p;
       await pushProfileToCloud(p);
     }
     m.finalizado = true; m.resultado = { golesLocal, golesVisitante }; m.stats = statsMap; m.mvpId = _shMvpId; m.notes = notes;
     saveOpenMatches(); await pushMatchToCloud(m); saveProfiles();
-    alert('Estadísticas enviadas y cartas actualizadas.');
+    alert(correctionOnly ? 'Corrección guardada. El puntaje de cada jugador quedó recalculado con los datos corregidos.' : 'Estadísticas enviadas y cartas actualizadas.');
   }
 
   statsHubCloseDetail();
   renderStatsHub();
 }
 
-// Deshace un partido registrado por error: si el partido se finalizó con esta
-// misma herramienta, revierte con precisión OVR/XP/LP/goles/asistencias/PJ de
-// cada jugador (los deltas quedan guardados junto al box score en m.stats) y
-// vuelve a dejarlo "sin registrar" para cargarlo de nuevo. Si es un partido
-// viejo sin esos deltas guardados, solo reinicia el estado del partido y avisa
-// que los efectos ya aplicados a los jugadores hay que corregirlos a mano.
+// Deshace un partido registrado por error: revierte con precisión OVR/XP/LP/
+// goles/asistencias/PJ de cada jugador (statsHubRevertPlayerEffects) y vuelve
+// a dejarlo "sin registrar" para cargarlo de nuevo. Si es un partido viejo sin
+// esos deltas guardados, solo reinicia el estado del partido y avisa que los
+// efectos ya aplicados a los jugadores hay que corregirlos a mano.
 async function statsHubResetMatch(matchId, esEquipo) {
   if (!isAdmin()) return;
   const m = esEquipo ? teamMatches.find(x => x.id === matchId) : openMatches.find(x => x.id === matchId);
@@ -7424,42 +7524,9 @@ async function statsHubResetMatch(matchId, esEquipo) {
     : 'Este partido no tiene guardados los deltas que aplicó (se cargó antes de esta función) — solo se puede reiniciar el ESTADO del partido. El OVR/XP/goles/asistencias que ya se le sumaron a cada jugador NO se revierten solos; si hace falta, corregilos a mano desde "Editar jugador".\n\n¿Continuar igual?';
   if (!confirm(warn)) return;
 
-  if (hasDeltas) {
-    const cancha = esEquipo ? m.cancha : (m.cancha || m.zona);
-    for (const pid of pids) {
-      const p = profiles[pid];
-      const d = statsMap[pid];
-      if (!p || !d) continue;
-      p.ovr = Math.max(40, Math.min(99, (p.ovr || 60) - (d.ovrDelta || 0)));
-      p.xp = Math.max(0, (p.xp || 0) - (d.xpGain || 0));
-      p.lp = Math.max(0, (p.lp || 0) - (d.lpGain || 0));
-      p.goals = Math.max(0, (p.goals || 0) - (d.goles || 0));
-      p.assists = Math.max(0, (p.assists || 0) - (d.asistencias || 0));
-      p.matches = Math.max(0, (p.matches || 0) - 1);
-      if (d.mvp) p.mvps = Math.max(0, (p.mvps || 0) - 1);
-      if (p.history && p.history.length) {
-        for (let i = p.history.length - 1; i >= 0; i--) {
-          const h = p.history[i];
-          if (h.date === m.fecha && h.cancha === cancha) { p.history.splice(i, 1); break; }
-        }
-      }
-      profiles[pid] = p;
-      await pushProfileToCloud(p);
-    }
-  }
+  await statsHubRevertPlayerEffects(m, esEquipo);
 
   if (esEquipo) {
-    const teamA = teams[m.teamAId], teamB = teams[m.teamBId];
-    if (teamA && teamB && m.resultado) {
-      const { golesA, golesB } = m.resultado;
-      teamA.goalsFor = Math.max(0, (teamA.goalsFor || 0) - golesA); teamA.goalsAgainst = Math.max(0, (teamA.goalsAgainst || 0) - golesB);
-      teamB.goalsFor = Math.max(0, (teamB.goalsFor || 0) - golesB); teamB.goalsAgainst = Math.max(0, (teamB.goalsAgainst || 0) - golesA);
-      if (golesA > golesB) { teamA.wins = Math.max(0, (teamA.wins || 0) - 1); teamB.losses = Math.max(0, (teamB.losses || 0) - 1); }
-      else if (golesA < golesB) { teamB.wins = Math.max(0, (teamB.wins || 0) - 1); teamA.losses = Math.max(0, (teamA.losses || 0) - 1); }
-      else { teamA.draws = Math.max(0, (teamA.draws || 0) - 1); teamB.draws = Math.max(0, (teamB.draws || 0) - 1); }
-      saveTeams();
-      await pushTeamToCloud(teamA); await pushTeamToCloud(teamB);
-    }
     m.estado = 'programado'; m.resultado = null; m.stats = {}; m.mvpId = null; m.notes = '';
     saveTeamMatches();
     await pushTeamMatchToCloud(m);
@@ -7468,7 +7535,6 @@ async function statsHubResetMatch(matchId, esEquipo) {
     saveOpenMatches();
     await pushMatchToCloud(m);
   }
-  saveProfiles();
 
   alert('Partido reiniciado. Ya podés volver a cargar sus estadísticas.');
   statsHubCloseDetail();
@@ -7568,7 +7634,7 @@ function renderStatsHubJugadores() {
     <div class="adm-player-row">
       <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
       <div class="adm-player-info">
-        <div class="adm-player-name">${p.nickname || p.name}</div>
+        <div class="adm-player-name">${(p.dorsal === 0 || p.dorsal) ? `<span class="sh-player-dorsal">#${p.dorsal}</span>` : ''}${p.nickname || p.name}</div>
         <div class="adm-player-meta">${p.position || '?'} · ${playerTeamLabel(p)} · OVR ${p.ovr||60} · ${p.goals||0}G ${p.assists||0}A · ${p.matches||0} PJ</div>
       </div>
       <button class="adm-edit-btn" onclick="openAdminPlayer('${p.id}')">EDITAR</button>

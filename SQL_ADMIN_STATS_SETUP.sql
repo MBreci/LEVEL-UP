@@ -6,9 +6,11 @@
 -- Idempotente: seguro correrlo varias veces.
 
 alter table open_matches add column if not exists stats jsonb default '{}'::jsonb;
+alter table open_matches add column if not exists notes text;
 
 alter table team_matches add column if not exists stats jsonb default '{}'::jsonb;
 alter table team_matches add column if not exists torneo_id text;
+alter table team_matches add column if not exists notes text;
 
 -- Sin políticas RLS nuevas: open_matches y team_matches ya tienen "allow all"
 -- (ver SQL_TEAMS_SETUP.sql), igual que el resto de columnas de estas tablas.

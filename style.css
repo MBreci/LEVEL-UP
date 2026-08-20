@@ -3020,6 +3020,13 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   background: #0d1a12;
   border: 1px solid #133622;
 }
+.sh-player-dorsal {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--td, #7a8b9a);
+  margin-right: 6px;
+}
 .sh-detail-header {
   display: flex;
   flex-wrap: wrap;
@@ -3067,26 +3074,22 @@ html{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.45) rgba(2,4,10,0.5)}
   color: var(--td, #7a8b9a);
   white-space: nowrap;
 }
-.sh-stat-inner {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 .sh-stat-cell > span:not(.sh-stat-name) {
   color: #fff;
   font-weight: 700;
 }
-.sh-mini-btn {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+.sh-stat-num {
+  width: 48px;
+  text-align: center;
+  background: #0a0f15;
   border: 1px solid var(--b2, #1e2a3a);
-  background: transparent;
+  border-radius: 6px;
   color: #fff;
-  font-size: 11px;
-  line-height: 1;
-  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 0;
 }
+.sh-stat-num:focus { border-color: var(--g, #00ff88); outline: none; }
 .sh-cal-wrap {
   font-size: 10px;
   color: var(--td, #7a8b9a);
