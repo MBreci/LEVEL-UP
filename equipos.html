@@ -1,400 +1,960 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="storage-shim.js?v=1784770966"></script>
-<title>Equipos · LEVEL UP</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1784770966">
-</head>
-<body>
-
-<!-- NAV -->
-<header>
-  <div class="nav-top">
-    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
-    <nav class="nav-modules" id="nav-modules"></nav>
-    <div class="nav-right">
-      <a class="season-badge" href="temporada-piloto.html" title="Conoce la Temporada Beta">TEMPORADA BETA</a>
-      <a class="btn-g" href="notificaciones.html">🔔 <span id="notif-count">0</span></a>
-      <div class="dropdown-wrap">
-        <button class="btn-g" id="profile-btn">PERFIL</button>
-        <div class="dropdown-menu" id="account-dropdown">
-          <a class="dropdown-item" href="dashboard.html#dashboard">CENTRO DE MANDO</a>
-          <a class="dropdown-item" href="carta.html">PERFIL</a>
-          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
-          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
-          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
-        </div>
-      </div>
-      <div class="dropdown-wrap">
-        <button class="btn-p" onclick="toggleDropdown('jugar-dropdown')">JUGAR PARTIDO ▾</button>
-        <div class="dropdown-menu" id="jugar-dropdown">
-          <a class="dropdown-item" href="buscar-partido.html">CREAR PARTIDO — MODO LIBRE<span class="dropdown-item-sub">Crea o únete a un partido en modo libre</span></a>
-          <a class="dropdown-item" href="equipos.html#crear">CREAR EQUIPO / MI EQUIPO<span class="dropdown-item-sub">Crea o gestiona tu equipo</span></a>
-          <a class="dropdown-item" href="equipos.html#rey">REY DEL BARRIO<span class="dropdown-item-sub">Busca y reta a otros equipos</span></a>
-          <a class="dropdown-item" href="equipos.html#programados">PARTIDOS PROGRAMADOS<span class="dropdown-item-sub">Ve tus retos y partidos</span></a>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="tk-pill"><div class="tk-dot"></div><div class="tk-lbl">ACTIVIDAD</div></div>
-  <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
-</div>
-
-<div class="page-banner">
-  <div class="page-banner-eyebrow">MODO COMPETITIVO</div>
-  <div class="page-banner-title">👑 REY DEL BARRIO</div>
-  <div class="page-banner-desc">Reta a otros equipos en canchas certificadas. Cada partido registra tu desempeño y actualiza tu ficha.</div>
-</div>
-
-<section id="equipos">
-  <div class="eq-tabs">
-    <div class="eq-tab" id="eq-tab-crear" onclick="switchEquiposTab('crear')">CREAR EQUIPO / MI EQUIPO</div>
-    <div class="eq-tab on" id="eq-tab-rey" onclick="switchEquiposTab('rey')">REY DEL BARRIO</div>
-    <div class="eq-tab" id="eq-tab-programados" onclick="switchEquiposTab('programados')">PARTIDOS PROGRAMADOS</div>
-  </div>
-
-  <!-- PANEL: CREAR / MI EQUIPO (oculto, accesible por hash) -->
-  <div id="eq-panel-crear" class="eq-panel" style="display:none">
-    <div id="team-create-panel" class="eq-create-wrap">
-      <div class="sec-hdr">
-        <div class="sec-eyebrow">CREAR EQUIPO</div>
-      </div>
-      <div class="bp-form" id="team-create-form">
-        <div class="auth-label">NOMBRE DEL EQUIPO</div>
-        <input class="auth-input" id="team-name" placeholder="Ej: Halcones FC" maxlength="24">
-        <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
-        <input class="auth-input" id="team-desc" placeholder="Ej: Equipo de barrio, jugamos los domingos" maxlength="80">
-        <div class="auth-label">CIUDAD / BARRIO</div>
-        <input class="auth-input" id="team-city" placeholder="Ej: Suba, Bogotá" maxlength="24">
-        <div class="auth-label">COLOR DEL EQUIPO</div>
-        <input class="auth-input" type="color" id="team-color" value="#00ff88">
-        <div class="auth-label">ESCUDO (OPCIONAL)</div>
-        <input class="auth-input" type="file" id="team-photo" accept="image/*" onchange="previewTeamPhoto(this)">
-        <img id="team-photo-preview" class="team-escudo escudo-clickable" style="display:none;margin-top:10px" onclick="openEscudoLightbox(this.src)">
-        <div class="auth-error" id="team-error"></div>
-        <button class="auth-submit" onclick="submitCreateTeam()">CREAR EQUIPO</button>
-      </div>
-    </div>
-    <div id="team-profile-content"></div>
-  </div>
-
-  <!-- PANEL: REY DEL BARRIO -->
-  <div id="eq-panel-rey" class="eq-panel eq-panel-rey-wrap">
-
-    <!-- BANNER INFORMATIVO -->
-    <div class="rdb-banner">
-      <div class="rdb-banner-glow"></div>
-      <div class="rdb-banner-content">
-        <div class="rdb-banner-crown">👑</div>
-        <div class="rdb-banner-body">
-          <div class="rdb-banner-title">MODO COMPETITIVO OFICIAL</div>
-          <div class="rdb-banner-text">Rey del Barrio no es un partido libre. Aquí se miden los jugadores en canchas certificadas por LEVEL UP. Cada partido registra tu desempeño real y actualiza tu ficha: OVR, estadísticas y rango.</div>
-          <div class="rdb-banner-pills">
-            <div class="rdb-pill rdb-pill-on">📍 Canchas certificadas LEVEL UP</div>
-            <div class="rdb-pill rdb-pill-on">📊 Toma de medidas en cancha</div>
-            <div class="rdb-pill rdb-pill-on">🃏 Actualiza tu ficha de jugador</div>
-            <div class="rdb-pill rdb-pill-off">≠ No es modo partido libre</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="storage-shim.js?v=1784770966"></script>
+    <title>Equipos · LEVEL UP</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css?v=1784770966" />
+  </head>
+  <body>
+    <!-- NAV -->
+    <header>
+      <div class="nav-top">
+        <a href="index.html" onclick="return goToHome(event);"
+          ><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"
+        /></a>
+        <nav class="nav-modules" id="nav-modules"></nav>
+        <div class="nav-right">
+          <a
+            class="season-badge"
+            href="temporada-piloto.html"
+            title="Conoce la Temporada Beta"
+            >TEMPORADA BETA</a
+          >
+          <a class="btn-g" href="notificaciones.html"
+            >🔔 <span id="notif-count">0</span></a
+          >
+          <div class="dropdown-wrap">
+            <button class="btn-g" id="profile-btn">PERFIL</button>
+            <div class="dropdown-menu" id="account-dropdown">
+              <a class="dropdown-item" href="dashboard.html#dashboard"
+                >CENTRO DE MANDO</a
+              >
+              <a class="dropdown-item" href="carta.html">PERFIL</a>
+              <a class="dropdown-item" href="configuracion.html"
+                >CONFIGURACIÓN</a
+              >
+              <div class="dropdown-item" onclick="openAuth(false)">
+                CAMBIAR DE PERFIL
+              </div>
+              <div class="dropdown-item danger" onclick="logout()">
+                CERRAR SESIÓN
+              </div>
+            </div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="btn-p" onclick="toggleDropdown('jugar-dropdown')">
+              JUGAR PARTIDO ▾
+            </button>
+            <div class="dropdown-menu" id="jugar-dropdown">
+              <a class="dropdown-item" href="buscar-partido.html"
+                >CREAR PARTIDO — MODO LIBRE<span class="dropdown-item-sub"
+                  >Crea o únete a un partido en modo libre</span
+                ></a
+              >
+              <a class="dropdown-item" href="equipos.html#crear"
+                >CREAR EQUIPO / MI EQUIPO<span class="dropdown-item-sub"
+                  >Crea o gestiona tu equipo</span
+                ></a
+              >
+              <a class="dropdown-item" href="equipos.html#rey"
+                >REY DEL BARRIO<span class="dropdown-item-sub"
+                  >Busca y reta a otros equipos</span
+                ></a
+              >
+              <a class="dropdown-item" href="equipos.html#programados"
+                >PARTIDOS PROGRAMADOS<span class="dropdown-item-sub"
+                  >Ve tus retos y partidos</span
+                ></a
+              >
+            </div>
           </div>
         </div>
       </div>
+    </header>
+
+    <!-- TICKER -->
+    <div class="ticker">
+      <div class="tk-pill">
+        <div class="tk-dot"></div>
+        <div class="tk-lbl">ACTIVIDAD</div>
+      </div>
+      <div class="tk-feed"><div class="tk-inner" id="ticker-inner"></div></div>
     </div>
 
-    <div class="pl-search-wrap">
-      <input class="pl-search-input" id="team-search" placeholder="Buscar equipo por nombre o ciudad..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lu-team-q" readonly onfocus="this.removeAttribute('readonly');renderTeamSearch(this.value)" oninput="renderTeamSearch(this.value)" onblur="setTimeout(closeTeamSuggestions, 150)">
-      <div class="pl-suggest" id="team-suggest"></div>
+    <div class="page-banner">
+      <div class="page-banner-eyebrow">MODO COMPETITIVO</div>
+      <div class="page-banner-title">👑 REY DEL BARRIO</div>
+      <div class="page-banner-desc">
+        Reta a otros equipos en canchas certificadas. Cada partido registra tu
+        desempeño y actualiza tu ficha.
+      </div>
     </div>
-    <div class="pl-grid" id="team-grid"></div>
-  </div>
 
-  <!-- PANEL: PARTIDOS PROGRAMADOS -->
-  <div id="eq-panel-programados" class="eq-panel" style="display:none">
-    <div id="team-matches-content"></div>
-  </div>
-</section>
+    <section id="equipos">
+      <div class="eq-tabs">
+        <div
+          class="eq-tab"
+          id="eq-tab-crear"
+          onclick="switchEquiposTab('crear')"
+        >
+          CREAR EQUIPO / MI EQUIPO
+        </div>
+        <div
+          class="eq-tab on"
+          id="eq-tab-rey"
+          onclick="switchEquiposTab('rey')"
+        >
+          REY DEL BARRIO
+        </div>
+        <div
+          class="eq-tab"
+          id="eq-tab-programados"
+          onclick="switchEquiposTab('programados')"
+        >
+          PARTIDOS PROGRAMADOS
+        </div>
+      </div>
 
-<footer>
-  <div class="ft-top">
-    <div>
-      <img class="ft-logo-img" src="assets/logo.png" alt="LEVEL UP">
-      <div class="ft-desc">La plataforma deportiva donde cada partido cambia tu carrera. Construido en Bogotá, Colombia.</div>
-    </div>
-  </div>
-  <div class="ft-bottom">© 2026 LEVEL UP · ETAPA BETA · <a href="privacidad.html">POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a></div>
-</footer>
+      <!-- PANEL: CREAR / MI EQUIPO (oculto, accesible por hash) -->
+      <div id="eq-panel-crear" class="eq-panel" style="display: none">
+        <div id="team-create-panel" class="eq-create-wrap">
+          <div class="sec-hdr">
+            <div class="sec-eyebrow">CREAR EQUIPO</div>
+          </div>
+          <div class="bp-form" id="team-create-form">
+            <div class="auth-label">NOMBRE DEL EQUIPO</div>
+            <input
+              class="auth-input"
+              id="team-name"
+              placeholder="Ej: Halcones FC"
+              maxlength="24"
+            />
+            <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
+            <input
+              class="auth-input"
+              id="team-desc"
+              placeholder="Ej: Equipo de barrio, jugamos los domingos"
+              maxlength="80"
+            />
+            <div class="auth-label">CIUDAD / BARRIO</div>
+            <input
+              class="auth-input"
+              id="team-city"
+              placeholder="Ej: Suba, Bogotá"
+              maxlength="24"
+            />
+            <div class="auth-label">COLOR DEL EQUIPO</div>
+            <input
+              class="auth-input"
+              type="color"
+              id="team-color"
+              value="#00ff88"
+            />
+            <div class="auth-label">ESCUDO (OPCIONAL)</div>
+            <input
+              class="auth-input"
+              type="file"
+              id="team-photo"
+              accept="image/*"
+              onchange="previewTeamPhoto(this)"
+            />
+            <img
+              id="team-photo-preview"
+              class="team-escudo escudo-clickable"
+              style="display: none; margin-top: 10px"
+              onclick="openEscudoLightbox(this.src)"
+            />
+            <div class="auth-error" id="team-error"></div>
+            <button class="auth-submit" onclick="submitCreateTeam()">
+              CREAR EQUIPO
+            </button>
+          </div>
+        </div>
+        <div id="team-profile-content"></div>
+      </div>
 
-<!-- MODAL FICHA DE EQUIPO RIVAL -->
-<div class="modal-overlay" id="team-view-modal">
-  <div class="player-view-card">
-    <div class="card-section" id="team-view-content"></div>
-    <button class="auth-cancel" onclick="closeTeamView()">CERRAR</button>
-  </div>
-</div>
+      <!-- PANEL: REY DEL BARRIO -->
+      <div id="eq-panel-rey" class="eq-panel eq-panel-rey-wrap">
+        <!-- BANNER INFORMATIVO -->
+        <div class="rdb-banner">
+          <div class="rdb-banner-glow"></div>
+          <div class="rdb-banner-content">
+            <div class="rdb-banner-crown">👑</div>
+            <div class="rdb-banner-body">
+              <div class="rdb-banner-title">MODO COMPETITIVO OFICIAL</div>
+              <div class="rdb-banner-text">
+                Rey del Barrio no es un partido libre. Aquí se miden los
+                jugadores en canchas certificadas por LEVEL UP. Cada partido
+                registra tu desempeño real y actualiza tu ficha: OVR,
+                estadísticas y rango.
+              </div>
+              <div class="rdb-banner-pills">
+                <div class="rdb-pill rdb-pill-on">
+                  📍 Canchas certificadas LEVEL UP
+                </div>
+                <div class="rdb-pill rdb-pill-on">
+                  📊 Toma de medidas en cancha
+                </div>
+                <div class="rdb-pill rdb-pill-on">
+                  🃏 Actualiza tu ficha de jugador
+                </div>
+                <div class="rdb-pill rdb-pill-off">
+                  ≠ No es modo partido libre
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- MODAL FICHA DE JUGADOR -->
-<div class="modal-overlay" id="player-view-modal">
-  <div class="player-view-card">
-    <div class="card-section" id="player-view-content"></div>
-    <button class="auth-cancel" onclick="closePlayerView()">CERRAR</button>
-  </div>
-</div>
+        <div class="pl-search-wrap">
+          <input
+            class="pl-search-input"
+            id="team-search"
+            placeholder="Buscar equipo por nombre o ciudad..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            name="lu-team-q"
+            readonly
+            onfocus="
+              this.removeAttribute('readonly');
+              renderTeamSearch(this.value);
+            "
+            oninput="renderTeamSearch(this.value)"
+            onblur="setTimeout(closeTeamSuggestions, 150)"
+          />
+          <div class="pl-suggest" id="team-suggest"></div>
+        </div>
+        <div class="pl-grid" id="team-grid"></div>
+      </div>
 
-<!-- MODAL VER ESCUDO EN GRANDE -->
-<div class="modal-overlay" id="escudo-lightbox">
-  <div class="escudo-lightbox-card">
-    <img id="escudo-lightbox-img" class="escudo-lightbox-img" src="">
-    <button class="auth-cancel" onclick="closeEscudoLightbox()">CERRAR</button>
-  </div>
-</div>
+      <!-- PANEL: PARTIDOS PROGRAMADOS -->
+      <div id="eq-panel-programados" class="eq-panel" style="display: none">
+        <div id="team-matches-content"></div>
+      </div>
+    </section>
 
-<!-- MODAL RETAR EQUIPO -->
-<div class="modal-overlay" id="challenge-modal">
-  <div class="auth-card">
-    <div class="auth-tabs"><div class="auth-tab on">RETAR EQUIPO</div></div>
-    <input type="hidden" id="challenge-to-team">
-    <div class="auth-label">CANCHA</div>
-    <select class="auth-input" id="challenge-cancha"></select>
-    <div class="auth-label">COSTO (OPCIONAL)</div>
-    <input class="auth-input" id="challenge-costo" placeholder="Ej: $10.000 por jugador" maxlength="30">
-
-    <!-- APUESTA EN LEVEL COINS -->
-    <div class="bet-section">
-      <div class="bet-header">
-        <span class="bet-icon">🪙</span>
+    <footer>
+      <div class="ft-top">
         <div>
-          <div class="bet-title">APUESTA EN LEVEL COINS</div>
-          <div class="bet-sub">El ganador se lleva todo. Los coins se bloquean al aceptar el reto.</div>
+          <img class="ft-logo-img" src="assets/logo.png" alt="LEVEL UP" />
+          <div class="ft-desc">
+            La plataforma deportiva donde cada partido cambia tu carrera.
+            Construido en Bogotá, Colombia.
+          </div>
         </div>
-        <label class="bet-toggle-wrap">
-          <input type="checkbox" id="bet-enabled" onchange="toggleBetSection()">
-          <span class="bet-toggle"></span>
-        </label>
       </div>
-      <div id="bet-fields" style="display:none">
-        <div class="bet-balance-row">Tu saldo: <span class="bet-balance-val" id="bet-my-balance">0</span> 🪙</div>
-        <div class="auth-label" style="margin-top:12px">COINS A APOSTAR (cada equipo)</div>
-        <div class="bet-inp-row">
-          <button class="bet-quick" onclick="setBetAmount(500)">500</button>
-          <button class="bet-quick" onclick="setBetAmount(1000)">1.000</button>
-          <button class="bet-quick" onclick="setBetAmount(2000)">2.000</button>
-          <button class="bet-quick" onclick="setBetAmount(5000)">5.000</button>
+      <div class="ft-bottom">
+        © 2026 LEVEL UP · ETAPA BETA ·
+        <a href="privacidad.html"
+          >POLÍTICA DE TRATAMIENTO DE DATOS Y DE IMAGEN</a
+        >
+      </div>
+    </footer>
+
+    <!-- MODAL FICHA DE EQUIPO RIVAL -->
+    <div class="modal-overlay" id="team-view-modal">
+      <div class="player-view-card">
+        <div class="card-section" id="team-view-content"></div>
+        <button class="auth-cancel" onclick="closeTeamView()">CERRAR</button>
+      </div>
+    </div>
+
+    <!-- MODAL FICHA DE JUGADOR -->
+    <div class="modal-overlay" id="player-view-modal">
+      <div class="player-view-card">
+        <div class="card-section" id="player-view-content"></div>
+        <button class="auth-cancel" onclick="closePlayerView()">CERRAR</button>
+      </div>
+    </div>
+
+    <!-- MODAL VER ESCUDO EN GRANDE -->
+    <div class="modal-overlay" id="escudo-lightbox">
+      <div class="escudo-lightbox-card">
+        <img id="escudo-lightbox-img" class="escudo-lightbox-img" src="" />
+        <button class="auth-cancel" onclick="closeEscudoLightbox()">
+          CERRAR
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL RETAR EQUIPO -->
+    <div class="modal-overlay" id="challenge-modal">
+      <div class="auth-card">
+        <div class="auth-tabs"><div class="auth-tab on">RETAR EQUIPO</div></div>
+        <input type="hidden" id="challenge-to-team" />
+        <div class="auth-label">CANCHA</div>
+        <select class="auth-input" id="challenge-cancha"></select>
+        <div class="auth-label">COSTO (OPCIONAL)</div>
+        <input
+          class="auth-input"
+          id="challenge-costo"
+          placeholder="Ej: $10.000 por jugador"
+          maxlength="30"
+        />
+
+        <!-- APUESTA EN LEVEL COINS -->
+        <div class="bet-section">
+          <div class="bet-header">
+            <span class="bet-icon">🪙</span>
+            <div>
+              <div class="bet-title">APUESTA EN LEVEL COINS</div>
+              <div class="bet-sub">
+                El ganador se lleva todo. Los coins se bloquean al aceptar el
+                reto.
+              </div>
+            </div>
+            <label class="bet-toggle-wrap">
+              <input
+                type="checkbox"
+                id="bet-enabled"
+                onchange="toggleBetSection()"
+              />
+              <span class="bet-toggle"></span>
+            </label>
+          </div>
+          <div id="bet-fields" style="display: none">
+            <div class="bet-balance-row">
+              Tu saldo:
+              <span class="bet-balance-val" id="bet-my-balance">0</span> 🪙
+            </div>
+            <div class="auth-label" style="margin-top: 12px">
+              COINS A APOSTAR (cada equipo)
+            </div>
+            <div class="bet-inp-row">
+              <button class="bet-quick" onclick="setBetAmount(500)">500</button>
+              <button class="bet-quick" onclick="setBetAmount(1000)">
+                1.000
+              </button>
+              <button class="bet-quick" onclick="setBetAmount(2000)">
+                2.000
+              </button>
+              <button class="bet-quick" onclick="setBetAmount(5000)">
+                5.000
+              </button>
+            </div>
+            <input
+              class="auth-input"
+              type="number"
+              id="bet-amount"
+              min="100"
+              step="100"
+              placeholder="Ej: 1000"
+              oninput="updateBetPreview()"
+            />
+            <div class="bet-preview" id="bet-preview"></div>
+          </div>
         </div>
-        <input class="auth-input" type="number" id="bet-amount" min="100" step="100" placeholder="Ej: 1000" oninput="updateBetPreview()">
-        <div class="bet-preview" id="bet-preview"></div>
+
+        <div class="auth-label">FECHA</div>
+        <input class="auth-input" type="date" id="challenge-fecha" />
+        <div class="auth-label">HORA</div>
+        <input
+          class="auth-input"
+          id="challenge-hora"
+          placeholder="Ej: 7:00 PM"
+          maxlength="20"
+        />
+        <div class="auth-label">JUGADORES POR EQUIPO</div>
+        <input
+          class="auth-input"
+          type="number"
+          id="challenge-jugadores"
+          min="1"
+          max="11"
+          value="6"
+        />
+        <div class="auth-label">OBSERVACIONES (OPCIONAL)</div>
+        <textarea
+          class="auth-input"
+          id="challenge-obs"
+          rows="3"
+          maxlength="200"
+          placeholder="Ej: Llevar peto, cancha sintética"
+        ></textarea>
+        <div class="auth-error" id="challenge-error"></div>
+        <button class="auth-submit" onclick="sendChallenge()">
+          ENVIAR RETO
+        </button>
+        <button class="auth-cancel" onclick="closeChallengeModal()">
+          CANCELAR
+        </button>
       </div>
     </div>
 
-    <div class="auth-label">FECHA</div>
-    <input class="auth-input" type="date" id="challenge-fecha">
-    <div class="auth-label">HORA</div>
-    <input class="auth-input" id="challenge-hora" placeholder="Ej: 7:00 PM" maxlength="20">
-    <div class="auth-label">JUGADORES POR EQUIPO</div>
-    <input class="auth-input" type="number" id="challenge-jugadores" min="1" max="11" value="6">
-    <div class="auth-label">OBSERVACIONES (OPCIONAL)</div>
-    <textarea class="auth-input" id="challenge-obs" rows="3" maxlength="200" placeholder="Ej: Llevar peto, cancha sintética"></textarea>
-    <div class="auth-error" id="challenge-error"></div>
-    <button class="auth-submit" onclick="sendChallenge()">ENVIAR RETO</button>
-    <button class="auth-cancel" onclick="closeChallengeModal()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL CONFIRMAR EXPULSIÓN DE JUGADOR -->
-<div class="modal-overlay" id="kick-modal">
-  <div class="auth-card">
-    <div class="auth-tabs"><div class="auth-tab on">EXPULSAR JUGADOR</div></div>
-    <div class="auth-label" id="kick-modal-text" style="white-space:pre-wrap;"></div>
-    <button class="auth-submit" id="kick-modal-confirm" onclick="confirmKickTeamMember()">SÍ, ECHAR DEL EQUIPO</button>
-    <button class="auth-cancel" onclick="closeKickModal()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL FINALIZAR PARTIDO -->
-<div class="modal-overlay" id="finalize-match-modal">
-  <div class="auth-card fm-card">
-    <div class="auth-tabs"><div class="auth-tab on">FINALIZAR PARTIDO</div></div>
-    <input type="hidden" id="finalize-match-id">
-    <div class="fm-score-row">
-      <div class="fm-score-team"><div class="auth-label" id="finalize-team-a-name">EQUIPO A</div><input class="auth-input" type="number" min="0" id="finalize-goles-a" value="0"></div>
-      <div class="fm-score-vs">VS</div>
-      <div class="fm-score-team"><div class="auth-label" id="finalize-team-b-name">EQUIPO B</div><input class="auth-input" type="number" min="0" id="finalize-goles-b" value="0"></div>
-    </div>
-    <div class="auth-label">ESTADÍSTICAS DE TU EQUIPO</div>
-    <div class="fm-players-head">
-      <span>JUGADOR</span><span>GOLES</span><span>ASIST.</span><span>PASES</span><span>RECUP.</span><span>CALIF.</span><span>MVP</span>
-    </div>
-    <div id="finalize-players-list" class="fm-players-list"></div>
-    <button class="auth-submit" onclick="submitFinalizeMatch()">PROCESAR PARTIDO</button>
-    <button class="auth-cancel" onclick="closeFinalizeMatchModal()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL EDITAR EQUIPO -->
-<div class="modal-overlay" id="edit-team-modal">
-  <div class="auth-card">
-    <div class="auth-tabs"><div class="auth-tab on">EDITAR EQUIPO</div></div>
-    <input type="hidden" id="edit-team-id">
-    <div class="auth-label">NOMBRE DEL EQUIPO</div>
-    <input class="auth-input" id="edit-team-name" maxlength="24">
-    <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
-    <input class="auth-input" id="edit-team-desc" maxlength="80">
-    <div class="auth-label">CIUDAD / BARRIO</div>
-    <input class="auth-input" id="edit-team-city" maxlength="24">
-    <div class="auth-label">COLOR DEL EQUIPO</div>
-    <input class="auth-input" type="color" id="edit-team-color">
-    <div class="auth-label">ESCUDO (OPCIONAL)</div>
-    <input class="auth-input" type="file" id="edit-team-photo" accept="image/*" onchange="previewEditTeamPhoto(this)">
-    <img id="edit-team-photo-preview" class="team-escudo" style="display:none;margin-top:10px">
-    <div class="auth-error" id="edit-team-error"></div>
-    <button class="auth-submit" onclick="submitEditTeam()">GUARDAR CAMBIOS</button>
-    <button class="auth-cancel" onclick="closeEditTeamModal()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL CALIFICACIÓN -->
-<div class="modal-overlay" id="rate-modal">
-  <div class="auth-card" style="max-width:380px">
-    <div class="auth-label">CALIFICAR A <span id="rate-player-name"></span></div>
-    <div class="rate-cat"><div class="rate-cat-label">PUNTUALIDAD</div><div class="rate-stars-row"><span class="rate-star" data-cat="puntualidad" data-val="1" onclick="setRateStar('puntualidad',1)">★</span><span class="rate-star" data-cat="puntualidad" data-val="2" onclick="setRateStar('puntualidad',2)">★</span><span class="rate-star" data-cat="puntualidad" data-val="3" onclick="setRateStar('puntualidad',3)">★</span><span class="rate-star" data-cat="puntualidad" data-val="4" onclick="setRateStar('puntualidad',4)">★</span><span class="rate-star" data-cat="puntualidad" data-val="5" onclick="setRateStar('puntualidad',5)">★</span></div></div>
-    <div class="rate-cat"><div class="rate-cat-label">TÉCNICA</div><div class="rate-stars-row"><span class="rate-star" data-cat="tecnica" data-val="1" onclick="setRateStar('tecnica',1)">★</span><span class="rate-star" data-cat="tecnica" data-val="2" onclick="setRateStar('tecnica',2)">★</span><span class="rate-star" data-cat="tecnica" data-val="3" onclick="setRateStar('tecnica',3)">★</span><span class="rate-star" data-cat="tecnica" data-val="4" onclick="setRateStar('tecnica',4)">★</span><span class="rate-star" data-cat="tecnica" data-val="5" onclick="setRateStar('tecnica',5)">★</span></div></div>
-    <div class="rate-cat"><div class="rate-cat-label">COMPORTAMIENTO</div><div class="rate-stars-row"><span class="rate-star" data-cat="comportamiento" data-val="1" onclick="setRateStar('comportamiento',1)">★</span><span class="rate-star" data-cat="comportamiento" data-val="2" onclick="setRateStar('comportamiento',2)">★</span><span class="rate-star" data-cat="comportamiento" data-val="3" onclick="setRateStar('comportamiento',3)">★</span><span class="rate-star" data-cat="comportamiento" data-val="4" onclick="setRateStar('comportamiento',4)">★</span><span class="rate-star" data-cat="comportamiento" data-val="5" onclick="setRateStar('comportamiento',5)">★</span></div></div>
-    <div class="rate-cat"><div class="rate-cat-label">NIVEL</div><div class="rate-stars-row"><span class="rate-star" data-cat="nivel" data-val="1" onclick="setRateStar('nivel',1)">★</span><span class="rate-star" data-cat="nivel" data-val="2" onclick="setRateStar('nivel',2)">★</span><span class="rate-star" data-cat="nivel" data-val="3" onclick="setRateStar('nivel',3)">★</span><span class="rate-star" data-cat="nivel" data-val="4" onclick="setRateStar('nivel',4)">★</span><span class="rate-star" data-cat="nivel" data-val="5" onclick="setRateStar('nivel',5)">★</span></div></div>
-    <div class="auth-error" id="rate-error"></div>
-    <button class="auth-submit" onclick="submitRating()">ENVIAR CALIFICACIÓN</button>
-    <button class="auth-cancel" onclick="closeRateModal()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL TRABAJO EN PROGRESO -->
-<div class="modal-overlay" id="wip-modal">
-  <div class="wip-card">
-    <div class="tape tape-top"></div>
-    <div class="wip-icon">🚧</div>
-    <div class="wip-title" id="wip-modal-title">MÓDULO</div>
-    <div class="wip-sub">TRABAJO EN PROGRESO</div>
-    <div class="wip-text">Esta sección llegará pronto a LEVEL UP. Estamos enfocados en perfeccionar tu carta, tu OVR y tu progreso primero.</div>
-    <button class="wip-close" onclick="closeWip()">CERRAR</button>
-    <div class="tape tape-bottom"></div>
-  </div>
-</div>
-
-<!-- MODAL REGISTRO / INICIO DE SESIÓN -->
-<div class="modal-overlay" id="auth-modal">
-  <div class="auth-card">
-    <div class="auth-tabs">
-      <div class="auth-tab on" id="tab-new" onclick="switchAuthTab('new')">CREAR CUENTA</div>
-      <div class="auth-tab" id="tab-existing" onclick="switchAuthTab('existing')">INICIAR SESIÓN</div>
+    <!-- MODAL CONFIRMAR EXPULSIÓN DE JUGADOR -->
+    <div class="modal-overlay" id="kick-modal">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on">EXPULSAR JUGADOR</div>
+        </div>
+        <div
+          class="auth-label"
+          id="kick-modal-text"
+          style="white-space: pre-wrap"
+        ></div>
+        <button
+          class="auth-submit"
+          id="kick-modal-confirm"
+          onclick="confirmKickTeamMember()"
+        >
+          SÍ, ECHAR DEL EQUIPO
+        </button>
+        <button class="auth-cancel" onclick="closeKickModal()">CANCELAR</button>
+      </div>
     </div>
 
-    <div id="auth-new">
-      <div class="auth-photo-note">📷 Tu foto de jugador no se sube aquí: el equipo de LEVEL UP te la toma en tu primer partido en la cancha y la sube a tu carta.</div>
-      <div class="auth-label">NOMBRE</div>
-      <input class="auth-input" id="auth-name" autocomplete="off" placeholder="Ej: Santi Munez" maxlength="24">
-      <div class="auth-label">APODO</div>
-      <input class="auth-input" id="auth-nickname" autocomplete="off" placeholder="Ej: Santim" maxlength="16">
-      <div class="auth-label">CORREO ELECTRÓNICO</div>
-      <input class="auth-input" id="auth-email" type="email" autocomplete="off" placeholder="Ej: tucorreo.com" maxlength="80">
-      <div class="auth-label">GÉNERO <span class="auth-note-inline">· Opcional</span></div>
-      <select class="auth-input" id="auth-gender">
-        <option value="">Prefiero no decir</option>
-        <option value="MASCULINO">Masculino</option>
-        <option value="FEMENINO">Femenino</option>
-        <option value="OTRO">Otro</option>
-      </select>
-      <div class="auth-label">POSICIÓN</div>
-      <select class="auth-input" id="auth-position">
-        <option value="DEL">DEL — Delantero</option>
-        <option value="MED">MED — Mediocampista</option>
-        <option value="DEF">DEF — Defensa</option>
-        <option value="POR">POR — Portero</option>
-      </select>
-      <div class="auth-label">CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="auth-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
-      <div class="auth-label">CONFIRMAR CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="auth-password-confirm" autocomplete="new-password" placeholder="Repite tu contraseña" maxlength="40">
-      <label class="auth-consent">
-        <input type="checkbox" id="auth-consent">
-        <span>He leído y acepto la <a href="privacidad.html" target="_blank">Política de Tratamiento de Datos Personales y de Imagen</a> de LEVEL UP.</span>
-      </label>
-      <div class="auth-error" id="auth-error"></div>
-      <button class="auth-submit" onclick="submitNewProfile()">CREAR MI CARTA</button>
+    <!-- MODAL FINALIZAR PARTIDO -->
+    <div class="modal-overlay" id="finalize-match-modal">
+      <div class="auth-card fm-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on">FINALIZAR PARTIDO</div>
+        </div>
+        <input type="hidden" id="finalize-match-id" />
+        <div class="fm-score-row">
+          <div class="fm-score-team">
+            <div class="auth-label" id="finalize-team-a-name">EQUIPO A</div>
+            <input
+              class="auth-input"
+              type="number"
+              min="0"
+              id="finalize-goles-a"
+              value="0"
+            />
+          </div>
+          <div class="fm-score-vs">VS</div>
+          <div class="fm-score-team">
+            <div class="auth-label" id="finalize-team-b-name">EQUIPO B</div>
+            <input
+              class="auth-input"
+              type="number"
+              min="0"
+              id="finalize-goles-b"
+              value="0"
+            />
+          </div>
+        </div>
+        <div class="auth-label">ESTADÍSTICAS DE TU EQUIPO</div>
+        <div class="fm-players-head">
+          <span>JUGADOR</span><span>GOLES</span><span>ASIST.</span
+          ><span>PASES</span><span>RECUP.</span><span>CALIF.</span
+          ><span>MVP</span>
+        </div>
+        <div id="finalize-players-list" class="fm-players-list"></div>
+        <button class="auth-submit" onclick="submitFinalizeMatch()">
+          PROCESAR PARTIDO
+        </button>
+        <button class="auth-cancel" onclick="closeFinalizeMatchModal()">
+          CANCELAR
+        </button>
+      </div>
     </div>
 
-    <div id="auth-existing" style="display:none">
-      <div class="auth-label">NOMBRE O APODO</div>
-      <input class="auth-input" id="login-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
-      <div class="auth-label">CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="login-password" autocomplete="current-password" placeholder="Tu contraseña" maxlength="40">
-      <div class="auth-error" id="login-error"></div>
-      <button class="auth-submit" id="login-submit" onclick="submitLogin()">INICIAR SESIÓN</button>
-      <div class="auth-forgot"><a href="javascript:void(0)" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></div>
+    <!-- MODAL EDITAR EQUIPO -->
+    <div class="modal-overlay" id="edit-team-modal">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on">EDITAR EQUIPO</div>
+        </div>
+        <input type="hidden" id="edit-team-id" />
+        <div class="auth-label">NOMBRE DEL EQUIPO</div>
+        <input class="auth-input" id="edit-team-name" maxlength="24" />
+        <div class="auth-label">DESCRIPCIÓN (OPCIONAL)</div>
+        <input class="auth-input" id="edit-team-desc" maxlength="80" />
+        <div class="auth-label">CIUDAD / BARRIO</div>
+        <input class="auth-input" id="edit-team-city" maxlength="24" />
+        <div class="auth-label">COLOR DEL EQUIPO</div>
+        <input class="auth-input" type="color" id="edit-team-color" />
+        <div class="auth-label">ESCUDO (OPCIONAL)</div>
+        <input
+          class="auth-input"
+          type="file"
+          id="edit-team-photo"
+          accept="image/*"
+          onchange="previewEditTeamPhoto(this)"
+        />
+        <img
+          id="edit-team-photo-preview"
+          class="team-escudo"
+          style="display: none; margin-top: 10px"
+        />
+        <div class="auth-error" id="edit-team-error"></div>
+        <button class="auth-submit" onclick="submitEditTeam()">
+          GUARDAR CAMBIOS
+        </button>
+        <button class="auth-cancel" onclick="closeEditTeamModal()">
+          CANCELAR
+        </button>
+      </div>
     </div>
 
-    <div id="auth-reset" style="display:none">
-      <div class="auth-label">NOMBRE O APODO</div>
-      <input class="auth-input" id="reset-id" autocomplete="off" placeholder="Ej: Santi Munez o Santim" maxlength="24">
-      <div class="auth-label">NUEVA CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="reset-password" autocomplete="new-password" placeholder="Mín. 6 caracteres, con letras y números" maxlength="40">
-      <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
-      <input class="auth-input" type="password" id="reset-password-confirm" autocomplete="new-password" placeholder="Repite tu nueva contraseña" maxlength="40">
-      <div class="auth-error" id="reset-error"></div>
-      <button class="auth-submit" id="reset-submit" onclick="submitResetPassword()">ACTUALIZAR CONTRASEÑA</button>
-      <div class="auth-forgot"><a href="javascript:void(0)" onclick="backToLogin()">Volver a iniciar sesión</a></div>
+    <!-- MODAL CALIFICACIÓN -->
+    <div class="modal-overlay" id="rate-modal">
+      <div class="auth-card" style="max-width: 380px">
+        <div class="auth-label">
+          CALIFICAR A <span id="rate-player-name"></span>
+        </div>
+        <div class="rate-cat">
+          <div class="rate-cat-label">PUNTUALIDAD</div>
+          <div class="rate-stars-row">
+            <span
+              class="rate-star"
+              data-cat="puntualidad"
+              data-val="1"
+              onclick="setRateStar('puntualidad', 1)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="puntualidad"
+              data-val="2"
+              onclick="setRateStar('puntualidad', 2)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="puntualidad"
+              data-val="3"
+              onclick="setRateStar('puntualidad', 3)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="puntualidad"
+              data-val="4"
+              onclick="setRateStar('puntualidad', 4)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="puntualidad"
+              data-val="5"
+              onclick="setRateStar('puntualidad', 5)"
+              >★</span
+            >
+          </div>
+        </div>
+        <div class="rate-cat">
+          <div class="rate-cat-label">TÉCNICA</div>
+          <div class="rate-stars-row">
+            <span
+              class="rate-star"
+              data-cat="tecnica"
+              data-val="1"
+              onclick="setRateStar('tecnica', 1)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="tecnica"
+              data-val="2"
+              onclick="setRateStar('tecnica', 2)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="tecnica"
+              data-val="3"
+              onclick="setRateStar('tecnica', 3)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="tecnica"
+              data-val="4"
+              onclick="setRateStar('tecnica', 4)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="tecnica"
+              data-val="5"
+              onclick="setRateStar('tecnica', 5)"
+              >★</span
+            >
+          </div>
+        </div>
+        <div class="rate-cat">
+          <div class="rate-cat-label">COMPORTAMIENTO</div>
+          <div class="rate-stars-row">
+            <span
+              class="rate-star"
+              data-cat="comportamiento"
+              data-val="1"
+              onclick="setRateStar('comportamiento', 1)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="comportamiento"
+              data-val="2"
+              onclick="setRateStar('comportamiento', 2)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="comportamiento"
+              data-val="3"
+              onclick="setRateStar('comportamiento', 3)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="comportamiento"
+              data-val="4"
+              onclick="setRateStar('comportamiento', 4)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="comportamiento"
+              data-val="5"
+              onclick="setRateStar('comportamiento', 5)"
+              >★</span
+            >
+          </div>
+        </div>
+        <div class="rate-cat">
+          <div class="rate-cat-label">NIVEL</div>
+          <div class="rate-stars-row">
+            <span
+              class="rate-star"
+              data-cat="nivel"
+              data-val="1"
+              onclick="setRateStar('nivel', 1)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="nivel"
+              data-val="2"
+              onclick="setRateStar('nivel', 2)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="nivel"
+              data-val="3"
+              onclick="setRateStar('nivel', 3)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="nivel"
+              data-val="4"
+              onclick="setRateStar('nivel', 4)"
+              >★</span
+            ><span
+              class="rate-star"
+              data-cat="nivel"
+              data-val="5"
+              onclick="setRateStar('nivel', 5)"
+              >★</span
+            >
+          </div>
+        </div>
+        <div class="auth-error" id="rate-error"></div>
+        <button class="auth-submit" onclick="submitRating()">
+          ENVIAR CALIFICACIÓN
+        </button>
+        <button class="auth-cancel" onclick="closeRateModal()">CANCELAR</button>
+      </div>
     </div>
 
-    <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">CANCELAR</button>
-  </div>
-</div>
-
-<!-- MODAL CONTRAOFERTA DE APUESTA -->
-<div class="modal-overlay" id="counteroffer-modal">
-  <div class="auth-card">
-    <div class="auth-tabs"><div class="auth-tab on">⚔ RETO RECIBIDO</div></div>
-    <div id="counteroffer-content"></div>
-    <div class="auth-error" id="counteroffer-error"></div>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button class="auth-submit" style="flex:1" onclick="acceptCounteroffer()">✅ ACEPTAR</button>
-      <button class="auth-submit" style="flex:1;background:linear-gradient(135deg,#ff6b00,#cc4400)" onclick="showCounterofferForm()">🔄 CONTRAOFERTAR</button>
-      <button class="auth-cancel" style="flex:1" onclick="rejectFromCounteroffer()">❌ RECHAZAR</button>
+    <!-- MODAL TRABAJO EN PROGRESO -->
+    <div class="modal-overlay" id="wip-modal">
+      <div class="wip-card">
+        <div class="tape tape-top"></div>
+        <div class="wip-icon">🚧</div>
+        <div class="wip-title" id="wip-modal-title">MÓDULO</div>
+        <div class="wip-sub">TRABAJO EN PROGRESO</div>
+        <div class="wip-text">
+          Esta sección llegará pronto a LEVEL UP. Estamos enfocados en
+          perfeccionar tu carta, tu OVR y tu progreso primero.
+        </div>
+        <button class="wip-close" onclick="closeWip()">CERRAR</button>
+        <div class="tape tape-bottom"></div>
+      </div>
     </div>
-    <div id="counteroffer-form" style="display:none;margin-top:16px">
-      <div class="auth-label">NUEVA APUESTA (coins)</div>
-      <input class="auth-input" type="number" id="counteroffer-amount" min="0" step="100" placeholder="0 = sin apuesta">
-      <button class="auth-submit" style="margin-top:8px" onclick="sendCounteroffer()">ENVIAR CONTRAOFERTA</button>
+
+    <!-- MODAL REGISTRO / INICIO DE SESIÓN -->
+    <div class="modal-overlay" id="auth-modal">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on" id="tab-new" onclick="switchAuthTab('new')">
+            CREAR CUENTA
+          </div>
+          <div
+            class="auth-tab"
+            id="tab-existing"
+            onclick="switchAuthTab('existing')"
+          >
+            INICIAR SESIÓN
+          </div>
+        </div>
+
+        <div id="auth-new">
+          <div class="auth-photo-note">
+            📷 Tu foto de jugador no se sube aquí: el equipo de LEVEL UP te la
+            toma en tu primer partido en la cancha y la sube a tu carta.
+          </div>
+          <div class="auth-label">NOMBRE</div>
+          <input
+            class="auth-input"
+            id="auth-name"
+            autocomplete="off"
+            placeholder="Ej: Santi Munez"
+            maxlength="24"
+          />
+          <div class="auth-label">APODO</div>
+          <input
+            class="auth-input"
+            id="auth-nickname"
+            autocomplete="off"
+            placeholder="Ej: Santim"
+            maxlength="16"
+          />
+          <div class="auth-label">CORREO ELECTRÓNICO</div>
+          <input
+            class="auth-input"
+            id="auth-email"
+            type="email"
+            autocomplete="off"
+            placeholder="Ej: tucorreo.com"
+            maxlength="80"
+          />
+          <div class="auth-label">
+            GÉNERO <span class="auth-note-inline">· Opcional</span>
+          </div>
+          <select class="auth-input" id="auth-gender">
+            <option value="">Prefiero no decir</option>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMENINO">Femenino</option>
+            <option value="OTRO">Otro</option>
+          </select>
+          <div class="auth-label">POSICIÓN</div>
+          <select class="auth-input" id="auth-position">
+            <option value="DEL">DEL — Delantero</option>
+            <option value="MED">MED — Mediocampista</option>
+            <option value="DEF">DEF — Defensa</option>
+            <option value="POR">POR — Portero</option>
+          </select>
+          <div class="auth-label">CONTRASEÑA</div>
+          <input
+            class="auth-input"
+            type="password"
+            id="auth-password"
+            autocomplete="new-password"
+            placeholder="Mín. 6 caracteres, con letras y números"
+            maxlength="40"
+          />
+          <div class="auth-label">CONFIRMAR CONTRASEÑA</div>
+          <input
+            class="auth-input"
+            type="password"
+            id="auth-password-confirm"
+            autocomplete="new-password"
+            placeholder="Repite tu contraseña"
+            maxlength="40"
+          />
+          <label class="auth-consent">
+            <input type="checkbox" id="auth-consent" />
+            <span
+              >He leído y acepto la
+              <a href="privacidad.html" target="_blank"
+                >Política de Tratamiento de Datos Personales y de Imagen</a
+              >
+              de LEVEL UP.</span
+            >
+          </label>
+          <div class="auth-error" id="auth-error"></div>
+          <button class="auth-submit" onclick="submitNewProfile()">
+            CREAR MI CARTA
+          </button>
+        </div>
+
+        <div id="auth-existing" style="display: none">
+          <div class="auth-label">NOMBRE O APODO</div>
+          <input
+            class="auth-input"
+            id="login-id"
+            autocomplete="off"
+            placeholder="Ej: Santi Munez o Santim"
+            maxlength="24"
+          />
+          <div class="auth-label">CONTRASEÑA</div>
+          <input
+            class="auth-input"
+            type="password"
+            id="login-password"
+            autocomplete="current-password"
+            placeholder="Tu contraseña"
+            maxlength="40"
+          />
+          <div class="auth-error" id="login-error"></div>
+          <button class="auth-submit" id="login-submit" onclick="submitLogin()">
+            INICIAR SESIÓN
+          </button>
+          <div class="auth-forgot">
+            <a href="javascript:void(0)" onclick="showResetPassword()"
+              >¿Olvidaste tu contraseña?</a
+            >
+          </div>
+        </div>
+
+        <div id="auth-reset" style="display: none">
+          <div class="auth-label">NOMBRE O APODO</div>
+          <input
+            class="auth-input"
+            id="reset-id"
+            autocomplete="off"
+            placeholder="Ej: Santi Munez o Santim"
+            maxlength="24"
+          />
+          <div class="auth-label">NUEVA CONTRASEÑA</div>
+          <input
+            class="auth-input"
+            type="password"
+            id="reset-password"
+            autocomplete="new-password"
+            placeholder="Mín. 6 caracteres, con letras y números"
+            maxlength="40"
+          />
+          <div class="auth-label">CONFIRMAR NUEVA CONTRASEÑA</div>
+          <input
+            class="auth-input"
+            type="password"
+            id="reset-password-confirm"
+            autocomplete="new-password"
+            placeholder="Repite tu nueva contraseña"
+            maxlength="40"
+          />
+          <div class="auth-error" id="reset-error"></div>
+          <button
+            class="auth-submit"
+            id="reset-submit"
+            onclick="submitResetPassword()"
+          >
+            ACTUALIZAR CONTRASEÑA
+          </button>
+          <div class="auth-forgot">
+            <a href="javascript:void(0)" onclick="backToLogin()"
+              >Volver a iniciar sesión</a
+            >
+          </div>
+        </div>
+
+        <button class="auth-cancel" id="auth-cancel" onclick="closeAuth()">
+          CANCELAR
+        </button>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- MODAL TRANSFERIR COINS -->
-<div class="modal-overlay" id="transfer-modal">
-  <div class="auth-card">
-    <div class="auth-tabs"><div class="auth-tab on">🪙 ENVIAR LEVEL COINS</div></div>
-    <div class="bet-balance-row" style="margin-bottom:16px">Tu saldo: <span class="bet-balance-val" id="transfer-my-balance">0</span> 🪙</div>
-    <div class="auth-label">BUSCAR JUGADOR</div>
-    <input class="auth-input" id="transfer-search" placeholder="Nombre o apodo..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lu-transfer-q" oninput="searchTransferPlayer()">
-    <div id="transfer-player-list" style="max-height:160px;overflow-y:auto;margin:8px 0"></div>
-    <input type="hidden" id="transfer-to-id">
-    <div id="transfer-to-name" style="display:none" class="bet-preview"></div>
-    <div class="auth-label" style="margin-top:12px">CANTIDAD (coins)</div>
-    <input class="auth-input" type="number" id="transfer-amount" min="1" step="1" placeholder="Ej: 500">
-    <div class="auth-error" id="transfer-error"></div>
-    <button class="auth-submit" onclick="submitTransfer()">ENVIAR COINS</button>
-    <button class="auth-cancel" onclick="closeTransferModal()">CANCELAR</button>
-  </div>
-</div>
+    <!-- MODAL CONTRAOFERTA DE APUESTA -->
+    <div class="modal-overlay" id="counteroffer-modal">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on">⚔ RETO RECIBIDO</div>
+        </div>
+        <div id="counteroffer-content"></div>
+        <div class="auth-error" id="counteroffer-error"></div>
+        <div style="display: flex; gap: 10px; margin-top: 16px">
+          <button
+            class="auth-submit"
+            style="flex: 1"
+            onclick="acceptCounteroffer()"
+          >
+            ✅ ACEPTAR
+          </button>
+          <button
+            class="auth-submit"
+            style="
+              flex: 1;
+              background: linear-gradient(135deg, #ff6b00, #cc4400);
+            "
+            onclick="showCounterofferForm()"
+          >
+            🔄 CONTRAOFERTAR
+          </button>
+          <button
+            class="auth-cancel"
+            style="flex: 1"
+            onclick="rejectFromCounteroffer()"
+          >
+            ❌ RECHAZAR
+          </button>
+        </div>
+        <div id="counteroffer-form" style="display: none; margin-top: 16px">
+          <div class="auth-label">NUEVA APUESTA (coins)</div>
+          <input
+            class="auth-input"
+            type="number"
+            id="counteroffer-amount"
+            min="0"
+            step="100"
+            placeholder="0 = sin apuesta"
+          />
+          <button
+            class="auth-submit"
+            style="margin-top: 8px"
+            onclick="sendCounteroffer()"
+          >
+            ENVIAR CONTRAOFERTA
+          </button>
+        </div>
+      </div>
+    </div>
 
-<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
-<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
-  <span class="a-dot"></span>
-  <span id="audio-lbl">LET'S ROLL</span>
-</div>
+    <!-- MODAL TRANSFERIR COINS -->
+    <div class="modal-overlay" id="transfer-modal">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab on">🪙 ENVIAR LEVEL COINS</div>
+        </div>
+        <div class="bet-balance-row" style="margin-bottom: 16px">
+          Tu saldo:
+          <span class="bet-balance-val" id="transfer-my-balance">0</span> 🪙
+        </div>
+        <div class="auth-label">BUSCAR JUGADOR</div>
+        <input
+          class="auth-input"
+          id="transfer-search"
+          placeholder="Nombre o apodo..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          name="lu-transfer-q"
+          oninput="searchTransferPlayer()"
+        />
+        <div
+          id="transfer-player-list"
+          style="max-height: 160px; overflow-y: auto; margin: 8px 0"
+        ></div>
+        <input type="hidden" id="transfer-to-id" />
+        <div
+          id="transfer-to-name"
+          style="display: none"
+          class="bet-preview"
+        ></div>
+        <div class="auth-label" style="margin-top: 12px">CANTIDAD (coins)</div>
+        <input
+          class="auth-input"
+          type="number"
+          id="transfer-amount"
+          min="1"
+          step="1"
+          placeholder="Ej: 500"
+        />
+        <div class="auth-error" id="transfer-error"></div>
+        <button class="auth-submit" onclick="submitTransfer()">
+          ENVIAR COINS
+        </button>
+        <button class="auth-cancel" onclick="closeTransferModal()">
+          CANCELAR
+        </button>
+      </div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1784770966"></script>
-</body>
+    <audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+    <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+      <span class="a-dot"></span>
+      <span id="audio-lbl">LET'S ROLL</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="app.js?v=1784770966"></script>
+  </body>
 </html>

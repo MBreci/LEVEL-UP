@@ -1,154 +1,230 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="storage-shim.js?v=1784770966"></script>
-<title>TORNEOS · LEVEL UP</title>
-<script>
-(function(){
-  try {
-    var id = LS.getItem('levelup_current_profile');
-    var profiles = JSON.parse(LS.getItem('levelup_profiles') || '{}');
-    if (!id || !profiles[id]) location.replace('index.html');
-  } catch(e) { location.replace('index.html'); }
-})();
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1784770966">
-</head>
-<body>
-
-<header>
-  <div class="nav-top">
-    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
-    <nav class="nav-modules" id="nav-modules"></nav>
-    <div class="nav-right">
-      <a class="season-badge" href="temporada-piloto.html" title="Conoce la Temporada Beta">TEMPORADA BETA</a>
-      <a class="btn-g" href="notificaciones.html">🔔 <span id="notif-count">0</span></a>
-      <div class="dropdown-wrap">
-        <button class="btn-g" id="profile-btn">PERFIL</button>
-        <div class="dropdown-menu" id="account-dropdown">
-          <a class="dropdown-item" href="dashboard.html#dashboard">CENTRO DE MANDO</a>
-          <a class="dropdown-item" href="carta.html">PERFIL</a>
-          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
-          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
-          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="storage-shim.js?v=1784770966"></script>
+    <title>TORNEOS · LEVEL UP</title>
+    <script>
+      (function () {
+        try {
+          var id = LS.getItem("levelup_current_profile");
+          var profiles = JSON.parse(LS.getItem("levelup_profiles") || "{}");
+          if (!id || !profiles[id]) location.replace("index.html");
+        } catch (e) {
+          location.replace("index.html");
+        }
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css?v=1784770966" />
+  </head>
+  <body>
+    <header>
+      <div class="nav-top">
+        <a href="index.html" onclick="return goToHome(event);"
+          ><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"
+        /></a>
+        <nav class="nav-modules" id="nav-modules"></nav>
+        <div class="nav-right">
+          <a
+            class="season-badge"
+            href="temporada-piloto.html"
+            title="Conoce la Temporada Beta"
+            >TEMPORADA BETA</a
+          >
+          <a class="btn-g" href="notificaciones.html"
+            >🔔 <span id="notif-count">0</span></a
+          >
+          <div class="dropdown-wrap">
+            <button class="btn-g" id="profile-btn">PERFIL</button>
+            <div class="dropdown-menu" id="account-dropdown">
+              <a class="dropdown-item" href="dashboard.html#dashboard"
+                >CENTRO DE MANDO</a
+              >
+              <a class="dropdown-item" href="carta.html">PERFIL</a>
+              <a class="dropdown-item" href="configuracion.html"
+                >CONFIGURACIÓN</a
+              >
+              <div class="dropdown-item" onclick="openAuth(false)">
+                CAMBIAR DE PERFIL
+              </div>
+              <div class="dropdown-item danger" onclick="logout()">
+                CERRAR SESIÓN
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</header>
+    </header>
 
-<!-- HERO TORNEOS -->
-<div class="tn-hero">
-  <div class="tn-hero-glow tn-hero-glow-gold"></div>
-  <div class="tn-hero-glow tn-hero-glow-mag"></div>
-  <div class="tn-hero-content">
-    <div class="tn-hero-eyebrow">COMPETENCIA OFICIAL</div>
-    <div class="tn-hero-title">TORNEOS</div>
-    <div class="tn-hero-desc">Equipos completos, enfrentamientos directos y un campeón que se lleva todo.</div>
-  </div>
-  <div class="tn-hero-art">
-    <div class="tn-hero-orb"></div>
-    <div class="tn-hero-trophy">🏆</div>
-  </div>
-</div>
-
-<!-- CONTENIDO PRINCIPAL -->
-<section id="torneos" style="padding:40px 0 80px">
-  <div class="tn-wrap">
-
-    <!-- BOTÓN CREAR (solo admin) -->
-    <div id="tn-admin-bar" style="display:none;margin-bottom:32px">
-      <button class="tn-create-btn" onclick="toggleTorneoForm()">
-        <span id="tn-create-btn-lbl">+ CREAR TORNEO</span>
-      </button>
-    </div>
-
-    <!-- FORMULARIO DE CREACIÓN (admin) -->
-    <div class="tn-form-wrap" id="tn-form-wrap" style="display:none">
-      <div class="tn-form-card">
-        <div class="tn-form-title">NUEVO TORNEO</div>
-        <div class="tn-form-grid">
-          <div class="tn-field full">
-            <label class="tn-label">NOMBRE DEL TORNEO</label>
-            <input class="tn-input" id="tn-nombre" autocomplete="off" placeholder="Ej: Copa Level Up — Julio 2026" maxlength="60">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">FECHA</label>
-            <input class="tn-input" id="tn-fecha" type="date">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">HORA DE INICIO</label>
-            <input class="tn-input" id="tn-hora-inicio" type="time">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">HORA DE FIN (aprox.)</label>
-            <input class="tn-input" id="tn-hora-fin" type="time">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">CANCHA</label>
-            <select class="tn-input" id="tn-cancha">
-              <option value="">Selecciona una cancha...</option>
-            </select>
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">VALOR POR JUGADOR (COP)</label>
-            <input class="tn-input" id="tn-valor" type="number" min="0" placeholder="Ej: 65000" oninput="actualizarPreviewInscripcion()">
-            <div class="tn-price-hint" id="tn-valor-hint">Total por equipo (8 jugadores): —</div>
-          </div>
-          <div class="tn-field full">
-            <label class="tn-label">📍 DIRECCIÓN <span class="auth-note-inline" style="opacity:.6">· La gente podrá abrir la ubicación en Maps</span></label>
-            <input class="tn-input" id="tn-direccion" autocomplete="off" placeholder="Ej: Calle 170 #54-30, Bogotá (o pega el link de Google Maps)">
-          </div>
-          <div class="tn-field full">
-            <label class="tn-label">🥇 PRIMER PREMIO</label>
-            <input class="tn-input" id="tn-premio1" autocomplete="off" placeholder="Ej: $500.000 + Trofeo + Uniforme" maxlength="120">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">🥈 SEGUNDO PREMIO</label>
-            <input class="tn-input" id="tn-premio2" autocomplete="off" placeholder="Ej: $200.000 + Medalla" maxlength="120">
-          </div>
-          <div class="tn-field">
-            <label class="tn-label">🥉 TERCER PREMIO</label>
-            <input class="tn-input" id="tn-premio3" autocomplete="off" placeholder="Ej: $100.000" maxlength="120">
-          </div>
-          <div class="tn-field full">
-            <label class="tn-label">OBSERVACIONES</label>
-            <textarea class="tn-input tn-textarea" id="tn-obs" rows="6" placeholder="Reglas, formato, dress code, horarios, lo que quieras... sin límite."></textarea>
-          </div>
+    <!-- HERO TORNEOS -->
+    <div class="tn-hero">
+      <div class="tn-hero-glow tn-hero-glow-gold"></div>
+      <div class="tn-hero-glow tn-hero-glow-mag"></div>
+      <div class="tn-hero-content">
+        <div class="tn-hero-eyebrow">COMPETENCIA OFICIAL</div>
+        <div class="tn-hero-title">TORNEOS</div>
+        <div class="tn-hero-desc">
+          Equipos completos, enfrentamientos directos y un campeón que se lleva
+          todo.
         </div>
-        <div class="tn-form-error" id="tn-form-error"></div>
-        <div class="tn-form-actions">
-          <button class="tn-btn-cancel" onclick="toggleTorneoForm()">CANCELAR</button>
-          <button class="tn-btn-save" onclick="crearTorneo()">PUBLICAR TORNEO</button>
-        </div>
+      </div>
+      <div class="tn-hero-art">
+        <div class="tn-hero-orb"></div>
+        <div class="tn-hero-trophy">🏆</div>
       </div>
     </div>
 
-    <!-- LISTA DE TORNEOS -->
-    <div id="tn-list"></div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <section id="torneos" style="padding: 40px 0 80px">
+      <div class="tn-wrap">
+        <!-- BOTÓN CREAR (solo admin) -->
+        <div id="tn-admin-bar" style="display: none; margin-bottom: 32px">
+          <button class="tn-create-btn" onclick="toggleTorneoForm()">
+            <span id="tn-create-btn-lbl">+ CREAR TORNEO</span>
+          </button>
+        </div>
 
-  </div>
-</section>
+        <!-- FORMULARIO DE CREACIÓN (admin) -->
+        <div class="tn-form-wrap" id="tn-form-wrap" style="display: none">
+          <div class="tn-form-card">
+            <div class="tn-form-title">NUEVO TORNEO</div>
+            <div class="tn-form-grid">
+              <div class="tn-field full">
+                <label class="tn-label">NOMBRE DEL TORNEO</label>
+                <input
+                  class="tn-input"
+                  id="tn-nombre"
+                  autocomplete="off"
+                  placeholder="Ej: Copa Level Up — Julio 2026"
+                  maxlength="60"
+                />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">FECHA</label>
+                <input class="tn-input" id="tn-fecha" type="date" />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">HORA DE INICIO</label>
+                <input class="tn-input" id="tn-hora-inicio" type="time" />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">HORA DE FIN (aprox.)</label>
+                <input class="tn-input" id="tn-hora-fin" type="time" />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">CANCHA</label>
+                <select class="tn-input" id="tn-cancha">
+                  <option value="">Selecciona una cancha...</option>
+                </select>
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">VALOR POR JUGADOR (COP)</label>
+                <input
+                  class="tn-input"
+                  id="tn-valor"
+                  type="number"
+                  min="0"
+                  placeholder="Ej: 65000"
+                  oninput="actualizarPreviewInscripcion()"
+                />
+                <div class="tn-price-hint" id="tn-valor-hint">
+                  Total por equipo (8 jugadores): —
+                </div>
+              </div>
+              <div class="tn-field full">
+                <label class="tn-label"
+                  >📍 DIRECCIÓN
+                  <span class="auth-note-inline" style="opacity: 0.6"
+                    >· La gente podrá abrir la ubicación en Maps</span
+                  ></label
+                >
+                <input
+                  class="tn-input"
+                  id="tn-direccion"
+                  autocomplete="off"
+                  placeholder="Ej: Calle 170 #54-30, Bogotá (o pega el link de Google Maps)"
+                />
+              </div>
+              <div class="tn-field full">
+                <label class="tn-label">🥇 PRIMER PREMIO</label>
+                <input
+                  class="tn-input"
+                  id="tn-premio1"
+                  autocomplete="off"
+                  placeholder="Ej: $500.000 + Trofeo + Uniforme"
+                  maxlength="120"
+                />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">🥈 SEGUNDO PREMIO</label>
+                <input
+                  class="tn-input"
+                  id="tn-premio2"
+                  autocomplete="off"
+                  placeholder="Ej: $200.000 + Medalla"
+                  maxlength="120"
+                />
+              </div>
+              <div class="tn-field">
+                <label class="tn-label">🥉 TERCER PREMIO</label>
+                <input
+                  class="tn-input"
+                  id="tn-premio3"
+                  autocomplete="off"
+                  placeholder="Ej: $100.000"
+                  maxlength="120"
+                />
+              </div>
+              <div class="tn-field full">
+                <label class="tn-label">OBSERVACIONES</label>
+                <textarea
+                  class="tn-input tn-textarea"
+                  id="tn-obs"
+                  rows="6"
+                  placeholder="Reglas, formato, dress code, horarios, lo que quieras... sin límite."
+                ></textarea>
+              </div>
+            </div>
+            <div class="tn-form-error" id="tn-form-error"></div>
+            <div class="tn-form-actions">
+              <button class="tn-btn-cancel" onclick="toggleTorneoForm()">
+                CANCELAR
+              </button>
+              <button class="tn-btn-save" onclick="crearTorneo()">
+                PUBLICAR TORNEO
+              </button>
+            </div>
+          </div>
+        </div>
 
-<!-- MODAL INSCRIPCIÓN / PAGO -->
-<div class="modal-overlay" id="tn-pay-modal" style="display:none">
-  <div class="tn-pay-card">
-    <div class="tn-pay-title" id="tn-pay-title">INSCRIBIR EQUIPO</div>
-    <div class="tn-pay-body" id="tn-pay-body"></div>
-    <button class="auth-cancel" onclick="closeTnPayModal()">CANCELAR</button>
-  </div>
-</div>
+        <!-- LISTA DE TORNEOS -->
+        <div id="tn-list"></div>
+      </div>
+    </section>
 
-<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
-<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
-  <span class="a-dot"></span>
-  <span id="audio-lbl">LET'S ROLL</span>
-</div>
+    <!-- MODAL INSCRIPCIÓN / PAGO -->
+    <div class="modal-overlay" id="tn-pay-modal" style="display: none">
+      <div class="tn-pay-card">
+        <div class="tn-pay-title" id="tn-pay-title">INSCRIBIR EQUIPO</div>
+        <div class="tn-pay-body" id="tn-pay-body"></div>
+        <button class="auth-cancel" onclick="closeTnPayModal()">
+          CANCELAR
+        </button>
+      </div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1784770966"></script>
-</body>
+    <audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+    <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+      <span class="a-dot"></span>
+      <span id="audio-lbl">LET'S ROLL</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="app.js?v=1784770966"></script>
+  </body>
 </html>

@@ -1,175 +1,644 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="storage-shim.js?v=1784770966"></script>
-<title>PREMIOS · LEVEL UP</title>
-<script>
-(function(){
-  try {
-    var id = LS.getItem('levelup_current_profile');
-    var profiles = JSON.parse(LS.getItem('levelup_profiles') || '{}');
-    if (!id || !profiles[id]) location.replace('index.html');
-  } catch(e) { location.replace('index.html'); }
-})();
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1784770966">
-<style>
-.pz-wrap{max-width:960px;margin:0 auto;padding:120px 18px 70px}
-.pz-head{text-align:center;margin-bottom:10px}
-.pz-eyebrow{font-family:var(--ft);font-size:10px;letter-spacing:5px;color:var(--gold);margin-bottom:10px}
-.pz-head h1{font-family:var(--ft);font-weight:900;font-size:clamp(24px,5vw,40px);letter-spacing:1px;color:var(--w)}
-.pz-head h1 span{background:linear-gradient(90deg,#22d3ee,#ff2fb0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.pz-head p{color:var(--tm);font-size:14px;margin-top:10px}
-.stage{position:relative;margin:30px auto 0;max-width:520px;padding:40px 20px 24px;text-align:center;border-radius:24px;overflow:hidden;
-  background:radial-gradient(ellipse 70% 55% at 50% 38%,rgba(34,211,238,.14),transparent 60%),radial-gradient(ellipse 60% 50% at 50% 45%,rgba(255,47,176,.12),transparent 60%);border:1px solid rgba(201,168,76,.25)}
-.spotlight{position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:120%;height:80%;background:conic-gradient(from 0deg,transparent,rgba(34,211,238,.10),transparent 30%,rgba(255,47,176,.10),transparent 60%);animation:pzhalo 14s linear infinite;filter:blur(6px);pointer-events:none}
-@keyframes pzhalo{to{transform:translateX(-50%) rotate(360deg)}}
-.sparkles{position:absolute;inset:0;pointer-events:none}
-.sp{position:absolute;width:4px;height:4px;border-radius:50%;background:#22d3ee;box-shadow:0 0 8px #22d3ee;opacity:.8;animation:pzrise 5s linear infinite}
-.sp:nth-child(2n){background:#ff2fb0;box-shadow:0 0 8px #ff2fb0}
-@keyframes pzrise{0%{transform:translateY(20px) scale(.6);opacity:0}20%{opacity:.9}100%{transform:translateY(-160px) scale(1);opacity:0}}
-.prize-badge{position:relative;z-index:3;display:inline-flex;align-items:center;gap:7px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--gold);border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);padding:6px 14px;border-radius:30px;margin-bottom:8px}
-.podium{position:relative;z-index:2;height:360px;display:flex;align-items:center;justify-content:center;margin:6px 0}
-.floater{animation:pzbob 5s ease-in-out infinite}
-@keyframes pzbob{0%,100%{transform:translateY(-7px)}50%{transform:translateY(9px)}}
-@keyframes pzspin{to{transform:rotate(360deg)}}
-/* Uniforme oficial: imagen fija con todas las vistas + luces animadas detrás */
-.kit{height:340px;width:auto;max-width:92%;display:block;filter:drop-shadow(0 20px 24px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(34,211,238,.22))}
-.ring{position:absolute;bottom:34px;left:50%;transform:translateX(-50%) rotateX(72deg);width:230px;height:230px;border-radius:50%;border:2px solid transparent;background:conic-gradient(from 0deg,#22d3ee,#ff2fb0,var(--gold),#22d3ee) border-box;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 0);animation:pzspin 8s linear infinite reverse;opacity:.6}
-.reflection{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:180px;height:26px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,211,238,.35),transparent 70%);filter:blur(6px)}
-.prize-name{position:relative;z-index:3;font-family:var(--ft);font-weight:900;font-size:22px;letter-spacing:1px;margin-top:4px;color:var(--w)}
-.prize-sub{position:relative;z-index:3;color:var(--tm);font-size:13px;margin-top:6px}
-.price-tag{position:relative;z-index:3;display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:10px 20px;border-radius:40px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.4)}
-.price-tag .coin{width:26px;height:26px;animation:pzcoin 5s linear infinite}
-@keyframes pzcoin{to{transform:rotateY(360deg)}}
-.price-tag .n{font-family:var(--ft);font-weight:900;font-size:22px;color:var(--gold)}
-.price-tag .eq{font-size:11px;color:var(--tm)}
-.cta-row{position:relative;z-index:3;display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
-.pz-cta{font-family:var(--ft);font-weight:700;font-size:11px;letter-spacing:1px;padding:14px 24px;border-radius:10px;border:none;cursor:pointer;transition:transform .15s}
-.pz-cta:hover{transform:translateY(-2px)}
-.pz-cta.redeem{color:#0b0500;background:linear-gradient(90deg,var(--gold),var(--g));box-shadow:0 0 22px rgba(201,168,76,.35)}
-.pz-cta.win{color:#22d3ee;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.4)}
-.pz-soon{display:inline-block;margin-top:16px;font-family:var(--ft);font-size:9px;letter-spacing:2px;color:var(--o);border:1px solid rgba(255,102,0,.4);background:rgba(255,102,0,.08);padding:7px 14px;border-radius:20px}
-.cat-title{font-family:var(--ft);font-size:12px;letter-spacing:3px;color:var(--tm);text-align:center;margin:46px 0 18px}
-.pz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
-.rw{background:var(--bg2);border:var(--b2);border-radius:14px;padding:18px;text-align:center;transition:border .2s}
-.rw:hover{border-color:rgba(201,168,76,.4)}
-.rw .thumb{height:110px;display:flex;align-items:center;justify-content:center;font-size:42px;filter:drop-shadow(0 0 12px rgba(34,211,238,.3))}
-.rw .rn{font-family:var(--ft);font-size:12px;margin-top:8px;color:var(--w)}
-.rw .rp{font-family:var(--ft);font-size:11px;color:var(--gold);margin-top:8px}
-.rw .rb{display:inline-block;margin-top:10px;font-family:var(--ft);font-size:8px;letter-spacing:1px;padding:5px 12px;border-radius:20px;background:rgba(0,255,136,.08);color:var(--g);border:1px solid rgba(0,255,136,.25)}
-</style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="storage-shim.js?v=1784770966"></script>
+    <title>PREMIOS · LEVEL UP</title>
+    <script>
+      (function () {
+        try {
+          var id = LS.getItem("levelup_current_profile");
+          var profiles = JSON.parse(LS.getItem("levelup_profiles") || "{}");
+          if (!id || !profiles[id]) location.replace("index.html");
+        } catch (e) {
+          location.replace("index.html");
+        }
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@200;300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css?v=1784770966" />
+    <style>
+      .pz-wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 120px 18px 70px;
+      }
+      .pz-head {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .pz-eyebrow {
+        font-family: var(--ft);
+        font-size: 10px;
+        letter-spacing: 5px;
+        color: var(--gold);
+        margin-bottom: 10px;
+      }
+      .pz-head h1 {
+        font-family: var(--ft);
+        font-weight: 900;
+        font-size: clamp(24px, 5vw, 40px);
+        letter-spacing: 1px;
+        color: var(--w);
+      }
+      .pz-head h1 span {
+        background: linear-gradient(90deg, #22d3ee, #ff2fb0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .pz-head p {
+        color: var(--tm);
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      .stage {
+        position: relative;
+        margin: 30px auto 0;
+        max-width: 520px;
+        padding: 40px 20px 24px;
+        text-align: center;
+        border-radius: 24px;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            ellipse 70% 55% at 50% 38%,
+            rgba(34, 211, 238, 0.14),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 50% 45%,
+            rgba(255, 47, 176, 0.12),
+            transparent 60%
+          );
+        border: 1px solid rgba(201, 168, 76, 0.25);
+      }
+      .spotlight {
+        position: absolute;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120%;
+        height: 80%;
+        background: conic-gradient(
+          from 0deg,
+          transparent,
+          rgba(34, 211, 238, 0.1),
+          transparent 30%,
+          rgba(255, 47, 176, 0.1),
+          transparent 60%
+        );
+        animation: pzhalo 14s linear infinite;
+        filter: blur(6px);
+        pointer-events: none;
+      }
+      @keyframes pzhalo {
+        to {
+          transform: translateX(-50%) rotate(360deg);
+        }
+      }
+      .sparkles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .sp {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #22d3ee;
+        box-shadow: 0 0 8px #22d3ee;
+        opacity: 0.8;
+        animation: pzrise 5s linear infinite;
+      }
+      .sp:nth-child(2n) {
+        background: #ff2fb0;
+        box-shadow: 0 0 8px #ff2fb0;
+      }
+      @keyframes pzrise {
+        0% {
+          transform: translateY(20px) scale(0.6);
+          opacity: 0;
+        }
+        20% {
+          opacity: 0.9;
+        }
+        100% {
+          transform: translateY(-160px) scale(1);
+          opacity: 0;
+        }
+      }
+      .prize-badge {
+        position: relative;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--ft);
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: var(--gold);
+        border: 1px solid rgba(201, 168, 76, 0.4);
+        background: rgba(201, 168, 76, 0.08);
+        padding: 6px 14px;
+        border-radius: 30px;
+        margin-bottom: 8px;
+      }
+      .podium {
+        position: relative;
+        z-index: 2;
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 6px 0;
+      }
+      .floater {
+        animation: pzbob 5s ease-in-out infinite;
+      }
+      @keyframes pzbob {
+        0%,
+        100% {
+          transform: translateY(-7px);
+        }
+        50% {
+          transform: translateY(9px);
+        }
+      }
+      @keyframes pzspin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      /* Uniforme oficial: imagen fija con todas las vistas + luces animadas detrás */
+      .kit {
+        height: 340px;
+        width: auto;
+        max-width: 92%;
+        display: block;
+        filter: drop-shadow(0 20px 24px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 26px rgba(34, 211, 238, 0.22));
+      }
+      .ring {
+        position: absolute;
+        bottom: 34px;
+        left: 50%;
+        transform: translateX(-50%) rotateX(72deg);
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        background: conic-gradient(
+            from 0deg,
+            #22d3ee,
+            #ff2fb0,
+            var(--gold),
+            #22d3ee
+          )
+          border-box;
+        -webkit-mask: radial-gradient(
+          farthest-side,
+          transparent calc(100% - 3px),
+          #000 0
+        );
+        mask: radial-gradient(
+          farthest-side,
+          transparent calc(100% - 3px),
+          #000 0
+        );
+        animation: pzspin 8s linear infinite reverse;
+        opacity: 0.6;
+      }
+      .reflection {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 26px;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse,
+          rgba(34, 211, 238, 0.35),
+          transparent 70%
+        );
+        filter: blur(6px);
+      }
+      .prize-name {
+        position: relative;
+        z-index: 3;
+        font-family: var(--ft);
+        font-weight: 900;
+        font-size: 22px;
+        letter-spacing: 1px;
+        margin-top: 4px;
+        color: var(--w);
+      }
+      .prize-sub {
+        position: relative;
+        z-index: 3;
+        color: var(--tm);
+        font-size: 13px;
+        margin-top: 6px;
+      }
+      .price-tag {
+        position: relative;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 16px;
+        padding: 10px 20px;
+        border-radius: 40px;
+        background: rgba(201, 168, 76, 0.1);
+        border: 1px solid rgba(201, 168, 76, 0.4);
+      }
+      .price-tag .coin {
+        width: 26px;
+        height: 26px;
+        animation: pzcoin 5s linear infinite;
+      }
+      @keyframes pzcoin {
+        to {
+          transform: rotateY(360deg);
+        }
+      }
+      .price-tag .n {
+        font-family: var(--ft);
+        font-weight: 900;
+        font-size: 22px;
+        color: var(--gold);
+      }
+      .price-tag .eq {
+        font-size: 11px;
+        color: var(--tm);
+      }
+      .cta-row {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+      .pz-cta {
+        font-family: var(--ft);
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 1px;
+        padding: 14px 24px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .pz-cta:hover {
+        transform: translateY(-2px);
+      }
+      .pz-cta.redeem {
+        color: #0b0500;
+        background: linear-gradient(90deg, var(--gold), var(--g));
+        box-shadow: 0 0 22px rgba(201, 168, 76, 0.35);
+      }
+      .pz-cta.win {
+        color: #22d3ee;
+        background: rgba(34, 211, 238, 0.06);
+        border: 1px solid rgba(34, 211, 238, 0.4);
+      }
+      .pz-soon {
+        display: inline-block;
+        margin-top: 16px;
+        font-family: var(--ft);
+        font-size: 9px;
+        letter-spacing: 2px;
+        color: var(--o);
+        border: 1px solid rgba(255, 102, 0, 0.4);
+        background: rgba(255, 102, 0, 0.08);
+        padding: 7px 14px;
+        border-radius: 20px;
+      }
+      .cat-title {
+        font-family: var(--ft);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--tm);
+        text-align: center;
+        margin: 46px 0 18px;
+      }
+      .pz-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 14px;
+      }
+      .rw {
+        background: var(--bg2);
+        border: var(--b2);
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+        transition: border 0.2s;
+      }
+      .rw:hover {
+        border-color: rgba(201, 168, 76, 0.4);
+      }
+      .rw .thumb {
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.3));
+      }
+      .rw .rn {
+        font-family: var(--ft);
+        font-size: 12px;
+        margin-top: 8px;
+        color: var(--w);
+      }
+      .rw .rp {
+        font-family: var(--ft);
+        font-size: 11px;
+        color: var(--gold);
+        margin-top: 8px;
+      }
+      .rw .rb {
+        display: inline-block;
+        margin-top: 10px;
+        font-family: var(--ft);
+        font-size: 8px;
+        letter-spacing: 1px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        background: rgba(0, 255, 136, 0.08);
+        color: var(--g);
+        border: 1px solid rgba(0, 255, 136, 0.25);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="nav-top">
+        <a href="index.html" onclick="return goToHome(event);"
+          ><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"
+        /></a>
+        <nav class="nav-modules" id="nav-modules"></nav>
+        <div class="nav-right">
+          <a
+            class="season-badge"
+            href="temporada-piloto.html"
+            title="Conoce la Temporada Beta"
+            >TEMPORADA BETA</a
+          >
+          <a class="btn-g" href="notificaciones.html"
+            >🔔 <span id="notif-count">0</span></a
+          >
+          <div class="dropdown-wrap">
+            <button class="btn-g" id="profile-btn">PERFIL</button>
+            <div class="dropdown-menu" id="account-dropdown">
+              <a class="dropdown-item" href="dashboard.html#dashboard"
+                >CENTRO DE MANDO</a
+              >
+              <a class="dropdown-item" href="carta.html">PERFIL</a>
+              <a class="dropdown-item" href="configuracion.html"
+                >CONFIGURACIÓN</a
+              >
+              <div class="dropdown-item" onclick="openAuth(false)">
+                CAMBIAR DE PERFIL
+              </div>
+              <div class="dropdown-item danger" onclick="logout()">
+                CERRAR SESIÓN
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
-<header>
-  <div class="nav-top">
-    <a href="index.html" onclick="return goToHome(event)"><img class="logo-img" src="assets/logo.png" alt="LEVEL UP"></a>
-    <nav class="nav-modules" id="nav-modules"></nav>
-    <div class="nav-right">
-      <a class="season-badge" href="temporada-piloto.html" title="Conoce la Temporada Beta">TEMPORADA BETA</a>
-      <a class="btn-g" href="notificaciones.html">🔔 <span id="notif-count">0</span></a>
-      <div class="dropdown-wrap">
-        <button class="btn-g" id="profile-btn">PERFIL</button>
-        <div class="dropdown-menu" id="account-dropdown">
-          <a class="dropdown-item" href="dashboard.html#dashboard">CENTRO DE MANDO</a>
-          <a class="dropdown-item" href="carta.html">PERFIL</a>
-          <a class="dropdown-item" href="configuracion.html">CONFIGURACIÓN</a>
-          <div class="dropdown-item" onclick="openAuth(false)">CAMBIAR DE PERFIL</div>
-          <div class="dropdown-item danger" onclick="logout()">CERRAR SESIÓN</div>
+    <div class="pz-wrap">
+      <div class="pz-head">
+        <div class="pz-eyebrow">RECOMPENSAS LEVEL UP</div>
+        <h1>GANA. CANJEA. <span>PRESUME.</span></h1>
+        <p>Junta Level Coins jugando o recargando, y llévate premios reales.</p>
+      </div>
+
+      <div class="stage">
+        <div class="spotlight"></div>
+        <div class="sparkles" id="sparkles"></div>
+        <div class="prize-badge">👑 PREMIO ESTRELLA · TEMPORADA 1</div>
+
+        <div class="podium">
+          <div class="floater">
+            <img
+              class="kit"
+              id="pz-kit"
+              src="assets/premio-kit-front.png?v=1"
+              alt="Uniforme oficial LEVEL UP"
+            />
+          </div>
+          <div class="reflection"></div>
+        </div>
+
+        <div class="prize-name">UNIFORME OFICIAL LEVEL UP</div>
+        <div class="prize-sub">
+          Camiseta + pantaloneta · edición Temporada 1 · diseñado para ganadores
+        </div>
+
+        <button
+          class="price-tag"
+          id="pz-redeem"
+          onclick="canjearPremio('Uniforme oficial LEVEL UP', 140)"
+          style="cursor: pointer; border: 1px solid rgba(201, 168, 76, 0.4)"
+        >
+          <svg class="coin" viewBox="0 0 40 40">
+            <circle
+              cx="20"
+              cy="20"
+              r="18"
+              fill="#1a1205"
+              stroke="url(#cg)"
+              stroke-width="2.4"
+            />
+            <text
+              x="20"
+              y="26"
+              text-anchor="middle"
+              font-family="Orbitron"
+              font-weight="900"
+              font-size="14"
+              fill="url(#cg)"
+            >
+              LC
+            </text>
+            <defs>
+              <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#c9a84c" />
+                <stop offset="1" stop-color="#00ff88" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="n">140</span
+          ><span class="eq">Level Coins · CANJEAR</span>
+        </button>
+        <div
+          id="pz-msg"
+          style="
+            position: relative;
+            z-index: 3;
+            margin-top: 14px;
+            font-family: var(--ft);
+            font-size: 11px;
+            letter-spacing: 1px;
+            min-height: 16px;
+          "
+        ></div>
+      </div>
+
+      <div class="cat-title">TODOS LOS PREMIOS</div>
+      <div class="pz-grid">
+        <div class="rw">
+          <div class="thumb">🧢</div>
+          <div class="rn">Gorra LEVEL UP</div>
+          <div class="rp">🪙 40 coins</div>
+          <div class="rb">PRONTO</div>
+        </div>
+        <div class="rw">
+          <div class="thumb">⚽</div>
+          <div class="rn">Balón oficial</div>
+          <div class="rp">🪙 55 coins</div>
+          <div class="rb">PRONTO</div>
+        </div>
+        <div class="rw">
+          <div class="thumb">🥤</div>
+          <div class="rn">Termo LEVEL UP</div>
+          <div class="rp">🪙 25 coins</div>
+          <div class="rb">PRONTO</div>
+        </div>
+        <div class="rw">
+          <div class="thumb">🎽</div>
+          <div class="rn">Uniforme oficial</div>
+          <div class="rp">🪙 140 coins</div>
+          <div class="rb">PRONTO</div>
         </div>
       </div>
     </div>
-  </div>
-</header>
 
-<div class="pz-wrap">
-  <div class="pz-head">
-    <div class="pz-eyebrow">RECOMPENSAS LEVEL UP</div>
-    <h1>GANA. CANJEA. <span>PRESUME.</span></h1>
-    <p>Junta Level Coins jugando o recargando, y llévate premios reales.</p>
-  </div>
-
-  <div class="stage">
-    <div class="spotlight"></div>
-    <div class="sparkles" id="sparkles"></div>
-    <div class="prize-badge">👑 PREMIO ESTRELLA · TEMPORADA 1</div>
-
-    <div class="podium">
-      <div class="floater">
-        <img class="kit" id="pz-kit" src="assets/premio-kit-front.png?v=1" alt="Uniforme oficial LEVEL UP">
-      </div>
-      <div class="reflection"></div>
+    <audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
+    <div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()">
+      <span class="a-dot"></span><span id="audio-lbl">LET'S ROLL</span>
     </div>
 
-    <div class="prize-name">UNIFORME OFICIAL LEVEL UP</div>
-    <div class="prize-sub">Camiseta + pantaloneta · edición Temporada 1 · diseñado para ganadores</div>
-
-    <button class="price-tag" id="pz-redeem" onclick="canjearPremio('Uniforme oficial LEVEL UP', 140)" style="cursor:pointer;border:1px solid rgba(201,168,76,.4)">
-      <svg class="coin" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1a1205" stroke="url(#cg)" stroke-width="2.4"/><text x="20" y="26" text-anchor="middle" font-family="Orbitron" font-weight="900" font-size="14" fill="url(#cg)">LC</text><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a84c"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs></svg>
-      <span class="n">140</span><span class="eq">Level Coins · CANJEAR</span>
-    </button>
-    <div id="pz-msg" style="position:relative;z-index:3;margin-top:14px;font-family:var(--ft);font-size:11px;letter-spacing:1px;min-height:16px"></div>
-  </div>
-
-  <div class="cat-title">TODOS LOS PREMIOS</div>
-  <div class="pz-grid">
-    <div class="rw"><div class="thumb">🧢</div><div class="rn">Gorra LEVEL UP</div><div class="rp">🪙 40 coins</div><div class="rb">PRONTO</div></div>
-    <div class="rw"><div class="thumb">⚽</div><div class="rn">Balón oficial</div><div class="rp">🪙 55 coins</div><div class="rb">PRONTO</div></div>
-    <div class="rw"><div class="thumb">🥤</div><div class="rn">Termo LEVEL UP</div><div class="rp">🪙 25 coins</div><div class="rb">PRONTO</div></div>
-    <div class="rw"><div class="thumb">🎽</div><div class="rn">Uniforme oficial</div><div class="rp">🪙 140 coins</div><div class="rb">PRONTO</div></div>
-  </div>
-</div>
-
-<audio id="audio" loop preload="auto" src="assets/theme.mp3"></audio>
-<div class="audio-ctrl muted" id="audio-ctrl" onclick="toggleAudio()"><span class="a-dot"></span><span id="audio-lbl">LET'S ROLL</span></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js?v=1784770966"></script>
-<script>
-  // sparkles
-  var sp=document.getElementById('sparkles');
-  for(var i=0;i<14;i++){var d=document.createElement('div');d.className='sp';d.style.left=(10+Math.random()*80)+'%';d.style.bottom=(20+Math.random()*40)+'%';d.style.animationDelay=(Math.random()*5)+'s';d.style.animationDuration=(3.5+Math.random()*3)+'s';sp.appendChild(d);}
-
-  // Uniforme oficial: imagen fija con todas las vistas (las luces del fondo siguen animadas).
-
-  // Canjear premio: descuenta los coins (RPC seguro) y avisa al admin para la entrega.
-  async function canjearPremio(nombre, costo){
-    var msg=document.getElementById('pz-msg');
-    var btn=document.getElementById('pz-redeem');
-    if(typeof state==='undefined' || !state){ location.href='index.html'; return; }
-    var misCoins = (typeof toCoins==='function') ? toCoins(state.saldo) : Math.round((state.saldo||0)/1300);
-    if(misCoins < costo){
-      msg.style.color='#ff5a5a';
-      msg.textContent='No tienes suficientes Level Coins ('+misCoins+' / '+costo+'). Recárgalos o gánalos jugando.';
-      return;
-    }
-    if(!confirm('¿Canjear "'+nombre+'" por '+costo+' Level Coins?')) return;
-    msg.style.color=''; msg.textContent='Canjeando...'; if(btn) btn.disabled=true;
-    try{
-      var r = await sb.rpc('redeem_prize', { p_profile_id: state.id, p_coins: costo, p_prize: nombre });
-      if(r.error){
-        msg.style.color='#ff5a5a';
-        msg.textContent = /insuficiente/i.test(r.error.message||'') ? 'No tienes suficientes Level Coins.' : 'No se pudo canjear. Intenta de nuevo.';
-        return;
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="app.js?v=1784770966"></script>
+    <script>
+      // sparkles
+      var sp = document.getElementById("sparkles");
+      for (var i = 0; i < 14; i++) {
+        var d = document.createElement("div");
+        d.className = "sp";
+        d.style.left = 10 + Math.random() * 80 + "%";
+        d.style.bottom = 20 + Math.random() * 40 + "%";
+        d.style.animationDelay = Math.random() * 5 + "s";
+        d.style.animationDuration = 3.5 + Math.random() * 3 + "s";
+        sp.appendChild(d);
       }
-      // Descontar local + dejar notificación + avisar al admin (ticket) para la entrega
-      state.saldo = Math.max(0, (state.saldo||0) - costo*1300);
-      state.notifications = state.notifications || [];
-      state.notifications.push({ icon:'🎁', text:'¡Canjeaste '+nombre+'! El equipo de LEVEL UP te lo entregará en tu próximo partido competitivo.', time:'AHORA' });
-      if(typeof saveProfiles==='function'){ if(typeof profiles!=='undefined'&&profiles[state.id]) profiles[state.id]=state; saveProfiles(); }
-      if(typeof pushProfileToCloud==='function') pushProfileToCloud(state);
-      if(typeof renderWalletPill==='function') renderWalletPill();
-      try{ await sb.rpc('submit_feedback', { p_type:'canje', p_message:'CANJE DE PREMIO: '+nombre+' ('+costo+' coins) — entregar en su proximo partido competitivo', p_reporter_id: state.id, p_reporter_name:(state.nickname||state.name), p_contact:(state.email||null), p_page:'premios.html', p_ua: navigator.userAgent }); }catch(e){}
-      msg.style.color='var(--g)';
-      msg.innerHTML='✅ ¡Canjeado! El equipo de LEVEL UP te entregará tu <b>'+nombre+'</b> en tu próximo partido competitivo.';
-    }catch(e){
-      msg.style.color='#ff5a5a'; msg.textContent='Error de conexión. Intenta de nuevo.';
-    }finally{ if(btn) btn.disabled=false; }
-  }
-</script>
-</body>
+
+      // Uniforme oficial: imagen fija con todas las vistas (las luces del fondo siguen animadas).
+
+      // Canjear premio: descuenta los coins (RPC seguro) y avisa al admin para la entrega.
+      async function canjearPremio(nombre, costo) {
+        var msg = document.getElementById("pz-msg");
+        var btn = document.getElementById("pz-redeem");
+        if (typeof state === "undefined" || !state) {
+          location.href = "index.html";
+          return;
+        }
+        var misCoins =
+          typeof toCoins === "function"
+            ? toCoins(state.saldo)
+            : Math.round((state.saldo || 0) / 1300);
+        if (misCoins < costo) {
+          msg.style.color = "#ff5a5a";
+          msg.textContent =
+            "No tienes suficientes Level Coins (" +
+            misCoins +
+            " / " +
+            costo +
+            "). Recárgalos o gánalos jugando.";
+          return;
+        }
+        if (
+          !confirm('¿Canjear "' + nombre + '" por ' + costo + " Level Coins?")
+        )
+          return;
+        msg.style.color = "";
+        msg.textContent = "Canjeando...";
+        if (btn) btn.disabled = true;
+        try {
+          var r = await sb.rpc("redeem_prize", {
+            p_profile_id: state.id,
+            p_coins: costo,
+            p_prize: nombre,
+          });
+          if (r.error) {
+            msg.style.color = "#ff5a5a";
+            msg.textContent = /insuficiente/i.test(r.error.message || "")
+              ? "No tienes suficientes Level Coins."
+              : "No se pudo canjear. Intenta de nuevo.";
+            return;
+          }
+          // Descontar local + dejar notificación + avisar al admin (ticket) para la entrega
+          state.saldo = Math.max(0, (state.saldo || 0) - costo * 1300);
+          state.notifications = state.notifications || [];
+          state.notifications.push({
+            icon: "🎁",
+            text:
+              "¡Canjeaste " +
+              nombre +
+              "! El equipo de LEVEL UP te lo entregará en tu próximo partido competitivo.",
+            time: "AHORA",
+          });
+          if (typeof saveProfiles === "function") {
+            if (typeof profiles !== "undefined" && profiles[state.id])
+              profiles[state.id] = state;
+            saveProfiles();
+          }
+          if (typeof pushProfileToCloud === "function")
+            pushProfileToCloud(state);
+          if (typeof renderWalletPill === "function") renderWalletPill();
+          try {
+            await sb.rpc("submit_feedback", {
+              p_type: "canje",
+              p_message:
+                "CANJE DE PREMIO: " +
+                nombre +
+                " (" +
+                costo +
+                " coins) — entregar en su proximo partido competitivo",
+              p_reporter_id: state.id,
+              p_reporter_name: state.nickname || state.name,
+              p_contact: state.email || null,
+              p_page: "premios.html",
+              p_ua: navigator.userAgent,
+            });
+          } catch (e) {}
+          msg.style.color = "var(--g)";
+          msg.innerHTML =
+            "✅ ¡Canjeado! El equipo de LEVEL UP te entregará tu <b>" +
+            nombre +
+            "</b> en tu próximo partido competitivo.";
+        } catch (e) {
+          msg.style.color = "#ff5a5a";
+          msg.textContent = "Error de conexión. Intenta de nuevo.";
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
 </html>

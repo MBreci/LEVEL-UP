@@ -17,32 +17,50 @@
    (cosa que Safari a veces no permite).
    ============================================================ */
 (function () {
-  var PREFIX = '__levelup_ls__';
+  var PREFIX = "__levelup_ls__";
   var _ns = null;
   function nameStore() {
     if (_ns) return _ns;
     var store = {};
     try {
-      if (typeof window.name === 'string' && window.name.indexOf(PREFIX) === 0) {
+      if (
+        typeof window.name === "string" &&
+        window.name.indexOf(PREFIX) === 0
+      ) {
         store = JSON.parse(window.name.slice(PREFIX.length)) || {};
       }
     } catch (e) {}
-    function flush() { try { window.name = PREFIX + JSON.stringify(store); } catch (e) {} }
+    function flush() {
+      try {
+        window.name = PREFIX + JSON.stringify(store);
+      } catch (e) {}
+    }
     _ns = {
-      getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
-      setItem: function (k, v) { store[String(k)] = String(v); flush(); },
-      removeItem: function (k) { delete store[String(k)]; flush(); },
+      getItem: function (k) {
+        k = String(k);
+        return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null;
+      },
+      setItem: function (k, v) {
+        store[String(k)] = String(v);
+        flush();
+      },
+      removeItem: function (k) {
+        delete store[String(k)];
+        flush();
+      },
     };
     return _ns;
   }
 
   var nativeOk = false;
   try {
-    var k = '__ls_probe__';
-    window.localStorage.setItem(k, '1');
+    var k = "__ls_probe__";
+    window.localStorage.setItem(k, "1");
     window.localStorage.removeItem(k);
     nativeOk = true;
-  } catch (e) { nativeOk = false; }
+  } catch (e) {
+    nativeOk = false;
+  }
 
   if (nativeOk) {
     // Nativo pasa la prueba, pero eso NO garantiza que persista entre páginas:
@@ -56,23 +74,35 @@
     window.LS = {
       getItem: function (k) {
         var v = null;
-        try { v = window.localStorage.getItem(k); } catch (e) {}
+        try {
+          v = window.localStorage.getItem(k);
+        } catch (e) {}
         if (v === null || v === undefined) return ns.getItem(k);
         return v;
       },
       setItem: function (k, v) {
-        try { window.localStorage.setItem(k, v); } catch (e) {}
-        try { ns.setItem(k, v); } catch (e) {}
+        try {
+          window.localStorage.setItem(k, v);
+        } catch (e) {}
+        try {
+          ns.setItem(k, v);
+        } catch (e) {}
       },
       removeItem: function (k) {
-        try { window.localStorage.removeItem(k); } catch (e) {}
-        try { ns.removeItem(k); } catch (e) {}
+        try {
+          window.localStorage.removeItem(k);
+        } catch (e) {}
+        try {
+          ns.removeItem(k);
+        } catch (e) {}
       },
     };
   } else {
     // Nativo bloqueado: respaldo en window.name (persiste en la pestaña).
     window.LS = nameStore();
-    try { window.__LEVELUP_STORAGE_FALLBACK__ = true; } catch (e) {}
+    try {
+      window.__LEVELUP_STORAGE_FALLBACK__ = true;
+    } catch (e) {}
   }
 })();
 
@@ -81,10 +111,13 @@
 (function () {
   try {
     var sp = new URLSearchParams(location.search);
-    if (sp.has('safe')) window.LS.setItem('levelup_safe_mode', '1');
-    if (sp.has('nosafe')) window.LS.removeItem('levelup_safe_mode');
-    if (window.LS.getItem('levelup_safe_mode') === '1' && document.documentElement) {
-      document.documentElement.classList.add('safe-mode');
+    if (sp.has("safe")) window.LS.setItem("levelup_safe_mode", "1");
+    if (sp.has("nosafe")) window.LS.removeItem("levelup_safe_mode");
+    if (
+      window.LS.getItem("levelup_safe_mode") === "1" &&
+      document.documentElement
+    ) {
+      document.documentElement.classList.add("safe-mode");
     }
   } catch (e) {}
 })();
