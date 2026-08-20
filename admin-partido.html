@@ -568,12 +568,12 @@ function apSetStat(pid, key, val) {
 
 function apCalcRating(pid) {
   const p = profiles[pid];
-  if (!p) return 6.5;
+  if (!p) return 6.0;
   const isPor = p.position === 'POR';
   const s = _apStats[pid] || {};
 
   if (isPor) {
-    let r = 6.5;
+    let r = 6.0;
     r += (s.atajadas || 0) * 0.15;
     r += (s.atajadasArea || 0) * 0.2;
     r += (s.despejes || 0) * 0.05;

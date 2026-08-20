@@ -7021,7 +7021,7 @@ const SH_LIBRE_STATS = [
 // para poder calcularla en vivo acá sin depender de esa página.
 function shCalcRating(position, s) {
   if (position === 'POR') {
-    let r = 6.5;
+    let r = 6.0;
     r += (s.atajadas||0)*.15 + (s.atajadasArea||0)*.2 + (s.despejes||0)*.05 + (s.achiques||0)*.1 + (s.pasesLargos||0)*.02 + (s.jugadasIniciadas||0)*.08;
     r -= (s.erroresGraves||0)*.4 + (s.oportunidadesFalladas||0)*.15 + (s.faltasCometidas||0)*.05 + (s.amarillas||0)*.3 + (s.rojas||0)*1.2;
     return Math.round(Math.max(1, Math.min(10, r)) * 10) / 10;
