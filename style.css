@@ -546,7 +546,9 @@ section{padding:64px;border-bottom:var(--b1)}
 @media(max-width:760px){.card-section{justify-content:center}.card-section .pi{flex:1 1 100%;max-width:480px}}
 .photo-process{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:36px;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:10px;padding:48px 40px 56px}
 .photo-process-img{width:auto;max-width:min(100%,380px);max-height:460px;height:auto;border-radius:10px;object-fit:contain;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
-.photo-process.has-real-photo .photo-process-img{max-width:min(100%,340px);max-height:480px;border-radius:14px;border:1px solid rgba(0,255,136,0.2)}
+/* Foto real de la ficha: recortada a retrato 3:4 (muestra de la cabeza hacia
+   abajo) con marco iluminado. Funciona con CUALQUIER fondo, no solo blanco. */
+.photo-process.has-real-photo .photo-process-img{width:min(100%,320px);max-width:min(100%,320px);height:auto;aspect-ratio:3/4;object-fit:cover;object-position:top center;border-radius:18px;border:2px solid rgba(0,255,136,0.55);box-shadow:0 0 0 1px rgba(0,255,136,0.15),0 0 42px rgba(0,255,136,0.30),inset 0 0 70px rgba(0,0,0,0.30);background:#0a0f16;filter:none}
 .photo-process-text{max-width:780px;text-align:center}
 .photo-process-tag{font-family:var(--ft);font-size:11px;letter-spacing:3px;color:var(--g);margin-bottom:12px}
 .photo-process-title{font-family:var(--ft);font-size:clamp(20px,3vw,28px);letter-spacing:0.5px;color:var(--w);margin-bottom:14px}
@@ -641,7 +643,7 @@ section{padding:64px;border-bottom:var(--b1)}
 .fcard .fco-pos{color:var(--rc,#fff);font-weight:700;margin-top:3%}
 /* Foto circular en el centro (o placeholder de cámara si aún no hay foto) */
 .fcard .fco-photowrap{position:absolute;aspect-ratio:1;z-index:2;border-radius:50%}
-.fcard .fco-photo-real{width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:0 0 24px -6px rgba(0,0,0,0.85)}
+.fcard .fco-photo-real{width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:50%;box-shadow:0 0 24px -6px rgba(0,0,0,0.85)}
 .fcard .fco-photo-ph{width:100%;height:100%;border-radius:50%;box-sizing:border-box;
   border:1.5px solid var(--rc,#fff);
   background:radial-gradient(circle at 50% 34%,var(--rcglow,rgba(255,255,255,0.2)),transparent 62%),rgba(4,5,9,0.42);

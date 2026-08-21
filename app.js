@@ -887,6 +887,30 @@ function updatePlayerFullPhoto() {
   }
 }
 
+// Trae las DOS fotos propias (medio cuerpo y cuerpo completo) frescas de la nube
+// una vez por carga de página. El sync masivo NO trae fotos (ahorro de egress) y
+// conserva la local, así que sin esto la foto que sube el admin no aparecía en la
+// tarjeta del propio jugador, o se quedaba mostrando la anterior. Solo re-renderiza
+// si algo cambió, para no parpadear en cada render.
+let _ownPhotosFetched = false;
+async function ensureOwnPhotos(force) {
+  if (!sb || !state) return;
+  if (_ownPhotosFetched && !force) return;
+  _ownPhotosFetched = true;
+  try {
+    const { data } = await sb.from('profiles').select('photo,photo_full').eq('id', state.id).single();
+    if (!data || !state) return;
+    let changed = false;
+    if ((data.photo || null) !== (state.photo || null)) { state.photo = data.photo || null; changed = true; }
+    if ((data.photo_full || null) !== (state.photoFull || null)) { state.photoFull = data.photo_full || null; changed = true; }
+    if (changed) {
+      profiles[state.id] = state;
+      try { saveProfiles(); } catch (e) {}
+      renderCard();
+    }
+  } catch (e) {}
+}
+
 function renderCard() {
   const card = document.getElementById('fifa-card');
   if (!card) return;
@@ -897,6 +921,7 @@ function renderCard() {
     if (piEl0) piEl0.innerHTML = guestPrompt('Inicia sesión o crea tu perfil para ver tu carta de jugador.');
     return;
   }
+  ensureOwnPhotos();
   const rank = getRank(state.xp);
   const a = state.attrs;
   const { className, html } = buildCardHTML(state);
