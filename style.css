@@ -3713,3 +3713,31 @@ html.safe-mode body{background:#05070d!important}
 .iab-x{flex:0 0 auto;background:none;border:0.5px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.6);width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer;transition:all .18s}
 .iab-x:hover{color:var(--w);border-color:rgba(255,255,255,0.5)}
 body.has-iab-banner{padding-top:76px}
+
+/* ===== Buscador de jugadores en el panel admin ===== */
+.adm-search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg3, #070c12);
+  border: 1px solid var(--b2, #1e2a3a);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin: 0 0 10px;
+  color: var(--w, #fff);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.adm-search::placeholder { color: var(--td, #7a8b9a); }
+.adm-search:focus {
+  border-color: rgba(0,255,136,0.55);
+  box-shadow: 0 0 0 2px rgba(0,255,136,0.12);
+}
+.adm-no-results {
+  color: var(--td, #7a8b9a);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  text-align: center;
+  padding: 18px 8px;
+}

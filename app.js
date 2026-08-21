@@ -6871,12 +6871,17 @@ function renderAdminPanel() {
     const hasPhoto = !!p.photo;
     const hasMedidas = ph.weight && ph.height;
     const status = hasPhoto && hasMedidas ? '✅' : '⚠️';
+    // Texto sobre el que busca el admin: apodo, nombre, posición, equipo y correo
+    // (el correo solo está disponible en algunos perfiles). En minúsculas para
+    // comparar sin importar mayúsculas/acentos del texto tecleado.
+    const haystack = `${p.nickname || ''} ${p.name || ''} ${p.position || ''} ${p.team || ''} ${p.email || ''}`
+      .toLowerCase().replace(/"/g, '');
     return `
-      <div class="adm-player-row">
+      <div class="adm-player-row" data-search="${haystack}">
         <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
         <div class="adm-player-info">
           <div class="adm-player-name">${p.nickname || p.name}</div>
-          <div class="adm-player-meta">${ph.height ? ph.height+'cm' : '—'} · ${ph.weight ? ph.weight+'kg' : '—'} · ${ph.foot || '—'}</div>
+          <div class="adm-player-meta">${p.position || '—'} · ${ph.height ? ph.height+'cm' : '—'} · ${ph.weight ? ph.weight+'kg' : '—'} · ${ph.foot || '—'}</div>
         </div>
         <span class="adm-status">${status}</span>
         <button class="adm-edit-btn" onclick="closeAdminPanel();openAdminPlayer('${p.id}')">EDITAR</button>
@@ -6907,11 +6912,31 @@ function renderAdminPanel() {
   }).join('') : '<div class="adm-empty">No hay partidos de equipo aún.</div>';
 
   content.innerHTML = `
-    <div class="adm-section-title">JUGADORES <span class="adm-count">${allPlayers.length}</span></div>
-    <div class="adm-player-list">${playersHtml}</div>
+    <div class="adm-section-title">JUGADORES <span class="adm-count" id="adm-player-count">${allPlayers.length}</span></div>
+    <input class="adm-search" id="adm-player-search" type="text" autocomplete="off"
+      placeholder="🔍 Buscar por apodo, nombre, posición o equipo..." oninput="filterAdminPlayers(this.value)">
+    <div class="adm-player-list" id="adm-player-list">${playersHtml}</div>
+    <div class="adm-no-results" id="adm-no-results" style="display:none">No se encontró ningún jugador.</div>
     <div class="adm-section-title" style="margin-top:28px">PARTIDOS REY DEL BARRIO</div>
     <div class="adm-match-list">${matchesHtml}</div>
   `;
+}
+
+// Filtra la lista de jugadores del panel admin en vivo, sin re-renderizar todo.
+function filterAdminPlayers(q) {
+  const query = (q || '').trim().toLowerCase();
+  const rows = document.querySelectorAll('#adm-player-list .adm-player-row');
+  let shown = 0;
+  rows.forEach(row => {
+    const hay = row.getAttribute('data-search') || '';
+    const match = !query || hay.indexOf(query) !== -1;
+    row.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  const countEl = document.getElementById('adm-player-count');
+  if (countEl) countEl.textContent = shown;
+  const noRes = document.getElementById('adm-no-results');
+  if (noRes) noRes.style.display = shown === 0 ? 'block' : 'none';
 }
 
 function openAdminMatch(matchId) {
