@@ -546,9 +546,11 @@ section{padding:64px;border-bottom:var(--b1)}
 @media(max-width:760px){.card-section{justify-content:center}.card-section .pi{flex:1 1 100%;max-width:480px}}
 .photo-process{margin-top:64px;display:flex;flex-direction:column;align-items:center;gap:36px;background:var(--bg3);border:0.5px solid rgba(0,255,136,0.15);border-radius:10px;padding:48px 40px 56px}
 .photo-process-img{width:auto;max-width:min(100%,380px);max-height:460px;height:auto;border-radius:10px;object-fit:contain;filter:drop-shadow(0 0 36px rgba(0,255,136,0.18))}
-/* Foto real de la ficha: recortada a retrato 3:4 (muestra de la cabeza hacia
-   abajo) con marco iluminado. Funciona con CUALQUIER fondo, no solo blanco. */
-.photo-process.has-real-photo .photo-process-img{width:min(100%,320px);max-width:min(100%,320px);height:auto;aspect-ratio:3/4;object-fit:cover;object-position:top center;border-radius:18px;border:2px solid rgba(0,255,136,0.55);box-shadow:0 0 0 1px rgba(0,255,136,0.15),0 0 42px rgba(0,255,136,0.30),inset 0 0 70px rgba(0,0,0,0.30);background:#0a0f16;filter:none}
+/* Foto real de la ficha: la foto se sube SIN fondo (recorte transparente), así
+   el jugador "flota" sobre la carta con un resplandor verde por los lados, como
+   la foto de ejemplo. Nada de marco/borde: quedaría un rectángulo alrededor del
+   recorte transparente. */
+.photo-process.has-real-photo .photo-process-img{width:auto;max-width:min(100%,340px);max-height:540px;height:auto;object-fit:contain;border:none;border-radius:0;background:none;filter:drop-shadow(0 10px 30px rgba(0,255,136,0.30)) drop-shadow(0 0 16px rgba(0,255,136,0.18))}
 .photo-process-text{max-width:780px;text-align:center}
 .photo-process-tag{font-family:var(--ft);font-size:11px;letter-spacing:3px;color:var(--g);margin-bottom:12px}
 .photo-process-title{font-family:var(--ft);font-size:clamp(20px,3vw,28px);letter-spacing:0.5px;color:var(--w);margin-bottom:14px}
