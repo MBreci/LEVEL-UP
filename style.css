@@ -3745,3 +3745,9 @@ body.has-iab-banner{padding-top:76px}
   text-align: center;
   padding: 18px 8px;
 }
+/* ===== Título de sección "Perfil del Jugador" (arriba de la foto de cuerpo completo) ===== */
+.perfil-jugador-hdr{text-align:center;margin:72px auto 8px;max-width:900px;padding:0 20px}
+.perfil-jugador-eyebrow{font-family:var(--ft);font-size:10px;letter-spacing:5px;color:var(--gold,#c9a84c);margin-bottom:12px;opacity:.85}
+.perfil-jugador-title{font-family:var(--ft);font-weight:900;font-size:clamp(26px,4.5vw,44px);letter-spacing:2px;color:var(--w);text-shadow:0 0 22px rgba(0,255,136,0.25);line-height:1.05}
+.perfil-jugador-sub{font-family:var(--fb);font-size:14px;color:var(--tm);margin-top:10px}
+.perfil-jugador-hdr::after{content:"";display:block;width:120px;height:2px;margin:18px auto 0;background:linear-gradient(90deg,transparent,var(--g),transparent)}
