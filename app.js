@@ -857,6 +857,41 @@ function buildPhysicalHTML(p) {
     </div>`;
 }
 
+// Renderiza el "PERFIL DEL JUGADOR": medallas/insignias del torneo, métricas de
+// desempeño (velocidad máxima, km recorridos, sprints…) y recomendaciones.
+// Los datos viven en state.physical.perfil y state.achievements. Es la sección
+// que va DEBAJO de la foto de cuerpo completo.
+function renderPerfilJugador() {
+  const el = document.getElementById('perfil-metrics');
+  if (!el || !state) return;
+  const perf = (state.physical && state.physical.perfil) || null;
+  const ach = Array.isArray(state.achievements) ? state.achievements.filter(a => typeof a === 'string') : [];
+  let html = '';
+  if (ach.length) {
+    html += `<div class="pf-badges-title">RECONOCIMIENTOS</div>
+      <div class="pf-badges">${ach.map(a => `<span class="pf-badge${/oro/i.test(a)?' gold':/plata/i.test(a)?' silver':/bronce/i.test(a)?' bronze':''}">${a}</span>`).join('')}</div>`;
+  }
+  const metric = (label, val, unit) => (val === null || val === undefined || val === '') ? '' :
+    `<div class="pf-metric"><div class="pf-metric-v">${val}<span class="pf-metric-u">${unit || ''}</span></div><div class="pf-metric-l">${label}</div></div>`;
+  if (perf) {
+    const cards = [
+      metric('VELOCIDAD MÁXIMA', perf.vel_max_kmh, ' km/h'),
+      metric('DISTANCIA RECORRIDA', perf.distancia_km, ' km'),
+      metric('VELOCIDAD MEDIA', perf.vel_media_kmh, ' km/h'),
+      metric('SPRINTS', perf.sprints, ''),
+      metric('CARRERAS DE INTENSIDAD', perf.carreras_intensidad, ''),
+    ].join('');
+    if (cards.trim()) {
+      html += `<div class="pf-metrics-title">MÉTRICAS DE DESEMPEÑO</div><div class="pf-metrics-grid">${cards}</div>`;
+      if (perf.fuente) html += `<div class="pf-note">Datos ${perf.fuente}. Se actualizarán con la medición oficial del VEO.</div>`;
+    }
+    if (perf.recomendacion) {
+      html += `<div class="pf-reco"><div class="pf-reco-title">👨‍🏫 ANÁLISIS DEL ENTRENADOR</div><p>${perf.recomendacion}</p></div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
 // Muestra la foto de CUERPO COMPLETO del jugador (subida por el admin) en la
 // sección "photo-process" de la carta. Si no hay, deja el ejemplo por defecto.
 function updatePlayerFullPhoto() {
@@ -928,6 +963,7 @@ function renderCard() {
   card.className = className;
   card.innerHTML = html;
   updatePlayerFullPhoto();
+  renderPerfilJugador();
 
   const next = getNextRank(state.xp);
   const prevMin = rank.min;

@@ -3751,3 +3751,21 @@ body.has-iab-banner{padding-top:76px}
 .perfil-jugador-title{font-family:var(--ft);font-weight:900;font-size:clamp(26px,4.5vw,44px);letter-spacing:2px;color:var(--w);text-shadow:0 0 22px rgba(0,255,136,0.25);line-height:1.05}
 .perfil-jugador-sub{font-family:var(--fb);font-size:14px;color:var(--tm);margin-top:10px}
 .perfil-jugador-hdr::after{content:"";display:block;width:120px;height:2px;margin:18px auto 0;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+
+/* ===== Perfil del Jugador: métricas de desempeño + reconocimientos ===== */
+.perfil-metrics{max-width:900px;margin:8px auto 40px;padding:0 20px}
+.pf-badges-title,.pf-metrics-title{font-family:var(--ft);font-size:11px;letter-spacing:3px;color:var(--g);text-align:center;margin:26px 0 14px}
+.pf-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.pf-badge{font-family:var(--fb);font-size:12px;color:var(--tm);background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 14px}
+.pf-badge.gold{color:#e9c65a;border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.08)}
+.pf-badge.silver{color:#cfd6de;border-color:rgba(200,210,220,0.4);background:rgba(200,210,220,0.06)}
+.pf-badge.bronze{color:#cd8a54;border-color:rgba(205,138,84,0.45);background:rgba(205,138,84,0.08)}
+.pf-metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.pf-metric{background:var(--bg3);border:1px solid rgba(0,255,136,0.15);border-radius:12px;padding:18px 14px;text-align:center}
+.pf-metric-v{font-family:var(--ft);font-weight:900;font-size:28px;color:var(--w);line-height:1}
+.pf-metric-u{font-family:var(--fb);font-size:12px;font-weight:400;color:var(--tm);margin-left:2px}
+.pf-metric-l{font-family:var(--ft);font-size:9px;letter-spacing:1.5px;color:var(--td);margin-top:8px}
+.pf-note{font-family:var(--fb);font-size:11px;color:var(--td);text-align:center;margin-top:14px;font-style:italic}
+.pf-reco{background:var(--bg3);border:1px solid rgba(0,255,136,0.15);border-left:3px solid var(--g);border-radius:10px;padding:18px 20px;margin-top:24px}
+.pf-reco-title{font-family:var(--ft);font-size:11px;letter-spacing:2px;color:var(--g);margin-bottom:10px}
+.pf-reco p{font-family:var(--fb);font-size:14px;line-height:1.6;color:var(--tm)}
