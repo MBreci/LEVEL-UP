@@ -885,10 +885,12 @@ function renderPerfilJugador() {
       html += `<div class="pf-metrics-title">MÉTRICAS DE DESEMPEÑO</div><div class="pf-metrics-grid">${cards}</div>`;
       if (perf.fuente) html += `<div class="pf-note">Datos ${perf.fuente}. Se actualizarán con la medición oficial del VEO.</div>`;
     }
-    if (perf.recomendacion) {
-      html += `<div class="pf-reco"><div class="pf-reco-title">👨‍🏫 ANÁLISIS DEL ENTRENADOR</div><p>${perf.recomendacion}</p></div>`;
-    }
   }
+  // Recomendaciones para mejorar (siempre visible). Se llenará con el análisis
+  // real por jugador a medida que registremos sus partidos; por ahora, un texto guía.
+  const reco = (perf && perf.recomendacion)
+    || 'A partir de ahora, el cuerpo técnico de LEVEL UP registrará tu desempeño partido a partido para darte recomendaciones personalizadas: qué potenciar, qué corregir y cómo llevar tu juego al siguiente nivel. ¡Sigue sumando minutos en la cancha!';
+  html += `<div class="pf-reco"><div class="pf-reco-title">🎯 RECOMENDACIONES PARA MEJORAR TU JUEGO</div><p>${reco}</p></div>`;
   el.innerHTML = html;
 }
 
