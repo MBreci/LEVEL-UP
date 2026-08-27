@@ -867,6 +867,43 @@ function buildPhysicalHTML(p) {
     </div>`;
 }
 
+// Renderiza el "PERFIL DEL JUGADOR": medallas/insignias del torneo, métricas de
+// desempeño (velocidad máxima, km recorridos, sprints…) y recomendaciones.
+// Los datos viven en state.physical.perfil y state.achievements. Es la sección
+// que va DEBAJO de la foto de cuerpo completo.
+function renderPerfilJugador() {
+  const el = document.getElementById('perfil-metrics');
+  if (!el || !state) return;
+  const perf = (state.physical && state.physical.perfil) || null;
+  const ach = Array.isArray(state.achievements) ? state.achievements.filter(a => typeof a === 'string') : [];
+  let html = '';
+  if (ach.length) {
+    html += `<div class="pf-badges-title">RECONOCIMIENTOS</div>
+      <div class="pf-badges">${ach.map(a => `<span class="pf-badge${/oro/i.test(a)?' gold':/plata/i.test(a)?' silver':/bronce/i.test(a)?' bronze':''}">${a}</span>`).join('')}</div>`;
+  }
+  const metric = (label, val, unit) => (val === null || val === undefined || val === '') ? '' :
+    `<div class="pf-metric"><div class="pf-metric-v">${val}<span class="pf-metric-u">${unit || ''}</span></div><div class="pf-metric-l">${label}</div></div>`;
+  if (perf) {
+    const cards = [
+      metric('VELOCIDAD MÁXIMA', perf.vel_max_kmh, ' km/h'),
+      metric('DISTANCIA RECORRIDA', perf.distancia_km, ' km'),
+      metric('VELOCIDAD MEDIA', perf.vel_media_kmh, ' km/h'),
+      metric('SPRINTS', perf.sprints, ''),
+      metric('CARRERAS DE INTENSIDAD', perf.carreras_intensidad, ''),
+    ].join('');
+    if (cards.trim()) {
+      html += `<div class="pf-metrics-title">MÉTRICAS DE DESEMPEÑO</div><div class="pf-metrics-grid">${cards}</div>`;
+      if (perf.fuente) html += `<div class="pf-note">Datos ${perf.fuente}. Se actualizarán con la medición oficial del VEO.</div>`;
+    }
+  }
+  // Recomendaciones para mejorar (siempre visible). Se llenará con el análisis
+  // real por jugador a medida que registremos sus partidos; por ahora, un texto guía.
+  const reco = (perf && perf.recomendacion)
+    || 'A partir de ahora, el cuerpo técnico de LEVEL UP registrará tu desempeño partido a partido para darte recomendaciones personalizadas: qué potenciar, qué corregir y cómo llevar tu juego al siguiente nivel. ¡Sigue sumando minutos en la cancha!';
+  html += `<div class="pf-reco"><div class="pf-reco-title">🎯 RECOMENDACIONES PARA MEJORAR TU JUEGO</div><p>${reco}</p></div>`;
+  el.innerHTML = html;
+}
+
 // Muestra la foto de CUERPO COMPLETO del jugador (subida por el admin) en la
 // sección "photo-process" de la carta. Si no hay, deja el ejemplo por defecto.
 function updatePlayerFullPhoto() {
@@ -897,6 +934,30 @@ function updatePlayerFullPhoto() {
   }
 }
 
+// Trae las DOS fotos propias (medio cuerpo y cuerpo completo) frescas de la nube
+// una vez por carga de página. El sync masivo NO trae fotos (ahorro de egress) y
+// conserva la local, así que sin esto la foto que sube el admin no aparecía en la
+// tarjeta del propio jugador, o se quedaba mostrando la anterior. Solo re-renderiza
+// si algo cambió, para no parpadear en cada render.
+let _ownPhotosFetched = false;
+async function ensureOwnPhotos(force) {
+  if (!sb || !state) return;
+  if (_ownPhotosFetched && !force) return;
+  _ownPhotosFetched = true;
+  try {
+    const { data } = await sb.from('profiles').select('photo,photo_full').eq('id', state.id).single();
+    if (!data || !state) return;
+    let changed = false;
+    if ((data.photo || null) !== (state.photo || null)) { state.photo = data.photo || null; changed = true; }
+    if ((data.photo_full || null) !== (state.photoFull || null)) { state.photoFull = data.photo_full || null; changed = true; }
+    if (changed) {
+      profiles[state.id] = state;
+      try { saveProfiles(); } catch (e) {}
+      renderCard();
+    }
+  } catch (e) {}
+}
+
 function renderCard() {
   const card = document.getElementById('fifa-card');
   if (!card) return;
@@ -907,12 +968,14 @@ function renderCard() {
     if (piEl0) piEl0.innerHTML = guestPrompt('Inicia sesión o crea tu perfil para ver tu carta de jugador.');
     return;
   }
+  ensureOwnPhotos();
   const rank = getRank(state.xp);
   const a = state.attrs;
   const { className, html } = buildCardHTML(state);
   card.className = className;
   card.innerHTML = html;
   updatePlayerFullPhoto();
+  renderPerfilJugador();
 
   const next = getNextRank(state.xp);
   const prevMin = rank.min;
@@ -1043,30 +1106,53 @@ function renderHistory() {
 }
 
 function getGeneralRanking() {
-  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, xp: p.xp || 0, rank: r.name, slug: r.slug, emoji: r.emoji }; });
+  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, xp: p.xp || 0, rank: r.name, slug: r.slug, emoji: r.emoji, pos: (p.position || '').toUpperCase() }; });
   return list.sort((a, b) => b.ovr - a.ovr || b.xp - a.xp || a.name.localeCompare(b.name));
+}
+
+// Filtro de posición activo en la página de ranking. Los porteros pueden venir
+// como POR/GK/ARQUERO desde datos viejos, por eso se normalizan a un grupo.
+let _rkPos = 'ALL';
+const RK_POS = { DEL: ['DEL'], MED: ['MED'], DEF: ['DEF'], POR: ['POR', 'GK', 'ARQUERO'] };
+function rkPosGroup(pos) {
+  for (const g in RK_POS) if (RK_POS[g].includes(pos)) return g;
+  return 'DEL'; // por defecto agrupamos posiciones sueltas como jugador de campo
+}
+function setRankingPos(pos, btn) {
+  _rkPos = pos;
+  document.querySelectorAll('#rk-tabs .rk-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const inp = document.getElementById('rk-search');
+  renderRanking(inp ? inp.value : '');
 }
 
 function renderRanking(query) {
   const el = document.getElementById('rk-panel');
   if (!el) return;
-  let list = getGeneralRanking();
+  let base = getGeneralRanking();
+  if (_rkPos !== 'ALL') base = base.filter(p => rkPosGroup(p.pos) === _rkPos);
+  let list = base;
   if (query) {
     const q = query.toLowerCase();
-    list = list.filter(p => p.name.toLowerCase().includes(q) || p.rank.toLowerCase().includes(q));
+    list = base.filter(p => p.name.toLowerCase().includes(q) || p.rank.toLowerCase().includes(q));
   }
+  const POSLBL = { DEL: 'DELANTEROS', MED: 'MEDIOCAMPISTAS', DEF: 'DEFENSAS', POR: 'PORTEROS', ALL: 'RANKING GENERAL' };
+  const head = `<div class="rk-list-head"><span class="rk-list-title">${POSLBL[_rkPos]}</span><span class="rk-list-count">${base.length} jugador${base.length !== 1 ? 'es' : ''}</span></div>`;
   if (!list.length) {
-    el.innerHTML = `<div class="rk-empty">${query ? 'No se encontraron jugadores.' : 'Todavía no hay jugadores registrados. Cuando alguien cree su perfil, aparecerá aquí.'}</div>`;
+    el.innerHTML = head + `<div class="rk-empty">${query ? 'No se encontraron jugadores en esta posición.' : 'Aún no hay jugadores en esta posición.'}</div>`;
     return;
   }
-  el.innerHTML = list.map((p, i) => `
+  el.innerHTML = head + list.map((p) => {
+    const num = base.findIndex(r => r.id === p.id) + 1;
+    const posG = rkPosGroup(p.pos);
+    return `
     <div class="rk-row rk-${p.slug} ${state && p.id === state.id ? 'me' : ''}" onclick="openPlayerView('${p.id}')" style="cursor:pointer">
-      <div class="rk-pos ${i === 0 && !query ? 'gold' : ''}">${getGeneralRanking().findIndex(r => r.id === p.id) + 1}</div>
+      <div class="rk-pos ${num === 1 ? 'gold' : num === 2 ? 'silver' : num === 3 ? 'bronze' : ''}">${num}</div>
       <div class="rk-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
-      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
+      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''} <span class="rk-poschip rk-poschip-${posG}">${posG}</span></div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
       <div class="rk-ovr">${p.ovr}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderPlayerSearch(query) {
@@ -7756,12 +7842,17 @@ function renderAdminPanel() {
     const hasPhoto = !!p.photo;
     const hasMedidas = ph.weight && ph.height;
     const status = hasPhoto && hasMedidas ? '✅' : '⚠️';
+    // Texto sobre el que busca el admin: apodo, nombre, posición, equipo y correo
+    // (el correo solo está disponible en algunos perfiles). En minúsculas para
+    // comparar sin importar mayúsculas/acentos del texto tecleado.
+    const haystack = `${p.nickname || ''} ${p.name || ''} ${p.position || ''} ${p.team || ''} ${p.email || ''}`
+      .toLowerCase().replace(/"/g, '');
     return `
-      <div class="adm-player-row">
+      <div class="adm-player-row" data-search="${haystack}">
         <div class="adm-player-av">${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div class="adm-av-placeholder">${(p.nickname||p.name).slice(0,2)}</div>`}</div>
         <div class="adm-player-info">
           <div class="adm-player-name">${p.nickname || p.name}</div>
-          <div class="adm-player-meta">${ph.height ? ph.height+'cm' : '—'} · ${ph.weight ? ph.weight+'kg' : '—'} · ${ph.foot || '—'}</div>
+          <div class="adm-player-meta">${p.position || '—'} · ${ph.height ? ph.height+'cm' : '—'} · ${ph.weight ? ph.weight+'kg' : '—'} · ${ph.foot || '—'}</div>
         </div>
         <span class="adm-status">${status}</span>
         <button class="adm-edit-btn" onclick="closeAdminPanel();openAdminPlayer('${p.id}')">EDITAR</button>
@@ -7818,8 +7909,11 @@ function renderAdminPanel() {
   const torneosHtml = tournaments.length ? tournaments.map(t => renderAdminTorneoCard(t)).join('') : '<div class="adm-empty">No hay torneos creados aún.</div>';
 
   content.innerHTML = `
-    <div class="adm-section-title">JUGADORES <span class="adm-count">${allPlayers.length}</span></div>
-    <div class="adm-player-list">${playersHtml}</div>
+    <div class="adm-section-title">JUGADORES <span class="adm-count" id="adm-player-count">${allPlayers.length}</span></div>
+    <input class="adm-search" id="adm-player-search" type="text" autocomplete="off"
+      placeholder="🔍 Buscar por apodo, nombre, posición o equipo..." oninput="filterAdminPlayers(this.value)">
+    <div class="adm-player-list" id="adm-player-list">${playersHtml}</div>
+    <div class="adm-no-results" id="adm-no-results" style="display:none">No se encontró ningún jugador.</div>
     <div class="adm-section-title" style="margin-top:28px">PARTIDOS REY DEL BARRIO</div>
     <div class="adm-match-list">${matchesHtml}</div>
     <div class="adm-section-title" style="margin-top:28px">PARTIDOS MODO LIBRE</div>
@@ -7827,6 +7921,23 @@ function renderAdminPanel() {
     <div class="adm-section-title" style="margin-top:28px">TORNEOS</div>
     <div class="adm-torneo-list">${torneosHtml}</div>
   `;
+}
+
+// Filtra la lista de jugadores del panel admin en vivo, sin re-renderizar todo.
+function filterAdminPlayers(q) {
+  const query = (q || '').trim().toLowerCase();
+  const rows = document.querySelectorAll('#adm-player-list .adm-player-row');
+  let shown = 0;
+  rows.forEach(row => {
+    const hay = row.getAttribute('data-search') || '';
+    const match = !query || hay.indexOf(query) !== -1;
+    row.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  const countEl = document.getElementById('adm-player-count');
+  if (countEl) countEl.textContent = shown;
+  const noRes = document.getElementById('adm-no-results');
+  if (noRes) noRes.style.display = shown === 0 ? 'block' : 'none';
 }
 
 function openAdminMatch(matchId) {
