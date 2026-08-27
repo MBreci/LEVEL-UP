@@ -1096,30 +1096,53 @@ function renderHistory() {
 }
 
 function getGeneralRanking() {
-  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, xp: p.xp || 0, rank: r.name, slug: r.slug, emoji: r.emoji }; });
+  const list = Object.values(profiles).map(p => { const r = getRank(p.xp); return { id: p.id, name: p.nickname || p.name, ovr: p.ovr, xp: p.xp || 0, rank: r.name, slug: r.slug, emoji: r.emoji, pos: (p.position || '').toUpperCase() }; });
   return list.sort((a, b) => b.ovr - a.ovr || b.xp - a.xp || a.name.localeCompare(b.name));
+}
+
+// Filtro de posición activo en la página de ranking. Los porteros pueden venir
+// como POR/GK/ARQUERO desde datos viejos, por eso se normalizan a un grupo.
+let _rkPos = 'ALL';
+const RK_POS = { DEL: ['DEL'], MED: ['MED'], DEF: ['DEF'], POR: ['POR', 'GK', 'ARQUERO'] };
+function rkPosGroup(pos) {
+  for (const g in RK_POS) if (RK_POS[g].includes(pos)) return g;
+  return 'DEL'; // por defecto agrupamos posiciones sueltas como jugador de campo
+}
+function setRankingPos(pos, btn) {
+  _rkPos = pos;
+  document.querySelectorAll('#rk-tabs .rk-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const inp = document.getElementById('rk-search');
+  renderRanking(inp ? inp.value : '');
 }
 
 function renderRanking(query) {
   const el = document.getElementById('rk-panel');
   if (!el) return;
-  let list = getGeneralRanking();
+  let base = getGeneralRanking();
+  if (_rkPos !== 'ALL') base = base.filter(p => rkPosGroup(p.pos) === _rkPos);
+  let list = base;
   if (query) {
     const q = query.toLowerCase();
-    list = list.filter(p => p.name.toLowerCase().includes(q) || p.rank.toLowerCase().includes(q));
+    list = base.filter(p => p.name.toLowerCase().includes(q) || p.rank.toLowerCase().includes(q));
   }
+  const POSLBL = { DEL: 'DELANTEROS', MED: 'MEDIOCAMPISTAS', DEF: 'DEFENSAS', POR: 'PORTEROS', ALL: 'RANKING GENERAL' };
+  const head = `<div class="rk-list-head"><span class="rk-list-title">${POSLBL[_rkPos]}</span><span class="rk-list-count">${base.length} jugador${base.length !== 1 ? 'es' : ''}</span></div>`;
   if (!list.length) {
-    el.innerHTML = `<div class="rk-empty">${query ? 'No se encontraron jugadores.' : 'Todavía no hay jugadores registrados. Cuando alguien cree su perfil, aparecerá aquí.'}</div>`;
+    el.innerHTML = head + `<div class="rk-empty">${query ? 'No se encontraron jugadores en esta posición.' : 'Aún no hay jugadores en esta posición.'}</div>`;
     return;
   }
-  el.innerHTML = list.map((p, i) => `
+  el.innerHTML = head + list.map((p) => {
+    const num = base.findIndex(r => r.id === p.id) + 1;
+    const posG = rkPosGroup(p.pos);
+    return `
     <div class="rk-row rk-${p.slug} ${state && p.id === state.id ? 'me' : ''}" onclick="openPlayerView('${p.id}')" style="cursor:pointer">
-      <div class="rk-pos ${i === 0 && !query ? 'gold' : ''}">${getGeneralRanking().findIndex(r => r.id === p.id) + 1}</div>
+      <div class="rk-pos ${num === 1 ? 'gold' : num === 2 ? 'silver' : num === 3 ? 'bronze' : ''}">${num}</div>
       <div class="rk-av"><div class="rk-av-fx"></div>${p.name.split(' ').map(s => s[0]).join('').slice(0, 2)}</div>
-      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''}</div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
+      <div class="rk-info"><div class="rk-name">${p.name}${state && p.id === state.id ? ' (TÚ)' : ''} <span class="rk-poschip rk-poschip-${posG}">${posG}</span></div><div class="rk-rank rk-emblem"><span class="rk-emblem-emoji">${p.emoji}</span>${p.rank}</div></div>
       <div class="rk-ovr">${p.ovr}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderPlayerSearch(query) {

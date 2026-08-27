@@ -58,6 +58,13 @@
   <div class="rk-search-wrap">
     <input class="rk-search-input" id="rk-search" placeholder="Buscar jugador por nombre o rango..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="lu-rk-q" readonly onfocus="this.removeAttribute('readonly')" oninput="renderRanking(this.value)">
   </div>
+  <div class="rk-tabs" id="rk-tabs">
+    <button class="rk-tab active" data-pos="ALL" onclick="setRankingPos('ALL',this)">🏆 GENERAL</button>
+    <button class="rk-tab rk-tab-del" data-pos="DEL" onclick="setRankingPos('DEL',this)">⚡ DELANTEROS</button>
+    <button class="rk-tab rk-tab-med" data-pos="MED" onclick="setRankingPos('MED',this)">🎯 MEDIOS</button>
+    <button class="rk-tab rk-tab-def" data-pos="DEF" onclick="setRankingPos('DEF',this)">🛡️ DEFENSAS</button>
+    <button class="rk-tab rk-tab-por" data-pos="POR" onclick="setRankingPos('POR',this)">🧤 PORTEROS</button>
+  </div>
   <div class="rk-panel" id="rk-panel"></div>
 </section>
 
