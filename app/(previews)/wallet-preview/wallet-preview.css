@@ -1,0 +1,75 @@
+/* Puerto fiel del <style> embebido de wallet-preview.html, prefijado bajo .wp-preview-page. */
+.wp-preview-page {
+  --g: #00ff88;
+  --f: #ff00aa;
+  --o: #ff6600;
+  --w: #ffffff;
+  --gold: #c9a84c;
+  --bg: #020408;
+  --bg2: #06090f;
+  --t: rgba(235, 242, 255, 0.95);
+  --tm: rgba(180, 200, 240, 0.55);
+  --td: rgba(180, 200, 240, 0.28);
+  --ft: var(--font-orbitron), monospace;
+  --fb: var(--font-inter), sans-serif;
+  --b2: 0.5px solid rgba(255, 255, 255, 0.12);
+
+  background: var(--bg);
+  color: var(--t);
+  font-family: var(--fb);
+  -webkit-font-smoothing: antialiased;
+  padding: 0 0 60px;
+  min-height: 100vh;
+}
+.wp-preview-page * { box-sizing: border-box; }
+.wp-preview-page .pv { position: sticky; top: 0; z-index: 9; background: rgba(255,102,0,.12); border-bottom: 1px solid rgba(255,102,0,.35); backdrop-filter: blur(10px); padding: 9px 16px; text-align: center; font-family: var(--ft); font-size: 9px; letter-spacing: 2px; color: var(--o); }
+.wp-preview-page .wrap { max-width: 480px; margin: 0 auto; padding: 22px 18px; }
+.wp-preview-page .eyebrow { font-family: var(--ft); font-size: 9px; letter-spacing: 4px; color: var(--g); margin-bottom: 8px; }
+.wp-preview-page h1 { font-family: var(--ft); font-weight: 900; font-size: 22px; letter-spacing: 1px; margin-bottom: 22px; }
+
+.wp-preview-page .wcard { position: relative; border-radius: 18px; padding: 26px 22px; overflow: hidden; margin-bottom: 18px;
+  background: linear-gradient(160deg,#0e2a1e,#0a0d12 55%,#1a0a16); border: 1px solid rgba(201,168,76,.35);
+  box-shadow: 0 0 46px rgba(0,255,136,.08),inset 0 0 40px rgba(0,0,0,.5); }
+.wp-preview-page .wcard::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 82% 0%,rgba(201,168,76,.16),transparent 45%),radial-gradient(circle at 0% 100%,rgba(255,0,170,.09),transparent 45%); }
+.wp-preview-page .wtop { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
+.wp-preview-page .wrank { display: flex; align-items: center; gap: 9px; }
+.wp-preview-page .wrank .crown { font-size: 20px; filter: drop-shadow(0 0 6px var(--gold)); }
+.wp-preview-page .wrank .rk { font-family: var(--ft); font-size: 10px; letter-spacing: 1px; color: var(--gold); }
+.wp-preview-page .wrank .rk small { display: block; color: var(--tm); font-size: 8px; letter-spacing: 1px; }
+.wp-preview-page .wchip { font-family: var(--ft); font-size: 8px; letter-spacing: 1.5px; color: var(--g); border: 1px solid rgba(0,255,136,.3); padding: 4px 9px; border-radius: 20px; background: rgba(0,255,136,.06); }
+.wp-preview-page .wbal { position: relative; z-index: 2; text-align: center; margin: 22px 0 6px; }
+.wp-preview-page .wbal .lb { font-family: var(--ft); font-size: 9px; letter-spacing: 3px; color: var(--tm); }
+.wp-preview-page .wbal .amt { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+.wp-preview-page .coin { width: 42px; height: 42px; animation: wpp-spin 6s linear infinite; }
+@keyframes wpp-spin { to { transform: rotateY(360deg); } }
+.wp-preview-page .wbal .num { font-family: var(--ft); font-weight: 900; font-size: 46px; line-height: 1; color: #fff; text-shadow: 0 0 20px rgba(201,168,76,.5); }
+.wp-preview-page .wbal .unit { font-family: var(--ft); font-size: 9px; letter-spacing: 2px; color: var(--gold); margin-top: 8px; }
+.wp-preview-page .wbal .eq { font-size: 12px; color: var(--tm); margin-top: 6px; }
+.wp-preview-page .wact { position: relative; z-index: 2; display: flex; gap: 10px; margin-top: 20px; }
+.wp-preview-page .wbtn { flex: 1; text-align: center; font-family: var(--ft); font-weight: 700; font-size: 10px; letter-spacing: 1px; padding: 13px; border-radius: 9px; border: none; cursor: pointer; }
+.wp-preview-page .wbtn.recarga { color: #0b0500; background: linear-gradient(90deg,var(--gold),var(--g)); box-shadow: 0 0 18px rgba(201,168,76,.3); }
+.wp-preview-page .wbtn.mov { color: var(--g); background: rgba(0,255,136,.06); border: 1px solid rgba(0,255,136,.3); }
+
+.wp-preview-page .wprog { position: relative; z-index: 2; margin-top: 20px; }
+.wp-preview-page .wprog .pl { display: flex; justify-content: space-between; font-family: var(--ft); font-size: 8px; letter-spacing: 1px; color: var(--tm); margin-bottom: 7px; }
+.wp-preview-page .wprog .pl b { color: var(--t); }
+.wp-preview-page .wprog .track { height: 9px; background: rgba(0,0,0,.4); border: 1px solid rgba(201,168,76,.25); border-radius: 20px; overflow: hidden; }
+.wp-preview-page .wprog .fill { height: 100%; background: linear-gradient(90deg,var(--gold),var(--g)); box-shadow: 0 0 12px var(--gold); border-radius: 20px; }
+
+.wp-preview-page .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.wp-preview-page .mini { background: var(--bg2); border: var(--b2); border-radius: 12px; padding: 16px; }
+.wp-preview-page .mini h4 { font-family: var(--ft); font-size: 10px; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.wp-preview-page .mini .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--tm); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.wp-preview-page .mini .row:last-child { border: none; }
+.wp-preview-page .mini .row b { color: var(--g); font-family: var(--ft); font-size: 11px; }
+
+.wp-preview-page .sect { background: var(--bg2); border: var(--b2); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.wp-preview-page .sect h3 { font-family: var(--ft); font-size: 12px; letter-spacing: 1px; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+.wp-preview-page .sect p { color: var(--tm); font-size: 13px; margin-bottom: 14px; }
+.wp-preview-page .cta { display: block; width: 100%; text-align: center; font-family: var(--ft); font-weight: 700; letter-spacing: 1px; font-size: 11px; padding: 14px; border-radius: 9px; border: none; cursor: pointer; }
+.wp-preview-page .cta.primary { color: #0b0500; background: linear-gradient(90deg,var(--gold),var(--g)); }
+.wp-preview-page .cta.pay { color: #fff; background: linear-gradient(90deg,var(--f),var(--o)); }
+.wp-preview-page .price { font-family: var(--ft); font-size: 9px; letter-spacing: 1px; color: var(--tm); text-align: center; margin-top: 9px; }
+.wp-preview-page .note { background: linear-gradient(135deg,rgba(0,255,136,.05),rgba(201,168,76,.05)); border: var(--b2); border-left: 3px solid var(--gold); border-radius: 8px; padding: 14px 16px; font-size: 12px; color: var(--tm); line-height: 1.6; }
+.wp-preview-page .note b { color: var(--gold); font-family: var(--ft); font-size: 10px; letter-spacing: 1px; }
+.wp-preview-page .rate { display: flex; gap: 6px; align-items: center; justify-content: center; font-size: 11px; color: var(--td); margin-top: 14px; }

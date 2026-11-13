@@ -1,0 +1,25 @@
+/* Puerto fiel del <style> embebido de estado.html, prefijado bajo .estado-page. */
+.estado-page {
+  background: #020408;
+  color: #eaf2ff;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px;
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+.estado-page * { box-sizing: border-box; }
+.estado-page h1 { font-size: 20px; margin: 14px 0 4px; }
+.estado-page .sub { color: #8fa; opacity: .6; font-size: 13px; margin-bottom: 18px; }
+.estado-page .card { border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: rgba(255,255,255,.02); }
+.estado-page .row { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+.estado-page .dot { width: 14px; height: 14px; border-radius: 50%; background: #666; flex-shrink: 0; }
+.estado-page .card.ok .dot { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+.estado-page .card.bad .dot { background: #ff3b3b; box-shadow: 0 0 10px #ff3b3b; }
+.estado-page .detail { font-size: 12px; color: #9ab; margin-top: 8px; word-break: break-word; font-family: ui-monospace, monospace; line-height: 1.5; }
+.estado-page button { width: 100%; padding: 15px; font-size: 15px; font-weight: 700; border: none; border-radius: 8px; background: linear-gradient(90deg,#00ff88,#00b36b); color: #02120a; cursor: pointer; margin: 8px 0; }
+.estado-page button.copy { background: rgba(255,255,255,.08); color: #eaf2ff; }
+.estado-page .verdict { padding: 16px; border-radius: 10px; font-size: 15px; line-height: 1.6; margin-top: 14px; }
+.estado-page .verdict.v-ok { background: rgba(0,255,136,.1); border: 1px solid rgba(0,255,136,.4); }
+.estado-page .verdict.v-bad { background: rgba(255,59,59,.1); border: 1px solid rgba(255,59,59,.4); }
+.estado-page .env { font-size: 11px; color: #678; margin-top: 16px; font-family: ui-monospace, monospace; word-break: break-all; }

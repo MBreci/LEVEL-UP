@@ -1,4 +1,38 @@
-node_modules/
-package-lock.json
-package.json
-DOCUMENTACION.md
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (contienen la clave publishable de Supabase, ya expuesta en el
+# cliente hoy — se versiona .env.example como referencia, no los .env reales)
+.env*
+!.env.example
+.env.local
+
+# vercel
+.vercel
+
+# wrangler local dev state
+/.wrangler
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
